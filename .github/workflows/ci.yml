@@ -9,7 +9,7 @@
 #
 # Action-Versionen geprüft am 2026-10-13 (Tags per git ls-remote, Mindestreife nach
 # project-context.md Abschnitt 3): checkout v7.0.1, setup-node v7.0.0, setup-python v7.0.0,
-# upload-artifact v7.0.1, pre-commit/action v3.0.1, Swatinem/rust-cache v2.9.2.
+# upload-artifact v7.0.1, Swatinem/rust-cache v2.9.2; pre-commit 4.6.2 (PyPI).
 
 name: CI
 
@@ -36,10 +36,14 @@ jobs:
       - uses: actions/setup-python@v7.0.0
         with:
           python-version: "3.12"
-      - uses: pre-commit/action@v3.0.1
+      # pre-commit direkt statt pre-commit/action@v3.0.1: die Action nutzt intern actions/cache@v4
+      # mit abgekündigtem Node 20 (CI-Protokoll vom 2026-10-13). pre-commit 4.6.2 (Linie 4.6 seit 2026-04).
+      - run: pip install pre-commit==4.6.2
+      - name: pre-commit (alle Dateien)
         env:
           # Code-Hooks laufen in den Jobs unten mit installierten Abhängigkeiten.
           SKIP: prettier,eslint,tsc,vitest-related,cargo-fmt,cargo-clippy
+        run: pre-commit run --all-files --show-diff-on-failure
 
   detect:
     name: Projektteile erkennen

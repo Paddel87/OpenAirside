@@ -227,7 +227,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 |---|---|---|---|---|
 | – | – | keine | 2026-10-13 | – |
 
-**Warnungsquellen ohne Schalter:** Hinweise der CI-Plattform zu Action-Versionen; Bündelgrößen-Warnungen von Vite; Abkündigungshinweise von electron-builder.
+**Warnungsquellen ohne Schalter:** Hinweise der CI-Plattform zu Action-Versionen und Runner-Images (Annotationen im Lauf); Bündelgrößen-Warnungen von Vite; Abkündigungshinweise von electron-builder.
 
 ### Durchsetzungsmechanismen
 
@@ -289,6 +289,8 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 | ESLint 10 | Lebensende „TBD" | Nachprüfung bei jedem Q.1 | eslint.org/version-support | Q.1 |
 | Playwright Electron-Unterstützung | experimentell, keine Frist | – | playwright.dev/docs/api/class-electron | Q.1 |
 | Übrige npm-Werkzeuge und Crates (ohne formale Richtlinie) | Nachprüfung 2027-04-13 | – | npm, crates.io | Q.1 |
+| Runner-Image `ubuntu-latest` → Ubuntu 26 | ab 2026-10-19 (Umstellung durch GitHub) | – | CI-Annotation, actions/runner-images#14748 | Q.1 (erster Lauf nach der Umstellung beobachten) |
+| Node 20 in GitHub Actions (abgekündigt) | behoben am 2026-10-13: pre-commit/action ersetzt | – | CI-Protokoll, GitHub-Changelog 2025-09-19 | – |
 | Claude-Kontingent | Zurücksetz-Zeitpunkt offen | – | Abo | beim ersten Sessionstart eintragen |
 
 ### Kosten
