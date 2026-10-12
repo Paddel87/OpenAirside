@@ -1,0 +1,79 @@
+# Release-Builds für OpenAirside (Klasse G, Aufteilung nach templates/projektstart.md Schritt 10).
+# Trigger: Tag v* (z. B. v0.1.0). Baut Windows, Linux und macOS (Universal) mit electron-builder
+# 26.16.1 und legt einen Release-ENTWURF an; veröffentlicht wird von Hand nach Freigabe.
+# Änderungen an dieser Datei sind freigabepflichtig (CLAUDE.md 4.7).
+# Vor dem ersten öffentlichen Release gilt das Gate aus Fahrplan-Schritt 7.1.
+#
+# Skelett: Build-Befehle (npm run dist:*) entstehen in Fahrplan-Schritt 1.6/2.1. Bis dahin bricht
+# der Workflow mit klarer Meldung ab, falls jemand vorzeitig einen Tag setzt.
+# Zusätzliche Action geprüft am 2026-10-13: download-artifact v8.0.2 (Linie 8.0 seit 2026-02).
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "26.11.1"
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: dist:win
+          - os: ubuntu-latest
+            target: dist:linux
+          - os: macos-latest
+            target: dist:mac
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Projekt vorhanden?
+        shell: bash
+        run: |
+          if [ ! -f package.json ] || [ ! -f Cargo.toml ]; then
+            echo "::error::Noch kein baubarer Stand (Fahrplan-Schritt 2.1 offen)."
+            exit 1
+          fi
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: rustup show
+      - if: runner.os == 'macOS'
+        run: rustup target add x86_64-apple-darwin aarch64-apple-darwin   # Universal-Build
+      - uses: Swatinem/rust-cache@v2.9.2
+      - run: npm ci
+      - name: Paket bauen (unsigniert, siehe project-context.md Abschnitt 8)
+        run: npm run ${{ matrix.target }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: openairside-${{ runner.os }}
+          path: release/
+          retention-days: 14
+
+  draft:
+    name: Release-Entwurf anlegen
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          path: artifacts
+      - name: Entwurf mit allen Paketen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --draft --verify-tag --title "OpenAirside $GITHUB_REF_NAME" artifacts/*/*

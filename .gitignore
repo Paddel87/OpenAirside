@@ -1,3 +1,14 @@
 # Kompilate von Python (S-24, Befund W6: eine .pyc-Datei war versehentlich eingecheckt).
 __pycache__/
 *.pyc
+
+# OpenAirside: Build- und Werkzeug-Ausgaben
+node_modules/
+target/
+dist/
+out/
+release/
+coverage/
+lcov*.info
+*.log
+.DS_Store

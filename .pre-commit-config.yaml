@@ -1,31 +1,72 @@
-# Pre-Commit-Konfiguration für Dev-Templates selbst (eingeführt mit S-4, siehe docs/archiv/selbstanwendung/).
+# Pre-Commit-Konfiguration für OpenAirside. Abgeleitet aus templates/pre-commit/typescript.yaml,
+# ergänzt um Markdown (aus dem Template-Repo) und Rust-Hooks (keine Rust-Vorlage vorhanden).
+# Framework: pre-commit (project-context.md Abschnitt 7, ADR-002).
+# Installation: `pip install pre-commit && pre-commit install`
+# Lokal ausführen: `pre-commit run --all-files`
 #
-# Hooks: markdownlint-cli2 (S-4); ruff und Tests für das Python-Hilfsskript (S-24, ADR-017).
-#
-# markdownlint-cli2: Läuft über die Node-Sprachumgebung, die pre-commit
-# selbst isoliert verwaltet - keine manuelle Node-Installation nötig, nur `pre-commit`
-# (Python) selbst. Version gepinnt und gegen die npm-Registry sowie den offiziellen
-# .pre-commit-hooks.yaml des Projekts verifiziert (2026-08-13).
+# Die lokalen Code-Hooks (language: system) greifen nur, wenn passende Dateien geändert werden;
+# sie setzen ab Fahrplan-Schritt 2.1 installierte Abhängigkeiten voraus (npm ci, rustup).
+# Versionen geprüft am 2026-10-13: pre-commit-hooks v6.0.0 (2025-08-09, Linie ohne Patches,
+# über ein Jahr alt), markdownlint-cli2 v0.23.3 (Linie 0.23 seit 2026-07).
+
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: detect-private-key
+
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.23.2
+    rev: v0.23.3
     hooks:
       - id: markdownlint-cli2
-  # ruff v0.16.9: Linie 0.16 seit 2026-07-23, v0.16.9 am 2026-09-24 auf PyPI, Tag in
-  # astral-sh/ruff-pre-commit geprüft (2026-09-27), Lizenz MIT. ruff-format nur für Python:
-  # der Hook würde sonst auch Markdown formatieren, das bewusst von Formatierung ausgenommen ist.
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.9
-    hooks:
-      - id: ruff-check
-      - id: ruff-format
-        types_or: [python]
-  # Test des Hilfsskripts, nur Standardbibliothek; Warnungen gelten als Fehler (CLAUDE.md Abschnitt 15).
+
   - repo: local
     hooks:
-      - id: test-kontingent-warnung
-        name: Tests kontingent-warnung.py
-        language: python
-        entry: python -W error -B -m unittest discover -s templates/werkzeuge/claude-code
+      # Prettier über die Projekt-Version aus package.json (3.9.10); Markdown ist per .prettierignore ausgenommen.
+      - id: prettier
+        name: Prettier
+        entry: npx --no-install prettier --write --ignore-unknown
+        language: system
+        types_or: [javascript, jsx, ts, tsx, json, css]
+
+      - id: eslint
+        name: ESLint
+        entry: npx --no-install eslint --max-warnings 0 --report-unused-disable-directives
+        language: system
+        types_or: [javascript, jsx, ts, tsx]
+        pass_filenames: true
+
+      - id: tsc
+        name: TypeScript type-check
+        entry: npx --no-install tsc --noEmit
+        language: system
+        types_or: [ts, tsx]
         pass_filenames: false
-        files: ^templates/werkzeuge/claude-code/.*\.py$
+
+      - id: vitest-related
+        name: Vitest (related tests)
+        entry: npx --no-install vitest related --run
+        language: system
+        types_or: [ts, tsx]
+        pass_filenames: true
+
+      - id: cargo-fmt
+        name: rustfmt
+        entry: cargo fmt --all --check
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: clippy
+        entry: cargo clippy --all-targets --all-features -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false

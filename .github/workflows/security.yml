@@ -1,0 +1,86 @@
+# Sicherheitsprüfung für OpenAirside (Klasse G, Aufteilung nach templates/projektstart.md Schritt 10).
+# CodeQL für TypeScript/JavaScript und Actions-Workflows; wöchentlicher Lauf zusätzlich zu Push/PR,
+# damit neue Advisories auch ohne Code-Änderung auffallen.
+# Rust wird über cargo-deny in ci.yml und hier wöchentlich geprüft.
+# Action-Versionen geprüft am 2026-10-13: github/codeql-action v4.38.3 (Linie 4.38 seit 2026-09-09).
+
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 4 * * 1"   # montags 04:17 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    name: Projektteile erkennen
+    runs-on: ubuntu-latest
+    outputs:
+      node: ${{ steps.check.outputs.node }}
+      rust: ${{ steps.check.outputs.rust }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - id: check
+        run: |
+          if [ -f package.json ]; then echo "node=true" >> "$GITHUB_OUTPUT"; else echo "node=false" >> "$GITHUB_OUTPUT"; fi
+          if [ -f Cargo.toml ]; then echo "rust=true" >> "$GITHUB_OUTPUT"; else echo "rust=false" >> "$GITHUB_OUTPUT"; fi
+
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    needs: detect
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [actions, javascript-typescript]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Überspringen ohne TypeScript-Code
+        id: gate
+        run: |
+          if [ "${{ matrix.language }}" = "javascript-typescript" ] && [ "${{ needs.detect.outputs.node }}" != "true" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.gate.outputs.run == 'true'
+        uses: github/codeql-action/init@v4.38.3
+        with:
+          languages: ${{ matrix.language }}
+      - if: steps.gate.outputs.run == 'true'
+        uses: github/codeql-action/analyze@v4.38.3
+
+  rust-advisories:
+    name: Rust Advisories (wöchentlich)
+    needs: detect
+    if: needs.detect.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - run: rustup show
+      - run: cargo install --locked cargo-deny@0.20.2
+      - run: cargo deny check advisories
+
+  npm-audit:
+    name: npm audit (wöchentlich)
+    needs: detect
+    if: needs.detect.outputs.node == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "26.11.1"
+          cache: npm
+      - run: npm ci
+      - run: npm audit --audit-level=high

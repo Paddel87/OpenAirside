@@ -1,4 +1,4 @@
-// Markdown-Lint-Konfiguration für Dev-Templates (eingeführt mit S-4, siehe docs/archiv/selbstanwendung/).
+// Markdown-Lint-Konfiguration für OpenAirside (übernommen aus dem Template-Repo Dev-Templates).
 //
 // Zwei Regeln sind bewusst deaktiviert, aus demselben Grund wie in .prettierignore
 // beschrieben: Diese Dokumente sind handgepflegte, präzise Prosa- und Tabellen-Strukturen,
