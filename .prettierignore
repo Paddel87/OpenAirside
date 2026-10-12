@@ -1,0 +1,20 @@
+# Prettier-Ausnahmen für aus diesem Vorlagen-Repo abgeleitete Projekte.
+#
+# Grundsatz: Reine Dokumentation enthält keinen operativen Code und muss nicht
+# formatiert werden. Markdown-Dokumente (README, Roadmap/Fahrplan, Decisions/ADRs,
+# Logbuch, Architektur, Onboarding usw.) sind handgepflegte, präzise Strukturen
+# (Tabellen, ANCHOR-Kommentare, Status-Marker, ASCII-Skizzen). Auto-Formatierung
+# erzeugt dort vor allem Diff-Lärm statt Mehrwert.
+#
+# Hintergrund: Der Pre-Commit-Hook in templates/pre-commit/typescript.yaml führt
+# Prettier auch über Markdown aus (types_or: [... markdown ...]). Dieser Ausschluss
+# nimmt sämtliche Markdown-Dokumente konsequent davon aus.
+#
+# Einordnung: CLAUDE.md Abschnitt 15 fordert einen Formatter für Code, nicht für
+# Prosa-Dokumente.
+#
+# Hinweis: Code-Dateien (JS/TS/CSS/JSON/YAML) bleiben bewusst NICHT ignoriert –
+# sie werden weiterhin von Prettier formatiert.
+
+# Alle Markdown-Dokumente, in jedem Verzeichnis.
+*.md

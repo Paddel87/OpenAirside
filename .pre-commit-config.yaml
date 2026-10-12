@@ -1,0 +1,31 @@
+# Pre-Commit-Konfiguration für Dev-Templates selbst (eingeführt mit S-4, siehe docs/archiv/selbstanwendung/).
+#
+# Hooks: markdownlint-cli2 (S-4); ruff und Tests für das Python-Hilfsskript (S-24, ADR-017).
+#
+# markdownlint-cli2: Läuft über die Node-Sprachumgebung, die pre-commit
+# selbst isoliert verwaltet - keine manuelle Node-Installation nötig, nur `pre-commit`
+# (Python) selbst. Version gepinnt und gegen die npm-Registry sowie den offiziellen
+# .pre-commit-hooks.yaml des Projekts verifiziert (2026-08-13).
+repos:
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.23.2
+    hooks:
+      - id: markdownlint-cli2
+  # ruff v0.16.9: Linie 0.16 seit 2026-07-23, v0.16.9 am 2026-09-24 auf PyPI, Tag in
+  # astral-sh/ruff-pre-commit geprüft (2026-09-27), Lizenz MIT. ruff-format nur für Python:
+  # der Hook würde sonst auch Markdown formatieren, das bewusst von Formatierung ausgenommen ist.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.9
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+        types_or: [python]
+  # Test des Hilfsskripts, nur Standardbibliothek; Warnungen gelten als Fehler (CLAUDE.md Abschnitt 15).
+  - repo: local
+    hooks:
+      - id: test-kontingent-warnung
+        name: Tests kontingent-warnung.py
+        language: python
+        entry: python -W error -B -m unittest discover -s templates/werkzeuge/claude-code
+        pass_filenames: false
+        files: ^templates/werkzeuge/claude-code/.*\.py$

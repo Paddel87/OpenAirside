@@ -1,0 +1,27 @@
+// Markdown-Lint-Konfiguration für Dev-Templates (eingeführt mit S-4, siehe docs/archiv/selbstanwendung/).
+//
+// Zwei Regeln sind bewusst deaktiviert, aus demselben Grund wie in .prettierignore
+// beschrieben: Diese Dokumente sind handgepflegte, präzise Prosa- und Tabellen-Strukturen,
+// keine Fließtexte mit Umbruchpflicht.
+//
+//   MD013 (line-length): Die Dokumente folgen bewusst "eine Zeile pro Absatz/Listenpunkt"
+//     statt hartem Zeilenumbruch bei 80 Zeichen. Erzwungener Umbruch würde bei jedem
+//     Diff ganze Absätze neu umbrechen und den eigentlichen inhaltlichen Diff verdecken.
+//
+//   MD060 (table-column-style): Erzwingt Pipe-Ausrichtung in Tabellen. Bei den vielen,
+//     oft über Sessions hinweg von Hand erweiterten Tabellen in diesem Repo (ADR-Übersicht,
+//     Reifegrad-Übersicht, Tooling-Inventar) erzeugt strikte Ausrichtung reinen
+//     Formatierungs-Diff ohne inhaltlichen Wert.
+//
+// Alle anderen Standardregeln bleiben aktiv, weil sie echte strukturelle Probleme fangen
+// (fehlende Sprachangabe an Codeblöcken, fehlende Leerzeilen um Listen/Codeblöcke,
+// doppelte Überschriften).
+{
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD060": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["**/node_modules/**"]
+}

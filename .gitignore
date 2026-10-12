@@ -1,0 +1,3 @@
+# Kompilate von Python (S-24, Befund W6: eine .pyc-Datei war versehentlich eingecheckt).
+__pycache__/
+*.pyc

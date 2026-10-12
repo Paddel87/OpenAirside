@@ -1,0 +1,238 @@
+R-001|0|Betriebsmodus semi-autonom|**Modus:** Semi-autonom.|R
+R-002|0|Liste: KI entscheidet eigenständig|**KI entscheidet eigenständig:**|R
+R-003|0|Liste: KI legt zur Freigabe vor|**KI legt zur Freigabe vor (siehe Abschnitt 4):**|R
+R-004|0|Liste: KI stoppt zwingend|**KI stoppt zwingend (siehe Abschnitt 8):**|R
+R-005|0|Vier Modellklassen, Besetzung in project-context §6|Die Methodik unterscheidet vier **Modellklassen**|R
+R-006|0|Mechanik-Klasse erst nach Probelauf aktiv, bis dahin Routine|Erst aktiv, wenn ein Probelauf sie im Projekt belegt hat|R
+R-007|0|Definition Routine-Klasse|trägt den Normalbetrieb. Durchspezifizierte Arbeit|R
+R-008|0|Definition Entscheidungs-Klasse|das stärkste im Projekt regulär eingesetzte Modell|R
+R-009|0|Ausnahme-Klasse nur auf Vorschlag mit Freigabe|Nur auf begründeten Vorschlag der KI mit Freigabe des Menschen|R
+R-010|0|Zuordnung über Auslöser, nicht Selbsteinschätzung|Die Zuordnung erfolgt **nicht** über Selbsteinschätzung|R
+R-011|0|Begründung: Scheitern und Nicht-Bemerken korrelieren|die beiden Fehler korrelieren|B
+R-012|0|Eskalations-Auslöser 1: ENTSCHEIDUNG-Block|steht an (alle acht Kategorien)|R
+R-013|0|Eskalations-Auslöser 2: Stopp-Kriterium 8|Stopp-Kriterium 8 greift|R
+R-014|0|Eskalations-Auslöser 3: STRATEGISCH-ADR|Ein ADR mit Klassifikations-Tag `[STRATEGISCH]` entsteht.|R
+R-015|0|Eskalations-Auslöser 4: Beförderung auf BELASTBAR|auf `[BELASTBAR]` befördert.|R
+R-016|0|Eskalations-Auslöser 5: Reaktiv-Quote überschritten|Die Reaktiv-Quote ist überschritten und ein Reflexions-Schritt steht an.|R
+R-017|0|Eskalations-Auslöser 6: Modus 1/2 Projektstart|Modus 1 oder Modus 2 des Projektstarts läuft|R
+R-018|0|Ausnahme-Klasse: zwei Auslöser, Form Stopp-Block, Ablehnung → weiter auf Entscheidung|**Vorschlag der Ausnahme-Klasse** nur bei einem dieser Auslöser|R
+R-019|0|Liste Routine-Klasse genügt für|**Routine-Klasse** genügt für:|R
+R-020|0|Liste Mechanik-Klasse genügt für|**Mechanik-Klasse** genügt für:|R
+R-021|0|Feld Empfohlene Klasse je Schritt; höchste Klasse gilt, Teilarbeit abgebbar|**Empfohlene Klasse je Schritt.**|R
+R-022|0|Arbeit oberhalb der Empfehlung: Wirtschaftlichkeit, kein Stopp|ist das eine Frage der Wirtschaftlichkeit, nicht der Korrektheit|K
+R-023|0|Begründung: bloßer Hinweis im Pilot wirkungslos|Ein bloßer Hinweis an den Menschen hat sich im Pilotprojekt aber als wirkungslos erwiesen|B
+R-024|0|Abgabe an Unteragenten (Routine/Mechanik), Prüfung vor Commit|**Abgabe an einen Unteragenten.**|K
+R-025|0|Abgabe nur nach bestandenem Probelauf|Die Abgabe gilt nur für Klassen und Aufgabenarten mit bestandenem Probelauf.|K
+R-026|0|Kleine Teilarbeit im geladenen Kontext bleibt|Ein Unteragent lädt seinen Kontext neu|K
+R-027|0|Abgabe nur, wo sie spart (Cache-Lesepreis, Ausgabe)|**Abgegeben wird nur, was tatsächlich spart:**|K
+R-028|0|Warnung zu Beginn des Schritts, einmal, kein Stopp|**Warnung zu Beginn des Schritts.**|K
+R-029|0|Bilanz am Sessionende (Klasse, Schritte oberhalb, Abgaben)|**Bilanz am Sessionende.**|K
+R-030|0|Probelauf-Verfahren, Wiederholung nach Modellwechsel|**Probelauf.** Mechanik- und Routine-Klasse|K
+R-031|0|Begründung Sessiongröße (Cache-Lesen)|Jeder Werkzeugaufruf liest den gesamten bisherigen Kontext der Session erneut|B
+R-032|0|Kontextgröße beim Sessionende feststellen und eintragen|**Prüfung:** Beim Sessionende stellt die KI die Kontextgröße|K
+R-033|0|Grenze überschritten: einzeiliger Hinweis, kein Stopp|**Grenze überschritten** (Wert in `docs/project-context.md` Abschnitt 6)|K
+R-034|0|Größe nicht feststellbar: vermerken|**Größe nicht feststellbar:**|K
+R-035|0|Kontingent-Warnung erst nach Probelauf aktiv|**Kontingent-Warnung.**|K
+R-036|0|Eskalation = echter Stopp, kein Werkzeugaufruf bis Antwort|**hält die KI die Arbeit an**|R
+R-037|0|Form des Modellwechsel-Stopps|STOPP – MODELLWECHSEL ERFORDERLICH|R
+R-038|0|Wiederanlauf: aktive Klasse zuerst benennen|**Beim Wiederanlauf:**|R
+R-039|0|Begründung: kein Ersatz-Vorgehen (ADR-005)|**Warum kein Ersatz-Vorgehen mehr:**|B
+R-040|0|Arbeit oberhalb der Empfehlung ist kein Stopp|**Arbeit oberhalb der Empfehlung ist kein Stopp.**|K
+R-041|0|Klasse nur aus Mitteilungen der Laufzeitumgebung|Die Kenntnis stammt ausschließlich aus **Mitteilungen der Laufzeitumgebung**|R
+R-042|0|Sessionstart: Modellabfrage, Eintrag; Wiederholung vor Stopp und Bilanz|**Pflicht beim Sessionstart:**|R
+R-043|0|Grenze: Tausch ohne Mitteilung unbemerkt|Wird das Modell **ohne solche Mitteilung** getauscht|R
+R-044|0|Widerspruch: letzte Mitteilung gilt, sonst unbestimmbar|gilt die zuletzt eingegangene Mitteilung|R
+R-045|0|Unbestimmbar: Stopp trotzdem; Warnung/Bilanz entfallen, Abgabe bleibt|**Wenn die eigene Modellklasse unbestimmbar ist:**|R
+R-046|0|Restrisiko: nur gelistete Auslöser; Kontingent nicht gemessen|**Was diese Regel nicht leistet:**|B
+R-047|1|Projektkontext in docs/project-context.md, zuerst lesen|Der projektspezifische Kontext liegt in `docs/project-context.md`|R
+R-048|1|CLAUDE.md projektübergreifend unverändert|Die vorliegende `CLAUDE.md` bleibt projektübergreifend unverändert.|R
+R-049|1A|Projektstart in templates/projektstart.md, nicht pro Session laden|Es läuft **einmalig pro Projekt** und wird **nicht pro Session geladen**|R
+R-050|1A|Regulärer Betrieb nach Initialisierungs-Commit|Der reguläre Betrieb (Abschnitt 2 ff. dieses Dokuments) beginnt nach dem Initialisierungs-Commit|R
+R-051|1B|Glossar Klassen K/M/G/V|**Klasse K (Klein):** 1 Modul|R
+R-052|1B|Klasse in ADR-001 fixiert; Reklassifikation per ADR als STABILISIERUNG|Die Klasse wird einmalig in ADR-001 fixiert.|R
+R-053|2|Pflichtlektüre vor jeder Änderung, zweistufig|**Vor jeder Änderung** liest die KI die Pflichtlektüre.|R
+R-054|2|Lektüre 1: project-context vollständig|das gesamte Dokument. Es enthält Stack|R
+R-055|2|Lektüre 2: Logbuch ab letztem SESSIONENDE|nur den **letzten `[SESSIONENDE]`-Eintrag plus alle Einträge danach**|R
+R-056|2|Lektüre 3: Fahrplan Aktueller Stand + laufende Phase|nur den Abschnitt **„Aktueller Stand"** plus die **aktuell laufende Phase mit ihren Schritten**|R
+R-057|2|Lektüre 4: Architektur 1, 2, 9|nur die Abschnitte **„Überblick" (1)**|R
+R-058|2|Lektüre 5: decisions Teil A und C|**Teil A (ADR-Übersicht und Reaktiv-Quote)** und **Teil C (Entscheidungsregeln)**|R
+R-059|2|Teil C zu groß → Auslagerung, nicht überspringen|Wächst Teil C über das Lesbare hinaus|R
+R-060|2|Lektüre 6: blockers Aktive Blocker|nur den Abschnitt **„Aktive Blocker"**|R
+R-061|2|Lektüre 7: requirements Übersicht ab G|**nur ab Klasse G**, und nur den Abschnitt **„Übersicht"**|R
+R-062|2|SESSIONSTART-Eintrag direkt nach Lektüre, vor jeder Aktion|Direkt nach der Mindest-Lektüre, **vor jeder anderen Aktion**|R
+R-063|2|Größen-Budget project-context 15.000 Token / 600 Zeilen, Splitting|15.000 Token bzw. ca. 600 Zeilen|R
+R-064|2|Recherche, Interviews nicht inline|**Explizite Inhalts-Regel:**|R
+R-065|2|Größen-Check beim Sessionende, Überschreitung = Bug|Größen-Check läuft als Teil der Sessionende-Disziplin|R
+R-066|2|Vertiefung nur mit konkreter Aufgabe begründet|Jede Vertiefung muss durch eine konkrete Aufgabe begründet sein|R
+R-067|2|Vertiefung: Modul X|Ein Schritt berührt **Modul X**|R
+R-068|2|Vertiefung: ADR-Y|Ein Schritt referenziert **ADR-Y**|R
+R-069|2|Vertiefung: aktiver Blocker|Ein Schritt **berührt einen aktiven Blocker**|R
+R-070|2|Vertiefung: Architekturentscheidung → Verworfene Alternativen + Heuristiken (Pflicht bei VDD)|Eine **Architekturentscheidung** steht an|R
+R-071|2|Vertiefung: ähnliches früheres Problem|**Ein offenes Problem ähnelt einem früheren**|R
+R-072|2|Vertiefung: NFR-Frage|Eine **NFR-Frage taucht auf**|R
+R-073|2|Vertiefung: Compliance/Lizenz|**Compliance- oder Lizenzfrage**|R
+R-074|2|Vertiefung: Anforderung umsetzen|Ein Schritt **setzt eine Anforderung um**|R
+R-075|2|Vertiefung: Geschäftsentscheidung → Teil D|Eine **Geschäftsentscheidung** steht an|R
+R-076|2|Sprung-Anker je Hauptabschnitt, nicht umbenennen|**Stabile Sprung-Anker.**|R
+R-077|2|Namensregel für Anker|**Namensregel für neu angelegte Abschnitte:**|R
+R-078|2|Tool-Limit: Grep auf Anker, gezielter Read|**Bei Tool-Limit-Treffer:**|R
+R-079|2|Abschnittsweises Splitting|**Abschnittsweises Splitting.**|R
+R-080|2|Abgebrochenen Read nicht still akzeptieren|Stille Akzeptanz eines abgebrochenen Reads|R
+R-081|2|Vision nicht Pflichtlektüre, außer Re-Derivations-Pass|`docs/vision.md` wird **einmalig** zu Projektstart gelesen|R
+R-082|2|README nicht zu Sessionbeginn lesen|`README.md` wird zu Sessionbeginn **nicht gelesen**|R
+R-083|2|CHANGELOG nur bei Releases|`CHANGELOG.md` wird nur bei Releases oder Versions-Fragen gelesen.|R
+R-084|2|Kein Überspringen der Mindest-Lektüre|„Kleine Änderung, brauche ich nicht" ist keine zulässige Begründung.|R
+R-085|3|Dokumenten-Index mit Aktualisierungstriggern (10 Dokumente)|| Datei | Zweck | Aktualisierungstrigger ||R
+R-086|3|Erste Session: Vorlagen anpassen, ADR-001|hält die Anpassung als **ADR-001** in `docs/decisions.md` fest|R
+R-087|4|Freigabe-Kategorien nie eigenständig; Vorschlag mit Alternativen|Die folgenden Kategorien werden **niemals** eigenständig umgesetzt.|R
+R-088|4|Kat. 1 Architekturänderungen|**Architekturänderungen:** neue Schichten|R
+R-089|4|Kat. 2 Neue Module|**Neue Module oder Komponenten:**|R
+R-090|4|Kat. 3 Externe Abhängigkeiten, Major-Updates|**Externe Abhängigkeiten:** neue Bibliotheken|R
+R-091|4|Kat. 4 Datenmodell|**Datenmodelländerungen:**|R
+R-092|4|Kat. 5 API-Vertrag|**API-Vertragsänderungen:**|R
+R-093|4|Kat. 6 Sicherheit und Datenschutz|**Sicherheit und Datenschutz:** Authentifizierungs|R
+R-094|4|Kat. 7 Build/Deploy|**Build- und Deploy-Pipeline:** CI/CD|R
+R-095|4|Kat. 8 Lizenz/Compliance|**Lizenz- und Compliance-relevante Änderungen:**|R
+R-096|4|Form ENTSCHEIDUNG ERFORDERLICH|ENTSCHEIDUNG ERFORDERLICH\nKategorie:|R
+R-097|4|Begründung der Form (Rubber-Stamp)|**Warum diese Form:**|B
+R-098|4|Nach Freigabe: ADR mit Vision-Frage und Konfidenz, dann implementieren|Nach Freigabe: ADR in `docs/decisions.md` anlegen|R
+R-099|5|Autonomiebereich (8 Punkte)|Innerhalb der folgenden Grenzen arbeitet die KI eigenständig|R
+R-100|5|Nicht autonom: Skript-Erweiterung mit neuer Voraussetzung, Sync im selben Commit|**Skript-Erweiterungen, die neue externe Voraussetzungen einführen**|R
+R-101|5|Nicht autonom: Skript-Erweiterung mit Idempotenz-Wirkung|**Skript-Erweiterungen, die das Re-Run-Verhalten|R
+R-102|5|Grenzfälle wie Freigaben|Grenzfälle werden **wie Freigaben behandelt**|R
+R-103|6|Keine Implementierung ohne Fahrplan-Referenz|**Keine Implementierung ohne Fahrplan-Referenz.**|R
+R-104|6|Keine stillen Annahmen|**Keine stillen Annahmen.**|R
+R-105|6|Keine Erfolgsmeldungen ohne Verifikation|**Keine Erfolgsmeldungen ohne Verifikation.**|R
+R-106|6|Platzhalter mit TODO(fahrplan-ref)|**Keine Platzhalter-Implementierungen ohne Kennzeichnung.**|R
+R-107|6|Modulgrenzen respektieren|**Modulgrenzen respektieren.**|R
+R-108|6|Keine heimlichen Scope-Erweiterungen|**Keine heimlichen Scope-Erweiterungen.**|R
+R-109|6|Keine Verschiebung ohne Landeplatz (+ Diagnose-Heuristik)|**Keine Verschiebung ohne Landeplatz.**|R
+R-110|6|Determinismus vor Kreativität|**Determinismus vor Kreativität.**|R
+R-111|6|Secrets niemals im Code oder Log|**Secrets niemals im Code oder Log.**|R
+R-112|6|Schutzbedarf ist Obergrenze|**Schutzbedarf ist Obergrenze.**|R
+R-113|6|Secrets nicht in eigener Ausgabe; kompromittiert → Stopp, Rotation|**Secrets auch nicht in der eigenen Ausgabe.**|R
+R-114|6|Reproduzierbarkeit vor Performance; flaky Tests = Blocker|**Reproduzierbarkeit vor Performance.**|R
+R-115|6|Code-Standards verbindlich; Suppressions nur begründet|**Code-Standards sind verbindlich.**|R
+R-116|6|Schutzmechanismen durch erzwungenen Fehler belegen|**Schutzmechanismen durch erzwungenen Fehler belegen.**|R
+R-117|6|Architektur-Reifegrad respektieren|**Architektur-Reifegrad respektieren.**|R
+R-118|6|Phasentyp-Disziplin|**Phasentyp-Disziplin.**|R
+R-119|6|Reaktiv-ADR-Disziplin (STABILISIERUNG, 14-Tage-Korrektur)|**Reaktiv-ADR-Disziplin.**|R
+R-120|6|Logbuch-Einträge proaktiv|**Logbuch-Einträge sind proaktiv.**|R
+R-121|7|Status-Marker (9 Marker, max. ein IN ARBEIT)|`[IN ARBEIT]` – aktuell in Bearbeitung|R
+R-122|7|VERSCHOBEN nennt Ziel-Schritt-ID|`[VERSCHOBEN]` – bewusst auf einen späteren Schritt verschoben|R
+R-123|7|CI-AUSSTEHEND nennt Nachprüf-Schritt mit Frist|`[CI-AUSSTEHEND]` – Definition of Done bis auf den CI-Lauf|R
+R-124|8|Stopp 1 Informationslücke|**Informationslücke:**|R
+R-125|8|Stopp 2 Widerspruch|**Widerspruch:** Zwei Dokumente|R
+R-126|8|Stopp 3 Freigabebedarf|**Freigabebedarf:**|R
+R-127|8|Stopp 4 Dreifach-Fehlschlag|**Dreifach-Fehlschlag:**|R
+R-128|8|Stopp 5 Fremde Modulgrenze|**Fremde Modulgrenze:**|R
+R-129|8|Stopp 6 Destruktiver Eingriff|**Destruktiver Eingriff:**|R
+R-130|8|Stopp 7 Unklare Testlage|**Unklare Testlage:**|R
+R-131|8|Stopp 8 Architektur-Rateschluss → Spike|**Architektur-Rateschluss:**|R
+R-132|8|Stopp 9 Phasen-Wucherung (Zählung nach Inhalt, Neuplanung)|**Phasen-Wucherung:**|R
+R-133|8|Form des STOPP-Blocks; kein Umgehen|Kein Umgehen durch „ich versuche es mal ohne".|R
+R-134|9|DoD: alle Punkte, Checkliste (19 Punkte)|Ein Arbeitsschritt ist **nur dann** `[ERLEDIGT]`|R
+R-135|9|DoD: Sicherheitsänderung durch getrennte Instanz geprüft|**Prüfung durch eine getrennte Instanz** ist erfolgt|R
+R-136|9|DoD: Onboarding-Pfad validiert bei Quick-Start-Änderung|**Bei Quick-Start-relevanten Änderungen: Onboarding-Pfad wurde gegen frischen Klon|R
+R-137|9|DoD: CI grün inkl. Warnungs-Bestand|**CI-Pipeline** läuft grün|R
+R-138|9|Unvollständige DoD bleibt IN ARBEIT|Unvollständige DoD = Status bleibt `[IN ARBEIT]`.|R
+R-139|9|Einzige Ausnahme CI-AUSSTEHEND (3 Bedingungen)|**Einzige Ausnahme – CI-Lauf nicht möglich:**|R
+R-140|10|Blocker-Protokoll bei dreifachem Scheitern (4 Schritte)|Bei **dreifachem Scheitern** am selben Problem:|R
+R-141|10|Was als derselbe Ansatz zählt|Was als „derselbe Ansatz" zählt|R
+R-142|11|Commit-Format mit Fahrplan-Zeile|<bereich>: <kurze beschreibung im imperativ>|R
+R-143|11|Commit-Regeln (atomar, Imperativ, kein WIP, keine Mix, ADR-Nr.)|Atomare Commits: eine logische Änderung pro Commit.|R
+R-144|11|Branch-Regeln|Feature-Branches: `feat/<kurztitel>`|R
+R-145|12|Sessionende 1: Fahrplan aktualisieren|`docs/fahrplan.md` aktualisieren: aktueller Stand, nächster konkreter Schritt.|R
+R-146|12|Sessionende 2: README synchronisieren|**`README.md` synchronisieren**|R
+R-147|12|Sessionende 3: Inter-Pflicht-Drift-Check|**Inter-Pflicht-Drift-Check**|R
+R-148|12|Sessionende 4: SESSIONENDE-Eintrag mit Pflichtinhalten|**`docs/logbuch.md` `[SESSIONENDE]`-Eintrag** anlegen|R
+R-149|12|Sessionende 5: committen oder begründet uncommitted|Alle Änderungen committen oder explizit als uncommitted markieren|R
+R-150|12|Sessionende 6: offene Gedanken festhalten|Offene Gedanken in Fahrplan oder als Kommentar|R
+R-151|12|Sessionende 7: STOPP-Block im Fahrplan|Bei offenen Stopp-Situationen|R
+R-152|12|Sessionende 8: Ablaufdaten-Register prüfen|**Ablaufdaten-Register prüfen**|R
+R-153|12|Vision-Checkpoint an Phasengrenze (Re-Derivation, ab M requirements)|**An jeder Phasengrenze**|R
+R-154|12|Vision-Checkpoint vor Go-Live|**Vor Go-Live / erstem produktiven Release:**|R
+R-155|12|Begründung: gegen Quelle statt Spiegel; Traceability-Tabelle zulässig|**Warum gegen die Quelle und nicht gegen ein Spiegel-Dokument:**|B
+R-156|12|Begründung: an Phasengrenzen statt pro Session|**Warum an Phasengrenzen und nicht pro Session:**|B
+R-157|12|Kein Abschluss mit IN ARBEIT ohne Statushinweis; 5-Minuten-Ziel|**Kein** Abschluss mit offenem `[IN ARBEIT]`-Eintrag ohne Statushinweis.|R
+R-158|12|Pflichtfrage: Anlass, nicht verschiebbar|### Weiterbauen, umbauen oder neu aufsetzen – Pflichtfrage|R
+R-159|12|Pflichtfrage Ablauf 1–4 (getrennte Instanz, Stellungnahme, Vorlage, ADR)|**Bewertung durch eine getrennte Instanz**|R
+R-160|12|Werkzeug ohne getrennte Session: Mensch stößt an|Kennt das Werkzeug keine getrennte Session|R
+R-161|12|Begründung getrennte Instanz (Pilot)|**Warum eine getrennte Instanz:**|B
+R-162|12|Gate: acht Prüfpunkte, blockierend, eigener Schritt|müssen **alle acht Prüfpunkte** erfüllt sein|R
+R-163|12|Gate 1 Bedrohungsmodell|**Bedrohungsmodell** für das Gesamtsystem|R
+R-164|12|Gate 2 Sicherheitsniveau per ADR|**Sicherheitsniveau** per ADR festgelegt|R
+R-165|12|Gate 3 Grundhärtung Host, Prüfung von außen|**Grundhärtung des Hosts:**|R
+R-166|12|Gate 4 Secrets im Betrieb, Zugriff der KI|**Secrets im Betrieb und Zugriff der KI:**|R
+R-167|12|Gate 5 Backup mit erprobter Wiederherstellung|**Backup mit erprobter Wiederherstellung:**|R
+R-168|12|Gate 6 Unabhängige Prüfung|**Unabhängige Prüfung:** Authentifizierung|R
+R-169|12|Gate 7 Vertretung und Notfall-Handbuch|**Vertretung und Notfall-Handbuch:**|R
+R-170|12|Gate 8 KI im Betrieb (Kontingent, Rückfall, Befehlsliste)|**KI im Betrieb:**|R
+R-171|12|Definition getrennte Instanz; Pflicht nach Gate für Kat. 6|**Getrennte Instanz:** eine eigene Session|R
+R-172|12|Verzicht auf Prüfpunkt nur per ADR Kat. 6|**Verzicht auf einen Prüfpunkt**|R
+R-173|12|Vor Go-Live externer Blick oder ADR|**Zusätzlich vor Go-Live / erstem produktiven Release:**|R
+R-174|12|Bereits öffentliche Projekte holen Gate nach|**Bereits öffentlich erreichbare Projekte**|R
+R-175|12|Begründung Gate vor erstem Deployment (Pilot)|**Warum vor dem ersten öffentlichen Deployment und nicht erst vor Go-Live:**|B
+R-176|13|Kommunikationsstil (5 Punkte)|**Ehrlich statt gefällig.**|R
+R-177|14|Archivierung nach harten Triggern, im Sessionende-Commit|Archivierung folgt **harten Triggern**|R
+R-178|14|Trigger Logbuch > 800 Zeilen|>800 Zeilen|R
+R-179|14|Trigger Fahrplan: Phase vollständig erledigt|Phase ist vollständig erledigt (alle Schritte `[ERLEDIGT]`)|R
+R-180|14|Trigger Blocker: gelöst > 90 Tage|Gelöster Blocker älter als 90 Tage|R
+R-181|14|Trigger decisions G/V ab ADR 30; Teil A/C zentral|Bei Klasse G/V ab ADR-Nummer ≥ 30|R
+R-182|14|Klassen-Dämpfung K doppelt|Bei Klasse K (Klein) gelten die Zeilen- und Anzahl-Trigger **doppelt**|R
+R-183|14|Verfahren (3 Punkte, Kopfzeile)|Erstmalige Anlage einer Archiv-Datei|R
+R-184|14|Logbuch-Verdichtung beim Phasen-Wechsel|### Logbuch-Verdichtung beim Phasen-Wechsel|R
+R-185|15|Sechs Pflichtkategorien je Sprache in CI|Für jede im Projekt verwendete Sprache müssen die folgenden Tool-Kategorien|R
+R-186|15|Kategorie 1 Linter|**Linter** – statische Codeanalyse|R
+R-187|15|Kategorie 2 Formatter|**Formatter** – deterministische Code-Formatierung|R
+R-188|15|Kategorie 3 Type-Checker strict|**Type-Checker** – statische Typprüfung|R
+R-189|15|Kategorie 4 Security-Scanner|**Security-Scanner** – statische Sicherheitsanalyse|R
+R-190|15|Kategorie 5 Dependency-Audit|**Dependency-Audit**|R
+R-191|15|Kategorie 6 Test-Runner mit Coverage|**Test-Runner mit Coverage**|R
+R-192|15|Nicht anwendbare Kategorie explizit vermerken|Sprachen ohne etablierte Tools in einer Kategorie sind explizit|R
+R-193|15|Skripte A: Header mit Zweck|**Header mit Zweck-Aussage**|R
+R-194|15|Skripte B: Voraussetzungen im Header|**Voraussetzungs-Deklaration im Header**|R
+R-195|15|Skripte C: Plattform-Matrix|**Plattform-Matrix-Aussage**|R
+R-196|15|Skripte D: Exit-Code-Disziplin|**Exit-Code-Disziplin**|R
+R-197|15|Skripte E: Idempotenz-Aussage (Schwelle)|**Idempotenz-Aussage** im Header|R
+R-198|15|Skripte F: Reproduzierbarkeits-Aussage|**Reproduzierbarkeits-Aussage** im Header|R
+R-199|15|Skripte G: Shell-Linter im Pre-Commit|**Shell-Linter im Pre-Commit**|R
+R-200|15|Skripte H: Architektur-Eintrag|**Architektur-Eintrag** – Skripte ab dieser Schwelle|R
+R-201|15|Nicht-anwendbar-Kennzeichnung für Skripte|**Nicht-anwendbar-Kennzeichnung:**|R
+R-202|15|Pre-Commit-Hook Pflicht|**Pre-Commit-Hook:** Lint, Format-Check|R
+R-203|15|CI-Gates Pflicht, rote Gates blockieren|**CI-Pipeline-Gates:**|R
+R-204|15|Bypass verboten ohne Freigabe|**Bypass verboten:**|R
+R-205|15|Warnungen sind Fehler, wo möglich|**Warnungen sind Fehler, wo das Werkzeug es erlaubt.**|R
+R-206|15|Warnungs-Bestand mit Obergrenze, nur schrumpfend|**Warnungs-Bestand mit Obergrenze.**|R
+R-207|15|Warnungsquellen ohne Schalter: Protokoll lesen|**Warnungsquellen ohne Schalter**|R
+R-208|15|Jede Abkündigung wird Schritt mit Frist + Register|**Jede Abkündigung wird ein Fahrplan-Schritt mit Frist.**|R
+R-209|15|Versionswahl: KI belegt, Mensch bestätigt|**Die KI belegt, der Mensch bestätigt.**|R
+R-210|15|Versionswahl: ausgereifte Linie (3 Bedingungen)|**Ausgereifte Linie.**|R
+R-211|15|Versionswahl: Nachprüfung über Register|**Nachprüfung.** Jede fixierte Version|R
+R-212|15|Lokale Suppressions nur mit Begründung, engster Scope|Ein lokales Deaktivieren einer Regel|R
+R-213|15|Pauschale Suppressions freigabepflichtig|Pauschale Suppressions auf Datei- oder Modulebene sind freigabepflichtig.|R
+R-214|15|Naming nach Sprachstandard; Inkonsistenz = Bug|Naming Conventions folgen den sprachüblichen Standards|R
+R-215|16|README folgt zwei festen Triggern, nie sporadisch|Sie wird **niemals sporadisch** aktualisiert|R
+R-216|16|Trigger 1: pro nutzerrelevantem Schritt (5 Fälle)|### Trigger 1: Pro nutzerrelevantem Schritt|R
+R-217|16|Trigger 1: Voraussetzungen und .env.example im selben Commit|**Neue oder geänderte Voraussetzung / ENV-Variable / CLI-Tool / OS-Komponente:**|R
+R-218|16|Trigger 2: Sessionende-Synchronisation (Tabelle)|### Trigger 2: Sessionende-Synchronisation|R
+R-219|16|Drift README = Bug|**Drift zwischen README und Pflicht-Dokumenten ist ein Bug**|R
+R-220|16|Inter-Pflicht-Drift-Tabelle (7 Anker)|### Drift-Prüfung zwischen Pflicht-Dokumenten|R
+R-221|16|Drift zwischen Pflicht-Dokumenten = Bug|**Drift zwischen Pflicht-Dokumenten ist ein Bug**|R
+R-222|16|Trigger 3: Phasen-Abschluss-Re-Validation je Klasse|### Trigger 3: Phasen-Abschluss-Re-Validation|R
+R-223|16|Findings → eigener STABILISIERUNG-Schritt|wird ein eigener STABILISIERUNG-Schritt im Fahrplan angelegt|R
+R-224|16|Badge-Maximalwerte je Klasse|**Maximalwerte pro Klasse**|R
+R-225|16|Pflicht-Badges|**Pflicht-Badges in jeder Klasse:**|R
+R-226|16|Badges spiegeln reale Zustände|**Badges spiegeln reale Zustände.**|R
+R-227|16|Badge-Update im selben Commit|**Badge-Update Pflicht im selben Commit**|R
+R-228|16|Was die README nicht ist (4 Punkte)|### Was die README NICHT ist|R
+R-229|17|Definition Onboarding-Pfad (5 Bestandteile)|Der **Onboarding-Pfad** ist die dokumentierte Sequenz|R
+R-230|17|Quick-Start-relevante Artefakte|### Was als „Quick-Start-relevante Änderung" zählt|R
+R-231|17|Validierungs-Form (Mindestform 4 Schritte, erweitert G/V)|### Validierungs-Form|R
+R-232|17|Auslöser-Trigger (Wiederholung aus 9 und 16)|### Auslöser-Trigger (zur Erinnerung)|R
+R-233|17|Verhältnis README, Runbook, Logbuch; Eintragstyp ONBOARDING-VALIDATION|`[ONBOARDING-VALIDATION]` als Eintragstyp|R
+R-234|11|Hauptbranch-Umbenennung freigabepflichtig|Umbenennung ist freigabepflichtig.|R
+R-235|11|Push-Regeln in project-context|Push-Regeln auf Hauptbranch werden in `docs/project-context.md` festgelegt.|R
+R-236|Schluss|Hinweis: generische Vorlage, Projektspezifika in docs/|**Hinweis für den Projektstart:**|R
+R-237|Kopf|Kopfkommentar: gilt für alle Sessions, semi-autonom|Wird zu Sessionbeginn automatisch geladen|R
+R-238|15|Begründung Warnungen mechanisch behandeln|Was die Ampel nicht zeigt, prüft im Alltag niemand|B

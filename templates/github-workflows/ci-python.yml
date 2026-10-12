@@ -1,0 +1,85 @@
+# Voller CI-Gate-Satz für Python (Klasse M/G).
+# Spiegelt die Pflichtkategorien aus CLAUDE.md Abschnitt 15.
+# Lokale Pre-Commit-Hooks (templates/pre-commit/python.yaml) führen dieselben
+# Checks aus — diese Pipeline ist die unabhängige Diagnoseschicht.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"  # TBD: aus project-context.md Abschnitt 3
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+
+  typecheck:
+    name: Type-Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: mypy --strict src/  # TBD: Pfad anpassen
+
+  security:
+    name: Security-Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Bandit
+        run: bandit -r src/ -c pyproject.toml  # TBD: Pfad und Konfig anpassen
+      - name: Dependency audit
+        run: pip-audit
+
+  test:
+    name: Tests & Coverage
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]  # TBD: bei Multi-Version-Support erweitern
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Pytest with coverage
+        # Warnungen sind Fehler: in pyproject.toml [tool.pytest.ini_options]
+        # filterwarnings = ["error", ...benannte Ausnahmen aus project-context.md Abschnitt 7 (Warnungs-Bestand)]
+        # (CLAUDE.md Abschnitt 15, „Warnungen und Abkündigungen"). Nicht per -W auf der Kommandozeile –
+        # das würde die benannten Ausnahmen überstimmen.
+        run: pytest --cov=src --cov-report=xml --cov-report=term --cov-fail-under=80  # TBD: Schwellenwert aus project-context.md; TBD: filterwarnings in pyproject.toml gesetzt
+      - name: Upload coverage
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          retention-days: 14
