@@ -7,9 +7,82 @@
   "type": "module",
   "main": "main.mjs",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder --publish never"
   },
   "devDependencies": {
-    "electron": "44.7.0"
+    "electron": "44.7.0",
+    "electron-builder": "26.16.1"
+  },
+  "build": {
+    "appId": "org.openairside.spike-1-1",
+    "productName": "OpenAirside Spike 1.1",
+    "asar": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "package.json",
+      "main.mjs",
+      "preload.cjs",
+      "simhost.mjs",
+      "renderer/index.html",
+      "renderer/main.js",
+      "renderer/shared.js",
+      "native/*.node"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "identity": null,
+      "x64ArchFiles": "**/native/*.node",
+      "category": "public.app-category.simulation-games"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Game"
+    },
+    "publish": []
   }
 }

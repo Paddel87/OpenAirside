@@ -86,3 +86,20 @@ Vollständige Tabelle: [`results/summary.md`](results/summary.md). Kernwerte (10
 ## Empfehlung und Entscheidung
 
 **Variante A (napi-rs im Electron-Utility-Prozess).** Am 2026-10-13 freigegeben, festgehalten in ADR-009 (`docs/decisions.md`). Variante B ist zurückgestellt; Neubewertung in Fahrplan-Schritt Q.2, sobald WebAssembly-Threads mit stabilem Rust baubar sind.
+
+## Testprogramm herunterladen und starten (Schritt 1.6)
+
+Der Workflow `.github/workflows/spike-build.yml` baut dieses Programm für alle drei Systeme. Herunterladen: GitHub → Actions → „Spike-Build" → neuester Lauf → unten unter „Artifacts" `spike-1-1-win`, `spike-1-1-mac` oder `spike-1-1-linux` (Anmeldung bei GitHub nötig, 14 Tage verfügbar). Das Programm misst 10 Sekunden lang und zeigt das Ergebnis im Fenster; Leistungsaussagen über die Grafik macht es noch nicht (Spielfeld folgt in 1.3).
+
+- **Windows:** ZIP entpacken, `OpenAirside Spike 1.1.exe` starten (oder das Setup ausführen). Erwartet: SmartScreen-Warnung „Der Computer wurde durch Windows geschützt", weil das Programm unsigniert ist → „Weitere Informationen" → „Trotzdem ausführen".
+- **macOS:** ZIP oder DMG öffnen, App in einen Ordner ziehen und starten. Zu prüfen: Was meldet macOS? Erwartet ist eine Warnung wegen fehlender Beglaubigung; Ausweg: Rechtsklick → „Öffnen" oder in „Systemeinstellungen → Datenschutz & Sicherheit" erlauben; meldet macOS „beschädigt", hilft im Terminal `xattr -cr "/Pfad/OpenAirside Spike 1.1.app"`.
+- **Linux (Live-USB):** `tar.gz` entpacken, im Terminal `./openairside-spike-1-1 --no-sandbox` starten (AppImage: `chmod +x *.AppImage` und ebenfalls `--no-sandbox`). Ohne `--no-sandbox` bricht das Programm auf aktuellem Ubuntu ab (siehe Befund unten).
+
+Rückmeldung: Bildschirmfoto des Ergebnisfensters oder den angezeigten Text, plus was das System beim Start gemeldet hat.
+
+### Befunde aus dem ersten CI-Lauf (2026-10-13, Lauf 38383032090)
+
+- Alle drei Pakete gebaut und im CI gestartet (Windows x64, macOS Universal x86_64 + arm64 mit Ad-hoc-Signatur, Linux x64). Bauzeit je Plattform 3–5 Minuten; Paketgröße rund 120 MB je Plattform (macOS Universal größer).
+- macOS: natives Modul per `lipo` als Universal-Datei, von electron-builder über `x64ArchFiles` unverändert übernommen. Keine Signatur durch electron-builder (`identity: null`), das Programm trägt dennoch eine Ad-hoc-Signatur und startet auf arm64.
+- Linux: Mit Chromium-Sandbox Abbruch (Exit-Code 133, „SUID sandbox helper binary was found, but is not configured correctly"), weil `chrome-sandbox` nach dem Entpacken nicht dem Benutzer root mit SUID gehört; ohne Sandbox läuft das Programm. Für Releases zu lösen (Landeplatz Fahrplan 7.2).
+- Bildraten aus dem CI (9 / 64 / 46) sind ohne Aussagekraft: virtuelle Maschinen ohne Grafikkarte.

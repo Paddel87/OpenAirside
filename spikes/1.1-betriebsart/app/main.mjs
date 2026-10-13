@@ -4,7 +4,9 @@
 //   napi  : native module in a utility process, frames to the renderer via MessagePort
 //   wasm1 : single-threaded WebAssembly in a Web Worker, frames via SharedArrayBuffer
 //   wasmN : multi-threaded WebAssembly (N workers on shared memory), frames via SharedArrayBuffer
-// Prints one JSON result line to stdout and quits.
+// Prints one JSON result line to stdout and quits. Options for the packaged
+// build (step 1.6): --out=<file> writes the result as JSON; in a packaged app
+// without --exit the window stays open and shows the result.
 //
 // Hardening as required by project-context.md section 6: contextIsolation on,
 // nodeIntegration off, renderer sandboxed, no remote content. The custom app://
@@ -18,7 +20,7 @@ import {
   protocol,
   utilityProcess,
 } from "electron";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -37,6 +39,8 @@ const config = {
   seconds: Number(arg("seconds", "10")),
   entities: Number(arg("entities", "10000")),
 };
+const outFile = arg("out", "");
+const exitAfterRun = process.argv.includes("--exit") || !app.isPackaged;
 
 const MIME = {
   ".html": "text/html",
@@ -79,8 +83,8 @@ app.whenReady().then(async () => {
   });
 
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 900,
+    height: 700,
     show: true,
     webPreferences: {
       preload: path.join(here, "preload.cjs"),
@@ -91,9 +95,17 @@ app.whenReady().then(async () => {
     },
   });
 
-  ipcMain.once("report", (_event, result) => {
-    process.stdout.write(`${JSON.stringify({ ...config, ...result })}\n`);
-    app.exit(0);
+  ipcMain.once("report", async (_event, result) => {
+    const line = JSON.stringify({
+      ...config,
+      platform: process.platform,
+      arch: process.arch,
+      electron: process.versions.electron,
+      ...result,
+    });
+    process.stdout.write(`${line}\n`);
+    if (outFile) await writeFile(outFile, `${line}\n`);
+    if (exitAfterRun) app.exit(0);
   });
   ipcMain.on("log", (_event, msg) =>
     process.stderr.write(`[renderer] ${msg}\n`),
@@ -120,13 +132,15 @@ app.whenReady().then(async () => {
     win.webContents.send("config", config);
   });
 
-  setTimeout(
-    () => {
-      process.stderr.write("timeout\n");
-      app.exit(2);
-    },
-    (config.seconds + 30) * 1000,
-  );
+  if (exitAfterRun) {
+    setTimeout(
+      () => {
+        process.stderr.write("timeout\n");
+        app.exit(2);
+      },
+      (config.seconds + 30) * 1000,
+    );
+  }
 
   await win.loadURL("app://spike/index.html");
 });

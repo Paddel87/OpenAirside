@@ -24,6 +24,34 @@ Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt. Nächster Sch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 10:40 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 25 Minuten Arbeitszeit seit `[SESSIONSTART]` 02:40 (mit Unterbrechung)
+- **Bearbeitet:** 1.6 – Verpackung für drei Plattformen (vor 1.3 auf Wunsch des Projektinhabers)
+- **Erreicht:** electron-builder 26.16.1 eingerichtet; Workflow `spike-build.yml` baut und startet Pakete für Windows, macOS Universal und Linux (Lauf 38383032090 grün); Testanleitung im README von Spike 1.1; Befund Linux-Sandbox mit Landeplatz 7.2.
+- **Offen geblieben:** 1.6 bleibt `[IN ARBEIT]` bis zur Rückmeldung des Projektinhabers vom Start auf Windows-PC, Mac M3 Pro und Linux-Live-USB (insbesondere Verhalten von macOS ohne Signatur). CI-Lauf des letzten Dokumentations-Commits nicht abgewartet.
+- **Nächster Schritt:** Rückmeldung zu 1.6 auswerten und 1.6 abschließen; danach 1.3 in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session`); 1 Schritt oberhalb der Empfehlung (1.6 empfiehlt Routine); keine Abgabe (Probelauf offen).
+- **Kontextgröße:** 520.846 Token laut `get_session` – **über der Grenze von 400.000**. Hinweis: nächste Arbeit in einer neuen Session beginnen.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf. **Drift-Prüfung:** README unverändert gültig (Phase 1, nächste Schritte); Fahrplan 1.6 und 7.2 nachgezogen; keine ADR- oder Reifegrad-Änderung (Verpackung bleibt `[VORLÄUFIG]` bis zum Abschluss von 1.6).
+
+### 2026-10-13 10:35 – [BEOBACHTUNG]
+
+- **Spike-Build, erster Lauf grün** (38383032090): Pakete für Windows, macOS Universal und Linux gebaut und im CI gestartet.
+- **Linux-Sandbox:** Entpacktes Programm bricht mit Chromium-Sandbox ab (Exit 133, SUID-Hilfsprogramm nicht root-eigen); ohne Sandbox lauffähig. Landeplatz 7.2.
+- **macOS:** Ad-hoc-Signatur vorhanden, obwohl electron-builder nicht signiert; Verhalten nach dem Herunterladen (Gatekeeper) nur auf echtem Mac prüfbar.
+- **Xvfb:** Mit der Voreinstellung (8 Bit Farbtiefe) fiel die Bildrate lokal auf 0,3; mit `-screen 0 1280x800x24` normal. Im Workflow gesetzt.
+- **npm audit** nach Einführung von electron-builder: 8 × moderate (`sprintf-js`), 0 × high – innerhalb der Schwelle aus `project-context.md` Abschnitt 7.
+
+### 2026-10-13 02:40 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 02:35 einer anderen Session (Branch-Konvention, PR Paddel87/OpenAirside#4, gemergt als `04c7c5b`); Branch neu auf `main`.
+- **Pflichtlektüre:** Änderungen seit dem letzten Lesen gezielt gelesen (`git diff 1353542 04c7c5b`): `CLAUDE.md` Abschnitt 11 (Branch-Schema, ein Branch je PR, vom Werkzeug vergebene Namen), `project-context.md` Abschnitt 7, README „Mitwirken", Logbuch 02:28/02:35. Übrige Pflicht-Dokumente unverändert seit dem Lesen in dieser Sitzung. Folge: Branch `claude/gracious-galileo-2reksz` ist vom Werkzeug vorgegeben, Typ und Schritt-ID stehen im PR-Titel.
+- **Geplant:** Schritt 1.6 (Verpackung für drei Plattformen), damit die GPU-Messungen von 1.3 und 1.5 als fertige Programme auf den Rechnern des Projektinhabers laufen können. Reihenfolge vom Projektinhaber gewählt (Rückfrage zu 1.3: Container ohne Grafikkarte, Bildrate hier nicht aussagekräftig).
+- **Freigabe CI-Änderung:** Die gewählte Option nennt ausdrücklich, dass die CI fertige Testprogramme baut (Kategorie 7, Abschnitt 4).
+- **Modell:** `claude-opus-5-5` (Entscheidungs-Klasse, `get_session` 02:2x). 1.6 empfiehlt Routine → läuft oberhalb der Empfehlung; keine Abgabe möglich (Probelauf offen).
+- **Kontextgröße zu Beginn:** rund 460.000 Token, über der Grenze von 400.000; Fortsetzung auf Wunsch des Projektinhabers.
+
 ### 2026-10-13 02:35 – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 10 Minuten
