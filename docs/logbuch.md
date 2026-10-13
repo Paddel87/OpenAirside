@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 20:53 (UTC) – [BEOBACHTUNG]
+
+- **Websuche „weitere hilfreiche Quellen"** (Frage des Projektinhabers): Status des Originals bestätigt – Apog Labs: „development of Airport CEO has concluded", 1.1-3 vom 2026-01-24 nur Wartung (Unity-Update wegen CVE-2025-59489; forum.apoglabs.com, Thema 22277). Name „OpenAirside" im Web nicht belegt (keine Namenskollision gefunden). Kein quelloffenes Flughafen-Tycoon-Spiel gefunden; kommerziell: SimAirport, JetSet. Datenquellen: OurAirports (Public Domain), ICAO-Flugplatz-Referenzcode A–F nach Spannweite (Skybrary). Wegweiser: Game AI Pro (Kapitel kostenlos auf gameaipro.com; Kapitel „Flow Field Tiles" dort nicht verifiziert). napi-rs mit Electron: Beispiel von Dave Ceddia, kein Beispiel mit `utilityProcess` gefunden. Keine Änderung an Plan oder Entwurf.
+
 ### 2026-10-13 20:48 (UTC) – [BEOBACHTUNG]
 
 - **Vorbilder 2.9 belegt** (Websuche auf Wunsch des Projektinhabers): Factorio, OpenTTD, OpenRCT2, Minecraft, Cities: Skylines, RimWorld, Electron-Checkliste; Tabelle mit Güte der Quelle im Entwurf. Zwei Behauptungen aus dem Gedächtnis nicht belegbar und gestrichen (Early-Access-Spielstände, Bauen in der Pause bei Cities: Skylines/OpenRCT2).
