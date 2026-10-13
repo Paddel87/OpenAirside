@@ -324,6 +324,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 - **Repository:** github.com/Paddel87/OpenAirside (öffentlich)
 - **Hauptbranch:** `main`
 - **Push-Regel:** Initialisierung direkt auf `main`; ab Schritt 2.1 Arbeit auf Feature-Branches, Merge nach grüner CI
+- **Sessionende-Commits (Festlegung des Projektinhabers vom 2026-10-13):** Commits zum Sessionende, die nach dem Merge des Schritt-PR entstehen, bekommen keinen eigenen PR. Sie bleiben auf dem Arbeits-Branch und gehen mit dem PR des nächsten Schritts nach `main`. Die nächste Session übernimmt diese Commits auf den aktuellen `main`, statt den Branch ohne sie neu aufzusetzen.
 - **Schutzregeln:** keine Force-Pushes auf `main`; Branches nach Merge löschen
 - **Methodik-Vorlagen:** `templates/` stammt aus dem Template-Repo Dev-Templates und bleibt unverändert im Repo
 
