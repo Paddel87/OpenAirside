@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-13 (Sessionstart 19:00 UTC)
+- **Stand vom:** 2026-10-13 (Sessionstart 19:44 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (2.8 erledigt am 2026-10-13, ADR-020; 2.1 mit Nachlauf erledigt)
-- **Nächster Schritt:** 2.9 (Schnittstellenverträge S-2 bis S-7) in einer folgenden Session
-- **Offene STOPP-Situationen:** keine (Reaktiv-Quote 6 / 10 nach ADR-020 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 zur Kenntnis genommen, siehe „Iterations-Reflexion")
+- **Aktiver Schritt:** keiner (2.9 erledigt am 2026-10-13, ADR-021)
+- **Nächster Schritt:** 2.2 (Simulationskern: Takt, Zeitsteuerung, Befehle, Ereignisse)
+- **Offene STOPP-Situationen:** keine (Reaktiv-Quote 5 / 10 nach ADR-021 weiter über dem Schwellenwert, aber sinkend; Reflexion zu ADR-020 vom Projektinhaber zur Kenntnis genommen, Ergänzung zu ADR-021 siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -149,7 +149,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.9: Schnittstellenverträge S-2 bis S-7
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT 2026-10-13 (ADR-021)
 - **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt in Phase 2, ADR-016)
 - **Schritt-Art (nur ERKUNDUNG):** sonstiges (Entwurf)
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session
@@ -171,17 +171,18 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Brücke, Plattform, Oberfläche, Inhalte & Mods, Takt & Weltzustand
 - **Reifegrad-Wirkung:** S-2, S-3, S-6 `[VORLÄUFIG]` → `[BELASTBAR]`; S-4, S-5 `[OFFEN]` → `[BELASTBAR]`; S-7 neu `[BELASTBAR]`
 - **Artefakte:** ADR(s), Architektur-Update Abschnitt 4
+- **Ergebnis:** ADR-021 (freigegeben 2026-10-13, Option A): Verträge mit gemeinsamen Grundlagen (ein `MessagePort` mit Handshake, Sitzung in jeder Nachricht, Kern-Zustände, atomares Laden, Typen aus Rust per ts-rs, Weltkoordinaten nach ADR-020), S-2 (Befehle mit Kennung und genau einer Antwort, auch in der Pause, vorläufiges Zeichnen), S-3 (Ereignisse mit dem Bild, Flusssteuerung, Rückstandsmeldung), S-7 (Tabellen mit Filter, Sortierung und Fenster im Kern; Detailabfrage), S-4 (JSON-Pakete mit Manifest, ganzes Paket aus bei Fehlern, Grenzen und Pfadprüfung), S-5 (Binärcontainer, Prüfreihenfolge, Fehlerkatalog; Zusage für alte Spielstände ab 1.0; fehlendes Paket: verweigern, Entfernen in 6.1), S-6 (benannte Preload-Funktionen, Absenderprüfung per `senderFrame`). Text in `architecture.md` Abschnitt 4, Herleitung mit belegten Vorbildern in `docs/research/2.9-schnittstellenvertraege.md`. Getrennte Prüfung (Unteragent Sonnet 5.5): 15 Befunde, 13 eingearbeitet. S-2 bis S-7 `[BELASTBAR]`.
 
 #### 2.2: Simulationskern – Takt, Zeitsteuerung, Befehle, Ereignisse, Determinismus
 
 - **Status:** OFFEN
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.1, 2.8, 2.9
-- **Freigabepflichtig:** ja, nur für den neuen CI-Job mit Leistungsschwelle (Kategorie 7)
+- **Freigabepflichtig:** ja, für den neuen CI-Job mit Leistungsschwelle und die Prüfung der erzeugten Typen (Kategorie 7)
 - **Empfohlene Klasse:** Entscheidung – Freigabe des Benchmark-Gates; die Umsetzung selbst ist Routine und abgebbar.
 - **Eingangskriterien:** S-2, S-3 `[BELASTBAR]` (2.9); Zeitmodell (2.8)
 - **Anforderungen (ab Klasse M):** FR-003
-- **Zu tun:** Takt mit festen Simulationsschritten auf eigenen Threads (rayon), Tick = 1/3 Spielsekunde mit 60/120/180 Ticks/s (ADR-020), Zeitsteuerung Pause/1×–3×/Nachtsprung/Kalender, Befehlsverarbeitung mit Kennung und Bestätigung, Ereignisstrom; Prüfmodus mit festem Übernahme-Tick; Kern-Benchmark „Tick mit 10.000 Personen" headless in der CI mit Schwelle und Trend.
+- **Zu tun:** Verträge S-2 und S-3 nach ADR-021 im Kern: Befehle mit Kennung, Prüfung und genau einer Antwort, Verarbeitung auch in der Pause, Ereignisse mit `seq` und Rückstandsmeldung, Sitzungen und Kern-Zustände; ts-rs hinter Feature `ts` mit CI-Prüfung der erzeugten Typen (Kategorie 7, zusammen mit dem Benchmark-Job zur Freigabe). Takt mit festen Simulationsschritten auf eigenen Threads (rayon), Tick = 1/3 Spielsekunde mit 60/120/180 Ticks/s (ADR-020), Zeitsteuerung Pause/1×–3×/Nachtsprung/Kalender, Befehlsverarbeitung mit Kennung und Bestätigung, Ereignisstrom; Prüfmodus mit festem Übernahme-Tick; Kern-Benchmark „Tick mit 10.000 Personen" headless in der CI mit Schwelle und Trend.
 - **Akzeptanzkriterien:** `core/tests/time.rs` grün; Simulation bitgleich über verschiedene Threadzahlen im Prüfmodus; Benchmark-Job läuft und schlägt bei Überschreitung der Schwelle fehl (durch erzwungenen Fehler belegt, `CLAUDE.md` Abschnitt 6); Coverage Kern ≥ 85 %.
 - **Betroffene Module:** Takt & Weltzustand, Benchmark & Leistung
 - **Reifegrad-Wirkung:** Modul Takt & Weltzustand → `[BELASTBAR]` durch Umsetzung
@@ -207,11 +208,11 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Status:** OFFEN
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.9
-- **Freigabepflichtig:** nein (Härtung nach `project-context.md` Abschnitt 6 festgelegt; Verträge aus 2.9)
+- **Freigabepflichtig:** ja, nur für die Abhängigkeit zur Umwandlung JS ↔ Rust (Kategorie 3, ADR-021); Härtung nach `project-context.md` Abschnitt 6, Verträge aus ADR-021
 - **Empfohlene Klasse:** Routine – Umsetzung festgelegter Verträge und Härtungsregeln.
 - **Eingangskriterien:** S-1, S-2, S-3, S-6, S-7 `[BELASTBAR]`
 - **Anforderungen (ab Klasse M):** FR-009
-- **Zu tun:** Brücken-Crate mit napi-rs (Regel-006); Dreifachpuffer und kompaktes Bildformat mit Filter auf Etage und Ausschnitt; MessagePort-Handshake; Electron-Härtung (`contextIsolation`, Sandbox, CSP, schmale Preload-API; Electron-Standardmenü ersetzen oder entfernen, „Reload" und Entwicklerwerkzeuge nur im Entwicklungs-Build – Befund 2.1-N2); Spielfeld-Grundgerüst mit PixiJS und Personen im `ParticleContainer`; Konsole/Debug-Panel; Leistungsanzeige.
+- **Zu tun:** Verträge nach ADR-021: Port-Handshake mit Sitzungen, Ereignisse mit dem Bild und Flusssteuerung (S-3), Abfragedienst mit Test-Tabelle (S-7), Preload-Grundgerüst S-6 mit Absenderprüfung per `senderFrame`; URL-Prüfung in `app/src/main/security.ts` per Parser statt `startsWith` (Electron-Checkliste Punkt 13). Brücken-Crate mit napi-rs (Regel-006); Dreifachpuffer und kompaktes Bildformat mit Filter auf Etage und Ausschnitt; MessagePort-Handshake; Electron-Härtung (`contextIsolation`, Sandbox, CSP, schmale Preload-API; Electron-Standardmenü ersetzen oder entfernen, „Reload" und Entwicklerwerkzeuge nur im Entwicklungs-Build – Befund 2.1-N2); Spielfeld-Grundgerüst mit PixiJS und Personen im `ParticleContainer`; Konsole/Debug-Panel; Leistungsanzeige.
 - **Akzeptanzkriterien:** Härtung durch Tests belegt (`nodeIntegration` aus, Sandbox an, keine entfernten Inhalte); `app/console.test.ts` grün; das Szenario aus Spike 1.5 läuft auf Produktionscode mit gleichwertigen Kernwerten (Abschlusskriterium der Phase), gemessen auf Referenz-PC und Mac des Projektinhabers.
 - **Betroffene Module:** Brücke, Plattform, Spielfeld
 - **Reifegrad-Wirkung:** Brücke und Plattform → `[BELASTBAR]`
@@ -222,11 +223,11 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Status:** OFFEN
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.9
-- **Freigabepflichtig:** nein, außer bei neuer Abhängigkeit für die Schema-Validierung (Kategorie 3)
+- **Freigabepflichtig:** ja, für den JSON-Lader und die Schema-Erzeugung als neue Abhängigkeiten (Kategorie 3, ADR-021)
 - **Empfohlene Klasse:** Routine – Umsetzung des Vertrags S-4.
 - **Eingangskriterien:** S-4 `[BELASTBAR]`
 - **Anforderungen (ab Klasse M):** FR-044
-- **Zu tun:** Lader für Datenpakete im Kern mit Schema-Validierung und verständlicher Fehlermeldung; Basis-Datenpaket des Spiels (Regel-003).
+- **Zu tun:** Lader für Datenpakete im Kern nach S-4 (ADR-021): Manifest, zweistufige Prüfung, Grenzen, Pfadprüfung, ganzes Paket aus bei Fehlern, verständliche Fehlermeldung; JSON-Schema-Dateien für Modder; S-6 `packs.list`/`packs.setActive`; Basis-Datenpaket des Spiels (Regel-003).
 - **Akzeptanzkriterien:** `core/tests/datapacks.rs` grün, inklusive fehlerhafter Pakete ohne Absturz; Coverage Kern ≥ 85 %.
 - **Betroffene Module:** Inhalte & Mods, Takt & Weltzustand
 - **Reifegrad-Wirkung:** Modul Inhalte & Mods (Lader) → `[BELASTBAR]`; Code-Mods bleiben `[OFFEN]` (6.1)
@@ -237,11 +238,11 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Status:** OFFEN
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.7, 2.9
-- **Freigabepflichtig:** nein
-- **Empfohlene Klasse:** Routine – Umsetzung des Vertrags S-5.
+- **Freigabepflichtig:** ja, für Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3, ADR-021)
+- **Empfohlene Klasse:** Entscheidung – Freigabe neuer Abhängigkeiten; die Umsetzung des Vertrags S-5 ist Routine und abgebbar.
 - **Eingangskriterien:** S-5, S-6 `[BELASTBAR]`
 - **Anforderungen (ab Klasse M):** FR-004
-- **Zu tun:** Speichern und Laden über S-6, Schnellspeichern, Autosave mit Rotation, Vorschaubild; Laden validiert und meldet Fehler verständlich.
+- **Zu tun:** Spielstand-Container nach S-5 (ADR-021) mit Grenzen, Prüfreihenfolge und Fehlerkatalog; Höchstzahlen für Objekte, Personen und Fahrzeuge als Konstanten; Speichern und Laden über S-6 (`saves.*`), Schnellspeichern, Autosave mit Rotation (1–20), Vorschaubild; fehlendes Paket: Laden verweigern mit Liste; Laden validiert und meldet Fehler verständlich.
 - **Akzeptanzkriterien:** `core/tests/savegame_roundtrip.rs` grün: identische Prüfsumme nach Laden, auch während einer laufenden Neuberechnung der Wegweiser; manipulierter Spielstand führt zu einer Meldung statt zum Absturz.
 - **Betroffene Module:** Takt & Weltzustand, Plattform
 - **Reifegrad-Wirkung:** S-5 durch Umsetzung bestätigt
@@ -322,7 +323,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11) | FR-044 |
+| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11); Grafiken und Töne in Mods; Spielstände mit fehlenden Paketen laden unter Entfernen der betroffenen Objekte (ADR-021) | FR-044 |
 | 6.2 | Audio, Durchsagen, Musik, ggf. Intro-Video | FR-047, FR-049 |
 | 6.3 | Abgleich der Funktionsgleichheit gegen das gesamte Inventar | – |
 
@@ -335,7 +336,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
 | 7.1 | Gate vor dem ersten öffentlichen Release (CLAUDE.md Abschnitt 12, `templates/gate-deployment.md`): Sicherheits-Review, Vertretung, Notfall-Handbuch, Signatur-Entscheidung; Lizenzhinweise aller ausgelieferten Abhängigkeiten im Paket (ADR-019) | – |
-| 7.2 | Referenzszenario-Nachweis auf allen Plattformen inklusive Linux-Leistungsmessung auf echter Hardware mit gängigen Treibern (ADR-011, früher gern durch Mitwirkende), Langzeitstabilität, Release-Builds v1.0.0, auch für Windows und Linux auf arm64 (`project-context.md` Abschnitt 6; 2.1 baut dort nur x64); Linux-Pakete mit funktionierender Chromium-Sandbox (z. B. deb mit SUID-`chrome-sandbox` oder AppArmor-Profil, Befund aus 1.6) | FR-040, FR-045 |
+| 7.2 | Referenzszenario-Nachweis auf allen Plattformen inklusive Linux-Leistungsmessung auf echter Hardware mit gängigen Treibern (ADR-011, früher gern durch Mitwirkende), Langzeitstabilität, Release-Builds v1.0.0, auch für Windows und Linux auf arm64 (`project-context.md` Abschnitt 6; 2.1 baut dort nur x64); Linux-Pakete mit funktionierender Chromium-Sandbox (z. B. deb mit SUID-`chrome-sandbox` oder AppArmor-Profil, Befund aus 1.6); ab v1.0.0 Zusage für ältere Spielstände, Spielstände aus 1.0 als Prüfdaten aufbewahren (ADR-021) | FR-040, FR-045 |
 | 7.3 | Erfolgskriterien der Vision ohne eigene Messgröße: Spieltest des Projektinhabers über mehrere Stunden („Gleichwertiges Spielerlebnis") und Bilanz des Machbarkeitstests der KI-gestützten Entwicklung (ADR-016) | – |
 
 ### Querschnitt: wiederkehrende Schritte
@@ -428,6 +429,11 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Maßnahme (5):** Eine Größenfestlegung (Raster, Karte, Puffer, Grenzwert) nennt ihre Einheit und den Ausschnitt des Systems, an dem sie bemessen wurde; fehlt eines davon, wird sie als vorläufig mit Landeplatz geführt, nicht per ADR fixiert.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 5 / 10 ab ADR-021, 4 / 10 ab ADR-022, 3 / 10 ab ADR-025, 2 / 10 (Schwellenwert eingehalten) ab ADR-027. 2.9 entscheidet die geplanten Verträge, ohne zuvor fixierte ADRs zu ändern.
 - **Kenntnisnahme:** Projektinhaber am 2026-10-13: „Reflexion zur Kenntnis genommen"; kein Umbau, Maßnahme (5) gilt.
+
+### Ergänzung Reaktiv-Quote (2026-10-13, Anlass ADR-021)
+
+- **Befund:** ADR-021 ist `[ERKENNTNIS]` (geplanter Entwurfsschritt 2.9, ändert keinen ADR binnen 14 Tagen). Quote 5 / 10 über ADR-012 bis ADR-021 (ADR-012, ADR-015, ADR-017, ADR-019, ADR-020), 50 % – weiter über dem Schwellenwert, sinkend wie im Ausblick zu ADR-020 vorhergesagt.
+- **Architektur-Refactoring nötig?** Nein; keine neue Ursache. Maßnahme (5) wurde angewendet: alle Grenzen in ADR-021 nennen Einheit und Bezug.
 
 ---
 

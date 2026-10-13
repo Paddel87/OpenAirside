@@ -17,12 +17,64 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); nächster Schritt 2.9 in neuer Session. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); nächster Schritt 2.2. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 21:03 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 80 Minuten seit `[SESSIONSTART]` 19:44 UTC.
+- **Bearbeitet:** 2.9 – Schnittstellenverträge S-2 bis S-7.
+- **Erreicht:** 2.9 `[ERLEDIGT]` mit ADR-021; Verträge in `architecture.md` Abschnitt 4, S-2 bis S-7 `[BELASTBAR]`; getrennte Prüfung erfolgt (13 von 15 Befunden eingearbeitet); Vorbilder per Websuche belegt; Landeplätze in 2.2, 2.4, 2.5, 2.7, 6.1, 7.2.
+- **Offen geblieben:** Kein PR geöffnet (nicht angefragt); Branch `claude/gracious-galileo-2reksz` liegt mit 2.9 vor `main`, Merge nur per PR (Ruleset `main-schutz`). Nur Dokumentation geändert, daher keine Code-Gates außer markdownlint (lokal grün).
+- **Nächster Schritt:** 2.2 – Simulationskern (Takt, Zeitsteuerung, Befehle und Ereignisse nach ADR-021); zu Beginn Freigabe Kategorie 7 (Benchmark-Job, Prüfung der ts-rs-Typen). Vertiefung: `architecture.md` Abschnitt 4 (Grundlagen, S-2, S-3), ADR-020 (Zeitmodell), ADR-010 (Prüfmodus).
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 21:03 UTC); 2.9 empfiehlt Entscheidung, 0 Schritte oberhalb der Empfehlung; keine Teilarbeit abgegeben (Prüfung durch Unteragent ist keine Abgabe).
+- **Kontextgröße:** 314.544 Token laut `get_session`, unter der Grenze von 400.000.
+- **Kontingent:** 5-Stunden-Fenster `allowed`.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf; Runner-Umstellung auf Ubuntu 26 ab 2026-10-19 weiter in Q.1 zu beobachten.
+- **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte, Blocker 0); ADR-021 verweist auf vorhandene Schritte (2.2, 2.4, 2.5, 2.7, 3.1, 6.1, 7.2); Reifegrade passend zu ADR-021; Reaktiv-Quote 5 / 10 stimmt mit den Tags von ADR-012 bis ADR-021; Modul-Liste unverändert (S-7 ist Schnittstelle, kein Modul); keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Phase 2 weiter bei 10 Schritten; Größen: `project-context.md` 361 Zeilen, Logbuch unter 800.
+
+### 2026-10-13 21:03 (UTC) – [REIFEGRAD-WECHSEL]
+
+- S-2 Befehlskanal, S-3 Ereignisstrom, S-6 Plattform-API `[VORLÄUFIG]` → `[BELASTBAR]`; S-4 Datenpaket-Schema, S-5 Spielstand-Format `[OFFEN]` → `[BELASTBAR]`; S-7 Abfrage neu `[BELASTBAR]` (ADR-021, Regel-007; Bestätigung durch Umsetzung in 2.2, 2.4, 2.5, 2.7).
+
+### 2026-10-13 21:03 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-021** `[ERKENNTNIS]` (Kategorie 5, 1, 6): Schnittstellenverträge S-2 bis S-7. Freigabe des Projektinhabers per Auswahl: „A freigeben", Pause „Ja", Mod-Fehler „Ganzes Paket aus", alte Spielstände „Ab Version 1.0", fehlendes Paket „Erst verweigern, später Factorio-Weg". Erster Auswahldialog war abgelehnt worden; auf Wunsch des Projektinhabers folgten Anzeige des Entwurfs, belegte Vorbilder und Websuche, dann erneute Frage.
+- **Übernahme:** Vertragstext nach `architecture.md` Abschnitt 4 (gemeinsame Grundlagen vor S-1), Modul-Karte um „Abfrage" ergänzt, Reifegrade Abschnitt 9; zwei Unstimmigkeiten des Entwurfs dabei behoben (Rückstau-Regel S-3, fehlende `panel`-Kennung S-7). Landeplätze in 2.2, 2.4, 2.5, 2.7, 6.1, 7.2. Reaktiv-Quote 5 / 10.
+
+### 2026-10-13 20:53 (UTC) – [BEOBACHTUNG]
+
+- **Websuche „weitere hilfreiche Quellen"** (Frage des Projektinhabers): Status des Originals bestätigt – Apog Labs: „development of Airport CEO has concluded", 1.1-3 vom 2026-01-24 nur Wartung (Unity-Update wegen CVE-2025-59489; forum.apoglabs.com, Thema 22277). Name „OpenAirside" im Web nicht belegt (keine Namenskollision gefunden). Kein quelloffenes Flughafen-Tycoon-Spiel gefunden; kommerziell: SimAirport, JetSet. Datenquellen: OurAirports (Public Domain), ICAO-Flugplatz-Referenzcode A–F nach Spannweite (Skybrary). Wegweiser: Game AI Pro (Kapitel kostenlos auf gameaipro.com; Kapitel „Flow Field Tiles" dort nicht verifiziert). napi-rs mit Electron: Beispiel von Dave Ceddia, kein Beispiel mit `utilityProcess` gefunden. Keine Änderung an Plan oder Entwurf.
+
+### 2026-10-13 20:48 (UTC) – [BEOBACHTUNG]
+
+- **Vorbilder 2.9 belegt** (Websuche auf Wunsch des Projektinhabers): Factorio, OpenTTD, OpenRCT2, Minecraft, Cities: Skylines, RimWorld, Electron-Checkliste; Tabelle mit Güte der Quelle im Entwurf. Zwei Behauptungen aus dem Gedächtnis nicht belegbar und gestrichen (Early-Access-Spielstände, Bauen in der Pause bei Cities: Skylines/OpenRCT2).
+- **Korrektur:** Electron empfiehlt URL-Prüfung per Parser statt Zeichenkettenvergleich; S-6 im Entwurf ergänzt. `app/src/main/security.ts` (`isAllowedNavigation`) parst zwar, vergleicht dann aber per `startsWith` auf `href` – in 2.7 bei der Absenderprüfung mit ansehen (Fahrplan-Schritt 2.7, Härtungstests).
+- **Frage 4** um Option (c) ergänzt: in Phase 2 verweigern, Laden mit Entfernen nach Factorio-Vorbild in 6.1.
+
+### 2026-10-13 19:50 (UTC) – [BEOBACHTUNG]
+
+- **Getrennte Prüfung 2.9 erfolgt** (Unteragent, Sonnet 5.5, nur Entwurf, Bedrohungsmodell, Ist-Code): 15 Befunde (3 hoch, 8 mittel, 3 niedrig, 1 optional). Eingearbeitet: 1–12 und 14 (u. a. Grenzen für Spielstände und Pakete, Pfadprüfung, Absenderprüfung per `senderFrame`, Sitzungen in jeder Nachricht, atomares Laden, Flusssteuerung S-3, Ablehnungs- und Fehlercodes). Nicht übernommen: 13 (Prüfer rechnete mit 9 statt 180 Ticks/s bei 3×) und 15 (Signatur, über dem Schutzbedarf). Befund im Entwurf vermerkt.
+
+### 2026-10-13 19:48 (UTC) – [BEOBACHTUNG]
+
+- **Entwurf 2.9:** `docs/research/2.9-schnittstellenvertraege.md` angelegt (S-2, S-3, S-7, S-4, S-5, S-6 mit gemeinsamen Grundlagen: ein `MessagePort` mit Handshake, Typen aus Rust per ts-rs, Weltkoordinaten nach ADR-020). Nach Freigabe wandern die Verträge nach `architecture.md` Abschnitt 4.
+- **Getrennte Prüfung:** Der Entwurf berührt Kategorie 6 (nicht vertrauenswürdige Spielstände und Pakete, IPC). Prüfung durch einen Unteragenten mit anderem Modell (Sonnet 5.5), der nur Entwurf, Bedrohungsmodell und Ist-Code erhält, nicht den Gesprächsverlauf – keine Abgabe von Arbeit, daher kein Probelauf nötig.
+- **Mini-Reibung:** Tick-Reichweite von `u32` im ersten Entwurf falsch überschlagen („45 Spieljahre"); nachgerechnet: 2^32 Ticks zu 1/3 s ≈ 16.500 Spieltage.
+
+### 2026-10-13 19:44 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** 2.8 erledigt (ADR-020); PR Paddel87/OpenAirside#16 hat die Sessionende-Commits der Vorsession nach `main` gebracht (`b045477`). Branch `claude/gracious-galileo-2reksz` enthielt keine weiteren Commits und wurde auf `origin/main` neu aufgesetzt.
+- **Geplant für diese Session:** 2.9 – Schnittstellenverträge S-2 bis S-7 (Entwurf, Vorlage zur Freigabe Kategorie 5 und 1, ADR).
+- **Vorabprüfung:** Eingangskriterium „Weltmaßstab und Zeitmodell aus 2.8 entschieden" erfüllt (ADR-020). Reifegrade vor 2.9: S-1 `[BELASTBAR]`, S-2/S-3/S-6 `[VORLÄUFIG]`, S-4/S-5 `[OFFEN]`, S-7 nicht vorhanden – als Entwurfsschritt (Phasentyp-Kontext ERKUNDUNG) zulässig. Keine aktiven Blocker, keine offene STOPP-Situation.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]` 19:34, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Modus/Werkzeug:** Claude Code (Cloud-Session), semi-autonom.
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` (Quelle: `get_session` 19:44 UTC) – Entscheidungs-Klasse; 2.9 empfiehlt Entscheidung (Eskalations-Auslöser 1 erfüllt ohne Wechsel).
+- **Kontingent:** 5-Stunden-Fenster `allowed`.
 
 ### 2026-10-13 19:34 (UTC) – [SESSIONENDE]
 

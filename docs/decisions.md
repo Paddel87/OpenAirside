@@ -33,10 +33,11 @@
 | 018 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, STACK | Build/Deploy, Externe Abhängigkeiten | Projektgerüst, CI-Gates und napi-Versionen für Phase 2 |
 | 019 | 2026-10-13 | Aktiv | REAKTIV | STACK | Lizenz/Compliance | Erlaubte Lizenzen um BlueOak-1.0.0, 0BSD, Python-2.0 und WTFPL erweitert |
 | 020 | 2026-10-13 | Aktiv | REAKTIV | DATENMODELL, PERFORMANCE | Datenmodell | Weltmaßstab 2 m je Zelle, Luftseite im Raster, Wegweiser in Blöcken, Zeitmodell |
+| 021 | 2026-10-13 | Aktiv | ERKENNTNIS | SCHNITTSTELLE, SECURITY | API-Verträge, Architektur, Sicherheit | Schnittstellenverträge S-2 bis S-7 |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 6 / 10 über die letzten 10 ADRs (ADR-011 bis ADR-020: ADR-011, ADR-012, ADR-015, ADR-017, ADR-019, ADR-020), 60 % – **über dem Schwellenwert**; gesamt 6 / 20. Reflexionen vom 2026-10-13 in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-020)
+- **Aktueller Wert:** 5 / 10 über die letzten 10 ADRs (ADR-012 bis ADR-021: ADR-012, ADR-015, ADR-017, ADR-019, ADR-020), 50 % – **über dem Schwellenwert**; gesamt 6 / 21. Reflexionen vom 2026-10-13 in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-021)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -106,6 +107,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-018: Projektgerüst, CI-Gates und napi-Versionen für Phase 2](decisions/ADR-018.md)
 - [ADR-019: Erlaubte Lizenzen um BlueOak-1.0.0, 0BSD, Python-2.0 und WTFPL erweitert](decisions/ADR-019.md)
 - [ADR-020: Weltmaßstab 2 m je Zelle, Luftseite im Raster, Wegweiser in Blöcken, Zeitmodell](decisions/ADR-020.md)
+- [ADR-021: Schnittstellenverträge S-2 bis S-7](decisions/ADR-021.md)
 
 ---
 
