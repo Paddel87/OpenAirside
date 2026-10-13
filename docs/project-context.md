@@ -230,7 +230,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 |---|---|---|---|---|
 | – | – | keine | 2026-10-13 | – |
 
-**Warnungsquellen ohne Schalter:** Hinweise der CI-Plattform zu Action-Versionen und Runner-Images (Annotationen im Lauf); Bündelgrößen-Warnungen von Vite; Abkündigungshinweise von electron-builder.
+**Warnungsquellen ohne Schalter:** Hinweise der CI-Plattform zu Action-Versionen und Runner-Images (Annotationen im Lauf); Bündelgrößen-Warnungen von Vite; Abkündigungshinweise von electron-builder und npm (`npm warn deprecated`, Ablaufdaten-Register, Q.1). Bekannter Bestand (Stand 2026-10-13, Release-Lauf 38440601610): npm „install scripts not yet covered by allowScripts" für electron-winstaller und fsevents (Skripte laufen nicht; Bau und Tests grün; Prüfung in Q.1); electron-builder „asar usage is disabled" (Muster aus den Spikes, Entscheidung mit der Signatur in 7.1) und „default Electron icon is used" (Symbol mit dem Stilleitfaden in 2.10).
 
 ### Durchsetzungsmechanismen
 
@@ -298,7 +298,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 | Node 20 in GitHub Actions (abgekündigt) | behoben am 2026-10-13: pre-commit/action ersetzt | – | CI-Protokoll, GitHub-Changelog 2025-09-19 | – |
 | WebAssembly-Threads mit stabilem Rust (`atomics`, threadfähige Standardbibliothek ohne `build-std`) | Nachprüfung 2027-01-02, danach bei jedem Q.1 | – | rust-lang/rust RELEASES.md, wasm-bindgen-Doku | Q.2 |
 | Abgekündigte Unterpakete von electron-builder 26.16.1 (inflight 1.0.6, rimraf 2.6.3, glob 7.2.3, boolean 3.2.0; Hinweise bei `npm install`) | keine Frist, Nachprüfung bei jedem Q.1 | – | npm-Installationsprotokoll 2026-10-13 | Q.1 (electron-builder-Version prüfen, ob die Unterpakete ersetzt sind) |
-| Claude-Kontingent | rollierendes 5-Stunden-Fenster („five_hour“), Zurücksetz-Zeitpunkt je Session über `get_session` | – | Laufzeitumgebung, geprüft 2026-10-13 | – (kein Fristablauf) |
+| Claude-Kontingent | rollierendes 5-Stunden-Fenster („five_hour“) und 7-Tage-Fenster („seven_day“), Zurücksetz-Zeitpunkt je Session über `get_session`; am 2026-10-13 17:46 UTC 7-Tage-Fenster mit Status `allowed_warning`, Zurücksetzen 2026-10-18 08:00 UTC | – | Laufzeitumgebung, geprüft 2026-10-13 | – (kein Fristablauf) |
 
 ### Kosten
 

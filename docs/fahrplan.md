@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-13 (Sessionstart 16:40 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.1 – in Arbeit (ADR-018)
-- **Nächster Schritt:** nach 2.1: (Weltmaßstab, Luftseite, Zeitmodell) in einer folgenden Session
+- **Aktiver Schritt:** keiner (2.1 erledigt am 2026-10-13; Nachlauf 2.1-N1 und 2.1-N2 beim Projektinhaber)
+- **Nächster Schritt:** 2.8 (Weltmaßstab, Luftseite, Zeitmodell) in einer folgenden Session, danach 2.9
 - **Offene STOPP-Situationen:** keine (Reaktiv-Quote 5 / 10 nach ADR-019 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 zur Kenntnis genommen, siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
@@ -100,7 +100,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.1: Repository-Struktur, CI-Gates und Werkzeuge
 
-- **Status:** IN ARBEIT (freigegeben am 2026-10-13, ADR-018)
+- **Status:** ERLEDIGT 2026-10-13 (ADR-018, ADR-019); CI-Lauf 38440669665 und Release-Lauf 38440601610 grün auf drei Plattformen
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 1.7
 - **Freigabepflichtig:** ja (Kategorie 7 Build- und Deploy-Pipeline; Kategorie 3 bei Änderung der napi-Versionen)
@@ -119,6 +119,10 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Plattform, Build/CI
 - **Reifegrad-Wirkung:** keine (Verpackung bleibt `[VORLÄUFIG]` bis 7.1/7.2)
 - **Artefakte:** Workspace-Gerüst, Workflows, `.editorconfig`, Runbook, ggf. ADR zur napi-Version
+- **Ergebnis:** `core/` (openairside-core), `bridge/` (napi, `test = false`), `app/` (Electron mit Kern im Utility-Prozess, leeres gehärtetes Fenster), `scripts/check-licenses.mjs`; Gates lokal und in der CI grün. Coverage: Rust-Kern 100 % Lines (1 Test), TypeScript und Skripte 87,2 % Lines (53 Tests; App-Module 100 %, Lizenz-Skript 81,7 %). Rauchtest auf Windows, Linux und macOS (Entwicklungs-Build in `ci.yml`, gepackte Programme in `release.yml`); erzwungener Fehlerfall belegt (ohne natives Modul rot). Runbook am frischen Worktree unter Linux validiert. Abweichung: `c13ebd9` trägt Typ `chore`, enthält aber auch eine CI-Änderung (Logbuch 17:36 UTC).
+- **Nachlauf (zählt nicht zur Phase):**
+  - **2.1-N1 `[OFFEN]` – Branch-Schutz auf `main` (Projektinhaber):** GitHub → Settings → Branches (bzw. Rules → Rulesets) → Regel für `main`: Pull Request vor Merge, Status-Checks der CI als Pflicht, Force-Push und Löschen gesperrt. Frist: vor dem Merge von 2.8.
+  - **2.1-N2 `[OFFEN]` – Startweg heruntergeladener Pakete prüfen (Projektinhaber, Maßnahme 1):** nach `docs/onboarding-runbook.md` Abschnitt 3, Schritt 6, auf Mac und Referenz-PC (Windows) mit den Artefakten des Release-Laufs 38440601610 oder eines neuen manuellen Laufs. Frist: vor Beginn von 2.7.
 
 #### 2.8: Weltmaßstab, Luftseite und Zeitmodell
 

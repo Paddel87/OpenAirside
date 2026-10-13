@@ -30,7 +30,7 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 2: Fundament (UMSETZUNG), Schritt 2.1 (Projektgerüst und CI) in Arbeit; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
+- **Projektphase:** Phase 2: Fundament (UMSETZUNG), Schritt 2.1 (Projektgerüst und CI) abgeschlossen, als Nächstes 2.8; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-13
@@ -86,7 +86,7 @@ Noch nicht spielbar. `npm start` öffnet ein leeres Fenster; der Simulationskern
 
 ## Nächste Schritte
 
-- 2.1: Projektgerüst und CI-Gates abschließen (CI auf drei Plattformen grün, Branch-Schutz auf `main`)
+- Branch-Schutz auf `main` einrichten und den Start der heruntergeladenen Pakete prüfen (Projektinhaber, 2.1-N1/N2)
 - 2.8 und 2.9: Weltmaßstab, Lage der Luftseite, Zeitmodell und Schnittstellenverträge festlegen
 - Phase 2 insgesamt: lauffähiger, leerer Spielrahmen mit grüner CI auf drei Plattformen
 

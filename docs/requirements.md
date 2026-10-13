@@ -195,7 +195,7 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | FR-042 | Leistungsbewusstsein: Spiel erklärt, warum es an Grenzen stößt | UC-011 | Soll | Anzeige der teuersten Bereiche/Systeme | 5.8 | `app/perf_hints.test.ts` | OFFEN |
 | FR-043 | Erklärbare Wegfindungsprobleme | UC-011 | Muss | Bei fehlendem Weg wird Ursache angezeigt (Zone, Verbindung, Station) | 3.3 | `core/tests/path_diagnostics.rs` | OFFEN |
 | FR-044 | Inhalte als Datenpakete; Mods plattformneutral aktivierbar | UC-015 | Muss | Airline, Flugzeugtyp, Objekt aus Mod-Ordner im Spiel; Inventar MOD-01 sinngemäß ohne Workshop | 2.4, 6.1 | `core/tests/datapacks.rs` | OFFEN |
-| FR-045 | Lauffähig auf Windows, Linux, macOS; Download von GitHub | UC-017 | Muss | CI baut und startet auf allen drei Plattformen; Release-Artefakte je Plattform | 1.6, 7.2 | `.github/workflows/release.yml` | OFFEN |
+| FR-045 | Lauffähig auf Windows, Linux, macOS; Download von GitHub | UC-017 | Muss | CI baut und startet auf allen drei Plattformen; Release-Artefakte je Plattform | 1.6, 2.1, 7.2 | `e2e/smoke.spec.ts` in `.github/workflows/ci.yml` und `release.yml` (seit 2.1, x64 bzw. macOS arm64) | OFFEN (arm64 für Windows/Linux und v1.0.0-Builds in 7.2) |
 | FR-046 | Datenmodell bereitet Fracht vor | UC-004 | Muss | Ladungsart „Fracht" im Schema vorhanden, ohne Spielmechanik | 2.3 | `core/tests/cargo_ready.rs` | OFFEN |
 | FR-047 | Musik, Geräusche, Atmosphäre | UC-005 | Soll | AUDIO-01 sinngemäß, freie Bibliotheken | 6.2 | `app/audio.test.ts` | OFFEN |
 | FR-048 | Fracht spielbar | UC-004 | Kann | nach 1.0 | – | – | OFFEN |
