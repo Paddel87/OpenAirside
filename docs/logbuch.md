@@ -24,6 +24,19 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 19:22 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 22 Minuten seit `[SESSIONSTART]` 19:00 UTC; ersetzt als Wiedereinstiegspunkt den Eintrag 19:14 (danach nur die Kenntnisnahme 19:20).
+- **Bearbeitet:** 2.8 – Weltmaßstab, Luftseite und Zeitmodell
+- **Erreicht:** 2.8 `[ERLEDIGT]` mit ADR-020 (Details im Eintrag 19:14); Reflexion zur Reaktiv-Quote vom Projektinhaber zur Kenntnis genommen, keine offene STOPP-Situation.
+- **Offen geblieben:** Branch `claude/gracious-galileo-2reksz` liegt 6 Commits vor `main` (`d9cbf8a` bis `9f2456d`), kein PR geöffnet (nicht angefragt). Merge auf `main` nur per PR (Ruleset `main-schutz`); dabei Nachweis 2.1-N1 (Pflicht-Checks als „Required") prüfen. Neuberechnung in Blöcken nur ersatzweise gemessen, Bestätigung in 2.3.
+- **Nächster Schritt:** 2.9 – Schnittstellenverträge S-2 bis S-7 (Entwurfsschritt, Entscheidungs-Klasse, Freigabe Kategorie 5 und 1). Einstieg: zuerst klären, ob der Branch gemergt ist (sonst auf ihm weiterarbeiten bzw. nach Merge neu von `main`); Vertiefung: `architecture.md` Abschnitt 4 (Schnittstellenverträge), ADR-020 (Adressierung in Weltkoordinaten, Zeitmodell), ADR-009/ADR-010 (Übernahme der Wegweiser, Prüfmodus), Spike 1.4 (`readTable`) für S-7, `project-context.md` Abschnitt 6 (Sicherheit: Validierung von Spielständen und Mods) für S-4/S-5/S-6.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 19:20 UTC); 0 Schritte oberhalb der Empfehlung; keine Teilarbeit abgegeben (Probelauf offen).
+- **Kontextgröße:** 285.309 Token laut `get_session` 19:20 UTC, unter der Grenze von 400.000. Korrektur zum Eintrag 19:14: der dort genannte Wert war veraltet.
+- **Kontingent:** 5-Stunden-Fenster `allowed`.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf.
+- **Drift-Prüfung:** unverändert gegenüber 19:14 (README, ADR-Verweise, Reifegrade, Reaktiv-Quote 6 / 10, Blocker 0, Phase 2 bei 10 Schritten); Fahrplan „Aktueller Stand" ohne offene STOPP-Situation.
+
 ### 2026-10-13 19:20 (UTC) – [BEOBACHTUNG]
 
 - **Kenntnisnahme:** Projektinhaber hat die Reflexion zur Reaktiv-Quote (Anlass ADR-020, 6 / 10) zur Kenntnis genommen; kein Umbau, Maßnahme (5) gilt. Damit keine offene STOPP-Situation.
