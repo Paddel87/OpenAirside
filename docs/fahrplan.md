@@ -11,7 +11,7 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** 1.4 – Großes Tabellen-Panel neben dem Spielfeld
+- **Aktiver Schritt:** keiner (1.4 erledigt am 2026-10-13)
 - **Nächster Schritt:** 1.5 – Leistungsnachweis auf den Zielsystemen
 - **Offene STOPP-Situationen:** keine
 
@@ -254,7 +254,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.4: Großes Tabellen-Panel neben dem Spielfeld
 
-- **Status:** IN ARBEIT (seit 2026-10-13)
+- **Status:** ERLEDIGT (2026-10-13) – gemessen auf Referenz-PC (Windows) und Mac M3 Pro; Linux nach ADR-011 in 7.2
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Prototyp
 - **Zeitbox (nur ERKUNDUNG):** maximal eine halbe Session
@@ -272,7 +272,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Zwischenstand 2026-10-13:** Spike und Messprotokoll in `spikes/1.4-tabellen/README.md` (Rohdaten `results/`). Spielfeld und Brücke aus 1.3 unverändert; neu `panel-core` (synthetische Flugtabelle mit Live-Werten aus dem Tick, spaltenweise kodiert, 22 Byte je Zeile) und ein Panel mit React 19.2.8 und TanStack Table 9.2.8 (Sortierung), gebündelt mit Vite 8.3.4, eigene Virtualisierung ohne neue Abhängigkeit. Testprogramm über `.github/workflows/spike-build-1-4.yml` (Lauf 38404046104: Pakete und Rauchtest auf allen drei Plattformen grün).
   - **Container (Kontrolle ohne Zeichnen, 4 vCPU):** bis 5.000 Zeilen, sortiert nach einer Live-Spalte, bei jeder Rate bis 60/s 59,5–60 Bilder/s (höchstens 2 Bilder über 20 ms in 4 s), Aktualisierung 4–10 ms. 20.000 sortierte Zeilen drücken die Bildrate ab 4/s (57 Bilder/s; ab 30/s 40), weil TanStack je Aktualisierung 24–30 ms sortiert; unsortiert 60 Bilder/s. Ohne Virtualisierung schon bei 2.000 Zeilen 6–31 Bilder/s → Virtualisierung Pflicht. Maßnahmen für große Tabellen (Sortieren im Kern, seltener umsortieren, eigenes Sortieren auf den Spalten) im Messprotokoll, Entscheidung in 1.7.
   - **Referenz-PC Windows (2026-10-13):** virtualisiertes Panel drückt die Bildrate nicht – bis 5.000 sortierte Zeilen bei jeder Rate bis 60/s, 20.000 sortierte Zeilen bis 30/s (je Aktualisierung rund 20 ms, bei 60/s nur 30 erreicht); ohne Virtualisierung 17–46 Bilder/s schon bei 2.000 Zeilen. Daten: `spikes/1.4-tabellen/results/referenz-pc-windows-rx7700xt.json`.
-  - **Offen für den Abschluss:** Messung mit dem Testprogramm auf dem Mac; bis dahin bleibt „Oberfläche mit großen Tabellen" `[VORLÄUFIG]`.
+  - **Mac M3 Pro (2026-10-13, 120 Hz):** bis 5.000 sortierte Zeilen 120 Bilder/s bei jeder Rate; 20.000 sortierte Zeilen 110–120 Bilder/s (Aktualisierung 11–19 ms); ohne Virtualisierung 59–94. Daten: `spikes/1.4-tabellen/results/mac-m3pro.json`.
+  - **Abschluss:** Akzeptanzkriterien beantwortet. Das virtualisierte Panel drückt die Bildrate bis 5.000 sortierte Zeilen nicht; tragbar ist „wenige Male pro Sekunde" bis 20.000 Zeilen; Virtualisierung ist Pflicht. Maßnahmen für sehr große sortierte Tabellen (Sortieren im Kern, seltener umsortieren, eigenes Sortieren) zur Entscheidung in 1.7.
 
 #### 1.5: Leistungsnachweis auf den Zielsystemen
 

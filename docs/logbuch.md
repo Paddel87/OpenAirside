@@ -17,12 +17,23 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3 und 1.6 erledigt; Linux-Messung nach ADR-011 in 7.2. 1.4 in Arbeit.
+Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt; Linux-Messung nach ADR-011 in 7.2. Nächster Schritt: 1.5.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 14:10 – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** Oberfläche mit großen Tabellen
+- **Wechsel:** `[VORLÄUFIG]` → `[BELASTBAR]`, mit Bedingungen (Virtualisierung Pflicht; Sortierung sehr großer Tabellen nach Entscheidung 1.7)
+- **Auslöser:** Spike 1.4 auf Referenz-PC (Windows, 60 Hz) und Mac M3 Pro (120 Hz); Linux nach ADR-011 in 7.2. Entscheidungs-Klasse aktiv (`claude-opus-5-5`), Eskalations-Auslöser 4.
+- **Datum in `architecture.md` Abschnitt 9 nachgetragen:** ja
+
+### 2026-10-13 14:08 – [BEOBACHTUNG]
+
+- **Spike 1.4 auf dem Mac M3 Pro** (120 Hz, Ergebnisdatei vom Projektinhaber): bis 5.000 sortierte Zeilen 120 Bilder/s bei jeder Rate; 20.000 sortierte Zeilen 110–120 (Aktualisierung 11–19 ms, über dem 120-Hz-Budget von 8,3 ms); ohne Virtualisierung 59–94 mit Hängern bis 274 ms. **1.4 erledigt.**
 
 ### 2026-10-13 14:00 – [BEOBACHTUNG]
 

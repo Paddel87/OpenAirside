@@ -204,6 +204,7 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Nicht-Verantwortung:** keine Spiellogik.
 - **Technologie:** React, Tailwind CSS, TanStack Table (virtualisierte Tabellen)
 - **NFRs:** Aktualisierung höchstens wenige Male pro Sekunde; darf die Bildrate des Spielfelds nicht drücken
+- **Große Tabellen** `[BELASTBAR]` seit 2026-10-13 (Spike 1.4, Windows und macOS gemessen): nur virtualisiert (rund 46 Zeilen im DOM); bis 5.000 sortierte Zeilen bei jeder Rate, bis 20.000 bei wenigen Aktualisierungen je Sekunde; Sortierung sehr großer Tabellen nach Entscheidung in 1.7
 
 ### Modul: Audio [VORLÄUFIG]
 
@@ -419,7 +420,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | S-4 Datenpaket-Schema | OFFEN | 2026-10-13 | Phase 2 |
 | S-5 Spielstand-Format | OFFEN | 2026-10-13 | Phase 2 |
 | S-6 Plattform-API | VORLÄUFIG | 2026-10-13 | Phase 2 |
-| Oberfläche mit großen Tabellen | VORLÄUFIG | 2026-10-13 | Spike 1.4 im Container: bis 5.000 sortierte Zeilen ohne Einfluss auf die Bildrate, Virtualisierung Pflicht; Messung auf Referenz-PC und Mac ausstehend (Schritt 1.4) |
+| Oberfläche mit großen Tabellen | BELASTBAR | 2026-10-13 | Spike 1.4 auf Referenz-PC (Windows) und Mac M3 Pro: virtualisiert bis 5.000 sortierte Zeilen ohne Einfluss auf die Bildrate, bis 20.000 bei wenigen Aktualisierungen/s; Bedingungen: Virtualisierung Pflicht, Sortierung sehr großer Tabellen nach Entscheidung 1.7; Linux in 7.2 (ADR-011) |
 | Verpackung für drei Plattformen | VORLÄUFIG | 2026-10-13 | Schritt 1.6 erledigt (Bau und Start auf allen drei Plattformen); bleibt vorläufig: unsigniert (Entscheidung 7.1), Linux-Sandbox (7.2) |
 | Verkehr, Blockadevermeidung | VORLÄUFIG | 2026-10-13 | Erkundung vor Umsetzung des Verkehrs |
 | Code-Mods | OFFEN | 2026-10-13 | eigene Erkundung |

@@ -91,12 +91,34 @@ Lange Aufgaben (> 50 ms) gab es nur ohne Virtualisierung (4 bzw. 16 je Phase).
 
 **Bewertung:** Auf dem Referenz-PC drückt das virtualisierte Panel die Bildrate bis 5.000 sortierte Zeilen bei keiner Rate und bis 20.000 sortierte Zeilen bei bis zu 30 Aktualisierungen je Sekunde nicht. Eine einzelne Aktualisierung mit 20.000 sortierten Zeilen kostet aber rund 20 ms und damit mehr als ein Bild (16,7 ms); bei angeforderten 60/s schafft das Panel nur 30. Die Sortierung über TanStack bleibt der größte Posten (17–19 ms bei 20.000 Zeilen). Ohne Virtualisierung bricht die Bildrate auch hier schon bei 2.000 Zeilen ein (17–46 Bilder/s). Die Folgerungen aus dem Container gelten damit, mit mehr Spielraum: Virtualisierung ist Pflicht; „wenige Male pro Sekunde" ist bis 20.000 Zeilen tragbar; die Maßnahmen für große Tabellen unten bleiben für schwächere Rechner und mehr Spalten relevant.
 
+### Mac M3 Pro (2026-10-13)
+
+Datei `results/mac-m3pro.json`, Messreihe `quick` (103 s). Eingebautes Display 120 Hz (Budget 8,3 ms je Bild), Fenster 1280 × 768 bei Pixeldichte 2, WebGL2 über ANGLE/Metal. Paket nur für Apple-Chips (ADR-012).
+
+| Panel | Zeilen | Rate | Bilder/s | Bild p99 | Bilder > 20 ms | Update Mittel / max | davon Modell | Updates/s erreicht |
+|---|---|---|---|---|---|---|---|---|
+| aus | – | – | 120,0 | 9,3 ms | 0 | – | – | – |
+| ohne Aktualisierung, scrollt | 5.000 | 0 | 120,0 | 9,4 ms | 0 | – | – | – |
+| sortiert | 2.000 | 1–60/s | 120,0 | 9,4 ms | 0 | 2,2–4,0 / ≤ 5,0 ms | 1,1–2,4 ms | wie angefordert |
+| sortiert | 5.000 | 1–60/s | 119,7–120,2 | 9,4 ms | 0 | 3,7–5,7 / ≤ 7,6 ms | 2,7–4,3 ms | wie angefordert |
+| sortiert | 20.000 | 1/s | 119,0 | 9,4 ms | 1 | 17,8 / 22 ms | 16,0 ms | 1 |
+| sortiert | 20.000 | 4/s | **115,7** | 16,7 ms | 1 | 18,8 / 23 ms | 17,2 ms | 4 |
+| sortiert | 20.000 | 10/s | **110,5** | 16,7 ms | 0 | 16,3 / 18,3 ms | 14,9 ms | 10 |
+| sortiert | 20.000 | 30/s | 120,0 | 9,4 ms | 0 | 11,7 / 13,6 ms | 10,8 ms | 30 |
+| sortiert | 20.000 | 60/s | 118,5 | 15,8 ms | 0 | 11,2 / 18,4 ms | 10,3 ms | 59 |
+| unsortiert | 20.000 | 10/s | 120,0 | 9,4 ms | 0 | 3,1 / 3,9 ms | 1,8 ms | 10 |
+| alle Zeilen im DOM | 2.000 | 1/s | **94,0** | 24,9 ms | 5 | 98 / 106 ms | 2,2 ms | 1 |
+| alle Zeilen im DOM | 2.000 | 4/s | **58,6** | 166,5 ms | 16 | 65 / 85 ms | 1,4 ms | 4 |
+| aus (Ende) | – | – | 117,0 | 9,3 ms | 2 | – | – | – |
+
+**Bewertung:** Bis 5.000 sortierte Zeilen bleibt das Spielfeld bei jeder Rate bis 60/s auf 120 Bildern/s. Bei 20.000 sortierten Zeilen kostet eine Aktualisierung 11–19 ms, also mehr als ein Bild bei 120 Hz; das kostet bei 4–10/s 5–10 Bilder je Sekunde (115,7 bzw. 110,5 statt 120), bleibt aber flüssig. Dass 30/s und 60/s hier nicht schlechter abschneiden, liegt vermutlich an den mit steigender Rate kürzeren Aktualisierungen (warme Zwischenspeicher; nicht geprüft). Ohne Virtualisierung bricht die Bildrate auch auf dem Mac ein (59–94 Bilder/s, Hänger bis 274 ms).
+
 ## Bewertung gegen die Akzeptanzkriterien
 
 1. **Drückt das Panel die Bildrate des Spielfelds?** Im Container (Kontrolle): **nein** bis 5.000 Zeilen mit Sortierung nach einer Live-Spalte bei jeder Rate bis 60/s (höchstens 2 Bilder über 20 ms in 4 s) und bei 20.000 Zeilen ohne Sortierung. **Ja** bei 20.000 sortierten Zeilen ab 4/s (57 Bilder/s, 13 Bilder über 20 ms; ab 30/s nur noch 40 Bilder/s) und **immer ohne Virtualisierung** (schon 2.000 Zeilen: 6–31 Bilder/s, Hänger bis 0,6 s). Virtualisierung ist damit Pflicht.
 2. **Tragbare Aktualisierungsrate:** bis 5.000 sortierte Zeilen ist jede Rate bis 60/s tragbar; empfohlen sind die in `project-context.md` Abschnitt 6 vorgesehenen „wenige Male pro Sekunde" (4/s kostet bei 5.000 Zeilen rund 10 ms alle 250 ms). Bei 20.000 sortierten Zeilen trägt nur 1/s; mehr verlangt eine andere Sortierung (unten). Die Grenze liegt dort, wo eine einzelne Aktualisierung in die Nähe eines Bildes (16,7 ms) kommt, weil sie den Hauptthread in einem Stück belegt.
 
-**Vorbehalt:** Die Werte oben stammen aus dem Container. Referenz-PC unter Windows gemessen (Abschnitt „Messung auf echter Grafik"): gleiche Folgerungen mit mehr Spielraum. Die Messung auf dem Mac steht aus; bis dahin bleibt „Oberfläche mit großen Tabellen" `[VORLÄUFIG]`.
+**Vorbehalt:** Die Werte oben stammen aus dem Container. Referenz-PC unter Windows gemessen (Abschnitt „Messung auf echter Grafik"): gleiche Folgerungen mit mehr Spielraum. Mac M3 Pro ebenfalls gemessen (120-Hz-Display): bis 5.000 sortierte Zeilen ohne Einfluss, 20.000 sortierte Zeilen kosten 5–10 von 120 Bildern/s. Linux nach ADR-011 in 7.2.
 
 ### Mögliche Maßnahmen für große Tabellen (nicht umgesetzt, Entscheidung in 1.7 bzw. Phase 2)
 
