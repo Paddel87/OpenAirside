@@ -161,7 +161,7 @@ Keine externen APIs im Spiel.
 ### Plattform und Kompatibilität
 
 - Windows 10/11 x64 und arm64, Linux x64 und arm64, macOS 13+ als Universal-Build (Apple Silicon und Intel).
-- Grafik über WebGL2; Linux-Tests mit gängigen Treibern (Intel, AMD, NVIDIA) sind Teil des Leistungsnachweises.
+- Grafik über WebGL2. Leistungsnachweis in Phase 1 auf Windows und macOS; Linux bis Schritt 7.2 mit der Zusicherung „baut und startet im CI", Leistungsmessung mit gängigen Treibern (Intel, AMD, NVIDIA) in 7.2 oder früher durch Mitwirkende (ADR-011).
 - Hardware-Untergrenze: integrierte Grafik, lauffähig, mit Benchmark-Empfehlung zur Kartengröße.
 - Zielhardware (Referenz): Mittelklasse-PC mit 8 CPU-Kernen, 16 GB RAM und einer Mittelklasse-Grafikkarte der aktuellen Generation.
 - Für Tests unter macOS steht ein Mac des Projektinhabers zur Verfügung.

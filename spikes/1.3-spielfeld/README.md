@@ -90,11 +90,34 @@ Mit SwiftShader: p50 81–89 ms, 3 Bilder (bei 20–40 Bildern/s). Der Ablauf is
 - **Zu Spielbeginn** stehen alle Personen am Eingang; ohne Zeitraffer misst die Reihe ein leeres Spielfeld. Deshalb 3 s ungebremster Takt vor den Messphasen.
 - Pakete und Rauchtest für Windows, macOS Universal und Linux liefen im ersten CI-Lauf grün (Lauf 38389783470).
 
+## Messung auf echter Grafik
+
+### Referenz-PC, Windows (2026-10-13)
+
+Datei `results/referenz-pc-windows-rx7700xt.json`, Testprogramm aus „Spike-Build 1.3", Messreihe `quick` (168 s). Rechner: AMD Ryzen 9 3900X (12 Kerne, 24 Threads), 32 GB, AMD Radeon RX 7700 XT, Windows, WebGL2 über ANGLE/Direct3D 11, Fenster 1264 × 735, Pixeldichte 1. Takt 60 Ticks/s, 4 Simulations-Threads. Der Prozessor hat mehr Kerne als die Referenz (8); für Grafik und Übergabe spielt das kaum eine Rolle, die Simulation nutzt ohnehin nur 4 Threads.
+
+| Personen | Übertragung | Zeichenart | Bilder/s (Phasen) | Bild p99 | Bilder > 20 ms | Render (CPU) Mittel max | Rundlauf p50 / p99 max | Sim-Schritt Mittel / p99 |
+|---|---|---|---|---|---|---|---|---|
+| 10.000 | Ausschnitt | particles | 59,9–60,2 | 16,9 ms | 0 | 0,37 ms | 0,6 / 1,1 ms | 0,36 / 3,1 ms¹ |
+| 10.000 | alles | particles | 59,9–60,2 | 16,9 ms | 0 | 0,34 ms | 0,6 / 1,0 ms | 0,29 / 0,37 ms |
+| 10.000 | Ausschnitt | sprites | 60,0–60,1 | 16,9 ms | 0 | 2,2 ms | 2,4 / 2,8 ms | 0,31 / 0,41 ms |
+| 10.000 | alles | sprites | 59,9–60,0 | 16,9 ms | 0 | 2,5 ms | 2,8 / 3,4 ms | 0,32 / 0,49 ms |
+| 50.000 | Ausschnitt | particles | 59,8–60,0 | 16,9 ms | 0 | 1,1 ms | 1,5 / 2,5 ms | 0,85 / 4,2 ms¹ |
+| 50.000 | alles | particles | 60,0 | 16,9 ms | 0 | 1,3 ms | 2,1 / 2,6 ms | 0,82 / 1,1 ms |
+| 50.000 | Ausschnitt | sprites | 59,0–60,1 | 33,4 ms | 4 | 13,2 ms | 13,5 / 15,4 ms | 0,84 / 1,1 ms |
+| 50.000 | alles | sprites | **45,7**–60,0 | 33,6 ms | **59** | 16,3 ms | 17,7 / 23,0 ms | 0,91 / 1,2 ms |
+
+¹ Läufe mit Bauaktionen: Das Ausführen eines Baubefehls im Simulations-Thread kostet im Mittel 5–7 ms, höchstens 17 ms (Raster-Schnappschuss für die Hintergrundberechnung); kein Tick geriet in Rückstand.
+
+**Bauaktion:** 24 Bauaktionen je Personenzahl, Klick bis gezeichnetes Bild p50 33,5 ms, max 50,3 ms; **2 Bilder (max 3)** – wie im Container im übernächsten Bild. Neuberechnung der Wegweiser 39–45 ms im Mittel, max 100 ms (≤ 7 Ticks).
+
+**Bewertung:** 10.000 Personen erreichen auf dem Referenz-PC unter Windows durchgehend die Bildwiederholrate des Bildschirms (60 Bilder/s; der Bildschirm ist laut Projektinhaber auf 60 Hz begrenzt), ohne ein einziges Bild über 20 ms – mit beiden Zeichenarten. Bei 50.000 Personen hält nur `particles` die 60 Bilder/s; `sprites` fällt beim Schwenken auf 46 Bilder/s. Das bestätigt die Empfehlung `ParticleContainer`. Die Reserve über 60 Bilder/s ist mit dieser Messung nicht bestimmbar; die Rechenzeit im Renderer (≤ 1,3 ms mit `particles`) deutet auf viel Reserve.
+
 ## Bewertung gegen die Akzeptanzkriterien
 
 1. **Dauer der Übergabe je Bild:** beantwortet. 0,5–1,1 ms bei 10.000 Personen, 1,1–2,6 ms bei 50.000 (p99 bis 8,7 ms bei 50.000 und vollständiger Übertragung). Die Kopie je Bild aus ADR-009 trägt. Empfehlung für Phase 2: kompaktes Format und Filter auf Etage und Kamera-Ausschnitt; keine Änderungslisten.
 2. **Bauaktion im nächsten Bild:** beantwortet mit **nein** – im übernächsten (27–37 ms). Abweichung von der Regel in `project-context.md` Abschnitt 6 („im nächsten dargestellten Bild"). Mögliche Maßnahmen, nicht umgesetzt: Befehle in der Brücke sofort statt zu Beginn des nächsten Ticks ausführen; den Bauauftrag in der Präsentation sofort als Vorschau zeigen (wie die Bauplanung im Original, bevor Arbeiter bauen) – reine Darstellung, ändert keinen Zustand; höherer Takt. Entscheidung gehört in die Auswertung 1.7.
-3. **Bilder pro Sekunde mit 10.000 Personen:** **offen.** Im Container nur mit Software-Grafik messbar (26–47 Bilder/s, nicht aussagekräftig). Messung mit dem Testprogramm auf Referenz-PC und Mac des Projektinhabers.
+3. **Bilder pro Sekunde mit 10.000 Personen:** **Referenz-PC unter Windows: 60 Bilder/s ohne Ausreißer** (auch 50.000 Personen mit `particles`), siehe „Messung auf echter Grafik". Offen: Mac (M3 Pro) und Linux (Live-USB auf dem Referenz-PC).
 
 ## Testprogramm herunterladen und starten
 

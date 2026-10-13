@@ -23,10 +23,11 @@
 | 008 | 2026-10-13 | Aktiv | STRATEGISCH | MODUL | Architektur | Eigene SVG-Grafiken, Rasterung im Build |
 | 009 | 2026-10-13 | Aktiv | ERKENNTNIS | STACK, SCHNITTSTELLE, PERFORMANCE | Architektur | Betriebsart des Kerns: napi-rs im Electron-Utility-Prozess |
 | 010 | 2026-10-13 | Aktiv | ERKENNTNIS | DATENMODELL, PERFORMANCE, MODUL | Datenmodell, Architektur | Datenmodell und Parallelisierung im Kern, Übernahme der Wegweiser |
+| 011 | 2026-10-13 | Aktiv | REAKTIV | METHODIK, PERFORMANCE | Projekt-Vorgabe | Linux-Leistungsmessung auf echter Hardware verschoben auf Schritt 7.2 |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 0 / 10
+- **Aktueller Wert:** 1 / 10 über die letzten 10 ADRs (ADR-002 bis ADR-011), 10 %; gesamt 1 / 11
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -86,6 +87,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-008: Eigene SVG-Grafiken, Rasterung im Build](decisions/ADR-008.md)
 - [ADR-009: Betriebsart des Kerns: napi-rs im Electron-Utility-Prozess](decisions/ADR-009.md)
 - [ADR-010: Datenmodell und Parallelisierung im Kern, Übernahme der Wegweiser](decisions/ADR-010.md)
+- [ADR-011: Linux-Leistungsmessung auf echter Hardware verschoben auf Schritt 7.2](decisions/ADR-011.md)
 
 ---
 

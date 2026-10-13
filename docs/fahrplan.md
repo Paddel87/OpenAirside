@@ -248,7 +248,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
   - **Übergabe:** 0,5–1,1 ms je Bild bei 10.000, 1,1–2,6 ms bei 50.000 Personen (Kontrolle ohne Zeichnen, 4 vCPU); Änderungslisten lohnen nicht (97–99 % bzw. 49–68 % der Personen bewegen sich je Tick). Empfehlung: kompakt + Ausschnitt.
   - **Zeichenart:** `ParticleContainer` nötig; Sprites kosten bei 50.000 Personen schon auf der CPU-Seite 10–19 ms je Bild.
   - **Bauaktion:** sichtbar im **übernächsten** Bild (27–37 ms), nicht im nächsten – Abweichung von `project-context.md` Abschnitt 6; Maßnahmen im Messprotokoll, Entscheidung in 1.7. Personen weichen nach höchstens 150 ms aus, ohne dass das Spiel wartet.
-  - **Offen für den Abschluss:** Bilder pro Sekunde auf echter Grafik. Im Container nur Software-Rendering (SwiftShader), das die CPU mit Simulation und Übergabe teilt – Werte nicht aussagekräftig. Messung mit dem Testprogramm auf Referenz-PC (Windows, Linux per Live-USB) und Mac; Anleitung im Messprotokoll, Abschnitt „Testprogramm herunterladen und starten". S-1 bleibt bis dahin `[VORLÄUFIG]`.
+  - **Referenz-PC Windows (2026-10-13, RX 7700 XT):** 10.000 Personen 60 Bilder/s in allen Kombinationen, kein Bild über 20 ms; 50.000 mit `particles` ebenfalls 60, mit `sprites` bis 46 Bilder/s beim Schwenken; Bauaktion auch hier im übernächsten Bild (p50 33,5 ms). Daten: `spikes/1.3-spielfeld/results/referenz-pc-windows-rx7700xt.json`.
+  - **Offen für den Abschluss:** Mac (M3 Pro). Linux auf echter Hardware verschoben auf 7.2 (ADR-011). Ursprünglich offen: Bilder pro Sekunde auf echter Grafik. Im Container nur Software-Rendering (SwiftShader), das die CPU mit Simulation und Übergabe teilt – Werte nicht aussagekräftig. Messung mit dem Testprogramm auf Referenz-PC (Windows, Linux per Live-USB) und Mac; Anleitung im Messprotokoll, Abschnitt „Testprogramm herunterladen und starten". S-1 bleibt bis dahin `[VORLÄUFIG]`.
 
 #### 1.4: Großes Tabellen-Panel neben dem Spielfeld
 
@@ -277,19 +278,19 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Abhängigkeiten:** 1.2, 1.3, 1.4
 - **Freigabepflichtig:** ja (Bestätigung oder Verwerfung von ADR-002)
 - **Empfohlene Klasse:** Entscheidung – bestätigt oder verwirft ADR-002 (STRATEGISCH).
-- **Eingangskriterien:** Durchstich aus 1.1–1.4 lauffähig; Zugang zu Testsystemen: Mittelklasse-PC (Referenz), Rechner mit integrierter Grafik (z. B. Mac des Projektverantwortlichen), Linux-System
+- **Eingangskriterien:** Durchstich aus 1.1–1.4 lauffähig; Zugang zu Testsystemen: Mittelklasse-PC (Referenz), Rechner mit integrierter Grafik (z. B. Mac des Projektverantwortlichen) (Linux: ADR-011)
 - **Anforderungen (ab Klasse M):** FR-040
 - **Zu tun:**
   - Rastergröße des Referenzszenarios mit Reserve festlegen (Vorgabe ADR-010) und Wegweiser mit fünf Etagen messen (Speicher, Neuberechnung).
   - Messung im Szenario mit 10.000 Personen bei höchster Spielgeschwindigkeit: Bildrate, Rechenzeit pro Simulationsschritt, Rückstand, Speicher über einen Langzeitlauf.
-  - Wiederholung auf integrierter Grafik und unter Linux (WebGL2).
+  - Wiederholung auf integrierter Grafik (Mac). Linux: nur Bau und Start im CI, Leistungsmessung in 7.2 (ADR-011).
   - Ergebnis gegen die Zielwerte aus `project-context.md` Abschnitt 6 bewerten.
 - **Akzeptanzkriterien:** Bewertung liegt vor: Ziel erreicht / mit benannten Maßnahmen erreichbar / nicht erreichbar. Entscheidungsvorlage an den Projektverantwortlichen.
 - **Betroffene Module:** alle des Durchstichs
 - **Reifegrad-Wirkung:** bei Bestehen: Stack, Pattern, NFR Performance `[VORLÄUFIG]` → `[BELASTBAR]`; bei Scheitern: ADR mit Neubewertung (Rückfalloption Godot-Präsentation mit Rust-Kern)
 - **Artefakte:** Messprotokoll, ADR (ERKENNTNIS), Update `architecture.md` Abschnitt 9
 - **Notizen:** Falls keine Mittelklasse-Referenz verfügbar ist, Messung auf verfügbarer Hardware und Hochrechnung mit Begründung; das Fehlen ist dann als Informationslücke zu melden.
-- **Testsysteme (Stand 2026-10-13, Angabe des Projektinhabers):** Referenz-PC (8 Kerne, Mittelklasse-Grafikkarte) und Mac mit integrierter Grafik verfügbar. Linux-System schwierig; Vorschlag: Ubuntu als Live-USB auf dem Referenz-PC (ohne Installation). Grafikkarte des Referenz-PCs: AMD Radeon RX 7700 XT – der freie Linux-Treiber (amdgpu/Mesa) ist im Live-System enthalten, Linux-Messung damit aussagekräftig (Treiberunterstützung in 1.5 gegen Quellen belegen). Die Karte ist eine Generation älter als „Mittelklasse der aktuellen Generation" (`project-context.md` Abschnitt 6); Messwerte sind dadurch eher vorsichtig. Mac: Apple M3 Pro mit 18 GB gemeinsamem Speicher – deckt macOS (Apple Silicon) ab, ist aber deutlich stärker als typische integrierte Grafik und belegt die Untergrenze daher nicht; ebenso bleibt der Intel-Teil des Universal-Builds ungetestet. Offen: weiterer Rechner mit schwacher integrierter Grafik (z. B. älterer Laptop mit Intel-Grafik), sonst ist die Untergrenze nur hochgerechnet.
+- **Testsysteme (Stand 2026-10-13, Angabe des Projektinhabers):** Referenz-PC (8 Kerne, Mittelklasse-Grafikkarte) und Mac mit integrierter Grafik verfügbar. Linux: Messung auf echter Hardware verschoben auf 7.2, früher durch Mitwirkende (ADR-011; Live-USB auf dem Referenz-PC vom Projektinhaber abgelehnt, weil die Arbeitsrechner nicht neu gestartet werden sollen).
 
 #### 1.6: Verpackung für drei Plattformen
 
@@ -308,7 +309,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** Verpackung `[VORLÄUFIG]` → `[BELASTBAR]` (bei Bestehen)
 - **Artefakte:** Workflow-Entwurf, Erkenntnisnotiz
 - **Notizen:** Änderungen an der Build-Pipeline sind ab Phase 2 freigabepflichtig (CLAUDE.md 4.7).
-- **Zwischenstand 2026-10-13:** Workflow `.github/workflows/spike-build.yml` baut das Spike-1.1-Programm (Electron 44 + napi-Modul) mit electron-builder 26.16.1 für Windows (NSIS, ZIP), macOS Universal (DMG, ZIP, ohne Signatur) und Linux (AppImage, tar.gz) und startet es auf jedem Runner (Lauf 38383032090, alle grün). Befunde im README des Spikes. Offen für den Abschluss: Start auf den Rechnern des Projektinhabers (Windows-PC, Mac M3 Pro, Linux per Live-USB), insbesondere was ein Spieler unter macOS ohne Signatur tun muss – Anleitung im README des Spikes, Abschnitt „Testprogramm herunterladen und starten".
+- **Zwischenstand 2026-10-13:** Workflow `.github/workflows/spike-build.yml` baut das Spike-1.1-Programm (Electron 44 + napi-Modul) mit electron-builder 26.16.1 für Windows (NSIS, ZIP), macOS Universal (DMG, ZIP, ohne Signatur) und Linux (AppImage, tar.gz) und startet es auf jedem Runner (Lauf 38383032090, alle grün). Befunde im README des Spikes. Windows-PC (2026-10-13, Rückmeldung Projektinhaber): SmartScreen-Warnung beim Start des unsignierten Programms, nach Zulassen lauffähig – wie erwartet. Linux: CI-Rauchtest genügt für 1.6 (ADR-011). Offen für den Abschluss: Start auf Mac M3 Pro, insbesondere was ein Spieler unter macOS ohne Signatur tun muss – Anleitung im README des Spikes, Abschnitt „Testprogramm herunterladen und starten".
 
 #### 1.7: Auswertung und Entscheidung
 
@@ -404,7 +405,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
 | 7.1 | Gate vor dem ersten öffentlichen Release (CLAUDE.md Abschnitt 12, `templates/gate-deployment.md`): Sicherheits-Review, Vertretung, Notfall-Handbuch, Signatur-Entscheidung | – |
-| 7.2 | Referenzszenario-Nachweis auf allen Plattformen, Langzeitstabilität, Release-Builds v1.0.0; Linux-Pakete mit funktionierender Chromium-Sandbox (z. B. deb mit SUID-`chrome-sandbox` oder AppArmor-Profil, Befund aus 1.6) | FR-040, FR-045 |
+| 7.2 | Referenzszenario-Nachweis auf allen Plattformen inklusive Linux-Leistungsmessung auf echter Hardware mit gängigen Treibern (ADR-011, früher gern durch Mitwirkende), Langzeitstabilität, Release-Builds v1.0.0; Linux-Pakete mit funktionierender Chromium-Sandbox (z. B. deb mit SUID-`chrome-sandbox` oder AppArmor-Profil, Befund aus 1.6) | FR-040, FR-045 |
 
 ### Querschnitt: wiederkehrende Schritte
 

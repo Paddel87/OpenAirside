@@ -24,6 +24,40 @@ Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt; 1.3 und 1.6 w
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 12:50 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 40 Minuten seit `[SESSIONSTART]` 12:10
+- **Bearbeitet:** 1.3 (Auswertung Windows-Ergebnis), 1.6 (Windows-Rückmeldung), ADR-011 (Linux-Messung verschoben auf 7.2)
+- **Erreicht:** Windows-Werte von Spike 1.3 im Messprotokoll (60 Bilder/s bei 10.000 und 50.000 Personen mit `particles`); SmartScreen-Verhalten unter Windows belegt; ADR-011 mit Nachzug in `project-context.md` Abschnitt 6 und Fahrplan 1.3/1.5/1.6/7.2; Reifegrad-Vermerk S-1 aktualisiert (bleibt `[VORLÄUFIG]`).
+- **Offen geblieben:** 1.3 und 1.6 `[IN ARBEIT]`, warten nur noch auf die Mac-Messung (Projektinhaber ab 14:45 Uhr).
+- **Nächster Schritt:** Ergebnisdatei und Startverhalten vom Mac auswerten, 1.3 und 1.6 abschließen, S-1 ggf. auf `[BELASTBAR]` (Eskalations-Auslöser 4); danach 1.4.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session`); 0 Schritte oberhalb der Empfehlung; keine Abgabe.
+- **Kontextgröße:** 625.658 Token laut `get_session` – **über der Grenze von 400.000**. Hinweis: nächste Arbeit in einer neuen Session beginnen.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf (Umstellung `ubuntu-latest` ab 2026-10-19 bleibt bei Q.1). **Drift-Prüfung:** README unverändert gültig; ADR-011 verweist auf 1.3, 1.5, 1.6, 7.2 (existieren); Reaktiv-Quote 1/10 stimmt mit Teil B überein; Phase 1 weiter 7 Schritte.
+
+### 2026-10-13 12:40 – [ADR-ANGELEGT]
+
+- **ADR:** ADR-011 „Linux-Leistungsmessung auf echter Hardware verschoben auf Schritt 7.2" (`docs/decisions/ADR-011.md`)
+- **Tag:** `[REAKTIV]` – ändert die Bedingung „Linux mit WebGL2" aus ADR-002 innerhalb von 14 Tagen; Reaktiv-Quote 1/10 (10 %, Schwelle 20 %)
+- **Auslöser:** Projektinhaber möchte keine Neustarts seiner Arbeitsrechner für Linux; Freigabe „A und B" (Messung in 7.2, früher durch Mitwirkende)
+
+### 2026-10-13 12:25 – [BEOBACHTUNG]
+
+- **Rückmeldung Projektinhaber, Windows:** SmartScreen-Warnung beim Start, nach Zulassen lauffähig (1.6, Teil Windows). Bildschirm auf 60 Hz begrenzt – die gemessenen 60 Bilder/s sind damit die Obergrenze des Bildschirms, nicht der Grafik.
+
+### 2026-10-13 12:15 – [BEOBACHTUNG]
+
+- **Spike 1.3 auf dem Referenz-PC unter Windows** (Ryzen 9 3900X, RX 7700 XT, Ergebnisdatei vom Projektinhaber): 10.000 Personen 60 Bilder/s ohne ein Bild über 20 ms (beide Zeichenarten), 50.000 mit `particles` 60 Bilder/s, mit `sprites` bis 46 Bilder/s. Bauaktion im übernächsten Bild (p50 33,5 ms). Ein Baubefehl kostet im Simulations-Thread bis 17 ms (Raster-Schnappschuss) – Ansatzpunkt für Phase 2, kein Rückstand gemessen. Details im Messprotokoll.
+- **Nebenbefund 1.6:** Das Windows-Paket von Spike 1.3 lief auf dem Referenz-PC; die Rückmeldung zum Startablauf (SmartScreen) fehlt noch.
+
+### 2026-10-13 12:10 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 11:45 (Spike 1.3 in einer anderen Session gebaut, PR Paddel87/OpenAirside#6 gemergt als `2436e99`); Branch neu auf `main`.
+- **Pflichtlektüre:** Änderungen seit dem letzten Lesen in dieser Sitzung gezielt gelesen (`git diff 1c5c9fb 2436e99` für `docs/` und README; Logbuch 11:10–11:45; Messprotokoll `spikes/1.3-spielfeld/README.md`).
+- **Geplant:** Ergebnisdatei des Testprogramms 1.3 vom Referenz-PC (Windows) auswerten.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` → Entscheidungs-Klasse (`get_session`); 1.3 empfiehlt Entscheidung.
+- **Kontextgröße:** 528.832 Token laut `get_session` – über der Grenze von 400.000 (Fortsetzung dieser Sitzung auf Wunsch des Projektinhabers).
+
 ### 2026-10-13 11:45 – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 35 Minuten seit `[SESSIONSTART]` 11:10
