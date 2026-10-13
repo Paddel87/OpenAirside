@@ -24,6 +24,12 @@ Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt; 1.3 und 1.6 w
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 12:40 – [ADR-ANGELEGT]
+
+- **ADR:** ADR-011 „Linux-Leistungsmessung auf echter Hardware verschoben auf Schritt 7.2" (`docs/decisions/ADR-011.md`)
+- **Tag:** `[REAKTIV]` – ändert die Bedingung „Linux mit WebGL2" aus ADR-002 innerhalb von 14 Tagen; Reaktiv-Quote 1/10 (10 %, Schwelle 20 %)
+- **Auslöser:** Projektinhaber möchte keine Neustarts seiner Arbeitsrechner für Linux; Freigabe „A und B" (Messung in 7.2, früher durch Mitwirkende)
+
 ### 2026-10-13 12:25 – [BEOBACHTUNG]
 
 - **Rückmeldung Projektinhaber, Windows:** SmartScreen-Warnung beim Start, nach Zulassen lauffähig (1.6, Teil Windows). Bildschirm auf 60 Hz begrenzt – die gemessenen 60 Bilder/s sind damit die Obergrenze des Bildschirms, nicht der Grafik.
