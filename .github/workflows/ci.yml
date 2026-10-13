@@ -78,6 +78,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2.9.2
       # Rot bei Mittelwert > 1 ms oder p99 > 4 ms je Schritt mit 10.000 Personen (ADR-022).
       - name: Tick mit 10.000 Personen
+        env:
+          OPENAIRSIDE_BENCH_MAX_MEAN_MS: "0.001" # erzwungener Fehlerfall, wird zurückgenommen
         run: cargo bench -p openairside-core --bench tick --locked -- --output bench-tick.json
       - name: Vergleichswert vom letzten Lauf auf main holen
         if: always()
