@@ -24,6 +24,12 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 20:48 (UTC) – [BEOBACHTUNG]
+
+- **Vorbilder 2.9 belegt** (Websuche auf Wunsch des Projektinhabers): Factorio, OpenTTD, OpenRCT2, Minecraft, Cities: Skylines, RimWorld, Electron-Checkliste; Tabelle mit Güte der Quelle im Entwurf. Zwei Behauptungen aus dem Gedächtnis nicht belegbar und gestrichen (Early-Access-Spielstände, Bauen in der Pause bei Cities: Skylines/OpenRCT2).
+- **Korrektur:** Electron empfiehlt URL-Prüfung per Parser statt Zeichenkettenvergleich; S-6 im Entwurf ergänzt. `app/src/main/security.ts` (`isAllowedNavigation`) parst zwar, vergleicht dann aber per `startsWith` auf `href` – in 2.7 bei der Absenderprüfung mit ansehen (Fahrplan-Schritt 2.7, Härtungstests).
+- **Frage 4** um Option (c) ergänzt: in Phase 2 verweigern, Laden mit Entfernen nach Factorio-Vorbild in 6.1.
+
 ### 2026-10-13 19:50 (UTC) – [BEOBACHTUNG]
 
 - **Getrennte Prüfung 2.9 erfolgt** (Unteragent, Sonnet 5.5, nur Entwurf, Bedrohungsmodell, Ist-Code): 15 Befunde (3 hoch, 8 mittel, 3 niedrig, 1 optional). Eingearbeitet: 1–12 und 14 (u. a. Grenzen für Spielstände und Pakete, Pfadprüfung, Absenderprüfung per `senderFrame`, Sitzungen in jeder Nachricht, atomares Laden, Flusssteuerung S-3, Ablehnungs- und Fehlercodes). Nicht übernommen: 13 (Prüfer rechnete mit 9 statt 180 Ticks/s bei 3×) und 15 (Signatur, über dem Schutzbedarf). Befund im Entwurf vermerkt.
