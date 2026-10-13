@@ -12,11 +12,12 @@ use serde::{Deserialize, Serialize};
 use crate::adoption::{Adoption, AdoptionMode};
 use crate::command::{self, Command, MAX_COMMANDS_PER_STEP, code, rejection};
 use crate::event::{Event, EventQueue, EventRecord, MAX_IN_FLIGHT, SpeedChangeReason};
+use crate::flowfield::FieldSet;
 use crate::geometry::MapSize;
 use crate::hash::StateHasher;
 use crate::text::{Params, Reason, Severity};
 use crate::time::{GameTime, Speed, TICKS_PER_DAY, Tick, is_day_start, is_night, next_morning};
-use crate::world::{Guidance, World};
+use crate::world::World;
 
 /// Code of the notice and rejection when the tick reaches its maximum.
 pub const TICK_LIMIT: &str = "tickLimit";
@@ -44,9 +45,13 @@ pub struct SimulationConfig {
     pub map: MapSize,
     /// Worker threads of the tick, at least 1.
     pub threads: usize,
+    /// Threads for background computations such as flow fields, at least 1.
+    /// A separate pool keeps long computations from delaying the tick.
+    pub background_threads: usize,
     /// When background results are taken over.
     pub adoption: AdoptionMode,
-    /// Number of persons in the synthetic population of step 2.2.
+    /// Number of persons in the world of [`Simulation::new`] and of
+    /// [`Simulation::restart`] (ignored by [`Simulation::with_world`]).
     pub persons: u32,
     /// Seed of the start state.
     pub seed: u64,
@@ -57,7 +62,7 @@ pub struct SimulationConfig {
 /// Errors when creating a simulation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SimulationError {
-    /// `threads` was 0.
+    /// `threads` or `background_threads` was 0.
     NoThreads,
     /// The thread pool could not be created.
     ThreadPool(String),
@@ -87,6 +92,7 @@ pub struct Counters {
 pub struct Simulation {
     config: SimulationConfig,
     pool: ThreadPool,
+    background: ThreadPool,
     session: u32,
     state: CoreState,
     tick: Tick,
@@ -97,27 +103,45 @@ pub struct Simulation {
     counters: Counters,
     events: EventQueue,
     world: World,
-    guidance: Adoption<Guidance>,
+    fields: Adoption<FieldSet>,
 }
 
 impl Simulation {
-    /// Creates the simulation with session 1, paused at `start_tick`.
+    /// Creates the simulation with session 1, paused at `start_tick`, in an
+    /// open hall with `persons` persons ([`World::open_hall`]).
     ///
     /// # Errors
     ///
-    /// Fails if `threads` is 0 or the thread pool cannot be created.
+    /// Fails if a thread count is 0 or a thread pool cannot be created.
     pub fn new(config: SimulationConfig) -> Result<Self, SimulationError> {
-        if config.threads == 0 {
+        let world = World::open_hall(config.map, config.persons, config.seed);
+        Self::with_world(config, world)
+    }
+
+    /// Creates the simulation with session 1 in the given world. The flow
+    /// fields of the world are computed before the first tick.
+    ///
+    /// # Errors
+    ///
+    /// Fails if a thread count is 0 or a thread pool cannot be created.
+    pub fn with_world(config: SimulationConfig, mut world: World) -> Result<Self, SimulationError> {
+        if config.threads == 0 || config.background_threads == 0 {
             return Err(SimulationError::NoThreads);
         }
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(config.threads)
-            .thread_name(|i| format!("sim-{i}"))
-            .build()
-            .map_err(|err| SimulationError::ThreadPool(err.to_string()))?;
+        let build = |threads: usize, name: &'static str| {
+            rayon::ThreadPoolBuilder::new()
+                .num_threads(threads)
+                .thread_name(move |i| format!("{name}-{i}"))
+                .build()
+                .map_err(|err| SimulationError::ThreadPool(err.to_string()))
+        };
+        let pool = build(config.threads, "sim")?;
+        let background = build(config.background_threads, "bg")?;
+        world.rebuild_fields_now(&background);
         Ok(Self {
             config,
             pool,
+            background,
             session: 1,
             state: CoreState::Ready,
             tick: config.start_tick,
@@ -127,8 +151,8 @@ impl Simulation {
             last_command_id: 0,
             counters: Counters::default(),
             events: EventQueue::new(),
-            world: World::new(config.map, config.persons, config.seed),
-            guidance: Adoption::new(config.adoption),
+            world,
+            fields: Adoption::new(config.adoption),
         })
     }
 
@@ -136,6 +160,14 @@ impl Simulation {
     /// (at `start_tick`) begin anew; unprocessed commands and events of the old session are
     /// discarded.
     pub fn restart(&mut self) {
+        let world = World::open_hall(self.config.map, self.config.persons, self.config.seed);
+        self.restart_with_world(world);
+    }
+
+    /// Like [`Simulation::restart`], with the given world (new game or a
+    /// loaded save game).
+    pub fn restart_with_world(&mut self, mut world: World) {
+        world.rebuild_fields_now(&self.background);
         self.session = self.session.wrapping_add(1).max(1);
         self.state = CoreState::Ready;
         self.tick = self.config.start_tick;
@@ -144,8 +176,8 @@ impl Simulation {
         self.inbox.clear();
         self.last_command_id = 0;
         self.events = EventQueue::new();
-        self.world = World::new(self.config.map, self.config.persons, self.config.seed);
-        self.guidance = Adoption::new(self.config.adoption);
+        self.world = world;
+        self.fields = Adoption::new(self.config.adoption);
     }
 
     /// Current session number.
@@ -251,11 +283,21 @@ impl Simulation {
         self.events.push(self.tick, event);
     }
 
-    /// Starts recomputing the derived data in the background and returns the
-    /// revision. Construction (step 3.1) triggers it after every change.
+    /// Starts recomputing the flow fields from the current grid and targets
+    /// in the background and returns the revision. Building (step 3.1)
+    /// triggers it after every change.
     pub fn request_recompute(&mut self) -> u32 {
-        self.guidance
-            .request(&self.pool, self.tick, Guidance::compute)
+        let input = self.world.field_input();
+        self.fields
+            .request(&self.background, self.tick, move |revision| {
+                FieldSet::compute(&input, revision)
+            })
+    }
+
+    /// World for building and for tests; changes take effect for the flow
+    /// fields with the next [`Simulation::request_recompute`].
+    pub fn world_mut(&mut self) -> &mut World {
+        &mut self.world
     }
 
     /// Deterministic hash over session-independent state: tick, speed and
@@ -295,8 +337,11 @@ impl Simulation {
             answers.push((id, self.execute(&command, &mut others)));
         }
 
-        if let Some((revision, guidance)) = self.guidance.poll(self.tick) {
-            self.world.adopt_guidance(guidance);
+        if let Some((revision, fields)) = self.fields.poll(self.tick) {
+            // The old set holds large buffers; freeing them is left to a
+            // background thread so that the tick is not delayed.
+            let old = self.world.adopt_fields(fields);
+            self.background.spawn(move || drop(old));
             others.push(Event::WaypointsAdopted { revision });
         }
 
@@ -423,6 +468,7 @@ mod tests {
         SimulationConfig {
             map: MapSize::new(256, 256).unwrap(),
             threads: 2,
+            background_threads: 1,
             adoption: AdoptionMode::FixedTick { delay: 3 },
             persons,
             seed: 1,
@@ -442,6 +488,13 @@ mod tests {
     fn zero_threads_are_rejected() {
         let err = Simulation::new(SimulationConfig {
             threads: 0,
+            ..config(0)
+        })
+        .err()
+        .unwrap();
+        assert_eq!(err, SimulationError::NoThreads);
+        let err = Simulation::new(SimulationConfig {
+            background_threads: 0,
             ..config(0)
         })
         .err()

@@ -8,11 +8,16 @@
 pub mod adoption;
 pub mod command;
 pub mod event;
+pub mod flowfield;
 pub mod geometry;
+pub mod grid;
 pub mod hash;
+pub mod network;
 pub mod pacer;
 pub mod runner;
+pub mod scenario;
 pub mod simulation;
+pub mod target;
 pub mod text;
 pub mod time;
 pub mod world;
