@@ -24,6 +24,12 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 19:48 (UTC) – [BEOBACHTUNG]
+
+- **Entwurf 2.9:** `docs/research/2.9-schnittstellenvertraege.md` angelegt (S-2, S-3, S-7, S-4, S-5, S-6 mit gemeinsamen Grundlagen: ein `MessagePort` mit Handshake, Typen aus Rust per ts-rs, Weltkoordinaten nach ADR-020). Nach Freigabe wandern die Verträge nach `architecture.md` Abschnitt 4.
+- **Getrennte Prüfung:** Der Entwurf berührt Kategorie 6 (nicht vertrauenswürdige Spielstände und Pakete, IPC). Prüfung durch einen Unteragenten mit anderem Modell (Sonnet 5.5), der nur Entwurf, Bedrohungsmodell und Ist-Code erhält, nicht den Gesprächsverlauf – keine Abgabe von Arbeit, daher kein Probelauf nötig.
+- **Mini-Reibung:** Tick-Reichweite von `u32` im ersten Entwurf falsch überschlagen („45 Spieljahre"); nachgerechnet: 2^32 Ticks zu 1/3 s ≈ 16.500 Spieltage.
+
 ### 2026-10-13 19:44 (UTC) – [SESSIONSTART]
 
 - **Letzter Stand:** 2.8 erledigt (ADR-020); PR Paddel87/OpenAirside#16 hat die Sessionende-Commits der Vorsession nach `main` gebracht (`b045477`). Branch `claude/gracious-galileo-2reksz` enthielt keine weiteren Commits und wurde auf `origin/main` neu aufgesetzt.
