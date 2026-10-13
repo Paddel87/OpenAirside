@@ -84,8 +84,6 @@ jobs:
       # Läuft auch, wenn der Tick-Benchmark rot ist.
       - name: Wegweiser im Referenz-Terminal
         if: always()
-        env:
-          OPENAIRSIDE_BENCH_MAX_RECOMPUTE_MS: "1" # erzwungener Fehlerfall, wird zurückgenommen
         run: cargo bench -p openairside-core --bench flowfield --locked -- --output "$GITHUB_WORKSPACE/bench-flowfield.json"
       - name: Vergleichswert vom letzten Lauf auf main holen
         if: always()
