@@ -24,7 +24,7 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
-### 2026-10-13 23:05 (UTC) – [BEOBACHTUNG]
+### 2026-10-13 22:58 (UTC) – [BEOBACHTUNG]
 
 - **2.2-N1 erledigt:** Der Projektinhaber hat „Kern-Benchmark" als Pflicht-Check im Ruleset `main-schutz` eingetragen. Geprüft über die öffentliche Schnittstelle `rules/branches/main`: 19 Pflicht-Checks, „Kern-Benchmark" mit Quelle GitHub Actions. Mini-Reibung: Die Liste der Checks war in der Ruleset-Ansicht eingeklappt („Show additional settings").
 - **Abweichung:** Im Ruleset ist „Require branches to be up to date" aktiv, bei 2.1-N1 steht „Branch nicht zwingend aktuell". Rückfrage an den Projektinhaber gestellt; der Fahrplan bleibt bis zur Antwort unverändert.
