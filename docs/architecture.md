@@ -124,7 +124,8 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Gemessen (Spike 1.2, 4 vCPU):** 512 × 512 × 2 Zellen, 29 Ziele: 14,5 MB, Neuberechnung 0,2–0,4 s; Aufwand linear in Zellen × Ziele.
 - **Abhängigkeiten:** Welt & Bau (Raster, Zonen), Personen (Nachfrage nach Zielen)
 - **NFRs:** Aufwand abhängig von der Zahl der Ziele, nicht der Personen; 10.000 Personen im Referenzszenario
-- **Offene Fragen:** Rastergröße des Referenzszenarios mit Reserve und fünf Etagen – Schritt 1.5; Modell für „Suchen ohne Schilder" und Feinwege – Erkundung vor Schritt 3.3
+- **Gemessen (Spike 1.5, 4 vCPU):** fünf Etagen, 768 × 768 (größte Karte, ADR-013): 101 MB / 0,98 s mit 36 Zielen, 180 MB / 1,7 s mit 64; Speicherspitze während der Neuberechnung etwa doppelt.
+- **Offene Fragen:** Leistungsnachweis mit 768 × 768 × 5 auf Referenz-PC und Mac – Schritt 1.5; Lage von Bahnen und Vorfeld im Raster – Planung Phase 2 (1.7); Modell für „Suchen ohne Schilder" und Feinwege – Erkundung vor Schritt 3.3
 
 ### Modul: Verkehr & Verkehrssteuerung [VORLÄUFIG]
 
@@ -414,7 +415,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Stack Electron/TypeScript/PixiJS/React + Rust (ADR-002) | VORLÄUFIG | 2026-10-13 | Phase 1, Schritt 1.5 (Leistungsnachweis) |
 | Betriebsart des Rust-Kerns (napi-rs, Utility-Prozess) | VORLÄUFIG | 2026-10-13 | ADR-009; Bestätigung durch Leistungsnachweis Schritt 1.5 |
 | Datenmodell und Parallelisierung im Kern | VORLÄUFIG | 2026-10-13 | ADR-010; Bestätigung im Leistungsnachweis 1.5 |
-| Wegfindung per Wegweiser-Prinzip (ADR-004, ADR-010) | VORLÄUFIG | 2026-10-13 | Spike 1.2 bestanden für 512² × 2; fünf Etagen und Rastergröße in Schritt 1.5 |
+| Wegfindung per Wegweiser-Prinzip (ADR-004, ADR-010, ADR-013) | VORLÄUFIG | 2026-10-13 | Spike 1.2 bestanden für 512² × 2; größte Karte 768² × 5 (ADR-013), im Container gemessen; Leistungsnachweis auf Referenz-PC und Mac in Schritt 1.5 |
 | S-1 Zustandspuffer | BELASTBAR | 2026-10-13 | Spike 1.3 auf Referenz-PC (Windows, 60 Bilder/s) und Mac M3 Pro (120 Bilder/s); Linux in 7.2 (ADR-011) |
 | S-2 Befehlskanal, S-3 Ereignisstrom | VORLÄUFIG | 2026-10-13 | Phase 2 |
 | S-4 Datenpaket-Schema | OFFEN | 2026-10-13 | Phase 2 |

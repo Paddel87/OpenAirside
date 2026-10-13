@@ -25,10 +25,11 @@
 | 010 | 2026-10-13 | Aktiv | ERKENNTNIS | DATENMODELL, PERFORMANCE, MODUL | Datenmodell, Architektur | Datenmodell und Parallelisierung im Kern, Übernahme der Wegweiser |
 | 011 | 2026-10-13 | Aktiv | REAKTIV | METHODIK, PERFORMANCE | Projekt-Vorgabe | Linux-Leistungsmessung auf echter Hardware verschoben auf Schritt 7.2 |
 | 012 | 2026-10-13 | Aktiv | REAKTIV | DEPLOYMENT | Build/Deploy, Projekt-Vorgabe | macOS nur für Apple-Chips, kein Intel- und kein Universal-Build |
+| 013 | 2026-10-13 | Aktiv | ERKENNTNIS | DATENMODELL, PERFORMANCE | Datenmodell | Größte Karte 768 × 768 Zellen je Etage, fünf Etagen |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 2 / 10 über die letzten 10 ADRs (ADR-003 bis ADR-012), 20 % – genau am Schwellenwert, nicht darüber; gesamt 2 / 12
+- **Aktueller Wert:** 2 / 10 über die letzten 10 ADRs (ADR-004 bis ADR-013), 20 % – genau am Schwellenwert, nicht darüber; gesamt 2 / 13
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -90,6 +91,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-010: Datenmodell und Parallelisierung im Kern, Übernahme der Wegweiser](decisions/ADR-010.md)
 - [ADR-011: Linux-Leistungsmessung auf echter Hardware verschoben auf Schritt 7.2](decisions/ADR-011.md)
 - [ADR-012: macOS nur für Apple-Chips, kein Intel- und kein Universal-Build](decisions/ADR-012.md)
+- [ADR-013: Größte Karte 768 × 768 Zellen je Etage, fünf Etagen](decisions/ADR-013.md)
 
 ---
 

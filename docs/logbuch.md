@@ -24,6 +24,12 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 14:38 – [ADR-ANGELEGT]
+
+- **ADR-013:** Größte Karte 768 × 768 Zellen je Etage, fünf Etagen (`[ERKENNTNIS]`, füllt die an 1.5 übergebene Festlegung aus ADR-010 aus, ändert ADR-010 nicht). Freigabe des Projektinhabers: „b".
+- **Nachgezogen:** `decisions.md` (Teil A, Index, Reaktiv-Quote 2/10 über ADR-004 bis ADR-013), `fahrplan.md` 1.5, `architecture.md` Modul Wegfindung und Reifegrad-Übersicht (bleibt `[VORLÄUFIG]`).
+- **Modellklasse:** Entscheidungs-Block nach Abschnitt 4 → Eskalations-Auslöser 1; aktiv `claude-opus-5-5` (Entscheidungs-Klasse), kein Wechsel nötig.
+
 ### 2026-10-13 14:28 – [BEOBACHTUNG]
 
 - **1.3/1.4 maßen Bauaktionen mit inkrementeller Reparatur:** `Sim::new` aus Spike 1.2 setzt `incremental = true`; die Brücke aus 1.3 änderte das nicht. Die in 1.3/1.4 gemessenen 39–54 ms bis zur Übernahme neuer Wegweiser gelten damit für die Reparatur, nicht für die in ADR-010 gewählte volle Neuberechnung (bei 512² × 2 laut 1.2: 0,2–0,4 s auf 4 Threads). Kein Einfluss auf die Akzeptanzkriterien von 1.3/1.4 (Bauaktion sichtbar, Wände wirken sofort); Testprogramm 1.5 misst die volle Neuberechnung. Festgehalten im Messprotokoll 1.5, Befund 4.
