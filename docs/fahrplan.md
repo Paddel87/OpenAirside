@@ -13,7 +13,7 @@
 - **Phasentyp:** ERKUNDUNG
 - **Aktiver Schritt:** 1.7 – Auswertung und Entscheidung
 - **Nächster Schritt:** 1.7 – Auswertung und Entscheidung
-- **Offene STOPP-Situationen:** keine (Reaktiv-Quote 3 / 10 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 bestätigt, siehe „Iterations-Reflexion")
+- **Offene STOPP-Situationen:** Freigabe der Pflichtfrage „Weiterbauen, umbauen oder neu aufsetzen" (1.7) steht aus; Widerspruch `CLAUDE.md` Abschnitt 6 ↔ `architecture.md` Abschnitt 0 zum Reifegrad vor UMSETZUNG wird mit dieser Entscheidung aufgelöst. Daneben (Reaktiv-Quote 3 / 10 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 bestätigt, siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -410,7 +410,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.7: Auswertung und Entscheidung
 
-- **Status:** IN ARBEIT (seit 2026-10-13)
+- **Status:** WARTET-AUF-FREIGABE (seit 2026-10-13) – Pflichtfrage vorgelegt, Bewertung und Stellungnahme in `docs/research/phasenabschluss-1.md`
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** sonstiges (Auswertung)
 - **Zeitbox (nur ERKUNDUNG):** maximal eine halbe Session
