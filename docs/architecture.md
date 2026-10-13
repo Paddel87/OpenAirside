@@ -20,6 +20,8 @@ Jedes Modul, jede Schnittstelle und jede Architektur-Aussage trägt einen der fo
 
 **Besonderheit der Initialisierung:** Der Stack (ADR-002) war unter der Bedingung des Leistungsnachweises in Phase 1 entschieden. Der Nachweis ist mit Auflagen erbracht (ADR-014, 2026-10-13); Stack, Pattern, Betriebsart, Datenmodell und Wegweiser-Prinzip sind seitdem `[BELASTBAR]`. Module und Schnittstellen bleiben `[VORLÄUFIG]`, bis ihre eigene Umsetzung sie belegt.
 
+**Reifegrad vor Umsetzungsschritten (Regel-007, ADR-016):** Grundsatzentscheidungen und jede Schnittstelle, die ein Umsetzungsschritt nutzt oder umsetzt, müssen vorher `[BELASTBAR]` sein; Module dürfen `[VORLÄUFIG]` in ihre erste Umsetzung gehen.
+
 <!-- ANCHOR:ueberblick -->
 ## 1. Überblick
 
@@ -85,7 +87,7 @@ graph TB
   INH -.->|Code-Mods OFFEN| UI
 ```
 
-Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsamen Weltzustand und interne Ereignisse des Takts, nicht durch direkten Zugriff auf interne Strukturen anderer Module. Die genaue Ausgestaltung (z. B. ECS-artige Datenhaltung) ist `[OFFEN]` bis Phase 1, Schritt 1.2.
+Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsamen Weltzustand und interne Ereignisse des Takts, nicht durch direkten Zugriff auf interne Strukturen anderer Module. Die Datenhaltung ist entschieden (ADR-010): eigene Felder je Objektart, kein ECS-Paket.
 
 <!-- ANCHOR:module -->
 ## 3. Module (detailliert)
@@ -96,12 +98,12 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Verantwortung:** Führt die Simulation in festen Simulationsschritten aus, unabhängig von der Bildrate; nimmt Befehle aus dem Befehlskanal entgegen, verteilt Arbeit auf die Kern-Module und auf mehrere Threads, schreibt den sichtbaren Zustand in den Zustandspuffer.
 - **Nicht-Verantwortung:** keine Darstellung, keine Dateizugriffe, keine Spielregeln einzelner Fachbereiche.
 - **Öffentliche Schnittstellen:** S-1, S-2, S-3, S-5
-- **Interne Struktur:** Je Objektart getrennte Felder „heiß" (je Tick gebraucht) und „kalt" (nur bei Ereignissen) in eigenem Rust-Code, kein ECS-Paket; Tick in zwei Phasen (Bewegung liest Zustand des Vortick, danach vertauschbare Zählungen), parallel mit rayon; bitgleich über Threadzahlen (ADR-010, `[VORLÄUFIG]`).
+- **Interne Struktur:** Je Objektart getrennte Felder „heiß" (je Tick gebraucht) und „kalt" (nur bei Ereignissen) in eigenem Rust-Code, kein ECS-Paket; Tick in zwei Phasen (Bewegung liest Zustand des Vortick, danach vertauschbare Zählungen), parallel mit rayon; bitgleich über Threadzahlen (ADR-010, `[BELASTBAR]` seit ADR-014).
 - **Abhängigkeiten (andere Module):** ruft alle Kern-Module je Simulationsschritt auf
-- **Abhängigkeiten (extern):** `rayon` (vorgesehen), `serde`
+- **Abhängigkeiten (extern):** `rayon`, `serde`
 - **Technologie:** Rust
 - **NFRs:** Rechenzeit pro Simulationsschritt muss bei höchster Spielgeschwindigkeit im Referenzszenario in das Zeitbudget passen (Abschnitt 6)
-- **Betriebsart:** natives Node-Modul (napi-rs) in einem Electron-Utility-Prozess, Simulation auf eigenen Rust-Threads (ADR-009, `[VORLÄUFIG]`); Kern-Crates ohne Anbindungscode (Regel-006).
+- **Betriebsart:** natives Node-Modul (napi-rs) in einem Electron-Utility-Prozess, Simulation auf eigenen Rust-Threads (ADR-009, `[BELASTBAR]` seit ADR-014); Kern-Crates ohne Anbindungscode (Regel-006).
 - **Determinismus:** bitgleich, solange neue Wegweiser zu festem Tick übernommen werden (Prüfmodus für Tests); im normalen Spiel werden sie übernommen, sobald fertig, Spiellogik darf davon nicht abhängen (ADR-010).
 
 ### Modul: Welt & Bau [VORLÄUFIG]
@@ -113,7 +115,7 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Interne Struktur:** Kachelraster je Etage; Änderungen werden als Änderungsbereiche an abhängige Module gemeldet, damit nur betroffene Teile neu berechnet werden.
 - **Abhängigkeiten:** Inhalte (Objektdefinitionen), Wirtschaft (Kosten)
 - **NFRs:** Bauaktion im nächsten Bild sichtbar; Neuberechnungen inkrementell und im Hintergrund
-- **Offene Fragen:** Granularität der Änderungsbereiche – Schritt 1.2
+- **Offene Fragen:** Granularität der Änderungsbereiche – geklärt in ADR-010: Wegweiser werden nach Bauänderungen vollständig im Hintergrund neu berechnet; feinere Änderungsbereiche nur, wenn eine Messung es verlangt. Zellgröße in Metern und Lage der Luftseite – Schritt 2.8
 
 ### Modul: Wegfindung & Passagierführung [VORLÄUFIG]
 
@@ -126,7 +128,7 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **NFRs:** Aufwand abhängig von der Zahl der Ziele, nicht der Personen; 10.000 Personen im Referenzszenario
 - **Gemessen (Spike 1.5, 4 vCPU):** fünf Etagen, 768 × 768 (größte Karte, ADR-013): 101 MB / 0,98 s mit 36 Zielen, 180 MB / 1,7 s mit 64; Speicherspitze während der Neuberechnung etwa doppelt.
 - **Gemessen (Spike 1.5, Referenz-PC und Mac M3 Pro):** volle Neuberechnung 768 × 768 × 5 mit 36 Zielen im Hintergrund 0,29 s (22 Threads), 0,66 s (6 Threads), 0,60 s (Mac, 9 Threads); Prinzip `[BELASTBAR]` seit 2026-10-13 (ADR-014).
-- **Offene Fragen:** Lage von Bahnen und Vorfeld im Raster – Planung Phase 2 (1.7); Modell für „Suchen ohne Schilder" und Feinwege – Erkundung vor Schritt 3.3
+- **Offene Fragen:** Lage von Bahnen und Vorfeld im Raster – Schritt 2.8 (ADR-016); Modell für „Suchen ohne Schilder" und Feinwege – Erkundung vor Schritt 3.3
 
 ### Modul: Verkehr & Verkehrssteuerung [VORLÄUFIG]
 
@@ -189,7 +191,7 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Öffentliche Schnittstellen:** S-1, S-2, S-3
 - **Technologie:** Rust (eigene Brücken-Crate mit napi-rs, Regel-006) und TypeScript; TypeScript-Typen werden aus Rust-Typen erzeugt
 - **Übertragungsweg:** `MessagePort` zwischen Kern-Prozess und Renderer, Bild je Frame als Kopie (ADR-009)
-- **Offene Fragen:** nur sichtbare oder geänderte Daten übertragen bei großen Datenmengen – Schritt 1.3
+- **Offene Fragen:** Übertragungsumfang – geklärt in Spike 1.3: kompaktes Vollbild mit Filter auf Etage und Kamera-Ausschnitt, keine Änderungslisten (97–99 % der Personen bewegen sich je Tick). Abfrage-Schnittstelle für Tabellen – Schritt 2.9
 
 ### Modul: Spielfeld [VORLÄUFIG]
 
@@ -332,8 +334,8 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 
 ### Performance
 
-- **Gesamtsystem:** 60 Bilder pro Sekunde im Referenzszenario auf der Zielhardware; Simulation ohne Rückstand bei höchster Spielgeschwindigkeit; mindestens 10.000 Personen `[BELASTBAR]` seit 2026-10-13 – Spike 1.5 auf Referenz-PC und Mac M3 Pro (ADR-014); Linux in 7.2 (ADR-011), echte 8-Kern-Hardware spätestens 4.1
-- **Bauen:** Bauaktion im nächsten Bild sichtbar `[VORLÄUFIG]` – in 1.5 nach 2–6 Bildern, weil erst nach Bestätigung durch den Kern gezeichnet; Maßnahme (vorläufiges Zeichnen im Fenster) in 1.7 (ADR-014)
+- **Gesamtsystem:** 60 Bilder pro Sekunde im Referenzszenario auf der Zielhardware; Simulation ohne Rückstand bei höchster Spielgeschwindigkeit; mindestens 10.000 Personen. Geteilt nach ADR-017: Simulationsschritt mit 10.000 Personen, Wegweiser 768² × 5 und Übergabe S-1 `[BELASTBAR]` seit 2026-10-13 – Spike 1.5 auf Referenz-PC und Mac M3 Pro (ADR-014); Linux in 7.2 (ADR-011), echte 8-Kern-Hardware spätestens 4.1. Darstellung mit echten Grafiken (Sprites, Atlanten, Overlays) und Last durch Fahrzeuge, Flugzeuge, Gepäck, Personal `[VORLÄUFIG]` – Messung in 2.10, vor 3.4/5.5 und im Referenzszenario 4.1
+- **Bauen:** Bauaktion im nächsten Bild sichtbar `[VORLÄUFIG]` – in 1.5 nach 2–6 Bildern, weil erst nach Bestätigung durch den Kern gezeichnet; Maßnahme (vorläufiges Zeichnen im Fenster, Abgleich über Befehlskennung): Vertrag in 2.9, Umsetzung in 3.1 (ADR-016)
 - **Langzeit:** konstante Rechenzeit und Speicher pro Simulationsschritt über lange Spielzeit `[BELASTBAR]` seit 2026-10-13 – 10-Minuten-Läufe in Spike 1.5 ohne Anstieg (ADR-014)
 - **Oberfläche:** gedrosselte Aktualisierung, virtualisierte Listen `[VORLÄUFIG]`
 
@@ -406,7 +408,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 - **Kern als WebAssembly mit mehreren Threads:** derzeit nur mit Nightly-Rust baubar, 1,37–1,50 × langsamer als nativ; nicht endgültig verworfen, sondern zurückgestellt: Neubewertung in Fahrplan-Schritt Q.2 – siehe ADR-009
 
 <!-- ANCHOR:reifegrad-uebersicht -->
-## 9. Reifegrad-Übersicht (Stand vom 2026-10-13, nach ADR-014)
+## 9. Reifegrad-Übersicht (Stand vom 2026-10-13, nach ADR-017)
 
 | Bestandteil | Reifegrad | Seit | Validiert durch / wartet auf |
 |---|---|---|---|
@@ -416,18 +418,19 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Stack Electron/TypeScript/PixiJS/React + Rust (ADR-002) | BELASTBAR | 2026-10-13 | Leistungsnachweis 1.5 auf Referenz-PC und Mac M3 Pro, ADR-014; Auflagen: Linux 7.2, schwache integrierte Grafik 5.8 |
 | Betriebsart des Rust-Kerns (napi-rs, Utility-Prozess) | BELASTBAR | 2026-10-13 | ADR-009; Leistungsnachweis 1.5, ADR-014; Linux 7.2 |
 | Datenmodell und Parallelisierung im Kern | BELASTBAR | 2026-10-13 | ADR-010; Leistungsnachweis 1.5 (Schritt 0,4–0,8 ms bei 10.000 Personen), ADR-014 |
-| Wegfindung per Wegweiser-Prinzip (ADR-004, ADR-010, ADR-013) | BELASTBAR | 2026-10-13 | Spike 1.2; Leistungsnachweis 1.5 mit 768² × 5 auf Referenz-PC und Mac, ADR-014; offen: Lage von Bahnen und Vorfeld (1.7), Feinwege (vor 3.3) |
+| Wegfindung per Wegweiser-Prinzip (ADR-004, ADR-010, ADR-013) | BELASTBAR | 2026-10-13 | Spike 1.2; Leistungsnachweis 1.5 mit 768² × 5 auf Referenz-PC und Mac, ADR-014; offen: Lage von Bahnen und Vorfeld (2.8), Feinwege (vor 3.3) |
 | S-1 Zustandspuffer | BELASTBAR | 2026-10-13 | Spike 1.3 auf Referenz-PC (Windows, 60 Bilder/s) und Mac M3 Pro (120 Bilder/s); Linux in 7.2 (ADR-011) |
-| S-2 Befehlskanal, S-3 Ereignisstrom | VORLÄUFIG | 2026-10-13 | Phase 2 |
-| S-4 Datenpaket-Schema | OFFEN | 2026-10-13 | Phase 2 |
-| S-5 Spielstand-Format | OFFEN | 2026-10-13 | Phase 2 |
-| S-6 Plattform-API | VORLÄUFIG | 2026-10-13 | Phase 2 |
-| Oberfläche mit großen Tabellen | BELASTBAR | 2026-10-13 | Spike 1.4 auf Referenz-PC (Windows) und Mac M3 Pro: virtualisiert bis 5.000 sortierte Zeilen ohne Einfluss auf die Bildrate, bis 20.000 bei wenigen Aktualisierungen/s; Bedingungen: Virtualisierung Pflicht, Sortierung sehr großer Tabellen nach Entscheidung 1.7; Linux in 7.2 (ADR-011) |
+| S-2 Befehlskanal, S-3 Ereignisstrom | VORLÄUFIG | 2026-10-13 | Entwurf mit ADR in 2.9 (Regel-007) |
+| S-4 Datenpaket-Schema | OFFEN | 2026-10-13 | Entwurf mit ADR in 2.9 |
+| S-5 Spielstand-Format | OFFEN | 2026-10-13 | Entwurf mit ADR in 2.9 |
+| S-6 Plattform-API | VORLÄUFIG | 2026-10-13 | Entwurf mit ADR in 2.9 |
+| Oberfläche mit großen Tabellen | BELASTBAR | 2026-10-13 | Spike 1.4 auf Referenz-PC (Windows) und Mac M3 Pro: virtualisiert bis 5.000 sortierte Zeilen ohne Einfluss auf die Bildrate, bis 20.000 bei wenigen Aktualisierungen/s; Bedingungen: Virtualisierung Pflicht; Abfrage-Schnittstelle in 2.9, Sortierung sehr großer Tabellen im Kern in 3.6 (ADR-016); Linux in 7.2 (ADR-011) |
 | Verpackung für drei Plattformen | VORLÄUFIG | 2026-10-13 | Schritt 1.6 erledigt (Bau und Start auf allen drei Plattformen); bleibt vorläufig: unsigniert (Entscheidung 7.1), Linux-Sandbox (7.2) |
 | Verkehr, Blockadevermeidung | VORLÄUFIG | 2026-10-13 | Erkundung vor Umsetzung des Verkehrs |
 | Code-Mods | OFFEN | 2026-10-13 | eigene Erkundung |
-| NFR Performance (Gesamtsystem, Langzeit) | BELASTBAR | 2026-10-13 | Leistungsnachweis 1.5, ADR-014; Linux 7.2, echte 8-Kern-Hardware spätestens 4.1 |
-| NFR Bauaktion im nächsten Bild | VORLÄUFIG | 2026-10-13 | in 1.5 nicht erreicht (2–6 Bilder); Maßnahme 1.7 |
+| NFR Performance: Simulationsschritt, Wegweiser, Übergabe S-1, Langzeit | BELASTBAR | 2026-10-13 | Leistungsnachweis 1.5, ADR-014, Grenze nach ADR-017; Linux 7.2, echte 8-Kern-Hardware spätestens 4.1 |
+| NFR Performance: Darstellung mit echten Grafiken, Last durch Fahrzeuge, Flugzeuge, Gepäck, Personal | VORLÄUFIG | 2026-10-13 | ADR-017 (Rückstufung aus ADR-014); Messung 2.10, vor 3.4 und 5.5, Referenzszenario 4.1 |
+| NFR Bauaktion im nächsten Bild | VORLÄUFIG | 2026-10-13 | in 1.5 nicht erreicht (2–6 Bilder); Vertrag 2.9, Umsetzung 3.1 (ADR-016) |
 
 <!-- ANCHOR:tooling-inventar -->
 ## 10. Tooling-Inventar

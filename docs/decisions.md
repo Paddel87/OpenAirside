@@ -28,10 +28,12 @@
 | 013 | 2026-10-13 | Aktiv | ERKENNTNIS | DATENMODELL, PERFORMANCE | Datenmodell | Größte Karte 768 × 768 Zellen je Etage, fünf Etagen |
 | 014 | 2026-10-13 | Aktiv | ERKENNTNIS | STACK, PERFORMANCE | Architektur | Stack aus ADR-002 bestätigt, Leistungsnachweis mit Auflagen erbracht |
 | 015 | 2026-10-13 | Aktiv | REAKTIV | DEPLOYMENT | Build/Deploy | Ad-hoc-Signatur für macOS-Pakete der Spike-Builds |
+| 016 | 2026-10-13 | Aktiv | ERKENNTNIS | METHODIK | Architektur, Methodik | Phasenabschluss 1 – gezielt umbauen, Reifegrad-Regel für Umsetzungsschritte |
+| 017 | 2026-10-13 | Aktiv | REAKTIV | PERFORMANCE | Architektur | Reifegrad „NFR Performance Gesamtsystem" auf das Gemessene begrenzt |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 3 / 10 über die letzten 10 ADRs (ADR-006 bis ADR-015: ADR-011, ADR-012, ADR-015), 30 % – **über dem Schwellenwert**; gesamt 3 / 15. Reflexion vom 2026-10-13 in `fahrplan.md` Abschnitt „Iterations-Reflexion"
+- **Aktueller Wert:** 4 / 10 über die letzten 10 ADRs (ADR-008 bis ADR-017: ADR-011, ADR-012, ADR-015, ADR-017), 40 % – **über dem Schwellenwert**; gesamt 4 / 17. Reflexionen vom 2026-10-13 in `fahrplan.md` Abschnitt „Iterations-Reflexion"
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -96,6 +98,8 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-013: Größte Karte 768 × 768 Zellen je Etage, fünf Etagen](decisions/ADR-013.md)
 - [ADR-014: Stack aus ADR-002 bestätigt, Leistungsnachweis mit Auflagen erbracht](decisions/ADR-014.md)
 - [ADR-015: Ad-hoc-Signatur für macOS-Pakete der Spike-Builds](decisions/ADR-015.md)
+- [ADR-016: Phasenabschluss 1 – gezielt umbauen, Reifegrad-Regel für Umsetzungsschritte](decisions/ADR-016.md)
+- [ADR-017: Reifegrad „NFR Performance Gesamtsystem" auf das Gemessene begrenzt](decisions/ADR-017.md)
 
 ---
 
@@ -163,6 +167,14 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - **Regel:** Die Kern-Crates kennen weder napi-rs noch wasm-bindgen noch Electron. Die Anbindung an JavaScript liegt ausschließlich in einer eigenen Brücken-Crate, die den Kern über seine öffentliche Rust-Schnittstelle nutzt. Der Kern bleibt ohne Anbindung baubar und testbar (auch für `wasm32-unknown-unknown`, damit Q.2 jederzeit möglich bleibt).
 - **Ausnahmen:** keine
 - **Gegenbeispiel:** `#[napi]`-Attribute oder `napi`-Typen in einer Kern-Crate; Spiellogik in der Brücken-Crate.
+
+#### Regel-007: Reifegrad vor Umsetzungsschritten
+
+- **Herkunft:** ADR-016
+- **Gilt für:** jeden Schritt einer UMSETZUNG-Phase (Auslegung von `CLAUDE.md` Abschnitt 6, „Architektur-Reifegrad respektieren", im Verhältnis zu `architecture.md` Abschnitt 0)
+- **Regel:** Vor dem Schritt müssen die **Grundsatzentscheidungen**, auf denen er aufbaut, `[BELASTBAR]` sein: Stack, Pattern, Datenmodell und jede Schnittstelle (S-n), die der Schritt nutzt oder umsetzt. **Module** dürfen `[VORLÄUFIG]` in ihre erste Umsetzung gehen; sie werden durch diese Umsetzung belastbar (Beförderungsregel). Ein `[OFFEN]`-Bestandteil, von dem der Schritt abhängt, ist immer ein Erkundungsgrund.
+- **Ausnahmen:** keine
+- **Gegenbeispiel:** Schritt 2.5 (Spielstand) beginnt, während S-5 noch `[OFFEN]` oder `[VORLÄUFIG]` ist; oder ein Modul wird zurückgestellt, weil es vor seiner ersten Umsetzung nicht `[BELASTBAR]` ist.
 
 <!-- ANCHOR:teil-d-geschaeftsentscheidungen -->
 ## Teil D: Geschäftsentscheidungen (BDR)
