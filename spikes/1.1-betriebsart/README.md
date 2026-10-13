@@ -103,3 +103,9 @@ Rückmeldung: Bildschirmfoto des Ergebnisfensters oder den angezeigten Text, plu
 - macOS: natives Modul per `lipo` als Universal-Datei, von electron-builder über `x64ArchFiles` unverändert übernommen. Keine Signatur durch electron-builder (`identity: null`), das Programm trägt dennoch eine Ad-hoc-Signatur und startet auf arm64.
 - Linux: Mit Chromium-Sandbox Abbruch (Exit-Code 133, „SUID sandbox helper binary was found, but is not configured correctly"), weil `chrome-sandbox` nach dem Entpacken nicht dem Benutzer root mit SUID gehört; ohne Sandbox läuft das Programm. Für Releases zu lösen (Landeplatz Fahrplan 7.2).
 - Bildraten aus dem CI (9 / 64 / 46) sind ohne Aussagekraft: virtuelle Maschinen ohne Grafikkarte.
+
+### Rückmeldungen von den Rechnern des Projektinhabers (2026-10-13)
+
+- **Windows (Referenz-PC):** SmartScreen-Warnung beim unsignierten Programm; nach Zulassen lauffähig.
+- **macOS (M3 Pro, Testprogramm 1.3):** Meldung „kann nicht geöffnet werden … konnte nicht überprüfen, ob … frei von Schadsoftware ist" mit „In den Papierkorb legen" / „Fertig". Lösung: „Fertig", dann Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen", mit Passwort bestätigen, App erneut starten. Rechtsklick → „Öffnen" hilft seit macOS 15 nicht mehr; `xattr -cr` war nicht nötig.
+- **Linux:** nur CI-Rauchtest (ADR-011).

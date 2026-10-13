@@ -113,11 +113,32 @@ Datei `results/referenz-pc-windows-rx7700xt.json`, Testprogramm aus „Spike-Bui
 
 **Bewertung:** 10.000 Personen erreichen auf dem Referenz-PC unter Windows durchgehend die Bildwiederholrate des Bildschirms (60 Bilder/s; der Bildschirm ist laut Projektinhaber auf 60 Hz begrenzt), ohne ein einziges Bild über 20 ms – mit beiden Zeichenarten. Bei 50.000 Personen hält nur `particles` die 60 Bilder/s; `sprites` fällt beim Schwenken auf 46 Bilder/s. Das bestätigt die Empfehlung `ParticleContainer`. Die Reserve über 60 Bilder/s ist mit dieser Messung nicht bestimmbar; die Rechenzeit im Renderer (≤ 1,3 ms mit `particles`) deutet auf viel Reserve.
 
+### Mac M3 Pro (2026-10-13)
+
+Datei `results/mac-m3pro.json`, Messreihe `quick` (167 s). Rechner: Apple M3 Pro (11 Kerne), 18 GB gemeinsamer Speicher, eingebautes Display mit 120 Hz (ProMotion), Fenster 1280 × 768 bei Pixeldichte 2 (2560 × 1536 Bildpunkte), WebGL2 über ANGLE/Metal. Takt 60 Ticks/s, 4 Simulations-Threads. Netzteil angeschlossen.
+
+| Personen | Übertragung | Zeichenart | Bilder/s (Phasen) | Bild p99 | Bilder > 20 ms | Render (CPU) Mittel max | Rundlauf p50 / p99 max | Sim-Schritt Mittel / p99 |
+|---|---|---|---|---|---|---|---|---|
+| 10.000 | Ausschnitt | particles | 120,0–120,1 | 9,3 ms | 0 | 0,56 ms | 1,0 / 1,8 ms | 1,1 / 3,3 ms¹ |
+| 10.000 | alles | particles | 120,0–120,2 | 9,4 ms | 0 | 0,58 ms | 1,0 / 2,0 ms | 1,1 / 3,3 ms |
+| 10.000 | Ausschnitt | sprites | 120,0–120,2 | 9,4 ms | 0 | 1,9 ms | 2,1 / 3,4 ms | 0,72 / 3,7 ms |
+| 10.000 | alles | sprites | 119,9–120,1 | 9,4 ms | 0 | 1,7 ms | 1,7 / 3,4 ms | 0,49 / 2,7 ms |
+| 50.000 | Ausschnitt | particles | 120,0 | 9,4 ms | 0 | 0,82 ms | 1,2 / 2,6 ms | 1,5 / 4,2 ms¹ |
+| 50.000 | alles | particles | 120,0–120,2 | 9,4 ms | 0 | 0,76 ms | 1,0 / 2,5 ms | 0,96 / 2,4 ms |
+| 50.000 | Ausschnitt | sprites | **109,4**–120,0 | 16,9 ms | 0 | 7,3 ms | 7,4 / 8,9 ms | 0,70 / 2,0 ms |
+| 50.000 | alles | sprites | **80,3**–120,0 | 17,4 ms | 0 | 9,1 ms | 10,9 / 12,5 ms | 0,54 / 1,4 ms |
+
+¹ Läufe mit Bauaktionen: Baubefehl im Simulations-Thread im Mittel 10 ms, höchstens 17,8 ms; kein Tick in Rückstand. Ein Tick in Rückstand gab es nur im Lauf „50.000, alles, sprites“.
+
+**Bauaktion:** Klick bis gezeichnetes Bild p50 26,7–27,9 ms, max 34,1 ms; bei 120 Hz sind das **4 Bilder (max 5)** – zeitlich wie unter Windows, nur in kürzeren Bildern. Neuberechnung der Wegweiser 53–54 ms im Mittel, max 84 ms.
+
+**Bewertung:** Mit `particles` hält das Spielfeld bei 10.000 und 50.000 Personen die volle Bildwiederholrate des Displays von 120 Bildern/s (Bild p99 ≤ 9,4 ms), bei doppelter Pixelzahl gegenüber Windows. Sprites fallen bei 50.000 Personen beim Schwenken auf 80–109 Bilder/s. Der Simulationsschritt ist mit 0,5–1,5 ms im Mittel länger als auf dem Referenz-PC (0,3–0,9 ms), bleibt aber weit unter dem Budget. Der M3 Pro ist eine starke integrierte Grafik; die Untergrenze „schwache integrierte Grafik" belegt diese Messung nicht.
+
 ## Bewertung gegen die Akzeptanzkriterien
 
 1. **Dauer der Übergabe je Bild:** beantwortet. 0,5–1,1 ms bei 10.000 Personen, 1,1–2,6 ms bei 50.000 (p99 bis 8,7 ms bei 50.000 und vollständiger Übertragung). Die Kopie je Bild aus ADR-009 trägt. Empfehlung für Phase 2: kompaktes Format und Filter auf Etage und Kamera-Ausschnitt; keine Änderungslisten.
 2. **Bauaktion im nächsten Bild:** beantwortet mit **nein** – im übernächsten (27–37 ms). Abweichung von der Regel in `project-context.md` Abschnitt 6 („im nächsten dargestellten Bild"). Mögliche Maßnahmen, nicht umgesetzt: Befehle in der Brücke sofort statt zu Beginn des nächsten Ticks ausführen; den Bauauftrag in der Präsentation sofort als Vorschau zeigen (wie die Bauplanung im Original, bevor Arbeiter bauen) – reine Darstellung, ändert keinen Zustand; höherer Takt. Entscheidung gehört in die Auswertung 1.7.
-3. **Bilder pro Sekunde mit 10.000 Personen:** **Referenz-PC unter Windows: 60 Bilder/s ohne Ausreißer** (auch 50.000 Personen mit `particles`), siehe „Messung auf echter Grafik". Offen: Mac (M3 Pro) und Linux (Live-USB auf dem Referenz-PC).
+3. **Bilder pro Sekunde mit 10.000 Personen:** **beantwortet:** Referenz-PC unter Windows 60 Bilder/s (Bildschirmgrenze), Mac M3 Pro 120 Bilder/s (Displaygrenze), jeweils ohne ein Bild über 20 ms, auch mit 50.000 Personen und `particles`; siehe „Messung auf echter Grafik". Linux auf echter Hardware: verschoben auf 7.2 (ADR-011).
 
 ## Testprogramm herunterladen und starten
 

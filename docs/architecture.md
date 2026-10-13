@@ -234,9 +234,9 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 <!-- ANCHOR:schnittstellenvertraege -->
 ## 4. Schnittstellenverträge
 
-### Schnittstelle: S-1 Zustandspuffer (Kern → Präsentation) [VORLÄUFIG]
+### Schnittstelle: S-1 Zustandspuffer (Kern → Präsentation) [BELASTBAR]
 
-- **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13
+- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, validiert durch Spike 1.3 auf Referenz-PC (Windows) und Mac M3 Pro: Dreifachpuffer im Kern-Prozess, kompaktes Format mit Filter auf Etage und Ausschnitt, Rundlauf 0,6–2,8 ms je Bild, Bildrate an der Displaygrenze (60 bzw. 120 Bilder/s); Linux nach ADR-011 in 7.2
 - **Typ:** Puffer im Kern-Prozess, je Bild als Kopie per `MessagePort` an den Renderer übertragen (ADR-009); im Spike 160 KB bei 10.000 Personen, 1,1 ms Übertragung im Mittel
 - **Anbieter:** Takt & Weltzustand
 - **Konsument:** Spielfeld, Oberfläche
@@ -414,13 +414,13 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Betriebsart des Rust-Kerns (napi-rs, Utility-Prozess) | VORLÄUFIG | 2026-10-13 | ADR-009; Bestätigung durch Leistungsnachweis Schritt 1.5 |
 | Datenmodell und Parallelisierung im Kern | VORLÄUFIG | 2026-10-13 | ADR-010; Bestätigung im Leistungsnachweis 1.5 |
 | Wegfindung per Wegweiser-Prinzip (ADR-004, ADR-010) | VORLÄUFIG | 2026-10-13 | Spike 1.2 bestanden für 512² × 2; fünf Etagen und Rastergröße in Schritt 1.5 |
-| S-1 Zustandspuffer | VORLÄUFIG | 2026-10-13 | Spike 1.3: Dreifachpuffer und Übergabe gemessen (0,5–2,6 ms je Bild); Bildrate auf Referenz-PC/Windows 60 Bilder/s gemessen; wartet auf Mac (Linux: ADR-011) |
+| S-1 Zustandspuffer | BELASTBAR | 2026-10-13 | Spike 1.3 auf Referenz-PC (Windows, 60 Bilder/s) und Mac M3 Pro (120 Bilder/s); Linux in 7.2 (ADR-011) |
 | S-2 Befehlskanal, S-3 Ereignisstrom | VORLÄUFIG | 2026-10-13 | Phase 2 |
 | S-4 Datenpaket-Schema | OFFEN | 2026-10-13 | Phase 2 |
 | S-5 Spielstand-Format | OFFEN | 2026-10-13 | Phase 2 |
 | S-6 Plattform-API | VORLÄUFIG | 2026-10-13 | Phase 2 |
 | Oberfläche mit großen Tabellen | VORLÄUFIG | 2026-10-13 | Phase 1, Schritt 1.4 |
-| Verpackung für drei Plattformen | VORLÄUFIG | 2026-10-13 | Phase 1, Schritt 1.6 |
+| Verpackung für drei Plattformen | VORLÄUFIG | 2026-10-13 | Schritt 1.6 erledigt (Bau und Start auf allen drei Plattformen); bleibt vorläufig: unsigniert (Entscheidung 7.1), Linux-Sandbox (7.2) |
 | Verkehr, Blockadevermeidung | VORLÄUFIG | 2026-10-13 | Erkundung vor Umsetzung des Verkehrs |
 | Code-Mods | OFFEN | 2026-10-13 | eigene Erkundung |
 | NFR Performance | VORLÄUFIG | 2026-10-13 | Phase 1, Schritt 1.5 |
