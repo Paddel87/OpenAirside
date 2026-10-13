@@ -1,0 +1,27 @@
+[package]
+name = "openairside-bridge"
+description = "napi-rs binding of the OpenAirside core for the Electron utility process (ADR-009)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+# Binding code only; verified end-to-end by the Electron smoke test
+# (e2e/smoke.spec.ts, ADR-018), not by `cargo test`.
+test = false
+doctest = false
+
+[dependencies]
+openairside-core.workspace = true
+napi.workspace = true
+napi-derive.workspace = true
+
+[build-dependencies]
+napi-build.workspace = true
+
+[lints]
+workspace = true

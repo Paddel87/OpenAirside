@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-13
+- **Stand vom:** 2026-10-13 (Sessionstart 16:40 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (Phase 1 abgeschlossen, ADR-016)
-- **Nächster Schritt:** 2.1 (Repository-Struktur, CI-Gates) und 2.8 (Weltmaßstab, Luftseite, Zeitmodell), parallel möglich
-- **Offene STOPP-Situationen:** keine (Reaktiv-Quote 4 / 10 über dem Schwellenwert; Reflexion zu ADR-017 vom Projektinhaber am 2026-10-13 bestätigt, siehe „Iterations-Reflexion")
+- **Aktiver Schritt:** keiner (2.1 erledigt am 2026-10-13; Nachlauf 2.1-N1 und 2.1-N2 beim Projektinhaber)
+- **Nächster Schritt:** 2.8 (Weltmaßstab, Luftseite, Zeitmodell) in einer folgenden Session, danach 2.9
+- **Offene STOPP-Situationen:** keine (Reaktiv-Quote 5 / 10 nach ADR-019 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 zur Kenntnis genommen, siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -100,7 +100,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.1: Repository-Struktur, CI-Gates und Werkzeuge
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT 2026-10-13 (ADR-018, ADR-019); CI-Lauf 38440669665 und Release-Lauf 38440601610 grün auf drei Plattformen
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 1.7
 - **Freigabepflichtig:** ja (Kategorie 7 Build- und Deploy-Pipeline; Kategorie 3 bei Änderung der napi-Versionen)
@@ -119,6 +119,10 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Plattform, Build/CI
 - **Reifegrad-Wirkung:** keine (Verpackung bleibt `[VORLÄUFIG]` bis 7.1/7.2)
 - **Artefakte:** Workspace-Gerüst, Workflows, `.editorconfig`, Runbook, ggf. ADR zur napi-Version
+- **Ergebnis:** `core/` (openairside-core), `bridge/` (napi, `test = false`), `app/` (Electron mit Kern im Utility-Prozess, leeres gehärtetes Fenster), `scripts/check-licenses.mjs`; Gates lokal und in der CI grün. Coverage: Rust-Kern 100 % Lines (1 Test), TypeScript und Skripte 87,2 % Lines (53 Tests; App-Module 100 %, Lizenz-Skript 81,7 %). Rauchtest auf Windows, Linux und macOS (Entwicklungs-Build in `ci.yml`, gepackte Programme in `release.yml`); erzwungener Fehlerfall belegt (ohne natives Modul rot). Runbook am frischen Worktree unter Linux validiert. Abweichung: `c13ebd9` trägt Typ `chore`, enthält aber auch eine CI-Änderung (Logbuch 17:36 UTC).
+- **Nachlauf (zählt nicht zur Phase):**
+  - **2.1-N1 `[OFFEN]` – Branch-Schutz auf `main` (Projektinhaber):** GitHub → Settings → Branches (bzw. Rules → Rulesets) → Regel für `main`: Pull Request vor Merge, Status-Checks der CI als Pflicht, Force-Push und Löschen gesperrt. Frist: vor dem Merge von 2.8.
+  - **2.1-N2 `[OFFEN]` – Startweg heruntergeladener Pakete prüfen (Projektinhaber, Maßnahme 1):** nach `docs/onboarding-runbook.md` Abschnitt 3, Schritt 6, auf Mac und Referenz-PC (Windows) mit den Artefakten des Release-Laufs 38440601610 oder eines neuen manuellen Laufs. Frist: vor Beginn von 2.7.
 
 #### 2.8: Weltmaßstab, Luftseite und Zeitmodell
 
@@ -328,8 +332,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 7.1 | Gate vor dem ersten öffentlichen Release (CLAUDE.md Abschnitt 12, `templates/gate-deployment.md`): Sicherheits-Review, Vertretung, Notfall-Handbuch, Signatur-Entscheidung | – |
-| 7.2 | Referenzszenario-Nachweis auf allen Plattformen inklusive Linux-Leistungsmessung auf echter Hardware mit gängigen Treibern (ADR-011, früher gern durch Mitwirkende), Langzeitstabilität, Release-Builds v1.0.0; Linux-Pakete mit funktionierender Chromium-Sandbox (z. B. deb mit SUID-`chrome-sandbox` oder AppArmor-Profil, Befund aus 1.6) | FR-040, FR-045 |
+| 7.1 | Gate vor dem ersten öffentlichen Release (CLAUDE.md Abschnitt 12, `templates/gate-deployment.md`): Sicherheits-Review, Vertretung, Notfall-Handbuch, Signatur-Entscheidung; Lizenzhinweise aller ausgelieferten Abhängigkeiten im Paket (ADR-019) | – |
+| 7.2 | Referenzszenario-Nachweis auf allen Plattformen inklusive Linux-Leistungsmessung auf echter Hardware mit gängigen Treibern (ADR-011, früher gern durch Mitwirkende), Langzeitstabilität, Release-Builds v1.0.0, auch für Windows und Linux auf arm64 (`project-context.md` Abschnitt 6; 2.1 baut dort nur x64); Linux-Pakete mit funktionierender Chromium-Sandbox (z. B. deb mit SUID-`chrome-sandbox` oder AppArmor-Profil, Befund aus 1.6) | FR-040, FR-045 |
 | 7.3 | Erfolgskriterien der Vision ohne eigene Messgröße: Spieltest des Projektinhabers über mehrere Stunden („Gleichwertiges Spielerlebnis") und Bilanz des Machbarkeitstests der KI-gestützten Entwicklung (ADR-016) | – |
 
 ### Querschnitt: wiederkehrende Schritte
@@ -344,7 +348,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Wahl neuer Linien ist eine Entscheidung über externe Abhängigkeiten.
 - **Eingangskriterien:** Vorlauf im Ablaufdaten-Register erreicht
 - **Anforderungen (ab Klasse M):** FR-045
-- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge; Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
+- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge, abgekündigte Unterpakete von electron-builder (Register-Eintrag vom 2026-10-13); Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
 - **Akzeptanzkriterien:** Keine fixierte Version ist über ihrem Lebensende; Register und `Verifiziert`-Vermerke aktuell; CI grün auf drei Plattformen.
 - **Betroffene Module:** Plattform, Build/CI
 - **Reifegrad-Wirkung:** keine
@@ -402,6 +406,16 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Kenntnisnahme:** Projektinhaber am 2026-10-13: „Zustimmung, Reflexion zur Kenntnis genommen".
 - **Maßnahme (3):** Eine Beförderung auf `[BELASTBAR]` nennt den gemessenen Umfang in der Reifegrad-Zeile; was die Messung nicht abdeckt, steht als eigene Zeile `[VORLÄUFIG]`.
 - **Ausblick:** Die Quote sinkt erst, wenn ADR-011, ADR-012 und ADR-015 aus dem Fenster fallen (ab ADR-018, ADR-019, ADR-022 bei nicht reaktiven Folge-ADRs). Phase 2 plant mit 2.8 und 2.9 die bekannten Entscheidungen vorab, damit dort keine reaktiven ADRs entstehen.
+
+### Ergänzung Reaktiv-Quote (2026-10-13, Anlass ADR-019)
+
+- **Befund:** 5 / 10 `[REAKTIV]` (ADR-011, ADR-012, ADR-015, ADR-017, ADR-019) über ADR-010 bis ADR-019, 50 %.
+- **Ursache von ADR-019:** Die erlaubte Lizenzliste in Modus 2 wurde ohne Abgleich mit den Lizenzen der Werkzeug-Abhängigkeiten festgelegt; die Spikes haben npm-Lizenzen nicht geprüft. Der Befund kam erst mit der ersten echten Lizenzprüfung in 2.1. Wie bei ADR-011, ADR-012 und ADR-015 betrifft er Werkzeuge und Verpackung, nicht Kern, Brücke, Datenmodell oder Präsentation.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI). ADR-019 ändert eine Compliance-Liste, keine Modulgrenze, Schnittstelle oder Datenhaltung.
+- **Muster:** Vier der fünf reaktiven ADRs (ADR-011, ADR-012, ADR-015, ADR-019) entstehen an der Grenze zu Werkzeugen, Plattformen und Verpackung; ADR-017 an einer zu breiten Reifegrad-Aussage. Die Häufung zeigt, dass Annahmen über das Werkzeug-Umfeld vor der ersten Nutzung nicht geprüft wurden.
+- **Maßnahme (4):** Vor jeder neuen Prüfung oder Liste mit Freigabe-Wirkung (Lizenzen, Audits, Plattformziele) läuft sie einmal gegen den tatsächlichen Bestand, und der Befund geht in dieselbe Freigabe ein. Für 2.1 bereits angewandt: `cargo deny check` und die npm-Zählung liefen vor dem Lizenz-Skript.
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs sinkt die Quote ab ADR-021 (ADR-011 fällt heraus) auf 4 / 10, ab ADR-022 auf 3 / 10, ab ADR-025 auf 2 / 10 (20 %, Schwellenwert eingehalten).
+- **Kenntnisnahme:** Projektinhaber am 2026-10-13: „Zur Kenntnis genommen"; kein Umbau, Maßnahme (4) gilt.
 
 ---
 

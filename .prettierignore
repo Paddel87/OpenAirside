@@ -18,3 +18,16 @@
 
 # Alle Markdown-Dokumente, in jedem Verzeichnis.
 *.md
+
+# Build- und Werkzeug-Ausgaben, Lockfile und fremder Bestand (ADR-018).
+node_modules/
+dist/
+app/native/
+coverage/
+release/
+target/
+test-results/
+playwright-report/
+package-lock.json
+spikes/
+templates/

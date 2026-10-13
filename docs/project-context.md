@@ -52,9 +52,8 @@ Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachwei
 #### Rust-Kern und Anbindung
 
 - Betriebsart des Kerns: natives Node-Modul (napi-rs) in einem Electron-Utility-Prozess (ADR-009, `[BELASTBAR]` seit ADR-014)
-  - napi 3.12.7, napi-derive 3.6.8, @napi-rs/cli 3.9.1 (Node-API 10 in Electron 44) — Verifiziert: 2026-10-13, Quelle: crates.io, npm
+  - napi 3.12.7, napi-derive 3.6.12, @napi-rs/cli 3.9.1 (Node-API 10 in Electron 44) — Verifiziert: 2026-10-13, Quelle: crates.io, npm; napi-derive 3.6.12 zieht napi-derive-backend 6.1.5 und baut ohne Festsetzung (ADR-018, Messung im frischen Workspace)
   - napi-build 2.4.4 (Begleit-Crate, von napi 3.12.7 mit `^2.4.4` verlangt) — Verifiziert: 2026-10-13, Quelle: crates.io
-  - napi-derive-backend 6.1.4 per `Cargo.lock` festgesetzt (6.1.5 bricht den Build mit napi-derive 3.6.8) — Verifiziert: 2026-10-13, Quelle: Build im Spike 1.1
   - zurückgestellt, nicht im Stack: wasm-bindgen 0.2.128 für WebAssembly mit Threads, Neubewertung in Fahrplan-Schritt Q.2
 - serde 1.0.229, rayon 1.12.0, ts-rs 12.0.1 — Verifiziert: 2026-10-13, Quelle: crates.io
 
@@ -170,7 +169,7 @@ Keine externen APIs im Spiel.
 
 - **Projektlizenz:** MIT für den Code; eigene Grafiken unter CC0.
 - **Audio:** freie Bibliotheken und KI-generierte Sounds erlaubt. → Regel: Audio-Dateien mit abweichenden Bedingungen liegen in einem eigenen Verzeichnis mit Lizenzhinweis-Datei.
-- **Erlaubte Abhängigkeitslizenzen:** MIT, BSD, Apache-2.0, ISC, zlib, MPL-2.0, Unicode-3.0. → Regel: `cargo-deny` (Rust) und Lizenzprüfung für npm in der CI.
+- **Erlaubte Abhängigkeitslizenzen:** MIT, BSD (2- und 3-Klausel), Apache-2.0, ISC, zlib, MPL-2.0, Unicode-3.0, BlueOak-1.0.0, 0BSD, Python-2.0, WTFPL (letzte vier seit ADR-019, gelten für ausgelieferte Teile und Werkzeuge gleichermaßen). → Regel: `cargo-deny` (Rust) und Lizenzprüfung für npm in der CI.
 - **Ausgeschlossene Lizenzen:** GPL, AGPL und proprietäre Lizenzen, die Mitwirkende an ein Konto oder eine Lizenzvereinbarung binden.
 
 ### Methodik-Schwellenwerte
@@ -214,6 +213,8 @@ Pflichtkategorien nach `CLAUDE.md` Abschnitt 15. Werkzeugversionen nach derselbe
 - **Type-Checker:** `tsc --noEmit` (TypeScript 6.0.3) mit `strict` und `noUncheckedIndexedAccess`
 - **Security-Scanner:** CodeQL über GitHub Actions; Electron-Härtung aus Abschnitt 6 als Lint- und Testprüfung
 - **Dependency-Audit:** `npm audit --audit-level=high`, zusätzlich Dependabot
+- **Begleitpakete (ADR-018):** `@types/node` 24.19.2 (Node 24 in Electron 44), `@eslint/js` 10.0.1, `@vitest/coverage-v8` 5.0.4, `@playwright/test` 1.62.1 — Verifiziert: 2026-10-13, Quelle: npm
+- **Lizenzprüfung npm:** eigenes Skript `scripts/check-licenses.mjs` gegen die erlaubten Lizenzen aus Abschnitt 6 (ADR-018)
 - **Test-Runner:** Vitest 5.0.4 mit Coverage (v8); Playwright 1.62.1 für Ende-zu-Ende-Tests der Electron-Anwendung (Electron-Unterstützung von Playwright ist „experimentell", Version exakt pinnen)
 - **Naming-Konvention:** camelCase für Variablen und Funktionen, PascalCase für Typen und React-Komponenten
 
@@ -229,7 +230,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 |---|---|---|---|---|
 | – | – | keine | 2026-10-13 | – |
 
-**Warnungsquellen ohne Schalter:** Hinweise der CI-Plattform zu Action-Versionen und Runner-Images (Annotationen im Lauf); Bündelgrößen-Warnungen von Vite; Abkündigungshinweise von electron-builder.
+**Warnungsquellen ohne Schalter:** Hinweise der CI-Plattform zu Action-Versionen und Runner-Images (Annotationen im Lauf); Bündelgrößen-Warnungen von Vite; Abkündigungshinweise von electron-builder und npm (`npm warn deprecated`, Ablaufdaten-Register, Q.1). Bekannter Bestand (Stand 2026-10-13, Release-Lauf 38440601610): npm „install scripts not yet covered by allowScripts" für electron-winstaller und fsevents (Skripte laufen nicht; Bau und Tests grün; Prüfung in Q.1); electron-builder „asar usage is disabled" (Muster aus den Spikes, Entscheidung mit der Signatur in 7.1) und „default Electron icon is used" (Symbol mit dem Stilleitfaden in 2.10).
 
 ### Durchsetzungsmechanismen
 
@@ -247,7 +248,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
   - Tests inklusive Coverage-Mindestwert
   - Leistungstest Referenzszenario (ab Phase 4, sobald das Referenzszenario baubar ist)
 - **Branch-Protection auf `main`:** alle Pflicht-Gates grün; Force-Push gesperrt (einzurichten in Schritt 2.1).
-- **Bis Schritt 2.1** laufen die Code-Jobs nur, wenn `Cargo.toml` bzw. `package.json` existiert; bis dahin prüft die CI nur die Dokumentation.
+- **Seit Schritt 2.1** laufen alle Code-Jobs bei jedem Push (ADR-018): Rust (fmt, clippy, cargo-deny, Tests auf drei Plattformen, Coverage Kern ≥ 85 % und gesamt ≥ 70 %), TypeScript (ESLint, Prettier, tsc, npm audit, Lizenz-Skript, Vitest mit Coverage auf drei Plattformen) und der Electron-Rauchtest auf drei Plattformen; die Brücken-Crate hat keine cargo-Tests und wird über den Rauchtest geprüft.
 
 ### Coverage-Mindestwerte
 
@@ -296,7 +297,8 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 | Runner-Image `ubuntu-latest` → Ubuntu 26 | ab 2026-10-19 (Umstellung durch GitHub) | – | CI-Annotation, actions/runner-images#14748 | Q.1 (erster Lauf nach der Umstellung beobachten) |
 | Node 20 in GitHub Actions (abgekündigt) | behoben am 2026-10-13: pre-commit/action ersetzt | – | CI-Protokoll, GitHub-Changelog 2025-09-19 | – |
 | WebAssembly-Threads mit stabilem Rust (`atomics`, threadfähige Standardbibliothek ohne `build-std`) | Nachprüfung 2027-01-02, danach bei jedem Q.1 | – | rust-lang/rust RELEASES.md, wasm-bindgen-Doku | Q.2 |
-| Claude-Kontingent | rollierendes 5-Stunden-Fenster („five_hour“), Zurücksetz-Zeitpunkt je Session über `get_session` | – | Laufzeitumgebung, geprüft 2026-10-13 | – (kein Fristablauf) |
+| Abgekündigte Unterpakete von electron-builder 26.16.1 (inflight 1.0.6, rimraf 2.6.3, glob 7.2.3, boolean 3.2.0; Hinweise bei `npm install`) | keine Frist, Nachprüfung bei jedem Q.1 | – | npm-Installationsprotokoll 2026-10-13 | Q.1 (electron-builder-Version prüfen, ob die Unterpakete ersetzt sind) |
+| Claude-Kontingent | rollierendes 5-Stunden-Fenster („five_hour“) und 7-Tage-Fenster („seven_day“), Zurücksetz-Zeitpunkt je Session über `get_session`; am 2026-10-13 17:46 UTC 7-Tage-Fenster mit Status `allowed_warning`, Zurücksetzen 2026-10-18 08:00 UTC | – | Laufzeitumgebung, geprüft 2026-10-13 | – (kein Fristablauf) |
 
 ### Kosten
 

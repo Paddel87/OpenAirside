@@ -17,12 +17,95 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) ausgeplant; Reaktiv-Reflexion zu ADR-017 bestätigt; nächste Schritte 2.1 und 2.8 in neuer Session.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019); Nachlauf 2.1-N1/N2 beim Projektinhaber; nächster Schritt 2.8 in neuer Session.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 17:47 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 67 Minuten seit `[SESSIONSTART]` 16:40 UTC
+- **Bearbeitet:** 2.1 – Repository-Struktur, CI-Gates und Werkzeuge
+- **Erreicht:** 2.1 `[ERLEDIGT]`. ADR-018 (Gerüst, CI, napi-derive 3.6.12) und ADR-019 (Lizenzliste erweitert, `[REAKTIV]`, Reflexion zur Kenntnis genommen). Rust-Workspace `core/` + `bridge/`, Electron-Gerüst mit Kern im Utility-Prozess, Lizenz-Skript, CI mit Rauchtest auf drei Plattformen, `release.yml` manuell startbar mit Ad-hoc-Signatur und Rauchtest der gepackten Programme. CI 38440436405 und 38440669665 grün, Release 38440601610 grün (macOS `Signature=adhoc`, natives Modul gültig signiert). Runbook erstbefüllt und unter Linux am frischen Worktree validiert.
+- **Offen geblieben:** 2.1-N1 Branch-Schutz auf `main` und 2.1-N2 Startweg heruntergeladener Pakete (beide Projektinhaber, Fristen im Fahrplan). Kein PR geöffnet (nicht angefragt). „Build/CI" weiter als Modulname ohne eigenen Architektur-Eintrag (Beobachtung der Vorsession, unverändert).
+- **Nächster Schritt:** 2.8 (Weltmaßstab, Luftseite, Zeitmodell) in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 17:46 UTC); 2.1 empfiehlt Entscheidung, 0 Schritte oberhalb der Empfehlung. Teilarbeiten der Routine-Klasse (Konfigurationsdateien, Runbook) nicht abgegeben: Probelauf offen. Worker-Neustart während der Session ohne Modellwechsel.
+- **Kontextgröße:** 333.819 Token laut `get_session`, unter der Grenze von 400.000.
+- **Kontingent:** 7-Tage-Fenster mit Status `allowed_warning`, Zurücksetzen 2026-10-18 08:00 UTC (in `project-context.md` Abschnitt 8 vermerkt).
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf (Electron 44: Vorlauf ab 2027-01-02); neu: abgekündigte Unterpakete von electron-builder (Q.1). Runner-Image `ubuntu-latest` → Ubuntu 26 ab 2026-10-19 (Q.1, ersten Lauf beobachten).
+- **Drift-Prüfung:** README synchron (Phase 2 mit 2.1 erledigt, Quick Start, Nächste Schritte, Blocker 0, Architektur-Reife unverändert); ADR-018/019 verweisen auf vorhandene Schritte (2.1, 7.1, 7.2, Q.1); Reifegrade unverändert und passend; Reaktiv-Quote 5 / 10 in Teil A stimmt mit den Tags von ADR-010 bis ADR-019; FR-045 nennt 2.1; keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Phase 2 weiter bei 10 Schritten nach ursprünglichem Plan (2.1-N1/N2 sind Nachlauf); Größen: `project-context.md` 356 Zeilen, Logbuch unter 800.
+
+### 2026-10-13 17:38 (UTC) – [BEOBACHTUNG]
+
+- **2.1 Validierung am frischen Worktree (Commit e1a42d2, Ubuntu 24.04.5, Node 26.11.1, Rust 1.98.1):** `npm ci` ok (audit: 8 moderat, 0 hoch); `pre-commit run --all-files` 15 / 15 grün; `npm run build` ok; Start des Fensters läuft (20 s Timeout ohne Absturz); fmt, clippy, `cargo test`, `cargo deny check`, ESLint, Prettier, tsc, Vitest (53 Tests, 87,2 % Lines; App-Dateien 100 %), Lizenz-Skript (535 Pakete), Rauchtest (1 passed) alle grün. Ohne `Cargo.lock` baut der Workspace mit napi-derive-backend 6.1.5.
+- **Erzwungene Fehler (Gates schlagen an):** Rauchtest ohne natives Modul → rot (`state: failed`); `cargo llvm-cov report --package openairside-core --fail-under-lines 101` → Exit 1. Coverage Rust lokal: Kern 100 %, gesamt 100 % (Brücke `test = false`).
+- **Paket Linux lokal:** AppImage (120 MB) und deb (95 MB) gebaut; gepacktes Programm besteht den Rauchtest (`OPENAIRSIDE_E2E_EXECUTABLE`). macOS und Windows nur in der CI.
+- **Abkündigungen bei `npm install`:** inflight, rimraf 2, glob 7, boolean (alle über electron-builder 26.16.1) → Ablaufdaten-Register, Q.1.
+- **Ohne Landeplatz bisher:** keine; CHANGELOG entsteht laut README ab erster Version.
+
+### 2026-10-13 17:36 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** 2.1, atomare Commits.
+- **Symptom:** Vier Commits scheiterten still in einer Schleife, alles landete im fünften (`ci:`) als Mix-Commit.
+- **Ursache:** pre-commit verweigert Commits, solange `.pre-commit-config.yaml` geändert, aber nicht gestaged ist („Your pre-commit configuration is unstaged").
+- **Lösung:** lokalen Mix-Commit per `git reset --soft` aufgelöst (nicht gepusht); ein weiterer `reset --soft` nach einem gescheiterten Probe-Commit setzte HEAD versehentlich einen Commit zu weit zurück und wurde sofort auf `89dfe86` (gepushter Stand) korrigiert – ohne Verlust, Index erhalten. Danach Hook-Konfiguration zuerst committet.
+- **Rest-Abweichung:** Commit `c13ebd9` („chore: formatiere bestehende Konfiguration mit Prettier") enthält zusätzlich das Entfernen der `detect`-Gates in `security.yml` (eigentlich Typ `ci`, ADR-018). Historie bewusst nicht umgeschrieben (Stopp-Kriterium 6).
+- **Lerneffekt:** Commit-Schleifen mit `set -e`-Abbruch und Fehlerausgabe bauen; nie `reset` auf ein ungeprüftes HEAD.
+
+### 2026-10-13 17:30 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** 2.1, Electron-Rauchtest in der Cloud-Umgebung (Ubuntu 24.04, root).
+- **Symptom:** Playwright wartet 30 s vergeblich auf das Fenster; Electron bricht mit `Running as root without --no-sandbox is not supported` ab. Mit `--no-sandbox` starten Kindprozesse (Netzwerkdienst, Utility-Prozess) trotzdem ohne den Schalter neu und brechen ebenso ab.
+- **Ursache:** `app.enableSandbox()` erzwingt die Sandbox für alle Kindprozesse und hebt `--no-sandbox` dort auf.
+- **Lösung:** `enableSandbox()` nur ohne `--no-sandbox`; der Rauchtest übergibt `--no-sandbox` nur unter Linux (Muster aus Spike 1.5, Linux-Sandbox in 7.2). Härtung im Normalbetrieb unverändert; `process` im Renderer weiter unsichtbar (im Test geprüft).
+- **Aufwand:** ca. 10 Minuten. **Wiederkehrgefahr:** bei jedem Start als root oder in Containern; im Runbook unter Troubleshooting.
+
+### 2026-10-13 17:24 (UTC) – [BEOBACHTUNG]
+
+- **STOPP Reaktiv-Quote aufgehoben:** Projektinhaber: „Zur Kenntnis genommen" (Reflexion Anlass ADR-019). 2.1 wird fortgesetzt.
+- **Worker-Neustart der Session:** Arbeitsbaum (unversionierte Gerüst-Dateien, `node_modules`, Node 26 unter `/opt/node26`, cargo-deny) blieb erhalten.
+
+### 2026-10-13 16:59 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-019 – Erlaubte Lizenzen um BlueOak-1.0.0, 0BSD, Python-2.0 und WTFPL erweitert
+- **Tag:** `[REAKTIV]` (unerwarteter Befund in der Umsetzung, Maßstab wie ADR-011/012/015)
+- **Auslöser:** Projektinhaber wählte Option B (Empfehlung der KI war A: Werkzeuge nur gegen Ausschlussliste).
+- **Folgen:** `project-context.md` Abschnitt 6 und `deny.toml` erweitert (`cargo deny check` weiter grün); 7.1 um Lizenzhinweise im Paket ergänzt. Nebenbefund: Windows- und Linux-Pakete für arm64 hatten keinen Fahrplan-Schritt, obwohl `project-context.md` Abschnitt 6 sie zusagt; Landeplatz in 7.2 ergänzt.
+- **STOPP Reaktiv-Quote:** 5 / 10 (ADR-010 bis ADR-019), 50 %. Reflexion in `fahrplan.md` ergänzt (Maßnahme 4), Kenntnisnahme ausstehend; bis dahin keine weitere Umsetzung in 2.1.
+
+### 2026-10-13 16:57 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 2.1, Kategorie 8 (Lizenz/Compliance), Stopp-Kriterium 3.
+- **Befund:** Nach `npm install` (461 Pakete, Lockfile-Feld `license`) liegen 12 Pakete außerhalb der erlaubten Liste aus `project-context.md` Abschnitt 6: BlueOak-1.0.0 (8: chownr, isexe ×2, minimatch, minipass, sax, tar, yallist), Python-2.0 (argparse), WTFPL (truncate-utf8-bytes), 0BSD (tslib). Alle permissiv, keines Copyleft; alle nur über Werkzeuge (electron-builder, @napi-rs/cli), keines wird mit dem Spiel ausgeliefert (keine Laufzeit-Abhängigkeiten in `package.json`). WTFPL OR ISC, WTFPL OR MIT, MIT OR CC0-1.0 sind über die erlaubte Alternative gedeckt.
+- **Rust:** `cargo deny check` grün (advisories, bans, licenses, sources ok).
+- **Vorlage:** Optionen im Chat; Entscheidung steht aus. Bis dahin kein Lizenz-Skript.
+
+### 2026-10-13 16:50 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-018 – Projektgerüst, CI-Gates und napi-Versionen für Phase 2
+- **Tag:** `[OPERATIV]` (in 2.1 geplante Freigabe)
+- **Auslöser:** Freigabe des Projektinhabers per Auswahl: 1A (napi-derive 3.6.12), 2A (Spike-Workflows entfernen), Rauchtest bei jedem Push, übrige CI-Erweiterungen und Begleitpakete wie vorgeschlagen.
+- **Reaktiv-Quote:** 4 / 10 (ADR-009 bis ADR-018), unverändert; durch die bestätigte Reflexion vom 2026-10-13 abgedeckt.
+- **Schritt 2.1:** `[IN ARBEIT]`.
+
+### 2026-10-13 16:46 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 2.1 (Projektinhaber wählte 2.1 vor 2.8).
+- **Kategorien:** 7 (Build- und Deploy-Pipeline), 3 (napi-Versionen, Begleitpakete).
+- **Messung napi (Scratchpad, frischer Workspace ohne `Cargo.lock`, Rust 1.98.1):** napi 3.12.7 + napi-derive 3.6.8 ohne Festsetzung → Build bricht (`?` couldn't convert the error to `napi_derive_backend::Diagnostic`, backend 6.1.5 gezogen; Befund aus Spike 1.1 reproduziert). Mit `napi-derive-backend = "=6.1.4"` → baut. napi 3.12.7 + napi-derive 3.6.12 (zieht backend 6.1.5) → baut. napi 3.14.2 + napi-derive 3.6.12 + napi-build 2.6.0 → baut. Varianten 1 und 2 als `.node` in Node 22.22 geladen: Funktion, Klasse mit Konstruktor und `#[napi(object)]` liefern korrekte Werte.
+- **Reife (crates.io, 2026-10-13):** napi-Linie 3.12 seit 2026-07-28 mit Patches; 3.13 (2026-09-22) ohne Patch, 3.14 seit 2026-10-01 (unter 1 Monat) → nicht reif. napi-derive-Linie 3.6 seit 2026-07-21, 3.6.12 vom 2026-10-06.
+- **Vorlage:** siehe Antwort im Chat; Entscheidung steht aus.
+
+### 2026-10-13 16:40 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** Phase 1 abgeschlossen (ADR-016), Phase 2 ausgeplant; STOPP Reaktiv-Quote durch Kenntnisnahme aufgehoben (19:05). PR #12 gemergt, Branch `claude/gracious-galileo-2reksz` steht auf `main` (24165c0), keine eigenen Commits darüber.
+- **Geplant für diese Session:** Beginn von Phase 2 mit 2.1 (Repository-Struktur, CI-Gates) oder 2.8 (Weltmaßstab, Luftseite, Zeitmodell); Auswahl durch den Projektinhaber, da höchstens ein Schritt `[IN ARBEIT]`.
+- **Vorabprüfung:** 2.1 – Eingangskriterium Stack und Betriebsart `[BELASTBAR]` erfüllt; 2.8 – Datenmodell im Kern `[BELASTBAR]` erfüllt. Keine aktiven Blocker, keine offenen STOPP-Situationen.
+- **Modus/Werkzeug:** Claude Code, Cloud-Session (Auto-Modus), aus der Desktop-App gestartet.
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` laut `get_session` (16:40 UTC) → Entscheidungs-Klasse. Beide Kandidaten-Schritte empfehlen Entscheidung.
+- **Hinweis Zeitstempel:** Die Systemuhr der Session zeigt 16:40 UTC; die Einträge der Vorsession (18:00–19:05) sind damit nicht in derselben Zeitbasis. Ab hier Zeitstempel in UTC mit Kennzeichnung, abgeglichen mit den Commit-Zeiten (erste Fassung enthielt geschätzte Zeiten, am 17:40 UTC korrigiert).
 
 ### 2026-10-13 19:05 – [BEOBACHTUNG]
 

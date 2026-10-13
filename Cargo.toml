@@ -1,0 +1,35 @@
+# Cargo workspace of OpenAirside (roadmap step 2.1, ADR-018).
+# core/   simulation core, free of any binding code (rule 006)
+# bridge/ napi-rs binding for the Electron utility process (ADR-009)
+# Spikes keep their own workspaces and are not part of this one.
+[workspace]
+resolver = "3"
+members = ["core", "bridge"]
+exclude = ["spikes"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.98"
+license = "MIT"
+repository = "https://github.com/Paddel87/OpenAirside"
+publish = false
+
+# Versions per docs/project-context.md section 3 (verified 2026-10-13).
+[workspace.dependencies]
+openairside-core = { path = "core" }
+napi = { version = "=3.12.7", default-features = false, features = ["napi10"] }
+napi-derive = "=3.6.12"
+napi-build = "=2.4.4"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+# `unsafe` only with a `// SAFETY:` comment (project-context.md section 6).
+[workspace.lints.clippy]
+undocumented_unsafe_blocks = "deny"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1

@@ -1,0 +1,111 @@
+{
+  "name": "openairside",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Open-source airport tycoon game for Windows, Linux and macOS",
+  "license": "MIT",
+  "author": "OpenAirside contributors",
+  "homepage": "https://github.com/Paddel87/OpenAirside",
+  "desktopName": "openairside.desktop",
+  "type": "module",
+  "main": "app/dist/main/main.js",
+  "engines": {
+    "node": ">=26.11.1"
+  },
+  "napi": {
+    "binaryName": "openairside-bridge"
+  },
+  "scripts": {
+    "build:native": "napi build --manifest-path bridge/Cargo.toml --output-dir app/native --release",
+    "build:main": "tsc -p app/tsconfig.main.json",
+    "build:renderer": "vite build",
+    "build": "npm run build:native && npm run build:main && npm run build:renderer",
+    "start": "npm run build && electron .",
+    "lint": "eslint . --max-warnings 0 --report-unused-disable-directives",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "check:licenses": "node scripts/check-licenses.mjs",
+    "dist:win": "npm run build && electron-builder --win --publish never",
+    "dist:linux": "npm run build && electron-builder --linux --publish never",
+    "dist:mac": "npm run build && electron-builder --mac --arm64 --publish never"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@napi-rs/cli": "3.9.1",
+    "@playwright/test": "1.62.1",
+    "@types/node": "24.19.2",
+    "@vitest/coverage-v8": "5.0.4",
+    "electron": "44.7.0",
+    "electron-builder": "26.16.1",
+    "eslint": "10.9.1",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.1",
+    "vite": "8.3.4",
+    "vitest": "5.0.4"
+  },
+  "build": {
+    "appId": "org.openairside.app",
+    "productName": "OpenAirside",
+    "asar": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "package.json",
+      "app/dist/**/*",
+      "!app/dist/**/*.map",
+      "app/native/*.node"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "identity": "-",
+      "hardenedRuntime": false,
+      "category": "public.app-category.simulation-games"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Game",
+      "maintainer": "OpenAirside contributors <noreply@github.com>",
+      "syncDesktopName": true
+    },
+    "publish": []
+  }
+}

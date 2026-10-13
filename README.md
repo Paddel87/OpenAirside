@@ -10,7 +10,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20Linux%20%7C%20macOS-informational)
 
-<!-- Coverage-, Lint- und Security-Badges folgen, sobald es Code gibt (Schritt 2.1); Badges zeigen nur reale Zustände. -->
+<!-- Coverage-Badge folgt mit einem Coverage-Dienst (freigabepflichtig, Kategorie 3); der Build-Badge deckt seit Schritt 2.1 Lint, Typen, Security und Tests ab. Badges zeigen nur reale Zustände. -->
 
 > Ein Open-Source-Flughafen-Tycoon für Windows, Linux und macOS: Plane, baue und betreibe deinen eigenen Flughafen, vom Regionalflughafen bis zum internationalen Drehkreuz.
 
@@ -30,7 +30,7 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 2: Fundament (UMSETZUNG), ausgeplant, noch kein Schritt begonnen; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
+- **Projektphase:** Phase 2: Fundament (UMSETZUNG), Schritt 2.1 (Projektgerüst und CI) abgeschlossen, als Nächstes 2.8; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-13
@@ -39,15 +39,23 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Quick Start
 
-Noch nicht lauffähig. Installations- und Startanleitung folgen mit dem ersten lauffähigen Stand.
+Lauffähig ist bisher ein leeres Spielfenster mit geladenem Simulationskern (Schritt 2.1); spielbar ist noch nichts.
 
-### Voraussetzungen (für Entwicklung, vorläufig)
+### Voraussetzungen (für Entwicklung)
 
-- Node.js 26 (LTS)
-- Rust 1.98.1 über rustup (festgeschrieben in `rust-toolchain.toml` ab Schritt 2.1)
+- Node.js 26.11.1
+- Rust über rustup (Version 1.98.1 aus `rust-toolchain.toml`); unter Windows Visual Studio Build Tools mit C++, unter macOS die Xcode Command Line Tools
 - Git, Python 3 mit `pre-commit`
 
-→ Ausführliche Anleitung pro Plattform: [`docs/onboarding-runbook.md`](docs/onboarding-runbook.md)
+```bash
+git clone https://github.com/Paddel87/OpenAirside.git
+cd OpenAirside
+npm ci
+pre-commit install
+npm start        # baut Rust-Kern, Brücke und Oberfläche, öffnet das Fenster
+```
+
+→ Ausführliche Anleitung pro Plattform, alle Prüfungen und Troubleshooting: [`docs/onboarding-runbook.md`](docs/onboarding-runbook.md)
 
 ## Architektur (Überblick)
 
@@ -74,11 +82,11 @@ graph LR
 
 ## Verwendung
 
-Noch nicht verfügbar.
+Noch nicht spielbar. `npm start` öffnet ein leeres Fenster; der Simulationskern läuft in einem eigenen Prozess.
 
 ## Nächste Schritte
 
-- 2.1: Repository-Struktur, CI-Gates und Werkzeuge
+- Branch-Schutz auf `main` einrichten und den Start der heruntergeladenen Pakete prüfen (Projektinhaber, 2.1-N1/N2)
 - 2.8 und 2.9: Weltmaßstab, Lage der Luftseite, Zeitmodell und Schnittstellenverträge festlegen
 - Phase 2 insgesamt: lauffähiger, leerer Spielrahmen mit grüner CI auf drei Plattformen
 

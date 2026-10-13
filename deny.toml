@@ -1,0 +1,40 @@
+# cargo-deny configuration of OpenAirside (roadmap step 2.1, ADR-018).
+# Licence policy from docs/project-context.md section 6: MIT, BSD, Apache-2.0, ISC,
+# zlib, MPL-2.0, Unicode-3.0, BlueOak-1.0.0, 0BSD, Python-2.0, WTFPL allowed (ADR-019);
+# GPL, AGPL and proprietary licences excluded.
+
+[graph]
+all-features = true
+
+[advisories]
+# Every advisory fails the check; exceptions need a roadmap reference.
+ignore = []
+
+[licenses]
+allow = [
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "Apache-2.0",
+    "ISC",
+    "Zlib",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "BlueOak-1.0.0",
+    "0BSD",
+    "Python-2.0",
+    "WTFPL",
+]
+confidence-threshold = 0.9
+# The list is policy, not inventory: unused entries are expected.
+unused-allowed-license = "allow"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

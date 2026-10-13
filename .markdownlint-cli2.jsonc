@@ -20,8 +20,8 @@
   "config": {
     "default": true,
     "MD013": false,
-    "MD060": false
+    "MD060": false,
   },
   "globs": ["**/*.md"],
-  "ignores": ["**/node_modules/**"]
+  "ignores": ["**/node_modules/**"],
 }
