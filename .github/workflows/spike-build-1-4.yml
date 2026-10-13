@@ -1,0 +1,146 @@
+# Testprogramm Spike 1.4 für Windows, macOS und Linux (Fahrplan-Schritt 1.4, ERKUNDUNG).
+# Baut spikes/1.4-tabellen (Spielfeld aus Spike 1.3 + Tabellen-Panel mit React und TanStack Table,
+# gebündelt mit Vite; Kern aus 1.2/1.3 plus panel-core als napi-Modul) mit electron-builder 26.16.1
+# nach dem Muster von spike-build-1-3.yml, startet das
+# fertige Programm auf jedem System mit einer kurzen Messung (Rauchtest) und stellt die Pakete
+# als Artefakte bereit. Die eigentliche Messung läuft auf den Rechnern des Projektinhabers;
+# die Runner haben keine Grafikkarte, ihre Bildraten sind nicht aussagekräftig.
+# Spike-Werkzeug, kein Release.
+#
+# Kleine Testpakete (2026-10-13, freigegeben vom Projektinhaber): je System nur ein Format
+# (Windows ZIP, macOS DMG, Linux AppImage), macOS nur für Apple-Chips (arm64) statt Universal.
+# Der Universal-Build bleibt durch spike-build.yml und Schritt 1.6 belegt.
+#
+# Action-Versionen wie in ci.yml (geprüft am 2026-10-13).
+
+name: Spike-Build 1.4
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "spikes/1.4-tabellen/**"
+      - "spikes/1.4-tabellen/bridge-core/**"
+      - "spikes/1.2-wegweiser/src/**"
+      - ".github/workflows/spike-build-1-4.yml"
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "26.11.1"     # project-context.md Abschnitt 3
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Paket ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: linux
+          - os: windows-latest
+            platform: win
+          - os: macos-latest
+            platform: mac
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: spikes/1.4-tabellen
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: spikes/1.4-tabellen/app/package-lock.json
+      - run: rustup show   # Rust 1.98.1 aus rust-toolchain.toml des Spikes
+      - uses: Swatinem/rust-cache@v2.9.2
+        with:
+          workspaces: spikes/1.4-tabellen
+
+      - name: Tests der Tabelle
+        if: matrix.platform == 'linux'
+        run: cargo test --release --locked -p panel-core
+
+      - name: Natives Modul bauen (Linux, Windows)
+        if: matrix.platform != 'mac'
+        run: |
+          cargo build --release --locked -p sim-bridge
+          mkdir -p app/native
+          if [ "${{ matrix.platform }}" = win ]; then
+            cp target/release/sim_bridge.dll app/native/sim_bridge.node
+          else
+            cp target/release/libsim_bridge.so app/native/sim_bridge.node
+          fi
+
+      - name: Natives Modul bauen (macOS, Apple-Chips)
+        if: matrix.platform == 'mac'
+        run: |
+          rustup target add aarch64-apple-darwin
+          cargo build --release --locked -p sim-bridge --target aarch64-apple-darwin
+          mkdir -p app/native
+          cp target/aarch64-apple-darwin/release/libsim_bridge.dylib app/native/sim_bridge.node
+          lipo -info app/native/sim_bridge.node
+
+      - name: Paket bauen
+        working-directory: spikes/1.4-tabellen/app
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build:panel
+          npx electron-builder --${{ matrix.platform }} --publish never
+
+      # Rauchtest: kurze Messreihe (10.000 Personen, 2.000 Zeilen, 4 Aktualisierungen/s, 1 s je Phase).
+      # --enable-unsafe-swiftshader: WebGL ohne Grafikkarte (nur für die Runner).
+      - name: Rauchtest Linux
+        if: matrix.platform == 'linux'
+        working-directory: spikes/1.4-tabellen/app
+        run: |
+          exe=release/linux-unpacked/openairside-spike-1-4
+          timeout 300 xvfb-run -a -s "-screen 0 1280x800x24" "$exe" --no-sandbox --enable-unsafe-swiftshader \
+            --series=quick --rows=2000 --rate=4 --phase-seconds=1 \
+            --exit --out="$PWD/smoke.json" --screenshot="$PWD/smoke.png" > smoke.log 2>&1 || { tail -40 smoke.log; exit 1; }
+
+      - name: Rauchtest Windows
+        if: matrix.platform == 'win'
+        working-directory: spikes/1.4-tabellen/app
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem release/win-unpacked -Filter *.exe | Where-Object { $_.Name -notlike 'Uninstall*' } | Select-Object -First 1
+          $p = Start-Process -FilePath $exe.FullName -ArgumentList '--enable-unsafe-swiftshader','--series=quick','--rows=2000','--rate=4','--phase-seconds=1','--exit',"--out=$PWD\smoke.json","--screenshot=$PWD\smoke.png" -PassThru -Wait
+          "Exit-Code: $($p.ExitCode)"
+
+      - name: Rauchtest macOS
+        if: matrix.platform == 'mac'
+        working-directory: spikes/1.4-tabellen/app
+        run: |
+          app="$(ls -d release/mac-arm64/*.app | head -1)"
+          lipo -info "$app/Contents/MacOS/"*
+          "$app/Contents/MacOS/$(basename "$app" .app)" --enable-unsafe-swiftshader \
+            --series=quick --rows=2000 --rate=4 --phase-seconds=1 \
+            --exit --out="$PWD/smoke.json" --screenshot="$PWD/smoke.png"
+
+      - name: Rauchtest auswerten
+        working-directory: spikes/1.4-tabellen/app
+        run: |
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync("smoke.json", "utf8"));
+            const run = r.runs[0];
+            console.log(r.gpu, "| WebGL2:", r.webgl2);
+            for (const p of run.phases) console.log(p.label, p.rows ?? "-", p.rate ?? "-", "fps", p.fps, "Updates/s", p.tableUpdatesPerSec, "Panel ms", p.panelMsMean);
+            const sorted = run.phases.find((p) => p.label === "sortiert");
+            if (!r.webgl2 || !run.phases.every((p) => p.fps > 0) || !(sorted?.tableUpdatesPerSec > 0)) process.exit(1);
+          '
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: spike-1-4-${{ matrix.platform }}
+          retention-days: 14
+          path: |
+            spikes/1.4-tabellen/app/release/*.AppImage
+            spikes/1.4-tabellen/app/release/*.zip
+            spikes/1.4-tabellen/app/release/*.dmg
+            spikes/1.4-tabellen/app/smoke*

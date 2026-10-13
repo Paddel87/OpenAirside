@@ -30,11 +30,11 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 1: Technischer Durchstich und Leistungsnachweis (ERKUNDUNG); Schritte 1.1, 1.2, 1.3 und 1.6 erledigt
+- **Projektphase:** Phase 1: Technischer Durchstich und Leistungsnachweis (ERKUNDUNG); Schritte 1.1, 1.2, 1.3, 1.4 und 1.6 erledigt
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-13
-- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern und Wegfindung VORLÄUFIG bis zum Leistungsnachweis in Phase 1; Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009) VORLÄUFIG; Datenmodell im Kern (ADR-010) VORLÄUFIG; Zustandsübergabe Kern → Darstellung BELASTBAR (Windows und macOS gemessen); Datenpaket- und Spielstand-Format OFFEN
+- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern und Wegfindung VORLÄUFIG bis zum Leistungsnachweis in Phase 1; Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009) VORLÄUFIG; Datenmodell im Kern (ADR-010) VORLÄUFIG; Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Datenpaket- und Spielstand-Format OFFEN
 - **Aktive Blocker:** 0
 
 ## Quick Start
@@ -78,7 +78,6 @@ Noch nicht verfügbar.
 
 ## Nächste Schritte
 
-- Großes Tabellen-Panel neben dem Spielfeld (Schritt 1.4)
 - Leistungsnachweis (Schritt 1.5): 60 Bilder pro Sekunde auf einem Mittelklasse-PC, lauffähig auf integrierter Grafik, auf Windows und macOS (Linux in Schritt 7.2, ADR-011)
 
 → Vollständiger Fahrplan: [`docs/fahrplan.md`](docs/fahrplan.md)

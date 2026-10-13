@@ -17,12 +17,62 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3 und 1.6 erledigt; Linux-Messung nach ADR-011 in 7.2. Nächster Schritt: 1.4.
+Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt; Linux-Messung nach ADR-011 in 7.2. Nächster Schritt: 1.5.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 14:15 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 65 Minuten seit `[SESSIONSTART]` 13:10 (mit Neustart der Laufzeitumgebung dazwischen)
+- **Bearbeitet:** 1.4 (Spike, Testprogramm, Auswertung Referenz-PC und Mac), ADR-012 (macOS nur Apple-Chips)
+- **Erreicht:** 1.4 `[ERLEDIGT]`; „Oberfläche mit großen Tabellen" `[BELASTBAR]` mit Bedingungen; ADR-012 mit Nachzug; Messprotokoll, Fahrplan, Architektur, README nachgezogen.
+- **Offen geblieben:** Startablauf des neuen macOS-Pakets (nur Apple-Chips) vom Projektinhaber nicht zurückgemeldet; CI des letzten Dokumentations-Commits nicht abgewartet. Folgepunkte mit Landeplatz: Sortierung großer Tabellen und Bauaktion (1.7), Linux (7.2), Signatur (7.1).
+- **Nächster Schritt:** 1.5 – Leistungsnachweis auf den Zielsystemen, in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session`); 1 Schritt oberhalb der Empfehlung (1.4 empfiehlt Routine, Warnung gegeben); keine Abgabe (Probelauf offen).
+- **Kontextgröße:** 750.317 Token laut `get_session` – **über der Grenze von 400.000**. Hinweis: nächste Arbeit in einer neuen Session beginnen.
+- **Ablaufdaten-Prüfung:** Umstellung `ubuntu-latest` auf Ubuntu 26 ab 2026-10-19 steht bei Q.1; kein weiterer Eintrag mit erreichtem Vorlauf. **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte); Reifegrade in Abschnitt 3 und 9 gleich; Reaktiv-Quote 2/10 laut Teil A; Phase 1 weiter 7 Schritte.
+
+### 2026-10-13 14:10 – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** Oberfläche mit großen Tabellen
+- **Wechsel:** `[VORLÄUFIG]` → `[BELASTBAR]`, mit Bedingungen (Virtualisierung Pflicht; Sortierung sehr großer Tabellen nach Entscheidung 1.7)
+- **Auslöser:** Spike 1.4 auf Referenz-PC (Windows, 60 Hz) und Mac M3 Pro (120 Hz); Linux nach ADR-011 in 7.2. Entscheidungs-Klasse aktiv (`claude-opus-5-5`), Eskalations-Auslöser 4.
+- **Datum in `architecture.md` Abschnitt 9 nachgetragen:** ja
+
+### 2026-10-13 14:08 – [BEOBACHTUNG]
+
+- **Spike 1.4 auf dem Mac M3 Pro** (120 Hz, Ergebnisdatei vom Projektinhaber): bis 5.000 sortierte Zeilen 120 Bilder/s bei jeder Rate; 20.000 sortierte Zeilen 110–120 (Aktualisierung 11–19 ms, über dem 120-Hz-Budget von 8,3 ms); ohne Virtualisierung 59–94 mit Hängern bis 274 ms. **1.4 erledigt.**
+
+### 2026-10-13 14:00 – [BEOBACHTUNG]
+
+- **Spike 1.4 auf dem Referenz-PC unter Windows** (Ergebnisdatei vom Projektinhaber, `spikes/1.4-tabellen/results/referenz-pc-windows-rx7700xt.json`): virtualisiertes Panel ohne Einfluss auf die Bildrate bis 5.000 sortierte Zeilen bei jeder Rate und bis 20.000 sortierte Zeilen bei bis zu 30 Aktualisierungen/s; 20.000 sortierte Zeilen kosten rund 20 ms je Aktualisierung (TanStack-Sortierung 17–19 ms). Ohne Virtualisierung 17–46 Bilder/s bei 2.000 Zeilen. Offen: Mac.
+- **Wiedereinstieg nach Neustart der Laufzeitumgebung:** Spike 1.4 und ADR-012 entstanden in einer Session, deren Verlauf hier nicht vorliegt; Stand aus Logbuch 13:10–13:45, Fahrplan 1.4, ADR-012 und Messprotokoll 1.4 nachgelesen, bevor ausgewertet wurde.
+
+### 2026-10-13 13:45 – [ADR-ANGELEGT]
+
+- **ADR-012:** macOS nur für Apple-Chips, kein Intel- und kein Universal-Build (`[REAKTIV]`, ändert eine Konsequenz von ADR-009 innerhalb von 14 Tagen). Freigabe des Projektinhabers: „A, nur Apple-Chips". Anlass: kleinere Testpakete; Apple beendet die Intel-Unterstützung mit macOS 26; Intel nie testbar.
+- **Nachgezogen:** `project-context.md` (Abschnitte 2, 3, 6), `architecture.md` Abschnitt 1, `onboarding-runbook.md` Abschnitt 2, `release.yml`, Teil A und Reaktiv-Quote in `decisions.md` (2/10 = 20 %, genau am Schwellenwert, kein STOPP).
+- **Vorher, ebenfalls freigegeben:** `spike-build-1-4.yml` baut je System nur ein Format (Windows ZIP, macOS DMG arm64, Linux AppImage).
+- **Modellklasse:** Entscheidungs-Block nach Abschnitt 4 → Eskalations-Auslöser 1; aktiv `claude-opus-5-5` (Entscheidungs-Klasse, `get_session`), kein Wechsel nötig.
+
+### 2026-10-13 13:25 – [BEOBACHTUNG]
+
+- **Spike 1.4 im Container** (`spikes/1.4-tabellen`, Messprotokoll im README): Das Panel drückt die Bildrate bis 5.000 nach einer Live-Spalte sortierte Zeilen bei keiner Rate bis 60/s; 20.000 sortierte Zeilen ab 4/s schon (TanStack sortiert 24–30 ms je Aktualisierung, reines `Array.sort` der Zeilennummern 4,8 ms). Ohne Virtualisierung kosten 2.000 Zeilen 120–180 ms je Aktualisierung.
+- **Reibung TanStack Table 9:** API gegenüber Version 8 umgebaut (`useTable` mit `tableFeatures`, `rowSortingFeature` + `createSortedRowModel`, `sortFn_*`); gelöst über die mitgelieferten Anleitungen in `node_modules/@tanstack/*/skills/`. Zeilen müssen Objekte sein (`RowData`), deshalb `{ i }` je Zeile.
+- **Reibung Vite 8 im Bibliotheksmodus:** ersetzt `process.env.NODE_ENV` nicht (React sonst in Entwicklungsfassung) → `define`; vier Warnungen `MODULE_LEVEL_DIRECTIVE` (`"use client"` in TanStack) – für Phase 2 im Messprotokoll vermerkt.
+- **Hooks:** Rust-Hooks am Repo-Stamm greifen erst ab 2.1; `cargo fmt --check` und `cargo clippy -D warnings` im Spike direkt, übrige Hooks über `pre-commit run` grün (Prettier als Container-Version 3.8.1, wie in 1.1–1.3).
+
+### 2026-10-13 13:10 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 13:05; PR Paddel87/OpenAirside#8 gemergt (`2c2f123`), Branch `claude/gracious-galileo-2reksz` neu auf `main` gesetzt.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 1, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant für diese Session:** 1.4 – Großes Tabellen-Panel neben dem Spielfeld (Prototyp auf Basis von Spike 1.3).
+- **Vorabprüfung:** ERKUNDUNG, keine BELASTBAR-Pflicht; Eingangskriterium „Spielfeld aus 1.3 lauffähig" erfüllt. React 19.2.8, TanStack Table 9.2.8 und Vite 8.3.4 stehen im Stack (ADR-002); Virtualisierung ohne neue Abhängigkeit (eigene Fensterung).
+- **Modus/Werkzeug:** Claude Code (Cloud-Session, Desktop-App).
+- **Modell:** eingestellt und bedient `claude-opus-5-5` (Quelle: `get_session`, `configured_model` und `last_served_model`) → Entscheidungs-Klasse. Schritt 1.4 empfiehlt Routine → läuft oberhalb der Empfehlung; Abgabe nicht möglich (Probelauf offen), Warnung gegeben.
 
 ### 2026-10-13 13:05 – [SESSIONENDE]
 
