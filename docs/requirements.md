@@ -142,7 +142,7 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | ID | Anforderung | Anwendungsfall | Priorität | Prüfbare Akzeptanz | Fahrplan-Schritt | Test (ab Klasse G) | Status |
 |---|---|---|---|---|---|---|---|
 | FR-016 | Passagiere mit Bedürfnissen, Zufriedenheit und Ablauf Abflug/Ankunft | UC-005 | Muss | Inventar Abschnitt 4 (PAX-*); Kernprozesse Abflug und Ankunft | 3.2 | `core/tests/pax_flow.rs` | OFFEN |
-| FR-017 | Wegfindung nach Wegweiser-Prinzip | UC-010 | Muss | ADR-004; 10.000 Personen mit ≤ 4 ms je Simulationstakt auf Referenz-Hardware | 1.2 | `core/benches/flowfield.rs` | OFFEN |
+| FR-017 | Wegfindung nach Wegweiser-Prinzip | UC-010 | Muss | ADR-004; 10.000 Personen mit ≤ 4 ms je Simulationstakt auf Referenz-Hardware | 1.2, 2.3, 3.3 | `core/benches/flowfield.rs` | OFFEN |
 | FR-018 | Passagierführung über Schilder und Bodenmarkierungen; ohne Schilder Suchen | UC-005 | Muss | mit Beschilderung messbar kürzere Wegzeit als ohne | 3.3 | `core/tests/signage.rs` | OFFEN |
 | FR-019 | Check-in modern: Online-Anteil, Gepäckabgabe, Self Bag Drop, Common Use | UC-005 | Muss | Inventar Abschnitt 6 (CHK-*), MOD-01 bis MOD-03 | 3.2, 5.4 | `core/tests/checkin.rs` | OFFEN |
 | FR-020 | Sicherheitskontrolle mit Spuren, Technikstufen und Nachkontrolle | UC-005 | Muss | Inventar Abschnitt 7 (SEC-*), MOD-05 bis MOD-07 | 3.2, 5.4 | `core/tests/security.rs` | OFFEN |
@@ -184,7 +184,7 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | FR-036 | Wirtschaft: Einnahmen, Kosten, Kredite, Lieferanten, moderne Einnahmequellen | UC-008 | Muss | ECO-*, MOD-51 | 3.6, 5.6 | `core/tests/economy.rs` | OFFEN |
 | FR-037 | Forschung, Ziele, Bewertungen, Post/E-Mail | UC-008 | Muss | RD-*, OPS-*, RATE-*, MAIL-* | 5.6 | `core/tests/progression.rs` | OFFEN |
 | FR-038 | Messbare Serviceziele mit Rückzahlungen an Airlines | UC-008 | Muss | MOD-19 | 5.6 | `core/tests/service_levels.rs` | OFFEN |
-| FR-039 | Große Tabellen-Panels (Flüge, Personal, Finanzen) bleiben bei Großflughafen flüssig | UC-010 | Muss | 10.000 Zeilen sortieren/filtern ohne spürbare Verzögerung (< 100 ms) | 1.4 | `app/tables.bench.ts` | OFFEN |
+| FR-039 | Große Tabellen-Panels (Flüge, Personal, Finanzen) bleiben bei Großflughafen flüssig | UC-010 | Muss | 10.000 Zeilen sortieren/filtern ohne spürbare Verzögerung (< 100 ms) | 1.4, 3.6, 5.6 | `app/tables.bench.ts` | OFFEN |
 
 ### Leistung, Erklärbarkeit, Plattform, Inhalte
 
@@ -200,7 +200,7 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | FR-047 | Musik, Geräusche, Atmosphäre | UC-005 | Soll | AUDIO-01 sinngemäß, freie Bibliotheken | 6.2 | `app/audio.test.ts` | OFFEN |
 | FR-048 | Fracht spielbar | UC-004 | Kann | nach 1.0 | – | – | OFFEN |
 | FR-049 | Intro-/Menü-Video | UC-001 | Kann | – | 6.2 | – | OFFEN |
-| FR-050 | Grafiken als eigene SVG, im Build gerastert | UC-002 | Soll | ADR-008; keine Grafik aus Original oder Mods | 2.6 | `scripts/assets.test.ts` | OFFEN |
+| FR-050 | Grafiken als eigene SVG, im Build gerastert | UC-002 | Soll | ADR-008; keine Grafik aus Original oder Mods | 2.10 | `scripts/assets.test.ts` | OFFEN |
 | FR-051 | Isometrische Sicht | UC-002 | Kann | spätere Ausbaustufe | – | – | OFFEN |
 
 **Regeln:**

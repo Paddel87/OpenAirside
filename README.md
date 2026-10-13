@@ -30,11 +30,11 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 1: Technischer Durchstich und Leistungsnachweis (ERKUNDUNG); Schritte 1.1–1.6 erledigt; Leistungsnachweis erbracht (ADR-014)
+- **Projektphase:** Phase 2: Fundament (UMSETZUNG), ausgeplant, noch kein Schritt begonnen; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-13
-- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern, Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009), Datenmodell im Kern (ADR-010), Wegweiser-Prinzip und Leistungsziele BELASTBAR seit dem Leistungsnachweis (ADR-014; Linux-Messung in 7.2); Bauaktion im nächsten Bild VORLÄUFIG; Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Datenpaket- und Spielstand-Format OFFEN
+- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern, Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009), Datenmodell im Kern (ADR-010), Wegweiser-Prinzip und Leistung von Simulation und Zustandsübergabe BELASTBAR seit dem Leistungsnachweis (ADR-014; Linux-Messung in 7.2); Leistung der Darstellung mit echten Grafiken und mit Fahrzeugen und Flugzeugen VORLÄUFIG (ADR-017); Bauaktion im nächsten Bild VORLÄUFIG; Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Datenpaket- und Spielstand-Format OFFEN
 - **Aktive Blocker:** 0
 
 ## Quick Start
@@ -78,8 +78,9 @@ Noch nicht verfügbar.
 
 ## Nächste Schritte
 
-- Auswertung von Phase 1 und Planung von Phase 2 (Schritt 1.7)
-- Phase 2: lauffähiger, leerer Spielrahmen mit grüner CI auf drei Plattformen
+- 2.1: Repository-Struktur, CI-Gates und Werkzeuge
+- 2.8 und 2.9: Weltmaßstab, Lage der Luftseite, Zeitmodell und Schnittstellenverträge festlegen
+- Phase 2 insgesamt: lauffähiger, leerer Spielrahmen mit grüner CI auf drei Plattformen
 
 → Vollständiger Fahrplan: [`docs/fahrplan.md`](docs/fahrplan.md)
 

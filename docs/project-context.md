@@ -26,7 +26,7 @@
 <!-- ANCHOR:technischer-stack -->
 ## 3. Technischer Stack
 
-Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachweises in Phase 1; bis dahin sind die Stack-Bestandteile in `architecture.md` `[VORLÄUFIG]`. Versionen nach der Regel „ausgereifte Linie" (`CLAUDE.md` Abschnitt 15), von der KI gegen offizielle Quellen belegt und vom Menschen am 2026-10-13 zeilenweise bestätigt.
+Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachweises in Phase 1; der Nachweis ist erbracht (ADR-014), die Stack-Bestandteile sind in `architecture.md` `[BELASTBAR]` (Grenzen nach ADR-017). Versionen nach der Regel „ausgereifte Linie" (`CLAUDE.md` Abschnitt 15), von der KI gegen offizielle Quellen belegt und vom Menschen am 2026-10-13 zeilenweise bestätigt.
 
 - **Mindestreife neuer Linien:** mindestens ein Fehlerkorrektur-Release (x.y.1) **und** erste Version der Linie mindestens 1 Monat alt. Ausnahme: Projekte, die nie Patch-Releases veröffentlichen (rayon), gelten ab 3 Monaten Alter als reif.
 - **Geplante Projektdauer:** 2 Jahre (bis Ende 2028). Linien mit rollierendem Unterstützungsmodell (Electron, Rust) erreichen das nie; sie werden über wiederkehrende Update-Schritte im Fahrplan nachgezogen.
@@ -51,7 +51,7 @@ Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachwei
 
 #### Rust-Kern und Anbindung
 
-- Betriebsart des Kerns: natives Node-Modul (napi-rs) in einem Electron-Utility-Prozess (ADR-009, `[VORLÄUFIG]` bis 1.5)
+- Betriebsart des Kerns: natives Node-Modul (napi-rs) in einem Electron-Utility-Prozess (ADR-009, `[BELASTBAR]` seit ADR-014)
   - napi 3.12.7, napi-derive 3.6.8, @napi-rs/cli 3.9.1 (Node-API 10 in Electron 44) — Verifiziert: 2026-10-13, Quelle: crates.io, npm
   - napi-build 2.4.4 (Begleit-Crate, von napi 3.12.7 mit `^2.4.4` verlangt) — Verifiziert: 2026-10-13, Quelle: crates.io
   - napi-derive-backend 6.1.4 per `Cargo.lock` festgesetzt (6.1.5 bricht den Build mit napi-derive 3.6.8) — Verifiziert: 2026-10-13, Quelle: Build im Spike 1.1
