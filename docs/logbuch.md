@@ -24,6 +24,17 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 14:15 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 65 Minuten seit `[SESSIONSTART]` 13:10 (mit Neustart der Laufzeitumgebung dazwischen)
+- **Bearbeitet:** 1.4 (Spike, Testprogramm, Auswertung Referenz-PC und Mac), ADR-012 (macOS nur Apple-Chips)
+- **Erreicht:** 1.4 `[ERLEDIGT]`; „Oberfläche mit großen Tabellen" `[BELASTBAR]` mit Bedingungen; ADR-012 mit Nachzug; Messprotokoll, Fahrplan, Architektur, README nachgezogen.
+- **Offen geblieben:** Startablauf des neuen macOS-Pakets (nur Apple-Chips) vom Projektinhaber nicht zurückgemeldet; CI des letzten Dokumentations-Commits nicht abgewartet. Folgepunkte mit Landeplatz: Sortierung großer Tabellen und Bauaktion (1.7), Linux (7.2), Signatur (7.1).
+- **Nächster Schritt:** 1.5 – Leistungsnachweis auf den Zielsystemen, in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session`); 1 Schritt oberhalb der Empfehlung (1.4 empfiehlt Routine, Warnung gegeben); keine Abgabe (Probelauf offen).
+- **Kontextgröße:** 750.317 Token laut `get_session` – **über der Grenze von 400.000**. Hinweis: nächste Arbeit in einer neuen Session beginnen.
+- **Ablaufdaten-Prüfung:** Umstellung `ubuntu-latest` auf Ubuntu 26 ab 2026-10-19 steht bei Q.1; kein weiterer Eintrag mit erreichtem Vorlauf. **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte); Reifegrade in Abschnitt 3 und 9 gleich; Reaktiv-Quote 2/10 laut Teil A; Phase 1 weiter 7 Schritte.
+
 ### 2026-10-13 14:10 – [REIFEGRAD-WECHSEL]
 
 - **Bestandteil:** Oberfläche mit großen Tabellen
