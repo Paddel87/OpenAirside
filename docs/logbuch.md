@@ -24,6 +24,20 @@ Phase 1 läuft. Schritt 1.1 erledigt: Kern als napi-rs-Modul im Electron-Utility
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 01:05 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 65 Minuten (ersetzt den vorläufigen Eintrag von 00:45, nach dem die Session für die Freigabe offen blieb)
+- **Bearbeitet:** 1.1 (Spike, Messreihe, Entscheidungsvorlage, ADR-009), Q.2 neu angelegt
+- **Erreicht:** 1.1 `[ERLEDIGT]`: Kern als napi-rs-Modul im Electron-Utility-Prozess (ADR-009, Regel-006); Betriebsart `[OFFEN]` → `[VORLÄUFIG]`; WebAssembly mit Threads zurückgestellt nach Q.2 (Auslegung vom Projektinhaber bestätigt). CI-Läufe 4 und 5 grün.
+- **Offen geblieben:** nichts aus 1.1. Spike-Code wird von der CI bis 2.1 nicht gebaut (nur Dokumentations-Prüfung).
+- **Nächster Schritt:** 1.2 – Wegweiser-Prinzip mit 10.000 Personen (Entscheidungs-Klasse, bis zu zwei Sessions); parallel möglich 1.6. Empfehlung: in neuer Session beginnen.
+- **Modell-Bilanz:** aktive Klasse Entscheidung (eingestellt und bedient `claude-opus-5-5`, Quelle `get_session` am Sessionende); 0 Schritte oberhalb der Empfehlung; keine Teilarbeiten abgegeben (Probelauf für Unteragenten offen).
+- **Kontextgröße:** 307.567 Token laut `get_session` (`context_usage`), unter der Grenze von 400.000; kein Hinweis nötig.
+- **Ablaufdaten-Prüfung:** kein Eintrag hat seinen Vorlauf erreicht; neu: Nachprüfung WebAssembly-Threads (2027-01-02, Q.2).
+- **Drift-Prüfung:** README (Phase, Architektur-Reife, Nächste Schritte, Blocker 0) synchron; ADR-009 verweist auf existierende Schritte 1.3, 1.5, 1.6, Q.2; Reifegrad Betriebsart passt zu ADR-009; Modulnamen in 1.1/1.3/Q.2 wie in der Modul-Karte; Reaktiv-Quote 0/9; Phase 1 weiter 7 Schritte (Q.2 ist Querschnitt).
+- **Archivierung/Budgets:** Logbuch 146 Zeilen, `project-context.md` 352 Zeilen – keine Trigger.
+- **Uncommitted:** nichts.
+
 ### 2026-10-13 01:00 – [BEOBACHTUNG]
 
 - **CI für Schritt 1.1:** Läufe 4 (`865b25f`) und 5 (`d912570`) grün. Aktiv sind bis Schritt 2.1 nur „Dokumentation (pre-commit)" und „Projektteile erkennen"; die Code-Jobs werden mangels `Cargo.toml`/`package.json` am Repo-Stamm übersprungen, der Spike-Code wird in der CI also nicht gebaut. Einzige Annotation: der bekannte Hinweis zur Umstellung von `ubuntu-latest` auf Ubuntu 26 ab 2026-10-19 (Ablaufdaten-Register, Q.1).
@@ -42,7 +56,7 @@ Phase 1 läuft. Schritt 1.1 erledigt: Kern als napi-rs-Modul im Electron-Utility
 - **Auslöser:** Freigabe des Projektinhabers „A, freigegeben, B perspektivisch“. „Perspektivisch“ ausgelegt als: B wird wieder geprüft, sobald WebAssembly-Threads mit stabilem Rust baubar sind → Landeplatz Q.2, Nachprüfung im Ablaufdaten-Register (erstmals 2027-01-02). Auslegung vom Projektinhaber am 2026-10-13 bestätigt („genau das meinte ich“).
 - **Modell:** weiterhin `claude-opus-5-5` (Entscheidungs-Klasse), erneut über `get_session` abgefragt; Kontext 267.791 Token laut Laufzeitumgebung (unter der Grenze von 400.000).
 
-### 2026-10-13 00:45 – [SESSIONENDE]
+### 2026-10-13 00:45 – [SESSIONENDE] (vorläufig, Session blieb für die Freigabe offen)
 
 - **Session-Dauer:** ca. 45 Minuten
 - **Bearbeitet:** Schritt 1.1 (Vergleichsstudie napi-rs gegen WebAssembly)
