@@ -17,12 +17,90 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); nächster Schritt 2.2. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); nächster Schritt 2.3. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 23:02 (UTC) – [BEOBACHTUNG]
+
+- **Ruleset `main-schutz`:** Der Projektinhaber hat „Require branches to be up to date before merging" ausgeschaltet. Geprüft über `rules/branches/main`: `strict_required_status_checks_policy: false`, 19 Pflicht-Checks inklusive „Kern-Benchmark". Fahrplan 2.1-N1 („Branch nicht zwingend aktuell") entspricht damit wieder dem Ist-Zustand.
+
+### 2026-10-13 22:58 (UTC) – [BEOBACHTUNG]
+
+- **2.2-N1 erledigt:** Der Projektinhaber hat „Kern-Benchmark" als Pflicht-Check im Ruleset `main-schutz` eingetragen. Geprüft über die öffentliche Schnittstelle `rules/branches/main`: 19 Pflicht-Checks, „Kern-Benchmark" mit Quelle GitHub Actions. Mini-Reibung: Die Liste der Checks war in der Ruleset-Ansicht eingeklappt („Show additional settings").
+- **Abweichung:** Im Ruleset ist „Require branches to be up to date" aktiv, bei 2.1-N1 steht „Branch nicht zwingend aktuell". Rückfrage an den Projektinhaber gestellt; der Fahrplan bleibt bis zur Antwort unverändert.
+
+### 2026-10-13 22:52 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 35 Minuten seit `[SESSIONSTART]` 22:17 UTC.
+- **Bearbeitet:** 2.2 – Simulationskern (Takt, Zeitsteuerung, Befehle, Ereignisse, Prüfmodus).
+- **Erreicht:** Freigabe Kategorie 7 (ADR-022, A/A); 2.2 `[ERLEDIGT]`, CI-Lauf 38480239819 auf allen 17 Jobs grün; Modul Takt & Weltzustand `[BELASTBAR]`; erzwungener Fehlerfall des Benchmark-Gates belegt (Lauf 38479926291).
+- **Offen geblieben:** Nachlauf 2.2-N1 (Projektinhaber trägt „Kern-Benchmark" im Ruleset `main-schutz` ein); kein PR geöffnet (nicht angefragt), Branch liegt mit den Sessionende-Commits der Vorsession und 2.2 vor `main`. Der Trend-Vergleich mit `main` zeigt erst nach dem ersten Lauf auf `main` Werte. CHANGELOG nicht angelegt: 2.2 ändert nichts für Spieler.
+- **Nächster Schritt:** 2.3 – Weltzustand, Datenmodell und Wegweiser (Routine-Klasse empfohlen). Vertiefung: ADR-010, ADR-020, `spikes/1.2-wegweiser/src/field.rs`, `core/src/world.rs` und `core/src/adoption.rs` aus 2.2.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 22:50 UTC); 2.2 empfiehlt Entscheidung (Freigabe), 0 Schritte oberhalb der Empfehlung; Umsetzungsteil wäre abgebbar gewesen, aber keine Abgabe, weil der Probelauf für Unteragenten noch offen ist.
+- **Kontextgröße:** nicht feststellbar (`get_session` meldet `used_tokens` 0); Hinweis entfällt.
+- **Kontingent:** 5-Stunden-Fenster `allowed`.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf; Runner-Umstellung auf Ubuntu 26 ab 2026-10-19 weiter in Q.1 zu beobachten; neue benannte Ausnahme `syn@2.0.119` in Q.1 aufgenommen.
+- **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte, Blocker 0); ADR-022 verweist auf vorhandene Schritte (2.2, 2.3); Reifegrad Takt & Weltzustand passend zu Regel-007 und 2.2; Reaktiv-Quote 4 / 10 stimmt mit den Tags von ADR-013 bis ADR-022; Modul-Liste unverändert; keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Phase 2 weiter bei 10 Schritten; Größen: `project-context.md` 363 Zeilen, Logbuch unter 800.
+
+### 2026-10-13 22:51 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** Modul Takt & Weltzustand.
+- **Wechsel:** `[VORLÄUFIG]` → `[BELASTBAR]`.
+- **Auslöser:** Umsetzung in 2.2 mit grüner CI (Regel-007); Weltzustand mit Raster und Wegweisern wird in 2.3 bestätigt.
+- **Datum in `architecture.md` Abschnitt 9 nachgetragen:** ja.
+
+### 2026-10-13 22:50 (UTC) – [ONBOARDING-VALIDATION]
+
+- **Anlass:** Runbook Schritt 5 um `npm run check:types` und den Kern-Benchmark ergänzt (Quick-Start-relevant).
+- **Durchführung:** frischer Worktree von `ea32484`, `npm ci`, `npm run check:types` („matches"), `cargo bench -p openairside-core --bench tick` (Mittel 0,115 ms, p99 0,248 ms).
+- **Ergebnis:** grün, keine Befunde.
+
+### 2026-10-13 22:49 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** erster CI-Lauf mit dem Job „Kern-Benchmark" (38479926291, erzwungener Fehlerfall).
+- **Symptom:** „No files were found with the provided path: bench-tick.json"; Zusammenfassung ohne Ergebnis.
+- **Ursache:** `cargo bench` startet das Messprogramm im Paketordner `core/`; der relative Pfad zeigte dorthin.
+- **Lösung:** absoluter Pfad `$GITHUB_WORKSPACE/bench-tick.json` in `ci.yml` (`7547424`), Hinweis im Kopf von `core/benches/tick.rs`. Folgelauf: Artefakt `bench-tick` abgelegt.
+- **Mini-Reibung dabei:** `git revert` des Fehlerfall-Commits hat keinen Commit erzeugt, das anschließende `git commit --amend` hat den schon gepushten Commit `ea32484` lokal umgeschrieben. Der Push wurde als Nicht-Fast-Forward abgelehnt, auf dem Remote hat sich nichts geändert. Lokal per `git reset --soft` auf den Remote-Stand zurückgesetzt, Revert neu erzeugt (`9b3d4f7`), kein Force-Push. Lehre: nach `git revert` erst `git log` prüfen, dann ändern.
+
+### 2026-10-13 22:47 (UTC) – [BEOBACHTUNG]
+
+- **Rückstandsmeldung S-3:** Der Vertrag meldet `simulationLag` ab 1 Spielsekunde Rückstand, das sind nur 3 Ticks (bei 3× rund 17 ms Echtzeit). Spike 1.5 zeigte ohne wachsenden Trend Rückstände bis 8 Ticks (Referenz-PC) bzw. 33 Ticks (Mac). Umgesetzt ist der Vertrag wie festgelegt; ob die Schwelle im Spiel Fehlalarme auslöst, prüft 2.7 bei der Messung auf Referenz-PC und Mac (im Fahrplan vermerkt). Bei Bedarf wäre die Änderung eine Vertragsänderung (Kategorie 5).
+- **Festlegungen der Umsetzung (additiv, `architecture.md` Abschnitt 4):** Kalender (Tick 0 = Tag 1 des Jahres 1, 00:00, Start-Tick je Sitzung), Codes `notNight`, `nightSkipBlocked`, `tickLimit`, Textschlüssel-Schema, Ende des Rückstaus bei höchstens 4.096 wartenden Ereignissen, Rückstand nach Arbeitsscheiben von 16 ms und Obergrenze von einer Sekunde.
+- **Befehl `debug`** ist nicht in 2.2 umgesetzt, weil seine Aktionen erst mit dem Debug-Panel feststehen; Landeplatz 2.7.
+- **npm audit:** 8 Funde der Stufe „moderate" (unverändertes Lockfile, Schwelle „high" grün); keine Maßnahme nötig, Prüfung mit Q.1.
+
+### 2026-10-13 22:31 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-022 – Kern-Benchmark als CI-Gate und Prüfung der erzeugten TypeScript-Typen.
+- **Tag:** `[OPERATIV]` (in 2.2 als Freigabe geplant).
+- **Auslöser:** Freigabe des Projektinhabers per Auswahldialog: Frage 1 „A: feste Grenze", Frage 2 „A: einchecken + prüfen". Reaktiv-Quote jetzt 4 / 10 (ADR-013 bis ADR-022), weiter über dem Schwellenwert, sinkend.
+- **Mini-Reibung:** Der Commit `abfafd5` entstand ohne Pre-Commit-Hook, weil der frische Container ihn nicht installiert hatte; Hooks danach auf beiden Dateien nachgeholt (grün) und `pre-commit install` ausgeführt. Für neue Cloud-Sessions: Hook-Installation gehört zum Sessionstart.
+
+### 2026-10-13 22:25 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 2.2, Kategorie 7 (Build- und Deploy-Pipeline), Eskalations-Auslöser 1 – aktive Klasse Entscheidung, kein Modellwechsel nötig.
+- **Frage 1, Kern-Benchmark:** A absolute Grenze aus dem Echtzeit-Budget als Pflicht-Check auf Linux, Trend nur als Anzeige (Empfehlung); B zusätzlich rot bei relativer Verschlechterung gegenüber `main`; C nur nächtlich bzw. von Hand, kein Merge-Gate; D externer Messdienst (Zählung von Instruktionen).
+- **Frage 2, ts-rs-Typen:** A Typen erzeugen, mit Prettier formatieren, Abweichung vom eingecheckten Stand färbt den bestehenden Job rot (Empfehlung); B Typen nur im Build erzeugen, nicht einchecken (weicht von ADR-021 ab).
+- **Vertiefung:** `architecture.md` Abschnitt 4 (Grundlagen, S-2), ADR-020, ADR-021, `ci.yml`, Spike 1.5 (Schritt 0,25–0,29 ms bei 10.000 Personen im Container mit 4 Kernen).
+- **Stand:** 2.2 `[WARTET-AUF-FREIGABE]`, Arbeit angehalten bis zur Antwort.
+
+### 2026-10-13 22:17 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 21:03 UTC plus `[BEOBACHTUNG]` 21:56 UTC (PR Paddel87/OpenAirside#17 gemergt, `118fe75`). Branch `claude/gracious-galileo-2reksz` steht auf `main` plus zwei Sessionende-Commits (`54b2e13`, `3f46cf6`), die nach `project-context.md` Abschnitt 10 mit dem PR von 2.2 nach `main` gehen.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]` 21:03, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant für diese Session:** 2.2 – Simulationskern; zuerst Freigabe Kategorie 7 (Benchmark-Job mit Leistungsschwelle, CI-Prüfung der ts-rs-Typen).
+- **Vorabprüfung:** Eingangskriterien von 2.2 erfüllt (S-2, S-3 `[BELASTBAR]` nach ADR-021; Zeitmodell ADR-020); Modul Takt & Weltzustand darf `[VORLÄUFIG]` in die erste Umsetzung gehen (Regel-007). Reaktiv-Quote 5 / 10 weiter über dem Schwellenwert, Reflexion liegt vor.
+- **Modus/Werkzeug:** Claude Code, Cloud-Session, Berechtigungsmodus `auto`; Auftrag aus der Vorsession („neue Session für 2.2 starten").
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` (Quelle: `get_session` 22:17 UTC) → Entscheidungs-Klasse. Kontingent: 5-Stunden-Fenster `allowed`.
+
+### 2026-10-13 21:56 (UTC) – [BEOBACHTUNG]
+
+- **PR Paddel87/OpenAirside#17 gemergt** (`118fe75`, Merge-Commit) auf Anweisung des Projektinhabers („merge"); vorher CI auf dem PR-Stand grün und ohne Konflikt. Rückfrage des Projektinhabers: Antworten vom iPhone zum ersten Auswahldialog kamen in der Session nur als „Denied by user" an; inhaltlich gleich mit dem zweiten Durchgang, keine Änderung an ADR-021. Dieser Eintrag liegt nach der Festlegung zu Sessionende-Commits (`project-context.md` Abschnitt 10) nur auf dem Branch und geht mit dem PR des nächsten Schritts nach `main`.
 
 ### 2026-10-13 21:03 (UTC) – [SESSIONENDE]
 

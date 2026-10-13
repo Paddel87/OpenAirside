@@ -34,10 +34,11 @@
 | 019 | 2026-10-13 | Aktiv | REAKTIV | STACK | Lizenz/Compliance | Erlaubte Lizenzen um BlueOak-1.0.0, 0BSD, Python-2.0 und WTFPL erweitert |
 | 020 | 2026-10-13 | Aktiv | REAKTIV | DATENMODELL, PERFORMANCE | Datenmodell | Weltmaßstab 2 m je Zelle, Luftseite im Raster, Wegweiser in Blöcken, Zeitmodell |
 | 021 | 2026-10-13 | Aktiv | ERKENNTNIS | SCHNITTSTELLE, SECURITY | API-Verträge, Architektur, Sicherheit | Schnittstellenverträge S-2 bis S-7 |
+| 022 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Kern-Benchmark als CI-Gate und Prüfung der erzeugten TypeScript-Typen |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 5 / 10 über die letzten 10 ADRs (ADR-012 bis ADR-021: ADR-012, ADR-015, ADR-017, ADR-019, ADR-020), 50 % – **über dem Schwellenwert**; gesamt 6 / 21. Reflexionen vom 2026-10-13 in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-021)
+- **Aktueller Wert:** 4 / 10 über die letzten 10 ADRs (ADR-013 bis ADR-022: ADR-015, ADR-017, ADR-019, ADR-020), 40 % – **über dem Schwellenwert**; gesamt 6 / 22. Reflexionen vom 2026-10-13 in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-021)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -108,6 +109,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-019: Erlaubte Lizenzen um BlueOak-1.0.0, 0BSD, Python-2.0 und WTFPL erweitert](decisions/ADR-019.md)
 - [ADR-020: Weltmaßstab 2 m je Zelle, Luftseite im Raster, Wegweiser in Blöcken, Zeitmodell](decisions/ADR-020.md)
 - [ADR-021: Schnittstellenverträge S-2 bis S-7](decisions/ADR-021.md)
+- [ADR-022: Kern-Benchmark als CI-Gate und Prüfung der erzeugten TypeScript-Typen](decisions/ADR-022.md)
 
 ---
 

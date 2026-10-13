@@ -1,6 +1,7 @@
 # CI für OpenAirside (Klasse G). Abgeleitet aus templates/github-workflows/ci-typescript.yml,
 # ergänzt um Rust-Jobs (keine Rust-Vorlage vorhanden), eine Plattform-Matrix und den
-# Electron-Rauchtest (ADR-018). Pflichtkategorien nach CLAUDE.md Abschnitt 15; Werte aus
+# Electron-Rauchtest (ADR-018), seit Schritt 2.2 um Kern-Benchmark und Prüfung der erzeugten
+# TypeScript-Typen (ADR-022). Pflichtkategorien nach CLAUDE.md Abschnitt 15; Werte aus
 # docs/project-context.md Abschnitt 7. Lokale Hooks (.pre-commit-config.yaml) führen dieselben
 # Checks aus — diese Pipeline ist die unabhängige Diagnoseschicht, kein Ersatz.
 # Änderungen an dieser Datei sind freigabepflichtig (CLAUDE.md 4.7).
@@ -56,6 +57,55 @@ jobs:
         run: cargo fmt --all --check
       - name: clippy
         run: cargo clippy --all-targets --all-features --locked -- -D warnings
+      # Eingecheckte TypeScript-Typen müssen den Rust-Typen entsprechen (ts-rs, ADR-021, ADR-022).
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Erzeugte Typen (app/src/generated) aktuell
+        run: npm run check:types
+
+  rust-bench:
+    name: Kern-Benchmark
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read # nur für den Vergleich mit dem letzten Lauf auf main (Anzeige, ADR-022)
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2.9.2
+      # Rot bei Mittelwert > 1 ms oder p99 > 4 ms je Schritt mit 10.000 Personen (ADR-022).
+      - name: Tick mit 10.000 Personen
+        # cargo bench startet das Programm im Paketordner core/, daher ein absoluter Pfad.
+        run: cargo bench -p openairside-core --bench tick --locked -- --output "$GITHUB_WORKSPACE/bench-tick.json"
+      - name: Vergleichswert vom letzten Lauf auf main holen
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_id=$(gh run list --repo "${{ github.repository }}" --workflow ci.yml --branch main \
+            --status success --limit 1 --json databaseId --jq '.[0].databaseId' || true)
+          if [ -n "$run_id" ]; then
+            gh run download "$run_id" --repo "${{ github.repository }}" --name bench-tick --dir previous \
+              || echo "Kein Ergebnis im Lauf $run_id"
+          else
+            echo "Kein erfolgreicher Lauf auf main"
+          fi
+      - uses: actions/setup-node@v7.0.0
+        if: always()
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Zusammenfassung mit Trend
+        if: always()
+        run: node scripts/bench-report.mjs bench-tick.json previous/bench-tick.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: bench-tick
+          path: bench-tick.json
+          retention-days: 90
 
   rust-security:
     name: Rust Security & Audit (cargo-deny)

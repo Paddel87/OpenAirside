@@ -31,6 +31,12 @@ unused-allowed-license = "allow"
 
 [bans]
 multiple-versions = "warn"
+# Named exceptions of the warning stock (project-context.md section 7).
+skip = [
+  # syn 2 only via ts-rs-macros 12.0.1 behind the core feature `ts` (ADR-022); serde uses syn 3.
+  # Re-check with every Q.1 whether ts-rs has moved to syn 3.
+  { crate = "syn@2.0.119", reason = "ts-rs-macros 12.0.1 still depends on syn 2 (Q.1)" },
+]
 wildcards = "deny"
 allow-wildcard-paths = true
 
