@@ -24,6 +24,17 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3 und 1.6 erledigt; Lin
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 13:05 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 15 Minuten Arbeitszeit nach dem `[SESSIONENDE]` von 12:50 (dieselbe Sitzung, Mac-Test begleitet)
+- **Bearbeitet:** 1.3 und 1.6 (Mac-Auswertung, macOS-Startablauf), Beförderung S-1
+- **Erreicht:** 1.3 und 1.6 `[ERLEDIGT]`; S-1 `[BELASTBAR]`; Messprotokolle, Fahrplan, Architektur, README nachgezogen.
+- **Offen geblieben:** CI des Dokumentations-Commits beim Schreiben noch nicht abgewartet. Folgepunkte mit Landeplatz: Bauaktion im übernächsten Bild (1.7), Linux (7.2), Signatur (7.1).
+- **Nächster Schritt:** 1.4 – Großes Tabellen-Panel neben dem Spielfeld, in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session`); 0 Schritte oberhalb der Empfehlung; keine Abgabe.
+- **Kontextgröße:** 680.642 Token laut `get_session` – **über der Grenze von 400.000**. Hinweis: nächste Arbeit in einer neuen Session beginnen.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf. **Drift-Prüfung:** README (Phase, Architektur-Reife, Nächste Schritte) synchron; Reifegrad S-1 im Abschnitt 4 und 9 gleich; keine neuen ADRs; Phase 1 weiter 7 Schritte.
+
 ### 2026-10-13 13:00 – [REIFEGRAD-WECHSEL]
 
 - **Bestandteil:** S-1 Zustandspuffer
