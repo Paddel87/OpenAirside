@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 19:50 (UTC) – [BEOBACHTUNG]
+
+- **Getrennte Prüfung 2.9 erfolgt** (Unteragent, Sonnet 5.5, nur Entwurf, Bedrohungsmodell, Ist-Code): 15 Befunde (3 hoch, 8 mittel, 3 niedrig, 1 optional). Eingearbeitet: 1–12 und 14 (u. a. Grenzen für Spielstände und Pakete, Pfadprüfung, Absenderprüfung per `senderFrame`, Sitzungen in jeder Nachricht, atomares Laden, Flusssteuerung S-3, Ablehnungs- und Fehlercodes). Nicht übernommen: 13 (Prüfer rechnete mit 9 statt 180 Ticks/s bei 3×) und 15 (Signatur, über dem Schutzbedarf). Befund im Entwurf vermerkt.
+
 ### 2026-10-13 19:48 (UTC) – [BEOBACHTUNG]
 
 - **Entwurf 2.9:** `docs/research/2.9-schnittstellenvertraege.md` angelegt (S-2, S-3, S-7, S-4, S-5, S-6 mit gemeinsamen Grundlagen: ein `MessagePort` mit Handshake, Typen aus Rust per ts-rs, Weltkoordinaten nach ADR-020). Nach Freigabe wandern die Verträge nach `architecture.md` Abschnitt 4.
