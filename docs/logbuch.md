@@ -24,6 +24,16 @@ Phase 1 läuft. Schritt 1.1 erledigt: Kern als napi-rs-Modul im Electron-Utility
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 01:10 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 01:05; PR Paddel87/OpenAirside#1 gemergt (`5813931`), Branch auf `main` vorgespult.
+- **Pflichtlektüre:** Die Dokumente auf `main` unterscheiden sich nicht vom Stand des letzten Commits dieser Sitzung (`git diff 1c9da21 HEAD` leer); die in derselben Sitzung gelesenen und selbst geschriebenen Abschnitte sind damit aktuell. Kein neues Lesen nötig.
+- **Geplant für diese Session:** Schritt 1.2 – Wegweiser-Prinzip mit 10.000 Personen (Prototyp, Zeitbox zwei Sessions).
+- **Vorabprüfung:** 1.2 ist ERKUNDUNG; Eingangskriterium „Betriebsart aus 1.1 entschieden" erfüllt (ADR-009). Wegfindung `[VORLÄUFIG]`, Datenmodell `[OFFEN]` – Gegenstand des Schritts. Keine aktiven Blocker.
+- **Modus/Werkzeug:** Claude Code, Cloud-Session (4 vCPU, keine GPU), Branch `claude/gracious-galileo-2reksz`; Fortsetzung derselben Sitzung auf Wunsch des Projektinhabers.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` → Entscheidungs-Klasse (Quelle `get_session`, 00:3x). Empfohlene Klasse 1.2: Entscheidung – passt.
+- **Kontextgröße zu Beginn:** rund 310.000 Token; die Grenze von 400.000 wird in diesem Schritt voraussichtlich überschritten.
+
 ### 2026-10-13 01:05 – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 65 Minuten (ersetzt den vorläufigen Eintrag von 00:45, nach dem die Session für die Freigabe offen blieb)

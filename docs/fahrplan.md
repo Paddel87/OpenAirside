@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** keiner (1.1 erledigt am 2026-10-13, ADR-009)
-- **Nächster Schritt:** 1.2 – Wegweiser-Prinzip mit 10.000 Personen; parallel möglich: 1.6 – Verpackung für drei Plattformen
+- **Aktiver Schritt:** 1.2 – Wegweiser-Prinzip mit 10.000 Personen
+- **Nächster Schritt:** 1.3 – Zustandsübergabe und Spielfeld-Darstellung; parallel möglich: 1.6 – Verpackung für drei Plattformen
 - **Offene STOPP-Situationen:** keine
 
 <!-- ANCHOR:phasen-typen -->
@@ -154,7 +154,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.2: Wegweiser-Prinzip mit 10.000 Personen
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Prototyp
 - **Zeitbox (nur ERKUNDUNG):** maximal zwei Sessions, dann Zwischenstand
