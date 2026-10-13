@@ -11,7 +11,7 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** 1.5 – Leistungsnachweis auf den Zielsystemen
+- **Aktiver Schritt:** keiner (1.5 erledigt, ADR-014)
 - **Nächster Schritt:** 1.7 – Auswertung und Entscheidung
 - **Offene STOPP-Situationen:** keine
 
@@ -277,7 +277,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.5: Leistungsnachweis auf den Zielsystemen
 
-- **Status:** WARTET-AUF-FREIGABE (seit 2026-10-13, Bestätigung ADR-002)
+- **Status:** ERLEDIGT (2026-10-13) – ADR-002 bestätigt mit Auflagen (ADR-014, Option A, freigegeben vom Projektinhaber)
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Lasttest / Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session
@@ -305,7 +305,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
   - **Mac M3 Pro (Langzeitlauf 611 s):** 117–120 Bilder/s (Display 120 Hz), 178–180 Ticks/s ohne wachsenden Rückstand (höchstens 33 Ticks), volle Neuberechnung 598 ms im Mittel (höchstens 724 ms, 9 Threads), Bauaktion bis zum Bild 16–48 ms (3–6 Bilder), Speicher 524–715 MB ohne Anstieg.
   - **Referenz-PC mit 6 Hintergrund-Threads (Nachbildung 8 Kerne):** 59,6–60 Bilder/s, 180 Ticks/s, Rückstand ≤ 1 Tick, Neuberechnung 662 ms Mittel / 871 ms höchstens, Bauaktion 2–3 Bilder, Speicher 632–713 MB ohne Anstieg.
   - **Bewertung (Messprotokoll, Abschnitt „Bewertung gegen die Zielwerte"):** mit benannten Maßnahmen erreichbar. Erreicht: 60 Bilder/s, kein Rückstand, Langzeitstabilität, Bauen ohne Wartezeit. Nicht erreicht: Bauaktion im nächsten Bild (2–6 Bilder, weil erst nach Bestätigung durch den Kern gezeichnet) → Maßnahme vorläufiges Zeichnen im Fenster, Landeplatz 1.7. Lücken: schwache integrierte Grafik nicht gemessen (Landeplatz 5.8, FR-041), 8 Kerne nur nachgebildet, Linux 7.2 (ADR-011).
-- **Entscheidungsvorlage ADR-002 (offen):**
+- **Entscheidung ADR-002:** am 2026-10-13 vom Projektinhaber: „A, freigegeben. Die Trade-offs nehme ich gerne in Kauf." → ADR-014; Reifegrade Stack, Pattern, Betriebsart, Datenmodell, Wegweiser-Prinzip und NFR Performance (Gesamtsystem, Langzeit) `[BELASTBAR]`.
+- **Entscheidungsvorlage ADR-002 (beantwortet):**
 
   ```text
   ENTSCHEIDUNG ERFORDERLICH
@@ -417,12 +418,16 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Pflichtfrage am Phasenende und ERKENNTNIS-ADR zu ADR-002.
 - **Eingangskriterien:** alle Messprotokolle liegen vor
 - **Anforderungen (ab Klasse M):** keine (Auswertung)
-- **Zu tun:** Erkenntnisse zusammenfassen, ADR-002 bestätigen oder verwerfen (ERKENNTNIS-ADR), Reifegrade nachziehen, Iterations-Reflexion schreiben, Phase 2 im vollen Schrittformat verfeinern.
+- **Zu tun:** Erkenntnisse zusammenfassen (ADR-002 bereits in 1.5 bestätigt, ADR-014; Reifegrade nachgezogen), Pflichtfrage „Weiterbauen, umbauen oder neu aufsetzen?" (CLAUDE.md Abschnitt 12), Iterations-Reflexion schreiben, Phase 2 im vollen Schrittformat verfeinern.
 - **Akzeptanzkriterien:** Entscheidung des Projektverantwortlichen liegt vor; Phase 2 ist ausgeplant.
 - **Betroffene Module:** –
 - **Reifegrad-Wirkung:** siehe Phasenziel
 - **Artefakte:** ADR, Reflexion, verfeinerter Fahrplan
-- **Notizen:** –
+- **Notizen:** Übergaben aus 1.3–1.6 und Auflagen aus ADR-014 in die Planung von Phase 2:
+  - Bauaktion im nächsten Bild: Fenster zeichnet sie sofort vorläufig und gleicht mit der Bestätigung des Kerns ab (heute 2–6 Bilder).
+  - Panel und Sortierung großer Tabellen (Sortieren im Kern, seltener umsortieren, eigenes Sortieren); Panel-Aufbau beim Verschieben auf dem Mac 12 statt 7 ms.
+  - Lage von Bahnen, Vorfeld und Straßen im Raster (ADR-013).
+  - Vorschlag 1.6-N1 (Ad-hoc-Signatur der Mac-Pakete) wartet auf Freigabe.
 
 ### Phase 2: Fundament – Typ: UMSETZUNG
 
@@ -463,7 +468,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 4.1 | Referenzszenario baubar, Leistungstest als CI-Gate | FR-040 |
+| 4.1 | Referenzszenario baubar, Leistungstest als CI-Gate; Messung auf echter 8-Kern-Hardware (Auflage ADR-014) | FR-040 |
 | 4.2 | Coverage auf Mindestwerte, Langzeittest, erste Funktionsgleichheits-Prüfung der umgesetzten Inventar-IDs | – |
 
 ### Phase 5: Ausbau in die Breite – Typ: UMSETZUNG
@@ -479,7 +484,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | 5.5 | Airside, Gepäck mit dreistufiger Kontrolle, Flüge, Abfertigung vollständig, Startfreigabe | FR-025, FR-026, FR-027, FR-029, FR-030, FR-032 |
 | 5.6 | Personal, Wirtschaft, Forschung, Serviceziele, Notfälle, Störungen, Tutorial, Erfolge | FR-007, FR-008, FR-033 bis FR-038 |
 | 5.7 | Flugzeugtypen und Airlines inklusive Add-on-Klassen | FR-031 |
-| 5.8 | Benchmark mit Empfehlung, Leistungsbewusstsein | FR-041, FR-042 |
+| 5.8 | Benchmark mit Empfehlung, Leistungsbewusstsein; Messung auf schwacher integrierter Grafik (Auflage ADR-014) | FR-041, FR-042 |
 
 ### Phase 6: Inhalte, Mods und Atmosphäre – Typ: UMSETZUNG
 

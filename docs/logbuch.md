@@ -17,12 +17,23 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt; Linux-Messung nach ADR-011 in 7.2. Nächster Schritt: 1.5.
+Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4, 1.5 (ADR-013, ADR-014) und 1.6 erledigt; Linux-Messung nach ADR-011 in 7.2. Nächster Schritt: 1.7.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 15:45 – [REIFEGRAD-WECHSEL]
+
+- `[VORLÄUFIG]` → `[BELASTBAR]` per ADR-014: Stack (ADR-002), Pattern Kern/Präsentation (ADR-003), Betriebsart des Kerns (ADR-009), Datenmodell und Parallelisierung (ADR-010), Wegweiser-Prinzip (ADR-004/010/013), NFR Performance Gesamtsystem und Langzeit. Bedingungen: Linux 7.2, schwache integrierte Grafik 5.8, echte 8-Kern-Hardware 4.1.
+- Bleibt `[VORLÄUFIG]`: NFR „Bauaktion im nächsten Bild" (1.7); alle Module und Schnittstellen außer S-1 bis zu ihrer eigenen Umsetzung.
+- Über die Vorlage hinaus befördert, weil ihre Validierung ausdrücklich auf 1.5 wartete: Betriebsart, Datenmodell, Wegweiser-Prinzip.
+
+### 2026-10-13 15:44 – [ADR-ANGELEGT]
+
+- **ADR-014:** Stack aus ADR-002 bestätigt, Leistungsnachweis mit Auflagen erbracht (`[ERKENNTNIS]` `[STRATEGISCH]`); Freigabe Projektinhaber: „A, freigegeben. Die Trade-offs nehme ich gerne in Kauf."
+- **Nachgezogen:** `decisions.md` (Teil A, Index, Reaktiv-Quote 2/10 über ADR-005 bis ADR-014), ADR-002 Status, `architecture.md` (Überblick, NFR, Wegfindung, Reifegrad-Übersicht), Fahrplan 1.5 `[ERLEDIGT]`, Auflagen in 1.7, 4.1, 5.8; README.
 
 ### 2026-10-13 15:30 – [ENTSCHEIDUNG-VORGELEGT]
 

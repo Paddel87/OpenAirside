@@ -14,7 +14,7 @@
 | ADR | Datum | Status | Klassifikation | Themen | Kategorie | Kurztitel |
 |---|---|---|---|---|---|---|
 | 001 | 2026-10-13 | Aktiv | STRATEGISCH | METHODIK | Methodik | Klasse G und Anpassung des Vorlagen-Sets |
-| 002 | 2026-10-13 | Aktiv (bedingt) | STRATEGISCH | STACK | Externe Abhängigkeiten | Stack: Web-Präsentation + Rust-Simulationskern |
+| 002 | 2026-10-13 | Aktiv (bestätigt durch ADR-014) | STRATEGISCH | STACK | Externe Abhängigkeiten | Stack: Web-Präsentation + Rust-Simulationskern |
 | 003 | 2026-10-13 | Aktiv | STRATEGISCH | MODUL, SCHNITTSTELLE | Architektur | Kern/Präsentation-Trennung, feste Simulationsschritte, Inhalte als Daten |
 | 004 | 2026-10-13 | Aktiv | STRATEGISCH | PERFORMANCE, MODUL | Architektur | Wegfindung nach dem Wegweiser-Prinzip |
 | 005 | 2026-10-13 | Aktiv | STRATEGISCH | MODUL | Architektur | Verkehrsregeln, Vorrang-Rangfolge und automatische Verkehrssteuerung |
@@ -26,10 +26,11 @@
 | 011 | 2026-10-13 | Aktiv | REAKTIV | METHODIK, PERFORMANCE | Projekt-Vorgabe | Linux-Leistungsmessung auf echter Hardware verschoben auf Schritt 7.2 |
 | 012 | 2026-10-13 | Aktiv | REAKTIV | DEPLOYMENT | Build/Deploy, Projekt-Vorgabe | macOS nur für Apple-Chips, kein Intel- und kein Universal-Build |
 | 013 | 2026-10-13 | Aktiv | ERKENNTNIS | DATENMODELL, PERFORMANCE | Datenmodell | Größte Karte 768 × 768 Zellen je Etage, fünf Etagen |
+| 014 | 2026-10-13 | Aktiv | ERKENNTNIS | STACK, PERFORMANCE | Architektur | Stack aus ADR-002 bestätigt, Leistungsnachweis mit Auflagen erbracht |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 2 / 10 über die letzten 10 ADRs (ADR-004 bis ADR-013), 20 % – genau am Schwellenwert, nicht darüber; gesamt 2 / 13
+- **Aktueller Wert:** 2 / 10 über die letzten 10 ADRs (ADR-005 bis ADR-014), 20 % – genau am Schwellenwert, nicht darüber; gesamt 2 / 14
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -92,6 +93,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-011: Linux-Leistungsmessung auf echter Hardware verschoben auf Schritt 7.2](decisions/ADR-011.md)
 - [ADR-012: macOS nur für Apple-Chips, kein Intel- und kein Universal-Build](decisions/ADR-012.md)
 - [ADR-013: Größte Karte 768 × 768 Zellen je Etage, fünf Etagen](decisions/ADR-013.md)
+- [ADR-014: Stack aus ADR-002 bestätigt, Leistungsnachweis mit Auflagen erbracht](decisions/ADR-014.md)
 
 ---
 
