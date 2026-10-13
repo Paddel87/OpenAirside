@@ -39,7 +39,7 @@ Phase 1 läuft. Schritt 1.1 erledigt: Kern als napi-rs-Modul im Electron-Utility
 
 - **ADR:** ADR-009 „Betriebsart des Kerns: napi-rs im Electron-Utility-Prozess“, dazu Regel-006 „Kern frei von Anbindungscode“
 - **Tag:** `[ERKENNTNIS]` – klärt einen in ADR-002 offen gelassenen Punkt, ändert ADR-002 nicht; Reaktiv-Quote 0/9
-- **Auslöser:** Freigabe des Projektinhabers „A, freigegeben, B perspektivisch“. „Perspektivisch“ ausgelegt als: B wird wieder geprüft, sobald WebAssembly-Threads mit stabilem Rust baubar sind → Landeplatz Q.2, Nachprüfung im Ablaufdaten-Register (erstmals 2027-01-02).
+- **Auslöser:** Freigabe des Projektinhabers „A, freigegeben, B perspektivisch“. „Perspektivisch“ ausgelegt als: B wird wieder geprüft, sobald WebAssembly-Threads mit stabilem Rust baubar sind → Landeplatz Q.2, Nachprüfung im Ablaufdaten-Register (erstmals 2027-01-02). Auslegung vom Projektinhaber am 2026-10-13 bestätigt („genau das meinte ich“).
 - **Modell:** weiterhin `claude-opus-5-5` (Entscheidungs-Klasse), erneut über `get_session` abgefragt; Kontext 267.791 Token laut Laufzeitumgebung (unter der Grenze von 400.000).
 
 ### 2026-10-13 00:45 – [SESSIONENDE]
