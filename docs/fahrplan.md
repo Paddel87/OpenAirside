@@ -126,7 +126,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.8: Weltmaßstab, Luftseite und Zeitmodell
 
-- **Status:** IN ARBEIT (seit 2026-10-13 19:00 UTC)
+- **Status:** WARTET-AUF-FREIGABE (seit 2026-10-13 19:08 UTC; Messung `spikes/2.8-weltmassstab/`, Vorschlag im Logbuch)
 - **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt in Phase 2, ADR-016)
 - **Schritt-Art (nur ERKUNDUNG):** Vergleichsstudie mit Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session

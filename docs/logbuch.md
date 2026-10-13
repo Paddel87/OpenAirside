@@ -24,6 +24,13 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 19:08 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 2.8, Kategorie 4 (Datenmodell), ändert ADR-013.
+- **Grundlage:** Messung `spikes/2.8-weltmassstab/` (Container, 4 vCPU): Luftseite im selben Raster mit dichter Speicherung 720 MB / 2,3 s (2048²) bis 1,6 GB / 5,2 s (3072²) für dasselbe Terminal; in 32×32-Blöcken über begehbaren Flächen 25,5 MB / 0,4 s unabhängig von der Weltgröße, Terminal 768² mit 64 Wegweisern 98 MB / 1,6 s. Schritt 0,23–0,28 ms, Blocktabelle +3 ns je Zugriff.
+- **Vorgelegt:** Maßstab (2 m je Zelle, Luftseite in realen Abmessungen, Karten 1536² / 2048², Block-Speicherung, Graphen für Straßen, Rollwege, Bahnen), Zeitmodell (60 Ticks/s bei 1×, gleiche Tick-Länge bis 3×, Spieltag bei 1×), Begehbarkeit des Vorfelds.
+- **Hinweis:** Der Folge-ADR ändert ADR-013 innerhalb von 14 Tagen und ist damit nach `CLAUDE.md` Abschnitt 6 `[REAKTIV]`; Reaktiv-Quote stiege auf 6 / 10.
+
 ### 2026-10-13 19:00 (UTC) – [SESSIONSTART]
 
 - **Letzter Stand:** `[SESSIONENDE]` 17:47 UTC plus `[BEOBACHTUNG]` 18:46 UTC (Nachlauf 2.1 erledigt); PR Paddel87/OpenAirside#14 gemergt (`0049866`), Branch `claude/gracious-galileo-2reksz` neu auf `main` gesetzt.
