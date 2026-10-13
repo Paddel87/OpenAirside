@@ -1,0 +1,16 @@
+# Spike for roadmap step 1.3 (state transfer and playfield). Throwaway code.
+# The simulation core is the crate from spike 1.2; this workspace only adds the
+# bridge (napi-rs), which keeps the core free of binding code (rule 006).
+[workspace]
+resolver = "3"
+members = ["bridge-core", "sim-bridge"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+publish = false
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
