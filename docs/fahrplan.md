@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** 1.6 – Verpackung für drei Plattformen (vor 1.3, damit GPU-Messungen als fertige Programme laufen)
-- **Nächster Schritt:** 1.3 – Zustandsübergabe und Spielfeld-Darstellung; parallel möglich: 1.6 – Verpackung für drei Plattformen
+- **Aktiver Schritt:** 1.3 – Zustandsübergabe und Spielfeld-Darstellung; 1.6 wartet auf die Rückmeldung des Projektinhabers vom Start auf seinen Rechnern
+- **Nächster Schritt:** 1.6 abschließen (Rückmeldung), danach 1.4
 - **Offene STOPP-Situationen:** keine
 
 <!-- ANCHOR:phasen-typen -->
@@ -225,7 +225,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.3: Zustandsübergabe und Spielfeld-Darstellung
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Prototyp
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session, dann Zwischenstand

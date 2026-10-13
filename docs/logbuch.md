@@ -24,6 +24,16 @@ Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt. Nächster Sch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 11:10 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 10:40; PR Paddel87/OpenAirside#5 gemergt (`1c5c9fb`), Branch `claude/gracious-galileo-2reksz` neu auf `main` gesetzt.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 1, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant:** Schritt 1.3 – Zustandsübergabe und Spielfeld-Darstellung (Anweisung des Projektinhabers „weiter mit 1.3"). 1.6 bleibt `[IN ARBEIT]` aus der Vorsession und wartet nur auf die Rückmeldung des Projektinhabers vom Start auf seinen Rechnern; in dieser Session wird 1.6 nicht bearbeitet.
+- **Vorabprüfung:** Eingangskriterium „Kern aus 1.2 lauffähig" erfüllt; S-1 ist `[VORLÄUFIG]`. Keine Kategorie aus `CLAUDE.md` Abschnitt 4 vorab berührt; PixiJS 8.20.1 ist fixierter Stack (ADR-002). Bildraten im Container (ohne Grafikkarte) nicht aussagekräftig – deshalb wird der Spike wie 1.1 als Testprogramm über die CI gebaut (Freigabe „CI baut fertige Testprogramme" aus 1.6).
+- **Modus/Werkzeug:** Claude Code, Cloud-Session.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` → Entscheidungs-Klasse (Quelle `get_session`); 1.3 empfiehlt Entscheidung.
+- **Kontextgröße zu Beginn:** rund 100.000 Token laut `get_session`.
+
 ### 2026-10-13 10:40 – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 25 Minuten Arbeitszeit seit `[SESSIONSTART]` 02:40 (mit Unterbrechung)
