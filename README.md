@@ -78,8 +78,8 @@ Noch nicht verfügbar.
 
 ## Nächste Schritte
 
-- Zustandsübergabe und Spielfeld mit 10.000 Personen (Schritt 1.3)
-- Verpackung für Windows, Linux und macOS aus der CI
+- Testprogramme der Schritte 1.3 (Spielfeld mit 10.000 Personen) und 1.6 (Verpackung) auf den Zielrechnern ausführen und auswerten
+- Großes Tabellen-Panel neben dem Spielfeld (Schritt 1.4)
 - Leistungsnachweis: 60 Bilder pro Sekunde auf einem Mittelklasse-PC, lauffähig auf integrierter Grafik, auf Windows, Linux und macOS
 
 → Vollständiger Fahrplan: [`docs/fahrplan.md`](docs/fahrplan.md)

@@ -88,7 +88,7 @@ Mit SwiftShader: p50 81–89 ms, 3 Bilder (bei 20–40 Bildern/s). Der Ablauf is
 - **PixiJS 8.20.1, Fehler im globalen Build von `unsafe-eval`:** Die Ergänzung ersetzt den eval-basierten Code der Partikel nur in ihrer eigenen gebündelten Kopie von `ParticleBuffer`, nicht in der von `pixi.min.js`. Unter strenger CSP bricht `ParticleContainer` deshalb ab. Umgehung im Spike: eine Zeile in `renderer/main.js` setzt `PIXI.ParticleBuffer.prototype.generateParticleUpdate` auf die mitgelieferte Ersatzfunktion. Für Phase 2 (Bündelung mit Vite, ES-Module) erneut prüfen; mit ES-Modulen teilen sich Pixi und `pixi.js/unsafe-eval` dieselben Klassen.
 - **Die Testkarte aus 1.2 stürzt bei 96 × 96 Zellen ab** (Index außerhalb des Rasters in `Grid::walkable`); ab 128 × 128 läuft sie. Wegwerf-Code, nicht behoben.
 - **Zu Spielbeginn** stehen alle Personen am Eingang; ohne Zeitraffer misst die Reihe ein leeres Spielfeld. Deshalb 3 s ungebremster Takt vor den Messphasen.
-- Windows- und Linux-Paket sowie Rauchtest liefen im ersten CI-Lauf grün (Lauf 38389783470).
+- Pakete und Rauchtest für Windows, macOS Universal und Linux liefen im ersten CI-Lauf grün (Lauf 38389783470).
 
 ## Bewertung gegen die Akzeptanzkriterien
 

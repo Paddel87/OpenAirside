@@ -17,12 +17,30 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt. Nächster Schritt: 1.3 (parallel möglich: 1.6), in neuer Session.
+Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt; 1.3 und 1.6 warten auf Messung bzw. Rückmeldung mit den Testprogrammen auf den Rechnern des Projektinhabers. Danach 1.4.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 11:45 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 35 Minuten seit `[SESSIONSTART]` 11:10
+- **Bearbeitet:** 1.3 – Zustandsübergabe und Spielfeld-Darstellung
+- **Erreicht:** Spike `spikes/1.3-spielfeld/` (Brücke mit Dreifachpuffer, Bildformat, Filter, Bauaktion; PixiJS-Spielfeld; eingebaute Messreihe); Kern aus 1.2 additiv ergänzt (Tests grün); Messreihe im Container mit und ohne Zeichnen; Messprotokoll; Workflow `spike-build-1-3.yml`, erster Lauf auf allen drei Plattformen grün. Prüfungen: `cargo test` (bridge-core 4, wegweiser 3), `cargo clippy -D warnings`, `cargo fmt --check`, Prettier (Container-Version 3.8.1, wie in 1.1), pre-commit-Dokumentations-Hooks grün; ESLint ohne Projektkonfiguration bis 2.1 nicht anwendbar.
+- **Offen geblieben:** 1.3 bleibt `[IN ARBEIT]`: Bildrate auf echter Grafik nur mit dem Testprogramm auf Referenz-PC und Mac messbar. 1.6 unverändert (Rückmeldung zum Start). Abweichung „Bauaktion im übernächsten statt nächsten Bild" zur Entscheidung in 1.7.
+- **Nächster Schritt:** Ergebnisdateien der Testprogramme 1.3 (Ordner „Downloads") und Rückmeldung 1.6 auswerten; S-1 dann ggf. auf `[BELASTBAR]` (Eskalations-Auslöser 4, Entscheidungs-Klasse); danach 1.4.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session`); 0 Schritte oberhalb der Empfehlung (1.3 empfiehlt Entscheidung); keine Abgabe (Probelauf offen).
+- **Kontextgröße:** 286.870 Token laut `get_session`, unter der Grenze von 400.000.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf (Umstellung `ubuntu-latest` erst ab 2026-10-19). **Drift-Prüfung:** README „Nächste Schritte" nachgezogen; keine ADR- oder Reifegrad-Änderung (S-1 bleibt `[VORLÄUFIG]`, Vermerk in `architecture.md` Abschnitt 9); Modulnamen unverändert; keine Blocker; Phase 1 weiter 7 Schritte.
+
+### 2026-10-13 11:35 – [BEOBACHTUNG]
+
+- **Spike 1.3 gemessen** (Container, 4 vCPU, ohne Grafikkarte): Übergabe 0,5–2,6 ms je Bild; Partikel statt Sprites nötig; Bauaktion erst im übernächsten Bild (27–37 ms) – Abweichung von `project-context.md` Abschnitt 6, Entscheidung in 1.7. Details im Messprotokoll `spikes/1.3-spielfeld/README.md`.
+- **SwiftShader verfälscht alles, nicht nur die Bildrate:** Mit Software-Grafik stiegen Simulationsschritt (0,7 → 3,5 ms) und Rundlauf der Übergabe (0,7 → 20–90 ms), weil die Grafik dieselben 4 Kerne belegt. Gelöst durch eine Kontrollmessung ohne Zeichnen (`--draw=0`); erst sie zeigt die Übergabezeiten.
+- **Gelöste Reibungen:** (1) Messreihe lieferte zunächst nur Nullen – Fehler im Renderer waren unsichtbar; Fehlerausgabe ins Protokoll eingebaut, Ursache CSP: der globale `unsafe-eval`-Build von PixiJS 8.20.1 patcht nur seine eigene Kopie von `ParticleBuffer` (Umgehung: eine Zeile). (2) Anfragen vor dem Anlegen der Simulation gingen verloren und blockierten die Schleife; Anfragen erst nach „ready". (3) Nahansicht zeigte 0 Personen, weil zu Spielbeginn alle am Eingang stehen; 3 s Zeitraffer und Kamera an der dichtesten Stelle. (4) Testkarte aus 1.2 stürzt bei 96 × 96 ab; Test auf 128 × 128.
+- **Spike-Build 1.3** (Lauf 38389783470): Pakete und Rauchtest für Windows, macOS Universal und Linux beim ersten Lauf grün.
 
 ### 2026-10-13 11:10 – [SESSIONSTART]
 
