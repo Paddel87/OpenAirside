@@ -11,7 +11,7 @@
 - **Stand vom:** 2026-10-13 (Sessionstart 22:17 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.2 `[IN ARBEIT]` (Freigabe Kategorie 7 am 2026-10-13, ADR-022)
+- **Aktiver Schritt:** keiner (2.2 erledigt am 2026-10-13, ADR-022; Nachlauf 2.2-N1 beim Projektinhaber)
 - **Nächster Schritt:** 2.3 (Weltzustand, Datenmodell und Wegweiser)
 - **Offene STOPP-Situationen:** keine (Reaktiv-Quote 5 / 10 nach ADR-021 weiter über dem Schwellenwert, aber sinkend; Reflexion zu ADR-020 vom Projektinhaber zur Kenntnis genommen, Ergänzung zu ADR-021 siehe „Iterations-Reflexion")
 
@@ -175,7 +175,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.2: Simulationskern – Takt, Zeitsteuerung, Befehle, Ereignisse, Determinismus
 
-- **Status:** IN ARBEIT seit 2026-10-13 (Freigabe Kategorie 7: ADR-022, Benchmark mit fester Grenze, Typen eingecheckt und geprüft)
+- **Status:** ERLEDIGT 2026-10-13 (ADR-022); CI-Lauf 38480239819 grün auf drei Plattformen
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.1, 2.8, 2.9
 - **Freigabepflichtig:** ja, für den neuen CI-Job mit Leistungsschwelle und die Prüfung der erzeugten Typen (Kategorie 7)
@@ -187,6 +187,9 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Takt & Weltzustand, Benchmark & Leistung
 - **Reifegrad-Wirkung:** Modul Takt & Weltzustand → `[BELASTBAR]` durch Umsetzung
 - **Artefakte:** Kern-Crate, Tests, Benchmark, CI-Job
+- **Ergebnis:** Kern-Module `time`, `command`, `event`, `simulation`, `adoption`, `pacer`, `runner`, `world`, `hash` in `core/src/` (Umsetzung in `architecture.md`, Modul Takt & Weltzustand); Tests `core/tests/time.rs` (FR-003), `core/tests/commands.rs` (S-2/S-3), `core/tests/determinism.rs` (bitgleich mit 1, 2, 4 und 7 Threads im Prüfmodus, auch mit Neuberechnungen); Coverage Kern 98,5 % Lines (59 Tests), TypeScript und Skripte 85,5 % Lines (75 Tests). Typen aus ts-rs in `app/src/generated/` (16 Dateien), geprüft im Job „Rust Lint & Format". Kern-Benchmark `core/benches/tick.rs` im Job „Kern-Benchmark": auf dem GitHub-Runner Mittel 0,089 ms, p99 0,104 ms (Lauf 38480239819; Container 4 Kerne 0,12–0,13 ms); erzwungener Fehlerfall belegt (Lauf 38479926291: Grenze 0,001 ms → Job rot, alle anderen grün; zurückgenommen in `9b3d4f7`). Onboarding-Pfad (neue Prüfungen im Runbook Schritt 5) im frischen Worktree validiert. Benannte Ausnahme `syn@2.0.119` in `deny.toml` (Warnungs-Bestand, Q.1). Landeplätze der markierten Platzhalter: 2.3, 2.4, 2.7, 3.1, 3.4.
+- **Nachlauf (zählt nicht zur Phase):**
+  - **2.2-N1 `[OFFEN]` – Pflicht-Check „Kern-Benchmark" im Ruleset `main-schutz` (Projektinhaber):** GitHub → Settings → Rules → Rulesets → `main-schutz` → Required status checks → „Kern-Benchmark" hinzufügen (ADR-022). Frist: vor dem Merge des PR von 2.2.
 
 #### 2.3: Weltzustand, Datenmodell und Wegweiser
 

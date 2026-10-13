@@ -17,12 +17,53 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); nächster Schritt 2.2. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); nächster Schritt 2.3. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 22:52 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 35 Minuten seit `[SESSIONSTART]` 22:17 UTC.
+- **Bearbeitet:** 2.2 – Simulationskern (Takt, Zeitsteuerung, Befehle, Ereignisse, Prüfmodus).
+- **Erreicht:** Freigabe Kategorie 7 (ADR-022, A/A); 2.2 `[ERLEDIGT]`, CI-Lauf 38480239819 auf allen 17 Jobs grün; Modul Takt & Weltzustand `[BELASTBAR]`; erzwungener Fehlerfall des Benchmark-Gates belegt (Lauf 38479926291).
+- **Offen geblieben:** Nachlauf 2.2-N1 (Projektinhaber trägt „Kern-Benchmark" im Ruleset `main-schutz` ein); kein PR geöffnet (nicht angefragt), Branch liegt mit den Sessionende-Commits der Vorsession und 2.2 vor `main`. Der Trend-Vergleich mit `main` zeigt erst nach dem ersten Lauf auf `main` Werte. CHANGELOG nicht angelegt: 2.2 ändert nichts für Spieler.
+- **Nächster Schritt:** 2.3 – Weltzustand, Datenmodell und Wegweiser (Routine-Klasse empfohlen). Vertiefung: ADR-010, ADR-020, `spikes/1.2-wegweiser/src/field.rs`, `core/src/world.rs` und `core/src/adoption.rs` aus 2.2.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 22:50 UTC); 2.2 empfiehlt Entscheidung (Freigabe), 0 Schritte oberhalb der Empfehlung; Umsetzungsteil wäre abgebbar gewesen, aber keine Abgabe, weil der Probelauf für Unteragenten noch offen ist.
+- **Kontextgröße:** nicht feststellbar (`get_session` meldet `used_tokens` 0); Hinweis entfällt.
+- **Kontingent:** 5-Stunden-Fenster `allowed`.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf; Runner-Umstellung auf Ubuntu 26 ab 2026-10-19 weiter in Q.1 zu beobachten; neue benannte Ausnahme `syn@2.0.119` in Q.1 aufgenommen.
+- **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte, Blocker 0); ADR-022 verweist auf vorhandene Schritte (2.2, 2.3); Reifegrad Takt & Weltzustand passend zu Regel-007 und 2.2; Reaktiv-Quote 4 / 10 stimmt mit den Tags von ADR-013 bis ADR-022; Modul-Liste unverändert; keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Phase 2 weiter bei 10 Schritten; Größen: `project-context.md` 363 Zeilen, Logbuch unter 800.
+
+### 2026-10-13 22:51 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** Modul Takt & Weltzustand.
+- **Wechsel:** `[VORLÄUFIG]` → `[BELASTBAR]`.
+- **Auslöser:** Umsetzung in 2.2 mit grüner CI (Regel-007); Weltzustand mit Raster und Wegweisern wird in 2.3 bestätigt.
+- **Datum in `architecture.md` Abschnitt 9 nachgetragen:** ja.
+
+### 2026-10-13 22:50 (UTC) – [ONBOARDING-VALIDATION]
+
+- **Anlass:** Runbook Schritt 5 um `npm run check:types` und den Kern-Benchmark ergänzt (Quick-Start-relevant).
+- **Durchführung:** frischer Worktree von `ea32484`, `npm ci`, `npm run check:types` („matches"), `cargo bench -p openairside-core --bench tick` (Mittel 0,115 ms, p99 0,248 ms).
+- **Ergebnis:** grün, keine Befunde.
+
+### 2026-10-13 22:49 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** erster CI-Lauf mit dem Job „Kern-Benchmark" (38479926291, erzwungener Fehlerfall).
+- **Symptom:** „No files were found with the provided path: bench-tick.json"; Zusammenfassung ohne Ergebnis.
+- **Ursache:** `cargo bench` startet das Messprogramm im Paketordner `core/`; der relative Pfad zeigte dorthin.
+- **Lösung:** absoluter Pfad `$GITHUB_WORKSPACE/bench-tick.json` in `ci.yml` (`7547424`), Hinweis im Kopf von `core/benches/tick.rs`. Folgelauf: Artefakt `bench-tick` abgelegt.
+- **Mini-Reibung dabei:** `git revert` des Fehlerfall-Commits hat keinen Commit erzeugt, das anschließende `git commit --amend` hat den schon gepushten Commit `ea32484` lokal umgeschrieben. Der Push wurde als Nicht-Fast-Forward abgelehnt, auf dem Remote hat sich nichts geändert. Lokal per `git reset --soft` auf den Remote-Stand zurückgesetzt, Revert neu erzeugt (`9b3d4f7`), kein Force-Push. Lehre: nach `git revert` erst `git log` prüfen, dann ändern.
+
+### 2026-10-13 22:47 (UTC) – [BEOBACHTUNG]
+
+- **Rückstandsmeldung S-3:** Der Vertrag meldet `simulationLag` ab 1 Spielsekunde Rückstand, das sind nur 3 Ticks (bei 3× rund 17 ms Echtzeit). Spike 1.5 zeigte ohne wachsenden Trend Rückstände bis 8 Ticks (Referenz-PC) bzw. 33 Ticks (Mac). Umgesetzt ist der Vertrag wie festgelegt; ob die Schwelle im Spiel Fehlalarme auslöst, prüft 2.7 bei der Messung auf Referenz-PC und Mac (im Fahrplan vermerkt). Bei Bedarf wäre die Änderung eine Vertragsänderung (Kategorie 5).
+- **Festlegungen der Umsetzung (additiv, `architecture.md` Abschnitt 4):** Kalender (Tick 0 = Tag 1 des Jahres 1, 00:00, Start-Tick je Sitzung), Codes `notNight`, `nightSkipBlocked`, `tickLimit`, Textschlüssel-Schema, Ende des Rückstaus bei höchstens 4.096 wartenden Ereignissen, Rückstand nach Arbeitsscheiben von 16 ms und Obergrenze von einer Sekunde.
+- **Befehl `debug`** ist nicht in 2.2 umgesetzt, weil seine Aktionen erst mit dem Debug-Panel feststehen; Landeplatz 2.7.
+- **npm audit:** 8 Funde der Stufe „moderate" (unverändertes Lockfile, Schwelle „high" grün); keine Maßnahme nötig, Prüfung mit Q.1.
 
 ### 2026-10-13 22:31 (UTC) – [ADR-ANGELEGT]
 

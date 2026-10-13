@@ -30,11 +30,11 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 2: Fundament (UMSETZUNG), Schritte 2.1 (Projektgerüst und CI), 2.8 (Weltmaßstab und Zeitmodell, ADR-020) und 2.9 (Schnittstellenverträge, ADR-021) abgeschlossen, als Nächstes 2.2; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
+- **Projektphase:** Phase 2: Fundament (UMSETZUNG), Schritte 2.1 (Projektgerüst und CI), 2.8 (Weltmaßstab und Zeitmodell, ADR-020), 2.9 (Schnittstellenverträge, ADR-021) und 2.2 (Takt, Zeitsteuerung, Befehle und Ereignisse im Kern, ADR-022) abgeschlossen, als Nächstes 2.3; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-13
-- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern, Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009), Datenmodell im Kern (ADR-010; Weltmaßstab 2 m je Zelle mit Luftseite im Raster und Speicherung in Blöcken nach ADR-020), Wegweiser-Prinzip und Leistung von Simulation und Zustandsübergabe BELASTBAR seit dem Leistungsnachweis (ADR-014; Linux-Messung in 7.2); Leistung der Darstellung mit echten Grafiken und mit Fahrzeugen und Flugzeugen VORLÄUFIG (ADR-017); Bauaktion im nächsten Bild VORLÄUFIG; Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Schnittstellenverträge für Befehle, Ereignisse, Abfragen, Datenpakete, Spielstände und Plattform BELASTBAR (ADR-021)
+- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern, Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009), Datenmodell im Kern (ADR-010; Weltmaßstab 2 m je Zelle mit Luftseite im Raster und Speicherung in Blöcken nach ADR-020), Wegweiser-Prinzip und Leistung von Simulation und Zustandsübergabe BELASTBAR seit dem Leistungsnachweis (ADR-014; Linux-Messung in 7.2); Leistung der Darstellung mit echten Grafiken und mit Fahrzeugen und Flugzeugen VORLÄUFIG (ADR-017); Bauaktion im nächsten Bild VORLÄUFIG; Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Schnittstellenverträge für Befehle, Ereignisse, Abfragen, Datenpakete, Spielstände und Plattform BELASTBAR (ADR-021); Takt des Simulationskerns BELASTBAR (Umsetzung 2.2)
 - **Aktive Blocker:** 0
 
 ## Quick Start
@@ -86,8 +86,8 @@ Noch nicht spielbar. `npm start` öffnet ein leeres Fenster; der Simulationskern
 
 ## Nächste Schritte
 
-- 2.2: Takt mit Zeitmodell, Befehle und Ereignisse nach den Verträgen aus ADR-021
-- 2.3 und 2.7: Weltzustand mit Wegweisern, Brücke und Plattformschicht im Produktionscode
+- 2.3: Weltzustand mit Raster in Blöcken und Wegweisern im Produktionscode
+- 2.7: Brücke und Plattformschicht, Anbindung des Takts an die Oberfläche
 - Phase 2 insgesamt: lauffähiger, leerer Spielrahmen mit grüner CI auf drei Plattformen
 
 → Vollständiger Fahrplan: [`docs/fahrplan.md`](docs/fahrplan.md)
