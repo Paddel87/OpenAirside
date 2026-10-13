@@ -17,12 +17,16 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) ausgeplant; nächste Schritte 2.1 und 2.8 nach Kenntnisnahme der Reaktiv-Reflexion (ADR-017).
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) ausgeplant; Reaktiv-Reflexion zu ADR-017 bestätigt; nächste Schritte 2.1 und 2.8 in neuer Session.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 19:05 – [BEOBACHTUNG]
+
+- **STOPP Reaktiv-Quote aufgehoben:** Projektinhaber: „Zustimmung, Reflexion zur Kenntnis genommen". Kein Architektur-Umbau; Maßnahme (3) gilt (Beförderungen nennen den gemessenen Umfang). Phase 2 kann mit 2.1 und 2.8 beginnen.
 
 ### 2026-10-13 19:00 – [SESSIONENDE]
 

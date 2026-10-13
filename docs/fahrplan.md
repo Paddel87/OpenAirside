@@ -13,7 +13,7 @@
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
 - **Aktiver Schritt:** keiner (Phase 1 abgeschlossen, ADR-016)
 - **Nächster Schritt:** 2.1 (Repository-Struktur, CI-Gates) und 2.8 (Weltmaßstab, Luftseite, Zeitmodell), parallel möglich
-- **Offene STOPP-Situationen:** Reaktiv-Quote 4 / 10 (40 %) über dem Schwellenwert nach ADR-017 – Reflexion ergänzt (Abschnitt „Iterations-Reflexion"), Kenntnisnahme des Projektinhabers steht aus; bis dahin kein Umsetzungsschritt von Phase 2.
+- **Offene STOPP-Situationen:** keine (Reaktiv-Quote 4 / 10 über dem Schwellenwert; Reflexion zu ADR-017 vom Projektinhaber am 2026-10-13 bestätigt, siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -399,6 +399,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Befund:** 4 / 10 `[REAKTIV]` (ADR-011, ADR-012, ADR-015, ADR-017) über ADR-008 bis ADR-017, 40 %.
 - **Ursache von ADR-017:** Die Beförderung in ADR-014 hat eine Sammelzeile („NFR Performance Gesamtsystem") befördert, obwohl die Messung nur Personen, Übergabe und einfache Darstellung abdeckte. Kein Fehler in Architektur oder Messung, sondern eine zu breite Reifegrad-Aussage; die getrennte Instanz hat sie gefunden.
 - **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI und der getrennten Instanz, `docs/research/phasenabschluss-1.md` Befund 4 und Teil 2). Die reaktiven ADRs betreffen Verpackung, Testlogistik und eine Reifegrad-Formulierung, nicht Kern, Brücke oder Datenmodell.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-13: „Zustimmung, Reflexion zur Kenntnis genommen".
 - **Maßnahme (3):** Eine Beförderung auf `[BELASTBAR]` nennt den gemessenen Umfang in der Reifegrad-Zeile; was die Messung nicht abdeckt, steht als eigene Zeile `[VORLÄUFIG]`.
 - **Ausblick:** Die Quote sinkt erst, wenn ADR-011, ADR-012 und ADR-015 aus dem Fenster fallen (ab ADR-018, ADR-019, ADR-022 bei nicht reaktiven Folge-ADRs). Phase 2 plant mit 2.8 und 2.9 die bekannten Entscheidungen vorab, damit dort keine reaktiven ADRs entstehen.
 
