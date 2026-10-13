@@ -181,9 +181,9 @@ Keine externen APIs im Spiel.
   - **Routine-Klasse:** Claude Sonnet 5.5 – Probelauf: offen
   - **Entscheidungs-Klasse:** Claude Opus 5.5 – stärkstes regulär eingesetztes Modell
   - **Ausnahme-Klasse:** Claude Fable 5.1, falls im Abo verfügbar – nur auf Vorschlag mit Freigabe
-  - **Bezugsmodell und knappe Ressource:** Claude-Abo des Projektinhabers; knapp ist das Nutzungskontingent (Art und Zurücksetz-Zeitpunkt beim ersten `[SESSIONSTART]` in Claude Code eintragen)
+  - **Bezugsmodell und knappe Ressource:** Claude-Abo des Projektinhabers; knapp ist das Nutzungskontingent (rollierendes 5-Stunden-Fenster laut Laufzeitumgebung, Stand 2026-10-13)
   - **Abgabe an Unteragenten:** Claude Code erlaubt Unteragenten mit fest eingestelltem Modell (`model` im Agenten-Aufruf bzw. in `.claude/agents/*.md`); Abgabe erst nach bestandenem Probelauf
-  - **Meldet die Laufzeitumgebung das Modell / das Kontingent?** Modell ja, über den Systemkontext der Session; Kontingent: beim ersten Sessionstart prüfen – Stand 2026-10-13
+  - **Meldet die Laufzeitumgebung das Modell / das Kontingent?** Modell ja, über den Systemkontext und die Abfrage `get_session` (eingestelltes und bedientes Modell); Kontingent ja, über `get_session` (`rate_limit_info`: Art „five_hour“, Status, Zurücksetz-Zeitpunkt) – geprüft 2026-10-13
   - **Preise je Klasse:** offen, beim Probelauf mit Quelle nachtragen
   - **Grenze der Sessiongröße:** 400.000 Token Kontext
   - **Kontingent-Warnung:** inaktiv, Begründung: erst nach Prüfung in der ersten Claude-Code-Session (`templates/werkzeuge/claude-code/`)
@@ -273,7 +273,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 - **macOS-Signatur:** vorerst unsigniert; Entscheidung über Signatur (Kosten im Rahmen unten) vor Phase 7
 - **Vertretung:** offen bis zum Deployment-Gate vor dem ersten öffentlichen Release (Phase 7)
 - **Notfall-Handbuch:** `docs/onboarding-runbook.md` Abschnitt „Notfall"; noch nicht erprobt
-- **KI im Betrieb:** Claude-Abo des Projektinhabers; Kontingent und Zurücksetz-Zeitpunkt werden beim ersten Sessionstart in Claude Code eingetragen; Rückfallweg ohne KI: Entwicklung pausiert, das veröffentlichte Spiel ist unabhängig
+- **KI im Betrieb:** Claude-Abo des Projektinhabers; Kontingent: rollierendes 5-Stunden-Fenster, Zurücksetz-Zeitpunkt je Session über `get_session` (geprüft 2026-10-13); Rückfallweg ohne KI: Entwicklung pausiert, das veröffentlichte Spiel ist unabhängig
 - **Zugriff der KI auf die Produktion:** kein Zugriff auf Spielerrechner; im Repository Schreibrechte über Claude Code; Releases nur nach Freigabe
 - **Unbeaufsichtigtes Handeln der KI:** nein
 
@@ -291,7 +291,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 | Übrige npm-Werkzeuge und Crates (ohne formale Richtlinie) | Nachprüfung 2027-04-13 | – | npm, crates.io | Q.1 |
 | Runner-Image `ubuntu-latest` → Ubuntu 26 | ab 2026-10-19 (Umstellung durch GitHub) | – | CI-Annotation, actions/runner-images#14748 | Q.1 (erster Lauf nach der Umstellung beobachten) |
 | Node 20 in GitHub Actions (abgekündigt) | behoben am 2026-10-13: pre-commit/action ersetzt | – | CI-Protokoll, GitHub-Changelog 2025-09-19 | – |
-| Claude-Kontingent | Zurücksetz-Zeitpunkt offen | – | Abo | beim ersten Sessionstart eintragen |
+| Claude-Kontingent | rollierendes 5-Stunden-Fenster („five_hour“), Zurücksetz-Zeitpunkt je Session über `get_session` | – | Laufzeitumgebung, geprüft 2026-10-13 | – (kein Fristablauf) |
 
 ### Kosten
 

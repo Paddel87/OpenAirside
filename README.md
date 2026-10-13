@@ -30,7 +30,7 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Initialisierung abgeschlossen, als Nächstes Phase 1: Technischer Durchstich und Leistungsnachweis (ERKUNDUNG)
+- **Projektphase:** Phase 1: Technischer Durchstich und Leistungsnachweis (ERKUNDUNG); Schritt 1.1 gemessen, wartet auf Freigabe
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-13
@@ -78,7 +78,7 @@ Noch nicht verfügbar.
 
 ## Nächste Schritte
 
-- Betriebsart des Rust-Kerns festlegen (natives Modul oder WebAssembly)
+- Betriebsart des Rust-Kerns festlegen: gemessen, Empfehlung natives Modul (napi-rs) im Utility-Prozess, wartet auf Freigabe ([Messprotokoll](spikes/1.1-betriebsart/README.md))
 - Prototyp mit 10.000 Personen nach dem Wegweiser-Prinzip
 - Leistungsnachweis: 60 Bilder pro Sekunde auf einem Mittelklasse-PC, lauffähig auf integrierter Grafik, auf Windows, Linux und macOS
 

@@ -9,11 +9,11 @@
 ## Aktueller Stand
 
 - **Stand vom:** 2026-10-13
-- **Laufende Phase:** keine (Initialisierung abgeschlossen, Phase 1 bereit)
-- **Phasentyp:** –
-- **Aktiver Schritt:** keiner
-- **Nächster Schritt:** 1.1 – Betriebsart des Rust-Kerns
-- **Offene STOPP-Situationen:** keine
+- **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
+- **Phasentyp:** ERKUNDUNG
+- **Aktiver Schritt:** 1.1 – Betriebsart des Rust-Kerns (WARTET-AUF-FREIGABE)
+- **Nächster Schritt:** 1.2 – Wegweiser-Prinzip mit 10.000 Personen (nach Entscheidung zu 1.1)
+- **Offene STOPP-Situationen:** Schritt 1.1 wartet auf Freigabe der Betriebsart (ENTSCHEIDUNG ERFORDERLICH, Kategorie Architektur, Vorlage im Schritt 1.1 unten)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -94,7 +94,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.1: Betriebsart des Rust-Kerns
 
-- **Status:** OFFEN
+- **Status:** WARTET-AUF-FREIGABE (Messungen abgeschlossen 2026-10-13, Empfehlung A vorgelegt)
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Vergleichsstudie
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session, dann Zwischenstand
@@ -113,6 +113,43 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** Betriebsart des Kerns `[OFFEN]` → `[VORLÄUFIG]`
 - **Artefakte:** Spike-Code, ADR (ERKENNTNIS), Update `architecture.md`
 - **Notizen:** Electron-Härtung (contextIsolation, Sandbox) von Anfang an beachten, sonst sind Messungen nicht repräsentativ.
+- **Zwischenstand 2026-10-13:** Spike und Messprotokoll in `spikes/1.1-betriebsart/README.md` (Rohdaten `results/matrix.jsonl`). Beide Varianten laufen in gehärtetem Electron 44.7.0; Akzeptanzkriterien „beide laufen" und „Messwerte liegen vor" erfüllt, „begründet empfohlen und vorgelegt" mit der Vorlage unten. Messung auf 4-vCPU-Container ohne GPU, nicht auf Referenzhardware; Windows und macOS nicht gemessen.
+- **Entscheidungsvorlage (offen):**
+
+  ```text
+  ENTSCHEIDUNG ERFORDERLICH
+  Kategorie: 1 Architekturänderung (Betriebsart des Kerns, Prozessgrenze Kern/Präsentation)
+  Kontext: ADR-002 lässt offen, ob der Rust-Kern als natives Node-Modul oder als
+      WebAssembly läuft. Spike 1.1 hat beide Varianten mit 10.000 Personen gemessen.
+  Optionen:
+    A: napi-rs-Modul im Electron-Utility-Prozess, Bild je Frame per MessagePort kopiert
+       → Für deine Vision: meiste Rechenreserve für große Flughäfen (1,3–1,5 × schneller,
+         alle Kerne mit stabilem Rust); stürzt die Simulation ab, bleibt das Fenster offen
+         und der Spielstand rettbar. Preis: je Plattform ein eigener Build, und die
+         Bilddaten werden je Frame kopiert (bei 10.000 Personen ~1 ms, unkritisch).
+    B: WebAssembly mit mehreren Threads im Web Worker, gemeinsamer Speicher
+       → Für deine Vision: einfachster Vertrieb (eine Datei für alle Systeme), keine
+         Kopie zur Anzeige. Preis: ein Drittel weniger Rechenreserve und Bau nur mit
+         Nightly-Rust (instabile Werkzeugkette, Widerspruch zu ADR-002/„Reproduzierbarkeit").
+    C: WebAssembly mit einem Thread (stabiles Rust)
+       → Für deine Vision: einfach und stabil, aber nur ein Prozessorkern – bei schwerer
+         Simulation bis 3,9 × langsamer; gefährdet das 10.000-Personen-Ziel.
+  Empfehlung: A – templates/architektur-heuristiken.md Teil 1, Default-Bias „die einfachere
+      Option gewinnt, bis das Gegenteil belegt ist": C ist am einfachsten, aber durch die
+      Vision-Anforderung 10.000 Personen (FR-040) und die Messung widerlegt. Zwischen A und B
+      ist keine klar einfacher (A: Prozessgrenze + 6 Builds; B: instabile Nightly-Kette);
+      den Ausschlag geben gemessene Reserve und stabile Werkzeuge (ADR-002, CLAUDE.md
+      Abschnitt 6 „Reproduzierbarkeit"). Übergabekosten von A gemessen tragbar.
+  Trade-off: gewinnst Rechenreserve, Absturzsicherheit, stabile Werkzeuge; gibst auf:
+      Zero-Copy-Übergabe und den Ein-Datei-Build (CI-Matrix mit 6 Zielen, macOS per lipo).
+  DIE FRAGE AN DICH: Ist dir Rechenreserve für sehr große Flughäfen wichtiger als ein
+      einfacher Build- und Vertriebsweg?
+  Konfidenz: mittel – Vergleich eindeutig, aber auf 4 vCPU ohne GPU gemessen; Windows-
+      und macOS-Builds nur nach Dokumentation bewertet.
+  Umkehrbarkeit: billig, solange der Kern (sim-core) frei von Bindungscode bleibt –
+      der Wechsel betrifft dann nur Brücke und Build (~150 Zeilen je Anbindung im Spike).
+  Blockiert Arbeit an: 1.2, 1.3 (und damit 1.4–1.7)
+  ```
 
 #### 1.2: Wegweiser-Prinzip mit 10.000 Personen
 
