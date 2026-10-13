@@ -24,6 +24,10 @@ Phase 1 läuft. Schritt 1.1 erledigt: Kern als napi-rs-Modul im Electron-Utility
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 01:00 – [BEOBACHTUNG]
+
+- **CI für Schritt 1.1:** Läufe 4 (`865b25f`) und 5 (`d912570`) grün. Aktiv sind bis Schritt 2.1 nur „Dokumentation (pre-commit)" und „Projektteile erkennen"; die Code-Jobs werden mangels `Cargo.toml`/`package.json` am Repo-Stamm übersprungen, der Spike-Code wird in der CI also nicht gebaut. Einzige Annotation: der bekannte Hinweis zur Umstellung von `ubuntu-latest` auf Ubuntu 26 ab 2026-10-19 (Ablaufdaten-Register, Q.1).
+
 ### 2026-10-13 00:55 – [REIFEGRAD-WECHSEL]
 
 - **Bestandteil:** Betriebsart des Rust-Kerns
