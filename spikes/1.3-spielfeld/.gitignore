@@ -1,0 +1,4 @@
+/target/
+/app/native/
+/app/release/
+/app/node_modules/

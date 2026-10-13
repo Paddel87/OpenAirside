@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** 1.6 – Verpackung für drei Plattformen (vor 1.3, damit GPU-Messungen als fertige Programme laufen)
-- **Nächster Schritt:** 1.3 – Zustandsübergabe und Spielfeld-Darstellung; parallel möglich: 1.6 – Verpackung für drei Plattformen
+- **Aktiver Schritt:** 1.3 – Zustandsübergabe und Spielfeld-Darstellung; wartet wie 1.6 auf Messung bzw. Rückmeldung des Projektinhabers mit den Testprogrammen auf seinen Rechnern
+- **Nächster Schritt:** Ergebnisse der Testprogramme 1.3 und 1.6 auswerten und beide abschließen; danach 1.4
 - **Offene STOPP-Situationen:** keine
 
 <!-- ANCHOR:phasen-typen -->
@@ -225,7 +225,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.3: Zustandsübergabe und Spielfeld-Darstellung
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Prototyp
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session, dann Zwischenstand
@@ -244,6 +244,11 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** S-1 `[VORLÄUFIG]` → `[BELASTBAR]` (bei Bestehen)
 - **Artefakte:** Spike-Code, Messprotokoll, Update `architecture.md`
 - **Notizen:** WebGL2 als Grundlage, WebGPU nicht voraussetzen.
+- **Zwischenstand 2026-10-13:** Spike und Messprotokoll in `spikes/1.3-spielfeld/README.md` (Rohdaten `results/`). Brücke mit Dreifachpuffer, kompaktem Bildformat, Filter auf Etage und Kamera-Ausschnitt und Bauaktion (S-2 minimal); PixiJS-Spielfeld mit Kamera, Etagen, zwei Detailstufen; eingebaute Messreihe. Kern aus 1.2 additiv um Bauen an beliebigen Zellen mit Übernahme der Wegweiser „sobald fertig" (ADR-010 A) ergänzt. Testprogramm für drei Plattformen über `.github/workflows/spike-build-1-3.yml` (Lauf 38389783470: alle drei Plattformen grün).
+  - **Übergabe:** 0,5–1,1 ms je Bild bei 10.000, 1,1–2,6 ms bei 50.000 Personen (Kontrolle ohne Zeichnen, 4 vCPU); Änderungslisten lohnen nicht (97–99 % bzw. 49–68 % der Personen bewegen sich je Tick). Empfehlung: kompakt + Ausschnitt.
+  - **Zeichenart:** `ParticleContainer` nötig; Sprites kosten bei 50.000 Personen schon auf der CPU-Seite 10–19 ms je Bild.
+  - **Bauaktion:** sichtbar im **übernächsten** Bild (27–37 ms), nicht im nächsten – Abweichung von `project-context.md` Abschnitt 6; Maßnahmen im Messprotokoll, Entscheidung in 1.7. Personen weichen nach höchstens 150 ms aus, ohne dass das Spiel wartet.
+  - **Offen für den Abschluss:** Bilder pro Sekunde auf echter Grafik. Im Container nur Software-Rendering (SwiftShader), das die CPU mit Simulation und Übergabe teilt – Werte nicht aussagekräftig. Messung mit dem Testprogramm auf Referenz-PC (Windows, Linux per Live-USB) und Mac; Anleitung im Messprotokoll, Abschnitt „Testprogramm herunterladen und starten". S-1 bleibt bis dahin `[VORLÄUFIG]`.
 
 #### 1.4: Großes Tabellen-Panel neben dem Spielfeld
 

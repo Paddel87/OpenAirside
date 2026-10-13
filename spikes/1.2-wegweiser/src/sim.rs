@@ -95,6 +95,24 @@ pub struct RecomputeReport {
     pub stall_ms: f64,
 }
 
+/// Background recomputation started by `set_walls` (spike 1.3).
+struct AsyncPending {
+    issued_tick: u64,
+    started: Instant,
+    rx: mpsc::Receiver<Fields>,
+}
+
+/// Result of taking over background fields (spike 1.3, ADR-010 option A).
+#[derive(Clone, Copy, Debug)]
+pub struct AsyncApplied {
+    /// Ticks between start of the recomputation and takeover.
+    pub ticks: u64,
+    /// Wall-clock time between start of the recomputation and takeover.
+    pub ms: f64,
+    /// Pure computation time reported by the field builder.
+    pub recompute_ms: f64,
+}
+
 struct Pending {
     changed_cells: usize,
     command: Command,
@@ -114,6 +132,10 @@ pub struct Sim {
     pub reports: Vec<RecomputeReport>,
     /// Incremental repair instead of full recomputation after build commands.
     pub incremental: bool,
+    /// Spike 1.3: cells changed by `set_walls` that the current fields do not
+    /// yet reflect and no running recomputation covers.
+    unapplied: Vec<u32>,
+    async_pending: Option<AsyncPending>,
     /// Ids of frequently used targets.
     exit: u8,
     toilet_land: u8,
@@ -331,6 +353,8 @@ impl Sim {
             bg,
             reports: Vec::new(),
             incremental: true,
+            unapplied: Vec::new(),
+            async_pending: None,
         };
         let mut hots = vec![Hot::default(); persons];
         let mut colds = vec![Cold::default(); persons];
@@ -508,6 +532,91 @@ impl Sim {
         self.fields = Arc::new(fields);
     }
 
+    /// Spike 1.3: sets or clears walls at arbitrary cells. The grid changes
+    /// immediately (visible in the next frame); new fields are computed in the
+    /// background and taken over by `poll_async` as soon as they are ready
+    /// (ADR-010, option A). Returns the cells that actually changed.
+    pub fn set_walls(&mut self, cells: &[u32], wall: bool) -> Vec<u32> {
+        let mut grid = (*self.grid).clone();
+        let mut changed = Vec::new();
+        for &c in cells {
+            let i = c as usize;
+            if i >= grid.cells() {
+                continue;
+            }
+            let before = grid.flags[i];
+            if wall {
+                grid.flags[i] |= WALL;
+            } else {
+                grid.flags[i] &= !WALL;
+            }
+            if grid.flags[i] != before {
+                changed.push(c);
+            }
+        }
+        if !changed.is_empty() {
+            self.grid = Arc::new(grid);
+            self.unapplied.extend_from_slice(&changed);
+            self.start_async_if_idle();
+        }
+        changed
+    }
+
+    fn start_async_if_idle(&mut self) {
+        if self.async_pending.is_some() || self.unapplied.is_empty() {
+            return;
+        }
+        let changed = std::mem::take(&mut self.unapplied);
+        let grid = Arc::clone(&self.grid);
+        let base = Arc::clone(&self.fields);
+        let incremental = self.incremental;
+        let (tx, rx) = mpsc::channel();
+        self.bg.spawn(move || {
+            let f = if incremental {
+                base.repair(&grid, &changed)
+            } else {
+                Fields::build(&grid)
+            };
+            let _ = tx.send(f);
+        });
+        self.async_pending = Some(AsyncPending {
+            issued_tick: self.tick,
+            started: Instant::now(),
+            rx,
+        });
+    }
+
+    /// Spike 1.3: takes over finished background fields without waiting.
+    /// Starts the next recomputation if more walls changed in the meantime.
+    pub fn poll_async(&mut self) -> Option<AsyncApplied> {
+        let p = self.async_pending.as_ref()?;
+        let fields = p.rx.try_recv().ok()?;
+        let applied = AsyncApplied {
+            ticks: self.tick - p.issued_tick,
+            ms: p.started.elapsed().as_secs_f64() * 1e3,
+            recompute_ms: fields.build_ms,
+        };
+        self.fields = Arc::new(fields);
+        self.async_pending = None;
+        self.start_async_if_idle();
+        Some(applied)
+    }
+
+    /// Spike 1.3: whether walls changed that the fields do not reflect yet.
+    #[must_use]
+    pub fn fields_outdated(&self) -> bool {
+        self.async_pending.is_some() || !self.unapplied.is_empty()
+    }
+
+    /// Spike 1.3: read access to the per-tick data of all persons, independent
+    /// of the memory layout.
+    pub fn visit_hot(&self, mut f: impl FnMut(&Hot)) {
+        match &self.store {
+            Store::Aos(p) => p.iter().for_each(|p| f(&p.hot)),
+            Store::Split(h, _) => h.iter().for_each(f),
+        }
+    }
+
     #[must_use]
     pub fn counters(&self) -> Counters {
         let c = &self.counters;
@@ -554,5 +663,47 @@ impl Sim {
             Store::Aos(p) => p.len() * size_of::<Person>(),
             Store::Split(h, c) => h.len() * size_of::<Hot>() + c.len() * size_of::<Cold>(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Spike 1.3: walls built while a recomputation is still running must end
+    /// up in the fields; after the last takeover the fields equal a full build.
+    #[test]
+    fn async_walls_converge_to_full_build() {
+        let grid = Grid::reference_like(128, 128, 4);
+        let mut sim = Sim::new(grid, 500, Layout::Split, 2, 7);
+        let a: Vec<u32> = (40..60).map(|x| sim.grid.idx(x, 90, 0) as u32).collect();
+        let b: Vec<u32> = (40..60).map(|y| sim.grid.idx(70, y, 0) as u32).collect();
+        assert_eq!(sim.set_walls(&a, true).len(), a.len());
+        // Second change while the first recomputation may still be running.
+        assert!(!sim.set_walls(&b, true).is_empty());
+        let mut takeovers = 0;
+        for _ in 0..10_000 {
+            sim.step(64);
+            if sim.poll_async().is_some() {
+                takeovers += 1;
+            }
+            if !sim.fields_outdated() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        assert!(!sim.fields_outdated(), "fields never caught up");
+        assert!(takeovers >= 1);
+        let full = Fields::build(&sim.grid);
+        assert_eq!(sim.fields.dist, full.dist);
+        // Clearing the walls again restores the original distances.
+        sim.set_walls(&a, false);
+        sim.set_walls(&b, false);
+        while sim.fields_outdated() {
+            sim.poll_async();
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        let original = Fields::build(&Grid::reference_like(128, 128, 4));
+        assert_eq!(sim.fields.dist, original.dist);
     }
 }
