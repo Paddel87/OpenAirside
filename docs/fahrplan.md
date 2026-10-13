@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-13 (Sessionstart 19:44 UTC)
+- **Stand vom:** 2026-10-13 (Sessionstart 22:17 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (2.9 erledigt am 2026-10-13, ADR-021)
-- **Nächster Schritt:** 2.2 (Simulationskern: Takt, Zeitsteuerung, Befehle, Ereignisse)
+- **Aktiver Schritt:** 2.2 `[WARTET-AUF-FREIGABE]` (Kategorie 7: Benchmark-Job mit Leistungsschwelle, CI-Prüfung der ts-rs-Typen; vorgelegt 2026-10-13 22:25 UTC)
+- **Nächster Schritt:** 2.2 umsetzen nach Freigabe
 - **Offene STOPP-Situationen:** keine (Reaktiv-Quote 5 / 10 nach ADR-021 weiter über dem Schwellenwert, aber sinkend; Reflexion zu ADR-020 vom Projektinhaber zur Kenntnis genommen, Ergänzung zu ADR-021 siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
@@ -175,7 +175,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.2: Simulationskern – Takt, Zeitsteuerung, Befehle, Ereignisse, Determinismus
 
-- **Status:** OFFEN
+- **Status:** WARTET-AUF-FREIGABE (Kategorie 7, vorgelegt 2026-10-13 22:25 UTC; Logbuch `[ENTSCHEIDUNG-VORGELEGT]`)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.1, 2.8, 2.9
 - **Freigabepflichtig:** ja, für den neuen CI-Job mit Leistungsschwelle und die Prüfung der erzeugten Typen (Kategorie 7)

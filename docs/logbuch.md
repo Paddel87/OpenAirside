@@ -24,6 +24,23 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 22:25 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 2.2, Kategorie 7 (Build- und Deploy-Pipeline), Eskalations-Auslöser 1 – aktive Klasse Entscheidung, kein Modellwechsel nötig.
+- **Frage 1, Kern-Benchmark:** A absolute Grenze aus dem Echtzeit-Budget als Pflicht-Check auf Linux, Trend nur als Anzeige (Empfehlung); B zusätzlich rot bei relativer Verschlechterung gegenüber `main`; C nur nächtlich bzw. von Hand, kein Merge-Gate; D externer Messdienst (Zählung von Instruktionen).
+- **Frage 2, ts-rs-Typen:** A Typen erzeugen, mit Prettier formatieren, Abweichung vom eingecheckten Stand färbt den bestehenden Job rot (Empfehlung); B Typen nur im Build erzeugen, nicht einchecken (weicht von ADR-021 ab).
+- **Vertiefung:** `architecture.md` Abschnitt 4 (Grundlagen, S-2), ADR-020, ADR-021, `ci.yml`, Spike 1.5 (Schritt 0,25–0,29 ms bei 10.000 Personen im Container mit 4 Kernen).
+- **Stand:** 2.2 `[WARTET-AUF-FREIGABE]`, Arbeit angehalten bis zur Antwort.
+
+### 2026-10-13 22:17 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 21:03 UTC plus `[BEOBACHTUNG]` 21:56 UTC (PR Paddel87/OpenAirside#17 gemergt, `118fe75`). Branch `claude/gracious-galileo-2reksz` steht auf `main` plus zwei Sessionende-Commits (`54b2e13`, `3f46cf6`), die nach `project-context.md` Abschnitt 10 mit dem PR von 2.2 nach `main` gehen.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]` 21:03, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant für diese Session:** 2.2 – Simulationskern; zuerst Freigabe Kategorie 7 (Benchmark-Job mit Leistungsschwelle, CI-Prüfung der ts-rs-Typen).
+- **Vorabprüfung:** Eingangskriterien von 2.2 erfüllt (S-2, S-3 `[BELASTBAR]` nach ADR-021; Zeitmodell ADR-020); Modul Takt & Weltzustand darf `[VORLÄUFIG]` in die erste Umsetzung gehen (Regel-007). Reaktiv-Quote 5 / 10 weiter über dem Schwellenwert, Reflexion liegt vor.
+- **Modus/Werkzeug:** Claude Code, Cloud-Session, Berechtigungsmodus `auto`; Auftrag aus der Vorsession („neue Session für 2.2 starten").
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` (Quelle: `get_session` 22:17 UTC) → Entscheidungs-Klasse. Kontingent: 5-Stunden-Fenster `allowed`.
+
 ### 2026-10-13 21:56 (UTC) – [BEOBACHTUNG]
 
 - **PR Paddel87/OpenAirside#17 gemergt** (`118fe75`, Merge-Commit) auf Anweisung des Projektinhabers („merge"); vorher CI auf dem PR-Stand grün und ohne Konflikt. Rückfrage des Projektinhabers: Antworten vom iPhone zum ersten Auswahldialog kamen in der Session nur als „Denied by user" an; inhaltlich gleich mit dem zweiten Durchgang, keine Änderung an ADR-021. Dieser Eintrag liegt nach der Festlegung zu Sessionende-Commits (`project-context.md` Abschnitt 10) nur auf dem Branch und geht mit dem PR des nächsten Schritts nach `main`.
