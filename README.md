@@ -86,7 +86,6 @@ Noch nicht spielbar. `npm start` öffnet ein leeres Fenster; der Simulationskern
 
 ## Nächste Schritte
 
-- Branch-Schutz auf `main` einrichten und den Start der heruntergeladenen Pakete prüfen (Projektinhaber, 2.1-N1/N2)
 - 2.8 und 2.9: Weltmaßstab, Lage der Luftseite, Zeitmodell und Schnittstellenverträge festlegen
 - Phase 2 insgesamt: lauffähiger, leerer Spielrahmen mit grüner CI auf drei Plattformen
 

@@ -17,12 +17,20 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019); Nachlauf 2.1-N1/N2 beim Projektinhaber; nächster Schritt 2.8 in neuer Session.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019); Nachlauf 2.1-N1/N2 erledigt; nächster Schritt 2.8 in neuer Session.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 18:46 (UTC) – [BEOBACHTUNG]
+
+- **Nachlauf 2.1 abgeschlossen** (Rückmeldungen des Projektinhabers nach Sessionende, Branch neu vom `main` nach Merge von PR #13 aufgesetzt).
+- **2.1-N1 Branch-Schutz:** Ruleset `main-schutz` laut Projektinhaber eingerichtet (PR-Pflicht ohne Freigabe-Zahl, 18 Pflicht-Checks, Force-Push und Löschen gesperrt). Von der KI nicht direkt prüfbar (kein Zugriff auf die Ruleset-Einstellungen); Nachweis beim nächsten PR.
+- **2.1-N2 Startweg (Release-Lauf 38440601610):** Windows 11 Pro 25H2 (Build 26200.9457): SmartScreen-Warnung, Zulassen, Installer mit Benutzer- und Ordnerwahl, Fenster startet. macOS (Version nicht erfasst): DMG ohne Browser-Warnung, Gatekeeper „In den Papierkorb legen / Fertig", „Dennoch öffnen" in Datenschutz & Sicherheit mit Touch ID, Fenster startet. Ad-hoc-Signatur nach ADR-015 bestätigt.
+- **Befunde mit Landeplatz:** Electron-Standardmenü (File/Edit/View/Window) mit „Reload" und „Toggle Developer Tools" im Release-Paket → 2.7 (Zu tun ergänzt); Standard-Symbol von Electron → 2.10 (Zu tun ergänzt).
+- **Runbook** Abschnitt 3, Schritt 6 an die beobachteten Dialoge angepasst.
 
 ### 2026-10-13 17:47 (UTC) – [SESSIONENDE]
 
