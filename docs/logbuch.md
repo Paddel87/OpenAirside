@@ -24,6 +24,14 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 14:52 – [GELÖST]
+
+- **Problem:** Mac-Paket Spike 1.5 (arm64 only, ADR-012) startet nicht: „ist beschädigt und kann nicht geöffnet werden", nur „In den Papierkorb"/„Fertig"; der Weg über „Dennoch öffnen" aus 1.3/1.4 (Universal) steht nicht zur Verfügung.
+- **Lösung:** `xattr -cr "/Applications/OpenAirside Spike 1.5.app"` (Projektinhaber, M3 Pro); `codesign` nicht nötig. Messung läuft.
+- **Vermutete Ursache (nicht geprüft):** ohne Universal-Zusammenführung fehlt die Ad-hoc-Signatur, die Apple-Chips verlangen.
+- **Nachgezogen:** Anleitung `spikes/1.5-leistung/README.md`, Fahrplan 1.5 und Nachtrag 1.6 mit Vorschlag 1.6-N1 (Ad-hoc-Signatur im Workflow, wartet auf Freigabe, Kategorie 7).
+- **Ablauf-Notiz:** Nach `/clear` hatte ich 1.5 fälschlich einer anderen Session zugeschrieben; der Projektinhaber stellte klar, dass der Verlauf hier fortgeführt wird.
+
 ### 2026-10-13 14:38 – [ADR-ANGELEGT]
 
 - **ADR-013:** Größte Karte 768 × 768 Zellen je Etage, fünf Etagen (`[ERKENNTNIS]`, füllt die an 1.5 übergebene Festlegung aus ADR-010 aus, ändert ADR-010 nicht). Freigabe des Projektinhabers: „b".
