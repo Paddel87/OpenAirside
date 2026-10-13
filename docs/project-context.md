@@ -52,9 +52,8 @@ Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachwei
 #### Rust-Kern und Anbindung
 
 - Betriebsart des Kerns: natives Node-Modul (napi-rs) in einem Electron-Utility-Prozess (ADR-009, `[BELASTBAR]` seit ADR-014)
-  - napi 3.12.7, napi-derive 3.6.8, @napi-rs/cli 3.9.1 (Node-API 10 in Electron 44) — Verifiziert: 2026-10-13, Quelle: crates.io, npm
+  - napi 3.12.7, napi-derive 3.6.12, @napi-rs/cli 3.9.1 (Node-API 10 in Electron 44) — Verifiziert: 2026-10-13, Quelle: crates.io, npm; napi-derive 3.6.12 zieht napi-derive-backend 6.1.5 und baut ohne Festsetzung (ADR-018, Messung im frischen Workspace)
   - napi-build 2.4.4 (Begleit-Crate, von napi 3.12.7 mit `^2.4.4` verlangt) — Verifiziert: 2026-10-13, Quelle: crates.io
-  - napi-derive-backend 6.1.4 per `Cargo.lock` festgesetzt (6.1.5 bricht den Build mit napi-derive 3.6.8) — Verifiziert: 2026-10-13, Quelle: Build im Spike 1.1
   - zurückgestellt, nicht im Stack: wasm-bindgen 0.2.128 für WebAssembly mit Threads, Neubewertung in Fahrplan-Schritt Q.2
 - serde 1.0.229, rayon 1.12.0, ts-rs 12.0.1 — Verifiziert: 2026-10-13, Quelle: crates.io
 
@@ -214,6 +213,8 @@ Pflichtkategorien nach `CLAUDE.md` Abschnitt 15. Werkzeugversionen nach derselbe
 - **Type-Checker:** `tsc --noEmit` (TypeScript 6.0.3) mit `strict` und `noUncheckedIndexedAccess`
 - **Security-Scanner:** CodeQL über GitHub Actions; Electron-Härtung aus Abschnitt 6 als Lint- und Testprüfung
 - **Dependency-Audit:** `npm audit --audit-level=high`, zusätzlich Dependabot
+- **Begleitpakete (ADR-018):** `@types/node` 24.19.2 (Node 24 in Electron 44), `@eslint/js` 10.0.1, `@vitest/coverage-v8` 5.0.4, `@playwright/test` 1.62.1 — Verifiziert: 2026-10-13, Quelle: npm
+- **Lizenzprüfung npm:** eigenes Skript `scripts/check-licenses.mjs` gegen die erlaubten Lizenzen aus Abschnitt 6 (ADR-018)
 - **Test-Runner:** Vitest 5.0.4 mit Coverage (v8); Playwright 1.62.1 für Ende-zu-Ende-Tests der Electron-Anwendung (Electron-Unterstützung von Playwright ist „experimentell", Version exakt pinnen)
 - **Naming-Konvention:** camelCase für Variablen und Funktionen, PascalCase für Typen und React-Komponenten
 

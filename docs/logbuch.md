@@ -24,6 +24,14 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 17:05 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-018 – Projektgerüst, CI-Gates und napi-Versionen für Phase 2
+- **Tag:** `[OPERATIV]` (in 2.1 geplante Freigabe)
+- **Auslöser:** Freigabe des Projektinhabers per Auswahl: 1A (napi-derive 3.6.12), 2A (Spike-Workflows entfernen), Rauchtest bei jedem Push, übrige CI-Erweiterungen und Begleitpakete wie vorgeschlagen.
+- **Reaktiv-Quote:** 4 / 10 (ADR-009 bis ADR-018), unverändert; durch die bestätigte Reflexion vom 2026-10-13 abgedeckt.
+- **Schritt 2.1:** `[IN ARBEIT]`.
+
 ### 2026-10-13 16:55 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt:** 2.1 (Projektinhaber wählte 2.1 vor 2.8).

@@ -30,10 +30,11 @@
 | 015 | 2026-10-13 | Aktiv | REAKTIV | DEPLOYMENT | Build/Deploy | Ad-hoc-Signatur für macOS-Pakete der Spike-Builds |
 | 016 | 2026-10-13 | Aktiv | ERKENNTNIS | METHODIK | Architektur, Methodik | Phasenabschluss 1 – gezielt umbauen, Reifegrad-Regel für Umsetzungsschritte |
 | 017 | 2026-10-13 | Aktiv | REAKTIV | PERFORMANCE | Architektur | Reifegrad „NFR Performance Gesamtsystem" auf das Gemessene begrenzt |
+| 018 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, STACK | Build/Deploy, Externe Abhängigkeiten | Projektgerüst, CI-Gates und napi-Versionen für Phase 2 |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 4 / 10 über die letzten 10 ADRs (ADR-008 bis ADR-017: ADR-011, ADR-012, ADR-015, ADR-017), 40 % – **über dem Schwellenwert**; gesamt 4 / 17. Reflexionen vom 2026-10-13 in `fahrplan.md` Abschnitt „Iterations-Reflexion"
+- **Aktueller Wert:** 4 / 10 über die letzten 10 ADRs (ADR-009 bis ADR-018: ADR-011, ADR-012, ADR-015, ADR-017), 40 % – **über dem Schwellenwert**, unverändert seit ADR-017 (ADR-018 nicht reaktiv; Ausblick der Reflexion vom 2026-10-13 trifft zu); gesamt 4 / 18. Reflexionen vom 2026-10-13 in `fahrplan.md` Abschnitt „Iterations-Reflexion"
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -100,6 +101,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-015: Ad-hoc-Signatur für macOS-Pakete der Spike-Builds](decisions/ADR-015.md)
 - [ADR-016: Phasenabschluss 1 – gezielt umbauen, Reifegrad-Regel für Umsetzungsschritte](decisions/ADR-016.md)
 - [ADR-017: Reifegrad „NFR Performance Gesamtsystem" auf das Gemessene begrenzt](decisions/ADR-017.md)
+- [ADR-018: Projektgerüst, CI-Gates und napi-Versionen für Phase 2](decisions/ADR-018.md)
 
 ---
 
