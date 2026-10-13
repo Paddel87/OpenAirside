@@ -24,6 +24,15 @@ Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt. Nächster Sch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 02:40 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 02:35 einer anderen Session (Branch-Konvention, PR Paddel87/OpenAirside#4, gemergt als `04c7c5b`); Branch neu auf `main`.
+- **Pflichtlektüre:** Änderungen seit dem letzten Lesen gezielt gelesen (`git diff 1353542 04c7c5b`): `CLAUDE.md` Abschnitt 11 (Branch-Schema, ein Branch je PR, vom Werkzeug vergebene Namen), `project-context.md` Abschnitt 7, README „Mitwirken", Logbuch 02:28/02:35. Übrige Pflicht-Dokumente unverändert seit dem Lesen in dieser Sitzung. Folge: Branch `claude/gracious-galileo-2reksz` ist vom Werkzeug vorgegeben, Typ und Schritt-ID stehen im PR-Titel.
+- **Geplant:** Schritt 1.6 (Verpackung für drei Plattformen), damit die GPU-Messungen von 1.3 und 1.5 als fertige Programme auf den Rechnern des Projektinhabers laufen können. Reihenfolge vom Projektinhaber gewählt (Rückfrage zu 1.3: Container ohne Grafikkarte, Bildrate hier nicht aussagekräftig).
+- **Freigabe CI-Änderung:** Die gewählte Option nennt ausdrücklich, dass die CI fertige Testprogramme baut (Kategorie 7, Abschnitt 4).
+- **Modell:** `claude-opus-5-5` (Entscheidungs-Klasse, `get_session` 02:2x). 1.6 empfiehlt Routine → läuft oberhalb der Empfehlung; keine Abgabe möglich (Probelauf offen).
+- **Kontextgröße zu Beginn:** rund 460.000 Token, über der Grenze von 400.000; Fortsetzung auf Wunsch des Projektinhabers.
+
 ### 2026-10-13 02:35 – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 10 Minuten

@@ -11,7 +11,7 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** keiner (1.2 erledigt am 2026-10-13, ADR-010)
+- **Aktiver Schritt:** 1.6 – Verpackung für drei Plattformen (vor 1.3, damit GPU-Messungen als fertige Programme laufen)
 - **Nächster Schritt:** 1.3 – Zustandsübergabe und Spielfeld-Darstellung; parallel möglich: 1.6 – Verpackung für drei Plattformen
 - **Offene STOPP-Situationen:** keine
 
@@ -288,7 +288,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.6: Verpackung für drei Plattformen
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Prototyp
 - **Zeitbox (nur ERKUNDUNG):** maximal eine halbe Session
