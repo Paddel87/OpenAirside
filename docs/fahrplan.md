@@ -197,7 +197,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – klar spezifizierte Umsetzung nach ADR-010 und ADR-020.
 - **Eingangskriterien:** Datenmodell `[BELASTBAR]`, Weltmaßstab aus 2.8
 - **Anforderungen (ab Klasse M):** FR-046, FR-017 (Kern des Wegweiser-Prinzips; Passagierführung in 3.3)
-- **Zu tun:** Raster mit fünf Etagen in 32 × 32-Blöcken (2 m je Zelle, Erdgeschoss voll, übrige Etagen nur belegt; ADR-020), Wegenetze für Straßen, Rollwege und Bahnen als Datenstrukturen im Weltzustand (ohne Verkehrslogik, die folgt in 3.4), Zonen-Grundlage, heiße und kalte Felder je Objektart, Ladungsart „Fracht" im Schema; Wegweiser-Berechnung neu aufgebaut nach `spikes/1.2-wegweiser/src/field.rs` mit Neuberechnung im Hintergrund und Übernahme sobald fertig (ADR-010), Wegweiser nur in Blöcken mit begehbaren Zellen (ADR-020); Benchmark Wegweiser „Terminal 768² × 5 in Welt 2048²" in der CI.
+- **Zu tun:** Raster mit fünf Etagen in 32 × 32-Blöcken (2 m je Zelle, Erdgeschoss voll, übrige Etagen nur belegt; ADR-020), Wegenetze für Straßen, Rollwege und Bahnen als Datenstrukturen im Weltzustand (ohne Verkehrslogik, die folgt in 3.4), Zonen-Grundlage, heiße und kalte Felder je Objektart, Ladungsart „Fracht" im Schema; Wegweiser-Berechnung neu aufgebaut nach `spikes/1.2-wegweiser/src/field.rs` mit Neuberechnung im Hintergrund und Übernahme sobald fertig (ADR-010), Wegweiser nur in Blöcken mit begehbaren Zellen (ADR-020); synthetische Bewegung und `Guidance` aus 2.2 (`core/src/world.rs`, `TODO(fahrplan-ref: 2.3)`) durch Wegweiser ersetzen, Neuberechnung über `core/src/adoption.rs` (Prüfmodus aus 2.2); Benchmark Wegweiser „Terminal 768² × 5 in Welt 2048²" in der CI.
 - **Akzeptanzkriterien:** `core/tests/cargo_ready.rs` und Wegweiser-Tests grün (Distanzen gleich der Vollberechnung nach Bauaktionen); `core/benches/flowfield.rs` mit 10.000 Personen ≤ 4 ms je Simulationsschritt (FR-017) und Neuberechnung im Bereich der Werte aus 1.5; Coverage Kern ≥ 85 %.
 - **Betroffene Module:** Takt & Weltzustand, Welt & Bau, Wegfindung & Passagierführung
 - **Reifegrad-Wirkung:** Modul Welt & Bau (Grundraster) → `[BELASTBAR]`
@@ -212,7 +212,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – Umsetzung festgelegter Verträge und Härtungsregeln.
 - **Eingangskriterien:** S-1, S-2, S-3, S-6, S-7 `[BELASTBAR]`
 - **Anforderungen (ab Klasse M):** FR-009
-- **Zu tun:** Verträge nach ADR-021: Port-Handshake mit Sitzungen, Ereignisse mit dem Bild und Flusssteuerung (S-3), Abfragedienst mit Test-Tabelle (S-7), Preload-Grundgerüst S-6 mit Absenderprüfung per `senderFrame`; URL-Prüfung in `app/src/main/security.ts` per Parser statt `startsWith` (Electron-Checkliste Punkt 13). Brücken-Crate mit napi-rs (Regel-006); Dreifachpuffer und kompaktes Bildformat mit Filter auf Etage und Ausschnitt; MessagePort-Handshake; Electron-Härtung (`contextIsolation`, Sandbox, CSP, schmale Preload-API; Electron-Standardmenü ersetzen oder entfernen, „Reload" und Entwicklerwerkzeuge nur im Entwicklungs-Build – Befund 2.1-N2); Spielfeld-Grundgerüst mit PixiJS und Personen im `ParticleContainer`; Konsole/Debug-Panel; Leistungsanzeige.
+- **Zu tun:** Verträge nach ADR-021: Port-Handshake mit Sitzungen, Ereignisse mit dem Bild und Flusssteuerung (S-3), Abfragedienst mit Test-Tabelle (S-7), Preload-Grundgerüst S-6 mit Absenderprüfung per `senderFrame`; URL-Prüfung in `app/src/main/security.ts` per Parser statt `startsWith` (Electron-Checkliste Punkt 13). Brücken-Crate mit napi-rs (Regel-006); Dreifachpuffer und kompaktes Bildformat mit Filter auf Etage und Ausschnitt; MessagePort-Handshake; Electron-Härtung (`contextIsolation`, Sandbox, CSP, schmale Preload-API; Electron-Standardmenü ersetzen oder entfernen, „Reload" und Entwicklerwerkzeuge nur im Entwicklungs-Build – Befund 2.1-N2); Spielfeld-Grundgerüst mit PixiJS und Personen im `ParticleContainer`; Konsole/Debug-Panel mit Befehl `debug { action: DebugAction }` (S-2, Aktionen legt dieser Schritt fest); Leistungsanzeige; Takt-Thread `core/src/runner.rs` aus 2.2 an den Port anbinden; Schwelle der Rückstandsmeldung (S-3: 1 Spielsekunde = 3 Ticks) bei der Messung auf Referenz-PC und Mac prüfen – Spike 1.5 zeigte Rückstände bis 8 bzw. 33 Ticks ohne wachsenden Trend.
 - **Akzeptanzkriterien:** Härtung durch Tests belegt (`nodeIntegration` aus, Sandbox an, keine entfernten Inhalte); `app/console.test.ts` grün; das Szenario aus Spike 1.5 läuft auf Produktionscode mit gleichwertigen Kernwerten (Abschlusskriterium der Phase), gemessen auf Referenz-PC und Mac des Projektinhabers.
 - **Betroffene Module:** Brücke, Plattform, Spielfeld
 - **Reifegrad-Wirkung:** Brücke und Plattform → `[BELASTBAR]`
@@ -227,7 +227,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – Umsetzung des Vertrags S-4.
 - **Eingangskriterien:** S-4 `[BELASTBAR]`
 - **Anforderungen (ab Klasse M):** FR-044
-- **Zu tun:** Lader für Datenpakete im Kern nach S-4 (ADR-021): Manifest, zweistufige Prüfung, Grenzen, Pfadprüfung, ganzes Paket aus bei Fehlern, verständliche Fehlermeldung; JSON-Schema-Dateien für Modder; S-6 `packs.list`/`packs.setActive`; Basis-Datenpaket des Spiels (Regel-003).
+- **Zu tun:** Lader für Datenpakete im Kern nach S-4 (ADR-021): Manifest, zweistufige Prüfung, Grenzen, Pfadprüfung, ganzes Paket aus bei Fehlern, verständliche Fehlermeldung; JSON-Schema-Dateien für Modder; S-6 `packs.list`/`packs.setActive`; Basis-Datenpaket des Spiels (Regel-003); Inhaltsprüfung von `build`/`buildArea` (S-2) auf die geladenen Pakete umstellen (`TODO(fahrplan-ref: 2.4)` in `core/src/simulation.rs`).
 - **Akzeptanzkriterien:** `core/tests/datapacks.rs` grün, inklusive fehlerhafter Pakete ohne Absturz; Coverage Kern ≥ 85 %.
 - **Betroffene Module:** Inhalte & Mods, Takt & Weltzustand
 - **Reifegrad-Wirkung:** Modul Inhalte & Mods (Lader) → `[BELASTBAR]`; Code-Mods bleiben `[OFFEN]` (6.1)
@@ -286,10 +286,10 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar | FR-010, FR-011 |
+| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2) | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
 | 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
-| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
+| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020); Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
 | 3.5 | Abfertigung und Gepäck in Grundform | FR-025, FR-032 |
 | 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform | FR-030, FR-036, FR-039 |
 
@@ -351,7 +351,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Wahl neuer Linien ist eine Entscheidung über externe Abhängigkeiten.
 - **Eingangskriterien:** Vorlauf im Ablaufdaten-Register erreicht
 - **Anforderungen (ab Klasse M):** FR-045
-- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge, abgekündigte Unterpakete von electron-builder (Register-Eintrag vom 2026-10-13); Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
+- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge, abgekündigte Unterpakete von electron-builder (Register-Eintrag vom 2026-10-13), benannte Ausnahme `syn@2.0.119` in `deny.toml` (ts-rs auf syn 3 umgestellt?, Warnungs-Bestand); Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
 - **Akzeptanzkriterien:** Keine fixierte Version ist über ihrem Lebensende; Register und `Verifiziert`-Vermerke aktuell; CI grün auf drei Plattformen.
 - **Betroffene Module:** Plattform, Build/CI
 - **Reifegrad-Wirkung:** keine

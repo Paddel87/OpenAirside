@@ -224,11 +224,11 @@ Pflichtkategorien nach `CLAUDE.md` Abschnitt 15. Werkzeugversionen nach derselbe
 
 ### Warnungs-Bestand
 
-Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`, `tsc` strict). Bisher keine Abweichungen.
+Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`, `tsc` strict). Abweichungen nur als benannte Ausnahme in der Tabelle.
 
 | Quelle | Mittel des Werkzeugs | Obergrenze / benannte Ausnahme | Stand vom | Fahrplan-Schritt |
 |---|---|---|---|---|
-| – | – | keine | 2026-10-13 | – |
+| cargo-deny `bans`, doppelte Crate-Versionen | `skip` in `deny.toml` | benannte Ausnahme: `syn@2.0.119` (nur über ts-rs-macros 12.0.1 hinter dem Feature `ts`; serde nutzt syn 3) | 2026-10-13 | Q.1 (prüfen, ob ts-rs auf syn 3 umgestellt hat) |
 
 **Warnungsquellen ohne Schalter:** Hinweise der CI-Plattform zu Action-Versionen und Runner-Images (Annotationen im Lauf); Bündelgrößen-Warnungen von Vite; Abkündigungshinweise von electron-builder und npm (`npm warn deprecated`, Ablaufdaten-Register, Q.1). Bekannter Bestand (Stand 2026-10-13, Release-Lauf 38440601610): npm „install scripts not yet covered by allowScripts" für electron-winstaller und fsevents (Skripte laufen nicht; Bau und Tests grün; Prüfung in Q.1); electron-builder „asar usage is disabled" (Muster aus den Spikes, Entscheidung mit der Signatur in 7.1) und „default Electron icon is used" (Symbol mit dem Stilleitfaden in 2.10).
 
@@ -246,6 +246,8 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
   - Security-Scan (cargo-deny, CodeQL)
   - Dependency-Audit (Schwellenwert: high)
   - Tests inklusive Coverage-Mindestwert
+  - Kern-Benchmark „Tick mit 10.000 Personen" (seit Schritt 2.2, ADR-022: rot bei Mittelwert > 1 ms oder p99 > 4 ms)
+  - Prüfung der erzeugten TypeScript-Typen gegen die Rust-Typen (seit Schritt 2.2, ADR-022, im Job „Rust Lint & Format")
   - Leistungstest Referenzszenario (ab Phase 4, sobald das Referenzszenario baubar ist)
 - **Branch-Protection auf `main`:** alle Pflicht-Gates grün; Force-Push gesperrt (einzurichten in Schritt 2.1).
 - **Seit Schritt 2.1** laufen alle Code-Jobs bei jedem Push (ADR-018): Rust (fmt, clippy, cargo-deny, Tests auf drei Plattformen, Coverage Kern ≥ 85 % und gesamt ≥ 70 %), TypeScript (ESLint, Prettier, tsc, npm audit, Lizenz-Skript, Vitest mit Coverage auf drei Plattformen) und der Electron-Rauchtest auf drei Plattformen; die Brücken-Crate hat keine cargo-Tests und wird über den Rauchtest geprüft.
