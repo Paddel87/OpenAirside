@@ -1,11 +1,10 @@
 # Release-Builds für OpenAirside (Klasse G, Aufteilung nach templates/projektstart.md Schritt 10).
-# Trigger: Tag v* (z. B. v0.1.0). Baut Windows, Linux und macOS (Apple-Chips, ADR-012) mit electron-builder
-# 26.16.1 und legt einen Release-ENTWURF an; veröffentlicht wird von Hand nach Freigabe.
+# Trigger: Tag v* (z. B. v0.1.0) legt einen Release-ENTWURF an; veröffentlicht wird von Hand nach
+# Freigabe. Manuell startbar (workflow_dispatch) für Testpakete ohne Entwurf (ADR-018).
+# Pakete: Windows NSIS x64, Linux AppImage und deb x64, macOS dmg arm64 (ADR-012) mit
+# Ad-hoc-Signatur (ADR-015); arm64 für Windows und Linux folgt in 7.2.
 # Änderungen an dieser Datei sind freigabepflichtig (CLAUDE.md 4.7).
 # Vor dem ersten öffentlichen Release gilt das Gate aus Fahrplan-Schritt 7.1.
-#
-# Skelett: Build-Befehle (npm run dist:*) entstehen in Fahrplan-Schritt 1.6/2.1. Bis dahin bricht
-# der Workflow mit klarer Meldung ab, falls jemand vorzeitig einen Tag setzt.
 # Zusätzliche Action geprüft am 2026-10-13: download-artifact v8.0.2 (Linie 8.0 seit 2026-02).
 
 name: Release
@@ -13,6 +12,7 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -29,42 +29,60 @@ jobs:
         include:
           - os: windows-latest
             target: dist:win
+            exe: release/win-unpacked/OpenAirside.exe
           - os: ubuntu-latest
             target: dist:linux
+            exe: release/linux-unpacked/openairside
           - os: macos-latest
             target: dist:mac
+            exe: release/mac-arm64/OpenAirside.app/Contents/MacOS/OpenAirside
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7.0.1
-      - name: Projekt vorhanden?
-        shell: bash
-        run: |
-          if [ ! -f package.json ] || [ ! -f Cargo.toml ]; then
-            echo "::error::Noch kein baubarer Stand (Fahrplan-Schritt 2.1 offen)."
-            exit 1
-          fi
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: rustup show
-      - if: runner.os == 'macOS'
-        run: rustup target add aarch64-apple-darwin   # nur Apple-Chips (ADR-012)
       - uses: Swatinem/rust-cache@v2.9.2
       - run: npm ci
-      - name: Paket bauen (unsigniert, siehe project-context.md Abschnitt 8)
+      - name: Paket bauen (ohne Beglaubigung, siehe project-context.md Abschnitt 8)
         run: npm run ${{ matrix.target }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - name: Signatur prüfen (macOS, ad hoc, ADR-015)
+        if: runner.os == 'macOS'
+        run: |
+          app="release/mac-arm64/OpenAirside.app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -dv "$app" 2>&1 | tee codesign.txt
+          grep -q "Signature=adhoc" codesign.txt
+          codesign --verify --verbose=2 "$app/Contents/Resources/app/app/native/openairside-bridge.node"
+      - name: Rauchtest des Pakets (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:e2e
+        env:
+          OPENAIRSIDE_E2E_EXECUTABLE: ${{ github.workspace }}/${{ matrix.exe }}
+      - name: Rauchtest des Pakets
+        if: runner.os != 'Linux'
+        shell: bash
+        run: npm run test:e2e
+        env:
+          OPENAIRSIDE_E2E_EXECUTABLE: ${{ github.workspace }}/${{ matrix.exe }}
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: openairside-${{ runner.os }}
-          path: release/
+          path: |
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+            release/*.dmg
           retention-days: 14
 
   draft:
     name: Release-Entwurf anlegen
     needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write

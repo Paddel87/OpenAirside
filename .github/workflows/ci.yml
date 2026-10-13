@@ -1,11 +1,9 @@
 # CI für OpenAirside (Klasse G). Abgeleitet aus templates/github-workflows/ci-typescript.yml,
-# ergänzt um Rust-Jobs (keine Rust-Vorlage vorhanden) und eine Plattform-Matrix.
-# Pflichtkategorien nach CLAUDE.md Abschnitt 15; Werte aus docs/project-context.md Abschnitt 7.
-# Lokale Hooks (.pre-commit-config.yaml) führen dieselben Checks aus — diese Pipeline ist die
-# unabhängige Diagnoseschicht, kein Ersatz.
-#
-# Bis Fahrplan-Schritt 2.1 gibt es weder package.json noch Cargo.toml. Der Job „detect" prüft das;
-# die Code-Jobs werden bis dahin übersprungen, die Dokumentations-Prüfung läuft immer.
+# ergänzt um Rust-Jobs (keine Rust-Vorlage vorhanden), eine Plattform-Matrix und den
+# Electron-Rauchtest (ADR-018). Pflichtkategorien nach CLAUDE.md Abschnitt 15; Werte aus
+# docs/project-context.md Abschnitt 7. Lokale Hooks (.pre-commit-config.yaml) führen dieselben
+# Checks aus — diese Pipeline ist die unabhängige Diagnoseschicht, kein Ersatz.
+# Änderungen an dieser Datei sind freigabepflichtig (CLAUDE.md 4.7).
 #
 # Action-Versionen geprüft am 2026-10-13 (Tags per git ls-remote, Mindestreife nach
 # project-context.md Abschnitt 3): checkout v7.0.1, setup-node v7.0.0, setup-python v7.0.0,
@@ -23,9 +21,9 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: "26.11.1"     # project-context.md Abschnitt 3
+  NODE_VERSION: "26.11.1" # project-context.md Abschnitt 3
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-D warnings"    # Warnungen sind Fehler (CLAUDE.md Abschnitt 15)
+  RUSTFLAGS: "-D warnings" # Warnungen sind Fehler (CLAUDE.md Abschnitt 15)
 
 jobs:
   docs:
@@ -45,40 +43,22 @@ jobs:
           SKIP: prettier,eslint,tsc,vitest-related,cargo-fmt,cargo-clippy
         run: pre-commit run --all-files --show-diff-on-failure
 
-  detect:
-    name: Projektteile erkennen
-    runs-on: ubuntu-latest
-    outputs:
-      node: ${{ steps.check.outputs.node }}
-      rust: ${{ steps.check.outputs.rust }}
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - id: check
-        run: |
-          if [ -f package.json ]; then echo "node=true" >> "$GITHUB_OUTPUT"; else echo "node=false" >> "$GITHUB_OUTPUT"; fi
-          if [ -f Cargo.toml ]; then echo "rust=true" >> "$GITHUB_OUTPUT"; else echo "rust=false" >> "$GITHUB_OUTPUT"; fi
-
-  # ---------- Rust-Simulationskern ----------
+  # ---------- Rust-Simulationskern und Brücke ----------
 
   rust-lint:
     name: Rust Lint & Format
-    needs: detect
-    if: needs.detect.outputs.rust == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - run: rustup show   # installiert die Version aus rust-toolchain.toml (1.98.1)
-      - run: rustup component add clippy rustfmt
+      - run: rustup show # installiert die Version aus rust-toolchain.toml (1.98.1)
       - uses: Swatinem/rust-cache@v2.9.2
       - name: rustfmt
         run: cargo fmt --all --check
       - name: clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features --locked -- -D warnings
 
   rust-security:
     name: Rust Security & Audit (cargo-deny)
-    needs: detect
-    if: needs.detect.outputs.rust == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -90,8 +70,6 @@ jobs:
 
   rust-test:
     name: Rust Tests (${{ matrix.os }})
-    needs: detect
-    if: needs.detect.outputs.rust == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -101,12 +79,10 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - run: rustup show
       - uses: Swatinem/rust-cache@v2.9.2
-      - run: cargo test --all --locked
+      - run: cargo test --workspace --locked
 
   rust-coverage:
-    name: Rust Coverage (Kern ≥ 85 %)
-    needs: detect
-    if: needs.detect.outputs.rust == 'true'
+    name: Rust Coverage (Kern ≥ 85 %, gesamt ≥ 70 %)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -114,8 +90,11 @@ jobs:
       - run: rustup component add llvm-tools-preview
       - uses: Swatinem/rust-cache@v2.9.2
       - run: cargo install --locked cargo-llvm-cov@0.9.1
-      - name: Coverage mit Mindestwert
-        run: cargo llvm-cov --all --locked --fail-under-lines 85 --lcov --output-path lcov-rust.info
+      # Die Brücke (bridge/, `test = false`) prüft der Electron-Rauchtest (ADR-018).
+      - name: Coverage gesamt (≥ 70 %)
+        run: cargo llvm-cov --workspace --locked --fail-under-lines 70 --lcov --output-path lcov-rust.info
+      - name: Coverage Kern (≥ 85 %)
+        run: cargo llvm-cov report --package openairside-core --fail-under-lines 85
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: coverage-rust
@@ -126,8 +105,6 @@ jobs:
 
   ts-lint:
     name: TS Lint & Format
-    needs: detect
-    if: needs.detect.outputs.node == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -138,14 +115,12 @@ jobs:
       - run: npm ci
       - name: ESLint
         # Obergrenze 0 laut Warnungs-Bestand (project-context.md Abschnitt 7).
-        run: npx eslint . --max-warnings 0 --report-unused-disable-directives
+        run: npm run lint
       - name: Prettier check
-        run: npx prettier --check .
+        run: npm run format:check
 
   ts-typecheck:
     name: TS Type-Check
-    needs: detect
-    if: needs.detect.outputs.node == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -154,12 +129,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit
+      - run: npm run typecheck
 
   ts-security:
-    name: TS Dependency-Audit
-    needs: detect
-    if: needs.detect.outputs.node == 'true'
+    name: TS Dependency-Audit & Lizenzen
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -169,12 +142,12 @@ jobs:
           cache: npm
       - run: npm ci
       - name: npm audit
-        run: npm audit --audit-level=high   # Schwellenwert aus project-context.md Abschnitt 7
+        run: npm audit --audit-level=high # Schwellenwert aus project-context.md Abschnitt 7
+      - name: Lizenzen (project-context.md Abschnitt 6, ADR-019)
+        run: npm run check:licenses
 
   ts-test:
     name: TS Tests & Coverage (${{ matrix.os }})
-    needs: detect
-    if: needs.detect.outputs.node == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -189,10 +162,42 @@ jobs:
       - run: npm ci
       - name: Vitest mit Coverage
         # Mindestwert 70 % Lines in vitest.config.ts (coverage.thresholds), project-context.md Abschnitt 7.
-        run: npx vitest run --coverage
+        run: npm test
       - if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v7.0.1
         with:
           name: coverage-ts
           path: coverage/
+          retention-days: 14
+
+  # ---------- Gesamtsystem ----------
+
+  e2e:
+    name: Rauchtest Electron (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2.9.2
+      - run: npm ci
+      - run: npm run build
+      - name: Playwright (Linux, virtueller Bildschirm)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:e2e
+      - name: Playwright
+        if: runner.os != 'Linux'
+        run: npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: e2e-${{ matrix.os }}
+          path: test-results/
           retention-days: 14
