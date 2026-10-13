@@ -24,6 +24,26 @@ Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt. Nächster Sch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 02:35 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 10 Minuten
+- **Bearbeitet:** Übernahme der Branch-Konvention aus Dev-Templates (Commit `046eecd`, PR Paddel87/Dev-Templates#50) auf Anweisung des Projektinhabers; kein Fahrplan-Schritt (Methodik-Pflege).
+- **Erreicht:** `CLAUDE.md` Abschnitt 11 und `templates/docs/project-context.md` wieder identisch mit Dev-Templates; `project-context.md` Abschnitt 7 um Branch-Präfixe und vom Werkzeug vergebene Namen ergänzt; README „Mitwirken" nachgezogen. Branch `docs/branch-konvention` nach dem neuen Schema.
+- **Offen geblieben:** PR wartet auf Review und Merge.
+- **Nächster Schritt:** unverändert 1.3 (parallel 1.6), in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session`); Arbeit wäre Routine-Klasse (Dokumentationspflege) – 1 Schritt oberhalb der Empfehlung, keine Abgabe (Probelauf für Unteragenten offen).
+- **Kontextgröße:** von `get_session` zu Sessionbeginn als 0 gemeldet, nicht verlässlich feststellbar; deutlich unter der Grenze von 400.000.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf. **Drift-Prüfung:** README „Mitwirken" an `CLAUDE.md` §11 angeglichen; sonst keine Pflicht-Dokumente berührt.
+
+### 2026-10-13 02:28 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 02:25; PR #3 gemergt (`1353542`).
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 1, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker, Requirements-Übersicht).
+- **Geplant für diese Session:** Branch-Konvention aus Dev-Templates übernehmen (Anweisung des Projektinhabers).
+- **Vorabprüfung:** reine Dokumentations- und Methodik-Pflege, keine Kategorie aus `CLAUDE.md` Abschnitt 4 berührt; keine aktiven Blocker.
+- **Modus/Werkzeug:** Claude Code, Cloud-Session mit Dev-Templates und OpenAirside.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` → Entscheidungs-Klasse (Quelle `get_session`).
+
 ### 2026-10-13 02:25 – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 20 Minuten nach dem `[SESSIONENDE]` von 02:05 (dieselbe Sitzung)
