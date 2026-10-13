@@ -419,7 +419,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | S-4 Datenpaket-Schema | OFFEN | 2026-10-13 | Phase 2 |
 | S-5 Spielstand-Format | OFFEN | 2026-10-13 | Phase 2 |
 | S-6 Plattform-API | VORLÄUFIG | 2026-10-13 | Phase 2 |
-| Oberfläche mit großen Tabellen | VORLÄUFIG | 2026-10-13 | Phase 1, Schritt 1.4 |
+| Oberfläche mit großen Tabellen | VORLÄUFIG | 2026-10-13 | Spike 1.4 im Container: bis 5.000 sortierte Zeilen ohne Einfluss auf die Bildrate, Virtualisierung Pflicht; Messung auf Referenz-PC und Mac ausstehend (Schritt 1.4) |
 | Verpackung für drei Plattformen | VORLÄUFIG | 2026-10-13 | Schritt 1.6 erledigt (Bau und Start auf allen drei Plattformen); bleibt vorläufig: unsigniert (Entscheidung 7.1), Linux-Sandbox (7.2) |
 | Verkehr, Blockadevermeidung | VORLÄUFIG | 2026-10-13 | Erkundung vor Umsetzung des Verkehrs |
 | Code-Mods | OFFEN | 2026-10-13 | eigene Erkundung |

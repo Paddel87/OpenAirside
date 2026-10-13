@@ -17,12 +17,28 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3 und 1.6 erledigt; Linux-Messung nach ADR-011 in 7.2. Nächster Schritt: 1.4.
+Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3 und 1.6 erledigt; Linux-Messung nach ADR-011 in 7.2. 1.4 in Arbeit.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 13:25 – [BEOBACHTUNG]
+
+- **Spike 1.4 im Container** (`spikes/1.4-tabellen`, Messprotokoll im README): Das Panel drückt die Bildrate bis 5.000 nach einer Live-Spalte sortierte Zeilen bei keiner Rate bis 60/s; 20.000 sortierte Zeilen ab 4/s schon (TanStack sortiert 24–30 ms je Aktualisierung, reines `Array.sort` der Zeilennummern 4,8 ms). Ohne Virtualisierung kosten 2.000 Zeilen 120–180 ms je Aktualisierung.
+- **Reibung TanStack Table 9:** API gegenüber Version 8 umgebaut (`useTable` mit `tableFeatures`, `rowSortingFeature` + `createSortedRowModel`, `sortFn_*`); gelöst über die mitgelieferten Anleitungen in `node_modules/@tanstack/*/skills/`. Zeilen müssen Objekte sein (`RowData`), deshalb `{ i }` je Zeile.
+- **Reibung Vite 8 im Bibliotheksmodus:** ersetzt `process.env.NODE_ENV` nicht (React sonst in Entwicklungsfassung) → `define`; vier Warnungen `MODULE_LEVEL_DIRECTIVE` (`"use client"` in TanStack) – für Phase 2 im Messprotokoll vermerkt.
+- **Hooks:** Rust-Hooks am Repo-Stamm greifen erst ab 2.1; `cargo fmt --check` und `cargo clippy -D warnings` im Spike direkt, übrige Hooks über `pre-commit run` grün (Prettier als Container-Version 3.8.1, wie in 1.1–1.3).
+
+### 2026-10-13 13:10 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 13:05; PR Paddel87/OpenAirside#8 gemergt (`2c2f123`), Branch `claude/gracious-galileo-2reksz` neu auf `main` gesetzt.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 1, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant für diese Session:** 1.4 – Großes Tabellen-Panel neben dem Spielfeld (Prototyp auf Basis von Spike 1.3).
+- **Vorabprüfung:** ERKUNDUNG, keine BELASTBAR-Pflicht; Eingangskriterium „Spielfeld aus 1.3 lauffähig" erfüllt. React 19.2.8, TanStack Table 9.2.8 und Vite 8.3.4 stehen im Stack (ADR-002); Virtualisierung ohne neue Abhängigkeit (eigene Fensterung).
+- **Modus/Werkzeug:** Claude Code (Cloud-Session, Desktop-App).
+- **Modell:** eingestellt und bedient `claude-opus-5-5` (Quelle: `get_session`, `configured_model` und `last_served_model`) → Entscheidungs-Klasse. Schritt 1.4 empfiehlt Routine → läuft oberhalb der Empfehlung; Abgabe nicht möglich (Probelauf offen), Warnung gegeben.
 
 ### 2026-10-13 13:05 – [SESSIONENDE]
 

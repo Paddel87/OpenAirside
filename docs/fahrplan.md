@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** keiner (1.3 und 1.6 erledigt am 2026-10-13)
-- **Nächster Schritt:** 1.4 – Großes Tabellen-Panel neben dem Spielfeld
+- **Aktiver Schritt:** 1.4 – Großes Tabellen-Panel neben dem Spielfeld
+- **Nächster Schritt:** 1.5 – Leistungsnachweis auf den Zielsystemen
 - **Offene STOPP-Situationen:** keine
 
 <!-- ANCHOR:phasen-typen -->
@@ -254,7 +254,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.4: Großes Tabellen-Panel neben dem Spielfeld
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT (seit 2026-10-13)
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Prototyp
 - **Zeitbox (nur ERKUNDUNG):** maximal eine halbe Session
@@ -269,6 +269,9 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** Oberfläche mit großen Tabellen `[VORLÄUFIG]` → `[BELASTBAR]` (bei Bestehen)
 - **Artefakte:** Spike-Code, Messprotokoll
 - **Notizen:** –
+- **Zwischenstand 2026-10-13:** Spike und Messprotokoll in `spikes/1.4-tabellen/README.md` (Rohdaten `results/`). Spielfeld und Brücke aus 1.3 unverändert; neu `panel-core` (synthetische Flugtabelle mit Live-Werten aus dem Tick, spaltenweise kodiert, 22 Byte je Zeile) und ein Panel mit React 19.2.8 und TanStack Table 9.2.8 (Sortierung), gebündelt mit Vite 8.3.4, eigene Virtualisierung ohne neue Abhängigkeit. Testprogramm über `.github/workflows/spike-build-1-4.yml`.
+  - **Container (Kontrolle ohne Zeichnen, 4 vCPU):** bis 5.000 Zeilen, sortiert nach einer Live-Spalte, bei jeder Rate bis 60/s 59,5–60 Bilder/s (höchstens 2 Bilder über 20 ms in 4 s), Aktualisierung 4–10 ms. 20.000 sortierte Zeilen drücken die Bildrate ab 4/s (57 Bilder/s; ab 30/s 40), weil TanStack je Aktualisierung 24–30 ms sortiert; unsortiert 60 Bilder/s. Ohne Virtualisierung schon bei 2.000 Zeilen 6–31 Bilder/s → Virtualisierung Pflicht. Maßnahmen für große Tabellen (Sortieren im Kern, seltener umsortieren, eigenes Sortieren auf den Spalten) im Messprotokoll, Entscheidung in 1.7.
+  - **Offen für den Abschluss:** Messung mit dem Testprogramm auf dem Referenz-PC (Windows) und dem Mac; bis dahin bleibt „Oberfläche mit großen Tabellen" `[VORLÄUFIG]`.
 
 #### 1.5: Leistungsnachweis auf den Zielsystemen
 
