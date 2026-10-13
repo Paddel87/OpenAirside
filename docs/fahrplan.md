@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-13 (Sessionstart 19:00 UTC)
+- **Stand vom:** 2026-10-13 (Sessionstart 19:44 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (2.8 erledigt am 2026-10-13, ADR-020; 2.1 mit Nachlauf erledigt)
-- **Nächster Schritt:** 2.9 (Schnittstellenverträge S-2 bis S-7) in einer folgenden Session
+- **Aktiver Schritt:** 2.9 (Schnittstellenverträge S-2 bis S-7)
+- **Nächster Schritt:** 2.2 nach Freigabe der Verträge aus 2.9
 - **Offene STOPP-Situationen:** keine (Reaktiv-Quote 6 / 10 nach ADR-020 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 zur Kenntnis genommen, siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
@@ -149,7 +149,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.9: Schnittstellenverträge S-2 bis S-7
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT (seit 2026-10-13 19:44 UTC)
 - **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt in Phase 2, ADR-016)
 - **Schritt-Art (nur ERKUNDUNG):** sonstiges (Entwurf)
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session

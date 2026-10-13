@@ -17,12 +17,22 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); nächster Schritt 2.9 in neuer Session. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 in Arbeit (Session ab 19:44 UTC). Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 19:44 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** 2.8 erledigt (ADR-020); PR Paddel87/OpenAirside#16 hat die Sessionende-Commits der Vorsession nach `main` gebracht (`b045477`). Branch `claude/gracious-galileo-2reksz` enthielt keine weiteren Commits und wurde auf `origin/main` neu aufgesetzt.
+- **Geplant für diese Session:** 2.9 – Schnittstellenverträge S-2 bis S-7 (Entwurf, Vorlage zur Freigabe Kategorie 5 und 1, ADR).
+- **Vorabprüfung:** Eingangskriterium „Weltmaßstab und Zeitmodell aus 2.8 entschieden" erfüllt (ADR-020). Reifegrade vor 2.9: S-1 `[BELASTBAR]`, S-2/S-3/S-6 `[VORLÄUFIG]`, S-4/S-5 `[OFFEN]`, S-7 nicht vorhanden – als Entwurfsschritt (Phasentyp-Kontext ERKUNDUNG) zulässig. Keine aktiven Blocker, keine offene STOPP-Situation.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]` 19:34, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Modus/Werkzeug:** Claude Code (Cloud-Session), semi-autonom.
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` (Quelle: `get_session` 19:44 UTC) – Entscheidungs-Klasse; 2.9 empfiehlt Entscheidung (Eskalations-Auslöser 1 erfüllt ohne Wechsel).
+- **Kontingent:** 5-Stunden-Fenster `allowed`.
 
 ### 2026-10-13 19:34 (UTC) – [SESSIONENDE]
 
