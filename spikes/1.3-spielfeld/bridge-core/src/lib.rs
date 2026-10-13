@@ -78,6 +78,11 @@ pub struct Config {
     /// Ticks per second; 0 = unthrottled (highest speed).
     pub hz: u32,
     pub seed: u32,
+    /// Spike 1.5: 5 = five-floor reference scenario, otherwise two floors.
+    pub floors: u8,
+    /// Spike 1.5: incremental repair (spike 1.3 default) or full
+    /// recomputation without stored distances (ADR-010).
+    pub incremental: bool,
 }
 
 impl Default for Config {
@@ -91,6 +96,8 @@ impl Default for Config {
             gates: 17,
             hz: 60,
             seed: 42,
+            floors: 2,
+            incremental: true,
         }
     }
 }
@@ -176,6 +183,7 @@ pub struct Host {
     persons: usize,
     w: usize,
     h: usize,
+    floors: usize,
     grid_bytes: Vec<u8>,
 }
 
@@ -188,14 +196,20 @@ impl Host {
             .num_threads(cfg.threads.max(1))
             .build()
             .expect("thread pool");
-        let grid = Grid::reference_like(cfg.w, cfg.h, cfg.gates);
+        let grid = if cfg.floors == 5 {
+            Grid::reference_scenario(cfg.w, cfg.h, cfg.gates)
+        } else {
+            Grid::reference_like(cfg.w, cfg.h, cfg.gates)
+        };
+        let floors = grid.floors;
         let sim = pool.install(|| {
-            Sim::new(
+            Sim::with_incremental(
                 grid,
                 cfg.persons,
                 Layout::Split,
                 cfg.bg_threads.max(1),
                 cfg.seed,
+                cfg.incremental,
             )
         });
         let grid_bytes = encode_grid(&sim.grid);
@@ -221,6 +235,7 @@ impl Host {
             persons: cfg.persons,
             w: cfg.w,
             h: cfg.h,
+            floors,
             grid_bytes,
         }
     }
@@ -258,7 +273,7 @@ impl Host {
         let mut cells = Vec::new();
         for yy in y..(y + size).min(h - 1) {
             for xx in x..(x + size).min(w - 1) {
-                if xx > 0 && yy > 0 && floor < 2 {
+                if xx > 0 && yy > 0 && (floor as usize) < self.floors {
                     cells.push((floor * h + yy) * w + xx);
                 }
             }
@@ -318,7 +333,7 @@ fn encode_grid(g: &Grid) -> Vec<u8> {
     let mut out = Vec::with_capacity(12 + 2 * cells);
     out.extend_from_slice(&(g.w as u32).to_le_bytes());
     out.extend_from_slice(&(g.h as u32).to_le_bytes());
-    out.extend_from_slice(&2u32.to_le_bytes());
+    out.extend_from_slice(&(g.floors as u32).to_le_bytes());
     out.extend(g.flags.iter().map(|f| f & (WALL | STAIRS)));
     out.extend_from_slice(&g.zone);
     out

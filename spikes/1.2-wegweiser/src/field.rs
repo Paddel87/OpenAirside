@@ -80,6 +80,13 @@ impl Fields {
     /// Builds all fields in parallel on the current rayon pool.
     #[must_use]
     pub fn build(grid: &Grid) -> Self {
+        Self::build_opts(grid, true)
+    }
+
+    /// Spike 1.5: like `build`; without `keep_dist` the distances (4 bytes per
+    /// cell and field, only needed for incremental repair) are dropped.
+    #[must_use]
+    pub fn build_opts(grid: &Grid, keep_dist: bool) -> Self {
         let start = Instant::now();
         let cells = grid.cells();
         let results: Vec<FieldResult> = (0..grid.targets.len())
@@ -93,6 +100,7 @@ impl Fields {
                     .filter(|&i| grid.walkable(i) && dir[i] == UNREACHABLE)
                     .count() as u32;
                 let relaxed = (unreachable > 0).then(|| relaxed_bits(grid, k));
+                let dist = if keep_dist { dist } else { Vec::new() };
                 (
                     dir,
                     dist,
@@ -103,13 +111,15 @@ impl Fields {
             })
             .collect();
         let mut dirs = Vec::with_capacity(cells * results.len());
-        let mut dists = Vec::with_capacity(cells * results.len());
+        let mut dists = Vec::with_capacity(if keep_dist { cells * results.len() } else { 0 });
         let mut relaxed = Vec::new();
         let mut unreachable_cells = Vec::new();
         let mut per_field_ms = Vec::new();
         for (d, di, r, u, ms) in results {
             dirs.extend_from_slice(&d);
-            dists.extend_from_slice(&di);
+            if keep_dist {
+                dists.extend_from_slice(&di);
+            }
             relaxed.push(r);
             unreachable_cells.push(u);
             per_field_ms.push(ms);
@@ -148,7 +158,7 @@ fn step_cost(grid: &Grid, p: usize, d: u8) -> Option<(usize, u32)> {
     let n = match d {
         UP | DOWN => {
             let n = match d {
-                UP if p < plane => p + plane,
+                UP if p + plane < grid.cells() => p + plane,
                 DOWN if p >= plane => p - plane,
                 _ => return None,
             };
@@ -187,10 +197,9 @@ fn step_cost(grid: &Grid, p: usize, d: u8) -> Option<(usize, u32)> {
 fn step_dirs(grid: &Grid, p: usize) -> impl Iterator<Item = u8> + '_ {
     let plane = grid.w * grid.h;
     let stairs = grid.flags[p] & STAIRS != 0;
-    let other = if p >= plane { p - plane } else { p + plane };
-    let vertical =
-        (stairs && grid.flags[other] & STAIRS != 0).then_some(if p >= plane { DOWN } else { UP });
-    (0..8u8).chain(vertical)
+    let up = stairs && p + plane < grid.cells() && grid.flags[p + plane] & STAIRS != 0;
+    let down = stairs && p >= plane && grid.flags[p - plane] & STAIRS != 0;
+    (0..8u8).chain(up.then_some(UP)).chain(down.then_some(DOWN))
 }
 
 impl Fields {
@@ -408,12 +417,13 @@ fn dijkstra(grid: &Grid, seeds: &[u32], dir: &mut [u8], dist: &mut [u32], zones:
                 relax(p, step.max(1), ((j + 4) % 8) as u8, dist, dir);
             }
             if grid.flags[c] & STAIRS != 0 {
-                let cf = c / plane;
-                let other = if cf == 0 { c + plane } else { c - plane };
-                if grid.flags[other] & STAIRS != 0 {
-                    // From the other floor the step leads up (to floor 1) or down.
-                    let d = if cf == 1 { UP } else { DOWN };
-                    relax(other, STAIR_COST, d, dist, dir);
+                // From the floor above the step leads down to c, from the
+                // floor below it leads up.
+                if c + plane < grid.cells() && grid.flags[c + plane] & STAIRS != 0 {
+                    relax(c + plane, STAIR_COST, DOWN, dist, dir);
+                }
+                if c >= plane && grid.flags[c - plane] & STAIRS != 0 {
+                    relax(c - plane, STAIR_COST, UP, dist, dir);
                 }
             }
         }

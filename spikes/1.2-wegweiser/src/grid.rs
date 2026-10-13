@@ -1,9 +1,11 @@
 //! Test grid: two floors, walls, landside/airside zones, security lanes,
 //! one-way exit passages, stairs and floor markings (cell cost factors).
+//! Spike 1.5 adds `reference_scenario` with five floors (additive).
 
 /// Cell flag: not walkable (wall or void).
 pub const WALL: u8 = 1;
-/// Cell flag: stairs/escalator connecting both floors at this (x, y).
+/// Cell flag: stairs/escalator; connects to the floor above or below where
+/// that cell is stairs as well.
 pub const STAIRS: u8 = 2;
 
 /// Zones. Allowed transitions: same zone, landside→security→airside,
@@ -39,6 +41,12 @@ pub enum TargetKind {
     ToiletAirside,
     ShopAirside,
     ExitLandside,
+    /// Spike 1.5: baggage claim (airside basement).
+    BaggageClaim(u8),
+    /// Spike 1.5: lounge (airside, top floor).
+    Lounge(u8),
+    /// Spike 1.5: metro station (landside, lowest floor).
+    Metro,
 }
 
 #[derive(Clone)]
@@ -52,6 +60,10 @@ pub struct Target {
 pub struct Grid {
     pub w: usize,
     pub h: usize,
+    /// Number of floors (spike 1.2: 2; spike 1.5: 5).
+    pub floors: usize,
+    /// Index of the ground floor (landside hall, check-in, security line).
+    pub ground: usize,
     pub flags: Vec<u8>,
     pub zone: Vec<u8>,
     pub cost: Vec<u8>,
@@ -70,7 +82,7 @@ pub const AIRLINES: u8 = 8;
 impl Grid {
     #[must_use]
     pub fn cells(&self) -> usize {
-        2 * self.w * self.h
+        self.floors * self.w * self.h
     }
 
     #[must_use]
@@ -98,6 +110,8 @@ impl Grid {
         let mut g = Self {
             w,
             h,
+            floors: 2,
+            ground: 0,
             flags: vec![0; n],
             zone: vec![LANDSIDE; n],
             cost: vec![COST_NORMAL; n],
@@ -255,6 +269,130 @@ impl Grid {
             cells: exit,
         });
         g
+    }
+
+    /// Spike 1.5: reference scenario with five floors. Floors 2 and 3 are the
+    /// two floors of `reference_like` (ground floor with landside hall and
+    /// security line, departures level with gates). Added: floor 0 metro
+    /// station (landside), floor 1 airside basement with baggage claim,
+    /// floor 4 airside level with lounges. Stairs connect all floors.
+    #[must_use]
+    pub fn reference_scenario(w: usize, h: usize, gates: u8) -> Self {
+        let base = Self::reference_like(w, h, gates);
+        let plane = w * h;
+        let floors = 5;
+        let ground = 2;
+        let off = ground * plane;
+        let n = floors * plane;
+        let mut g = Self {
+            w,
+            h,
+            floors,
+            ground,
+            flags: vec![WALL; n],
+            zone: vec![LANDSIDE; n],
+            cost: vec![COST_NORMAL; n],
+            targets: Vec::new(),
+            entrances: base.entrances.iter().map(|&c| c + off as u32).collect(),
+            security_cells: base
+                .security_cells
+                .iter()
+                .map(|&c| c + off as u32)
+                .collect(),
+            doors: base.doors.iter().map(|&c| c + off as u32).collect(),
+        };
+        g.flags[off..off + 2 * plane].copy_from_slice(&base.flags);
+        g.zone[off..off + 2 * plane].copy_from_slice(&base.zone);
+        g.cost[off..off + 2 * plane].copy_from_slice(&base.cost);
+        g.targets = base
+            .targets
+            .iter()
+            .map(|t| Target {
+                kind: t.kind,
+                cells: t.cells.iter().map(|&c| c + off as u32).collect(),
+            })
+            .collect();
+        let yb = h / 2;
+        // Airside basement (floor 1) and lounge level (floor 4): copies of the
+        // airside part of the ground floor (walls with doors every 64 cells).
+        for f in [1, 4] {
+            for y in 0..yb {
+                for x in 0..w {
+                    let src = g.idx(x, y, ground);
+                    let dst = g.idx(x, y, f);
+                    g.flags[dst] = g.flags[src] & WALL;
+                    g.zone[dst] = AIRSIDE;
+                }
+            }
+        }
+        // Metro station (floor 0, landside).
+        for y in yb + 20..yb + 60 {
+            for x in w / 4..w * 3 / 4 {
+                let i = g.idx(x, y, 0);
+                g.flags[i] = 0;
+            }
+        }
+        // Airside stairs: same columns as the two base floors, now floors 1..=4.
+        for k in 0..8 {
+            let x = w * (2 * k + 1) / 16;
+            for f in 1..=4 {
+                let i = g.idx(x, yb - 20, f);
+                g.flags[i] = STAIRS;
+            }
+        }
+        // Landside stairs: metro (0) through a shaft on floor 1 to the hall (2).
+        for k in 0..4 {
+            let x = w / 4 + (2 * k + 1) * w / 16 + 3;
+            for f in 0..=2 {
+                let i = g.idx(x, yb + 40, f);
+                g.flags[i] = STAIRS;
+                g.zone[i] = LANDSIDE;
+            }
+        }
+        let block = |g: &Self, x: usize, y: usize, f: usize| -> Vec<u32> {
+            let mut c = Vec::new();
+            for dy in 0..3 {
+                for dx in 0..3 {
+                    let j = g.idx(x + dx, y + dy, f);
+                    if g.walkable(j) {
+                        c.push(j as u32);
+                    }
+                }
+            }
+            c
+        };
+        for k in 0..4u8 {
+            let x = w * (2 * usize::from(k) + 1) / 8 + 5;
+            let cells = block(&g, x, yb - 40, 1);
+            g.targets.push(Target {
+                kind: TargetKind::BaggageClaim(k),
+                cells,
+            });
+        }
+        for (k, x) in [w / 4 + 5, w * 3 / 4 + 5].into_iter().enumerate() {
+            let cells = block(&g, x, yb / 2 + 5, 4);
+            g.targets.push(Target {
+                kind: TargetKind::Lounge(k as u8),
+                cells,
+            });
+        }
+        let metro: Vec<u32> = (w / 4 + 2..w * 3 / 4 - 2)
+            .map(|x| g.idx(x, yb + 50, 0) as u32)
+            .collect();
+        g.targets.push(Target {
+            kind: TargetKind::Metro,
+            cells: metro,
+        });
+        g
+    }
+
+    /// Spike 1.5: index of the first target of the given kind, if present.
+    #[must_use]
+    pub fn find_target(&self, kind: TargetKind) -> Option<u8> {
+        self.targets
+            .iter()
+            .position(|t| t.kind == kind)
+            .map(|i| i as u8)
     }
 
     /// Index of the first target of the given kind.

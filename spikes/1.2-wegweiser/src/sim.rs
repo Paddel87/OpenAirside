@@ -144,7 +144,36 @@ pub struct Sim {
     checkin0: u8,
     gate0: u8,
     gates: u8,
+    extras: Extras,
 }
+
+/// Spike 1.5: targets of the five-floor scenario (count 0 = not present).
+#[derive(Clone, Copy, Debug, Default)]
+struct Extras {
+    baggage0: u8,
+    baggage_n: u8,
+    lounge0: u8,
+    lounge_n: u8,
+    metro: Option<u8>,
+}
+
+impl Extras {
+    fn of(grid: &Grid) -> Self {
+        let count =
+            |f: fn(&TargetKind) -> bool| grid.targets.iter().filter(|t| f(&t.kind)).count() as u8;
+        Self {
+            baggage0: grid.find_target(TargetKind::BaggageClaim(0)).unwrap_or(0),
+            baggage_n: count(|k| matches!(k, TargetKind::BaggageClaim(_))),
+            lounge0: grid.find_target(TargetKind::Lounge(0)).unwrap_or(0),
+            lounge_n: count(|k| matches!(k, TargetKind::Lounge(_))),
+            metro: grid.find_target(TargetKind::Metro),
+        }
+    }
+}
+
+/// Plan stages of arriving persons (spike 1.5): to baggage claim, then out.
+const PLAN_BAGGAGE: u8 = 10;
+const PLAN_LEAVING: u8 = 11;
 
 fn xorshift(s: &mut u32) -> u32 {
     let mut x = *s;
@@ -167,6 +196,7 @@ struct Ctx<'a> {
     checkin0: u8,
     gate0: u8,
     gates: u8,
+    extras: Extras,
 }
 
 impl Ctx<'_> {
@@ -179,15 +209,27 @@ impl Ctx<'_> {
         cold.gate = ((r >> 8) % u32::from(self.gates)) as u8;
         cold.speed = 0.08 + ((r >> 12) % 64) as f32 / 1600.0;
         cold.needs = [0.1, 0.2, 0.3, 0.4];
+        let x = self.extras;
         let (cell, field) = if cold.departing {
-            let e = &self.grid.entrances;
+            // Spike 1.5: three in ten departing persons come by metro.
+            let e = match x.metro {
+                Some(m) if r >> 20 & 7 < 3 => &self.grid.targets[usize::from(m)].cells,
+                _ => &self.grid.entrances,
+            };
             (
                 e[(r >> 16) as usize % e.len()] as usize,
                 self.checkin0 + cold.airline,
             )
         } else {
             let t = &self.grid.targets[usize::from(self.gate0 + cold.gate)].cells;
-            (t[(r >> 16) as usize % t.len()] as usize, self.exit)
+            let field = if x.baggage_n > 0 && r >> 20 & 1 == 0 {
+                cold.plan = PLAN_BAGGAGE;
+                x.baggage0 + ((r >> 24) % u32::from(x.baggage_n)) as u8
+            } else {
+                cold.plan = PLAN_LEAVING;
+                self.leave_field(r)
+            };
+            (t[(r >> 16) as usize % t.len()] as usize, field)
         };
         let (x, y, f) = self.grid.xyf(cell);
         hot.x = x as f32 + 0.5;
@@ -202,6 +244,12 @@ impl Ctx<'_> {
         self.counters.arrivals.fetch_add(1, Ordering::Relaxed);
         let r = xorshift(&mut cold.rng);
         let dwell = 30 + (r % 90) as u16;
+        if !cold.departing && cold.plan == PLAN_BAGGAGE {
+            // Spike 1.5: baggage collected, now to the exit or the metro.
+            cold.plan = PLAN_LEAVING;
+            hot.field = self.leave_field(r);
+            return dwell;
+        }
         if !cold.departing {
             // Arrived at landside exit: leave, respawn as a new person.
             cold.trips += 1;
@@ -212,9 +260,14 @@ impl Ctx<'_> {
         // Departing plan: 0 check-in → 1 landside toilet (optional) → 2/3 airside
         // shop (optional, path leads through security) → 4 gate → board.
         let gate = self.gate0 + cold.gate;
+        let x = self.extras;
         let (stage, field) = match cold.plan {
             0 if r >> 8 & 3 == 0 => (1, self.toilet_land),
             0 | 1 if r >> 10 & 1 == 0 => (3, self.shop_air),
+            // Spike 1.5: one in four visits a lounge on the top floor.
+            0 | 1 | 3 if x.lounge_n > 0 && r >> 12 & 3 == 0 => {
+                (2, x.lounge0 + ((r >> 16) % u32::from(x.lounge_n)) as u8)
+            }
             0..=3 => (4, gate),
             _ => {
                 // Boarded: respawn as a new person.
@@ -228,6 +281,14 @@ impl Ctx<'_> {
         hot.field = field;
         let _ = self.toilet_air;
         dwell
+    }
+
+    /// Spike 1.5: exit or (three in ten, if present) metro.
+    fn leave_field(&self, r: u32) -> u8 {
+        match self.extras.metro {
+            Some(m) if r >> 28 & 7 < 3 => m,
+            _ => self.exit,
+        }
     }
 
     /// Movement for one person. Reads density of the previous tick only.
@@ -275,8 +336,12 @@ impl Ctx<'_> {
                 // Wait and retry; a later build change may reopen the path.
                 hot.wait = 60;
             }
-            UP | DOWN => {
-                hot.floor = 1 - hot.floor;
+            UP => {
+                hot.floor += 1;
+                hot.wait = 20;
+            }
+            DOWN => {
+                hot.floor -= 1;
                 hot.wait = 20;
             }
             d => {
@@ -317,7 +382,21 @@ impl Ctx<'_> {
 impl Sim {
     #[must_use]
     pub fn new(grid: Grid, persons: usize, layout: Layout, bg_threads: usize, seed: u32) -> Self {
-        let fields = Arc::new(Fields::build(&grid));
+        Self::with_incremental(grid, persons, layout, bg_threads, seed, true)
+    }
+
+    /// Spike 1.5: like `new`; without `incremental` the fields keep no
+    /// distances and every recomputation is a full build (ADR-010).
+    #[must_use]
+    pub fn with_incremental(
+        grid: Grid,
+        persons: usize,
+        layout: Layout,
+        bg_threads: usize,
+        seed: u32,
+        incremental: bool,
+    ) -> Self {
+        let fields = Arc::new(Fields::build_opts(&grid, incremental));
         let gates = grid
             .targets
             .iter()
@@ -338,6 +417,7 @@ impl Sim {
             checkin0: grid.target_index(TargetKind::CheckIn(0)),
             gate0: grid.target_index(TargetKind::Gate(0)),
             gates,
+            extras: Extras::of(&grid),
             grid: Arc::new(grid),
             fields,
             store: Store::Aos(Vec::new()),
@@ -352,7 +432,7 @@ impl Sim {
             pending: None,
             bg,
             reports: Vec::new(),
-            incremental: true,
+            incremental,
             unapplied: Vec::new(),
             async_pending: None,
         };
@@ -398,6 +478,7 @@ impl Sim {
             checkin0: self.checkin0,
             gate0: self.gate0,
             gates: self.gates,
+            extras: self.extras,
         }
     }
 
@@ -416,6 +497,7 @@ impl Sim {
             checkin0: self.checkin0,
             gate0: self.gate0,
             gates: self.gates,
+            extras: self.extras,
         };
         match &mut self.store {
             Store::Aos(p) => {
@@ -453,7 +535,7 @@ impl Sim {
                 // Every second door in the landside hall.
                 for (k, &d) in grid.doors.clone().iter().enumerate() {
                     let (_, y, f) = grid.xyf(d as usize);
-                    if f == 0 && y > grid.h / 2 && k % 2 == 0 {
+                    if f == grid.ground && y > grid.h / 2 && k % 2 == 0 {
                         if close {
                             grid.flags[d as usize] |= WALL;
                         } else {
@@ -480,7 +562,7 @@ impl Sim {
                 let (w, h) = (grid.w, grid.h);
                 for y in h / 2 + 20..h / 2 + 80 {
                     for x in w / 2..w * 3 / 4 {
-                        let i = grid.idx(x, y, 0);
+                        let i = grid.idx(x, y, grid.ground);
                         grid.cost[i] = c;
                     }
                 }
@@ -501,7 +583,7 @@ impl Sim {
             let f = if incremental {
                 base.repair(&grid, &changed)
             } else {
-                Fields::build(&grid)
+                Fields::build_opts(&grid, false)
             };
             let _ = tx.send(f);
         });
@@ -575,7 +657,7 @@ impl Sim {
             let f = if incremental {
                 base.repair(&grid, &changed)
             } else {
-                Fields::build(&grid)
+                Fields::build_opts(&grid, false)
             };
             let _ = tx.send(f);
         });
@@ -669,6 +751,25 @@ impl Sim {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Spike 1.5: in the five-floor scenario every floor is used, all cells
+    /// reach every target, and lean fields keep no distances.
+    #[test]
+    fn five_floor_scenario_uses_all_floors() {
+        let grid = Grid::reference_scenario(256, 256, 6);
+        let fields = Fields::build_opts(&grid, false);
+        assert!(fields.dist.is_empty());
+        assert!(fields.unreachable_cells.iter().all(|&u| u == 0));
+        let mut sim = Sim::with_incremental(grid, 3000, Layout::Split, 2, 9, false);
+        let mut seen = [0usize; 5];
+        for t in 0..8000 {
+            sim.step(256);
+            if t % 100 == 0 {
+                sim.visit_hot(|h| seen[usize::from(h.floor)] += 1);
+            }
+        }
+        assert!(seen.iter().all(|&n| n > 0), "floors used: {seen:?}");
+    }
 
     /// Spike 1.3: walls built while a recomputation is still running must end
     /// up in the fields; after the last takeover the fields equal a full build.

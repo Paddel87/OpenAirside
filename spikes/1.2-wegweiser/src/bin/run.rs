@@ -3,6 +3,9 @@
 //! run   w=512 h=512 gates=17 persons=10000 ticks=10000 threads=4 bg=1 layout=split window=1000
 //! fields w=512 h=512 gates=17 threads=4
 //!
+//! Spike 1.5: `scenario=5` uses the five-floor reference scenario,
+//! `incremental=0` builds fields without distances (ADR-010).
+//!
 //! `run` issues build commands on a fixed schedule (every 5000 ticks one cycle:
 //! close/open doors, close/open all security lanes, mark/clear an "avoid" area).
 
@@ -20,6 +23,19 @@ fn rss_mb() -> f64 {
                 .and_then(|v| v.parse::<f64>().ok())
         })
         .map_or(0.0, |pages| pages * 4096.0 / 1_048_576.0)
+}
+
+/// Peak resident memory (VmHWM) in MB.
+fn peak_mb() -> f64 {
+    std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|s| {
+            s.lines()
+                .find(|l| l.starts_with("VmHWM:"))
+                .and_then(|l| l.split_whitespace().nth(1))
+                .and_then(|v| v.parse::<f64>().ok())
+        })
+        .map_or(0.0, |kb| kb / 1024.0)
 }
 
 fn stats(v: &mut [f64]) -> (f64, f64, f64) {
@@ -46,6 +62,14 @@ fn main() {
     let get = |k: &str, d: usize| kv.get(k).and_then(|v| v.parse().ok()).unwrap_or(d);
     let (w, h) = (get("w", 512), get("h", 512));
     let gates = get("gates", 17) as u8;
+    let five = get("scenario", 2) == 5;
+    let make = |w, h, gates| {
+        if five {
+            Grid::reference_scenario(w, h, gates)
+        } else {
+            Grid::reference_like(w, h, gates)
+        }
+    };
     let threads = get("threads", 4);
     let pool = rayon::ThreadPoolBuilder::new()
         .num_threads(threads)
@@ -53,12 +77,16 @@ fn main() {
         .expect("pool");
 
     if mode == "fields" {
-        let grid = Grid::reference_like(w, h, gates);
-        let fields = pool.install(|| wegweiser::field::Fields::build(&grid));
+        let grid = make(w, h, gates);
+        let keep = get("incremental", 1) == 1;
+        let fields = pool.install(|| wegweiser::field::Fields::build_opts(&grid, keep));
         let mut per = fields.per_field_ms.clone();
         let (mean, _, max) = stats(&mut per);
         println!(
-            "{{\"mode\":\"fields\",\"w\":{w},\"h\":{h},\"floors\":2,\"cells\":{},\"fields\":{},\"threads\":{threads},\"build_ms\":{:.1},\"per_field_ms_mean\":{mean:.2},\"per_field_ms_max\":{max:.2},\"field_mb\":{:.2},\"unreachable_cells_max\":{}}}",
+            "{{\"mode\":\"fields\",\"w\":{w},\"h\":{h},\"floors\":{},\"walkable\":{},\"peak_mb\":{:.1},\"cells\":{},\"fields\":{},\"threads\":{threads},\"build_ms\":{:.1},\"per_field_ms_mean\":{mean:.2},\"per_field_ms_max\":{max:.2},\"field_mb\":{:.2},\"unreachable_cells_max\":{}}}",
+            grid.floors,
+            (0..grid.cells()).filter(|&i| grid.walkable(i)).count(),
+            peak_mb(),
             grid.cells(),
             grid.targets.len(),
             fields.build_ms,
@@ -81,10 +109,10 @@ fn main() {
     let commands = get("commands", 1) == 1;
     let rss0 = rss_mb();
     let t0 = Instant::now();
-    let mut sim =
-        pool.install(|| Sim::new(Grid::reference_like(w, h, gates), persons, layout, bg, 42));
+    let incremental = get("incremental", 1) == 1;
+    let mut sim = pool
+        .install(|| Sim::with_incremental(make(w, h, gates), persons, layout, bg, 42, incremental));
     let setup_ms = t0.elapsed().as_secs_f64() * 1e3;
-    sim.incremental = get("incremental", 1) == 1;
     let initial_fields_ms = sim.fields.build_ms;
     let schedule = [
         (2000, Command::CloseDoors),
@@ -131,7 +159,9 @@ fn main() {
         .map(|r| format!("{{\"cmd\":\"{:?}\",\"changed\":{},\"tick\":{},\"recompute_ms\":{:.1},\"stall_ms\":{:.2}}}", r.command, r.changed_cells, r.issued_tick, r.recompute_ms, r.stall_ms))
         .collect();
     println!(
-        "{{\"mode\":\"run\",\"w\":{w},\"h\":{h},\"gates\":{gates},\"fields\":{},\"persons\":{persons},\"ticks\":{ticks},\"threads\":{threads},\"bg\":{bg},\"chunk\":{chunk},\"layout\":\"{layout:?}\",\"incremental\":{},\"setup_ms\":{setup_ms:.0},\"initial_fields_ms\":{:.1},\"field_mb\":{:.1},\"persons_kb\":{:.0},\"rss_start_mb\":{rss0:.1},\"rss_end_mb\":{:.1},\"step_us_mean\":{mean:.0},\"step_us_p99\":{p99:.0},\"step_us_max\":{max:.0},\"ticks_per_s\":{:.0},\"arrivals\":{},\"trips\":{},\"unreachable_events_until_security_reopened\":{{\"zone\":{},\"enclosed\":{}}},\"unreachable_events_total\":{{\"zone\":{},\"enclosed\":{}}},\"checksum\":\"{:016x}\",\"recompute\":[{}],\"windows\":[{}]}}",
+        "{{\"mode\":\"run\",\"w\":{w},\"h\":{h},\"floors\":{},\"peak_mb\":{:.1},\"gates\":{gates},\"fields\":{},\"persons\":{persons},\"ticks\":{ticks},\"threads\":{threads},\"bg\":{bg},\"chunk\":{chunk},\"layout\":\"{layout:?}\",\"incremental\":{},\"setup_ms\":{setup_ms:.0},\"initial_fields_ms\":{:.1},\"field_mb\":{:.1},\"persons_kb\":{:.0},\"rss_start_mb\":{rss0:.1},\"rss_end_mb\":{:.1},\"step_us_mean\":{mean:.0},\"step_us_p99\":{p99:.0},\"step_us_max\":{max:.0},\"ticks_per_s\":{:.0},\"arrivals\":{},\"trips\":{},\"unreachable_events_until_security_reopened\":{{\"zone\":{},\"enclosed\":{}}},\"unreachable_events_total\":{{\"zone\":{},\"enclosed\":{}}},\"checksum\":\"{:016x}\",\"recompute\":[{}],\"windows\":[{}]}}",
+        sim.grid.floors,
+        peak_mb(),
         sim.grid.targets.len(),
         sim.incremental,
         initial_fields_ms,
