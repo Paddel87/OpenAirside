@@ -8,10 +8,10 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-13 (Sessionstart 16:40 UTC)
+- **Stand vom:** 2026-10-13 (Sessionstart 19:00 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (2.1 mit Nachlauf 2.1-N1 und 2.1-N2 erledigt am 2026-10-13)
+- **Aktiver Schritt:** 2.8 (Weltmaßstab, Luftseite, Zeitmodell); 2.1 mit Nachlauf 2.1-N1 und 2.1-N2 erledigt am 2026-10-13
 - **Nächster Schritt:** 2.8 (Weltmaßstab, Luftseite, Zeitmodell) in einer folgenden Session, danach 2.9
 - **Offene STOPP-Situationen:** keine (Reaktiv-Quote 5 / 10 nach ADR-019 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 zur Kenntnis genommen, siehe „Iterations-Reflexion")
 
@@ -126,7 +126,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.8: Weltmaßstab, Luftseite und Zeitmodell
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT (seit 2026-10-13 19:00 UTC)
 - **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt in Phase 2, ADR-016)
 - **Schritt-Art (nur ERKUNDUNG):** Vergleichsstudie mit Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session
