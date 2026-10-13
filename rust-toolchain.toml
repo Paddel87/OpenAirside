@@ -1,0 +1,4 @@
+# Rust version per docs/project-context.md section 3 (ADR-002).
+[toolchain]
+channel = "1.98.1"
+components = ["clippy", "rustfmt"]
