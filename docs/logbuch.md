@@ -24,6 +24,13 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 15:30 – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Spike 1.5, Referenz-PC mit `--bg-threads=6`** (Nachbildung 8 Kerne; abgelegt als `results/referenz-pc-windows-rx7700xt-6-threads.json`): 59,6–60 Bilder/s, 180 Ticks/s, Rückstand ≤ 1 Tick, Neuberechnung 662 / 871 ms, Speicher 632–713 MB stabil. Weniger Hintergrund-Threads verdoppeln die Neuberechnung, entlasten aber die Simulation.
+- **Bewertung 1.5:** mit benannten Maßnahmen erreichbar (Messprotokoll, Abschnitt „Bewertung gegen die Zielwerte"). Bauaktion erst nach 2–6 Bildern sichtbar, weil das Fenster sie erst nach Bestätigung durch den Kern zeichnet (geprüft in `renderer/main.js`) → 1.7.
+- **Vorlage ADR-002** (Optionen A/B/C, Empfehlung A) im Fahrplan 1.5; Schritt auf `[WARTET-AUF-FREIGABE]`.
+- **Modellklasse:** get_session 15:30 – eingestellt und bedient claude-opus-5-5, Entscheidungs-Klasse; Eskalations-Auslöser 1 (ENTSCHEIDUNG) erfüllt, kein Wechsel nötig.
+
 ### 2026-10-13 15:20 – [BEOBACHTUNG]
 
 - **Spike 1.5 auf dem Mac M3 Pro** (11 Kerne, 18 GB, Display 120 Hz; abgelegt als `spikes/1.5-leistung/results/mac-m3pro.json`): 611 s, 768² × 5, 10.000 Personen, 60 Bauaktionen. Übersicht 119–120, Verschieben 117–118 Bilder/s; 6 Bilder über 20 ms; 178–180 Ticks/s, Rückstand 4–33 Ticks ohne Wachstum; Neuberechnung 598 ms Mittel / 724 ms höchstens (9 Threads); Bauaktion 3–6 Bilder (16–48 ms); Speicher 524–715 MB ohne Anstieg.

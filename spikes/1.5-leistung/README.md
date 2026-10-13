@@ -95,6 +95,21 @@ Datei `results/referenz-pc-windows-rx7700xt.json`, Langzeitlauf 612 s, 768² × 
 
 **Einordnung:** Bildrate, Mithalten der Simulation und Speicher erfüllen die Zielwerte über 10 Minuten. Zwei Einschränkungen: (1) Der Referenz-PC hat 12 Kerne, die Zielhardware 8 (`project-context.md` Abschnitt 6); die Neuberechnung lief auf 22 Threads und ist auf 8 Kernen nicht gemessen. (2) Eine Bauaktion erscheint nach 2–3 Bildern, nicht im nächsten – derselbe Befund wie in 1.3/1.4, offen für 1.7.
 
+### Referenz-PC, Windows, 6 Hintergrund-Threads (2026-10-13)
+
+Datei `results/referenz-pc-windows-rx7700xt-6-threads.json`, gleicher Rechner und Lauf wie oben, gestartet mit `--bg-threads=6`: 4 Simulations- plus 6 Hintergrund-Threads, nachgebildet nach der Zielhardware mit 8 Kernen (Kerne − 2). Nachbildung, kein echter 8-Kern-Rechner: Takt, Cache und Speicheranbindung bleiben die des Ryzen 9 3900X.
+
+| Messgröße | 22 Threads | 6 Threads |
+|---|---|---|
+| Bilder/s je Fenster | 59,2–60,0 | 59,6–60,0 |
+| Bilder über 20 / 33 ms | 45 / 18 | 24 / 17 |
+| Ticks/s; Rückstand höchstens | 179,6–180,0; 8 Ticks | 180,0; 1 Tick |
+| Volle Neuberechnung Mittel / höchstens | 293 / 388 ms | 662 / 871 ms (≤ 158 Ticks alte Wegweiser) |
+| Bauaktion bis zum Bild | 27–69 ms, 2–3 Bilder | 28–45 ms, 2–3 Bilder |
+| Speicher aller Prozesse | 702–747 MB | 632–713 MB, ohne Anstieg |
+
+Weniger Hintergrund-Threads verlängern die Neuberechnung auf gut das Doppelte, entlasten aber die Simulation (Rückstand 1 statt 8 Ticks). Bildrate und Speicher bleiben unverändert.
+
 ### Mac M3 Pro (2026-10-13)
 
 Datei `results/mac-m3pro.json`, Langzeitlauf 611 s, gleiche Einstellungen wie oben. Rechner: Apple M3 Pro (11 Kerne: 5 Leistungs-, 6 Effizienzkerne), 18 GB, Grafik über ANGLE/Metal, eingebautes Display 120 Hz (Angabe Projektinhaber), Netzteil angeschlossen. Simulation 4 Threads, Neuberechnung 9 Hintergrund-Threads.
@@ -113,3 +128,25 @@ Datei `results/mac-m3pro.json`, Langzeitlauf 611 s, gleiche Einstellungen wie ob
 **Einordnung:** Bildrate (weit über 60), Mithalten der Simulation und Speicher erfüllen die Zielwerte über 10 Minuten. Beim Verschieben fallen rund 3 von 120 Bildern aus (Panel-Aufbau 12 ms neben dem Zeichnen); bei 60 Hz bliebe das ohne Wirkung. Die Neuberechnung dauert doppelt so lang wie auf dem Referenz-PC (9 statt 22 Threads, Effizienzkerne). Die Bauaktion erscheint auch hier nicht im nächsten Bild (3–6 Bilder bei 120 Hz, in Zeit 16–48 ms) – offen für 1.7.
 
 Linux auf echter Hardware: 7.2 (ADR-011).
+
+## Bewertung gegen die Zielwerte
+
+Zielwerte aus `docs/project-context.md` Abschnitt 6 und FR-040; Referenzszenario mit Reserve (768² × 5 Etagen, ADR-013), 10.000 Personen, höchste Spielgeschwindigkeit (180 Ticks/s), Langzeitlauf 10 min.
+
+| Zielwert | Referenz-PC (22 / 6 Threads) | Mac M3 Pro | Urteil |
+|---|---|---|---|
+| ≥ 60 Bilder/s | 59,2–60 / 59,6–60 (Monitor 60 Hz) | 117–120 (Display 120 Hz) | erreicht |
+| Simulation ohne Rückstand | 180 Ticks/s, Rückstand ≤ 8 / ≤ 1 Tick | 178–180, ≤ 33 Ticks, ohne Wachstum | erreicht |
+| Langzeitstabilität (Speicher) | ohne Anstieg, < 750 MB | ohne Anstieg, < 720 MB | erreicht |
+| Bauaktion im nächsten Bild sichtbar | 2–3 Bilder (28–69 ms) | 3–6 Bilder (16–48 ms) | **nicht erreicht**, Maßnahme benannt |
+| Neuberechnung im Hintergrund, Bauen ohne Wartezeit | 0,3 / 0,7 s, Bauen wartet nie | 0,6 s, Bauen wartet nie | erreicht |
+
+**Gesamturteil: mit benannten Maßnahmen erreichbar.**
+
+Maßnahmen und Lücken, jeweils mit Landeplatz:
+
+1. **Bauaktion im nächsten Bild:** Die Präsentation zeichnet eine Bauaktion bisher erst, wenn der Kern sie bestätigt hat (Weg Fenster → Kern → Fenster). Maßnahme: die Bauaktion sofort im Fenster vorläufig zeichnen und mit der Bestätigung des Kerns abgleichen. Landeplatz 1.7.
+2. **Panel beim Verschieben auf dem Mac:** Der Aufbau kostet 12 ms statt 7 ms, bei 120 Hz fallen rund 3 Bilder je Sekunde aus; bei 60 Hz ohne Wirkung. Landeplatz 1.7 (Panel und Sortierung großer Tabellen).
+3. **Untergrenze schwache integrierte Grafik:** nicht gemessen, kein Testgerät; der M3 Pro ist deutlich stärker. Anhaltspunkt: Im Container ohne Grafikkarte (Software-Grafik auf 4 Kernen) lief dasselbe Programm mit 20–29 Bildern/s durch – lauffähig im Sinne der Vision. Die Empfehlung einer passenden Kartengröße leistet der Benchmark (FR-041, Schritt 5.8).
+4. **Zielhardware mit 8 Kernen:** nur nachgebildet (6 Hintergrund-Threads auf dem 12-Kern-Rechner), nicht auf echtem 8-Kern-Rechner gemessen.
+5. **Linux:** nur Bau und Start im CI; Leistungsmessung in 7.2 (ADR-011).

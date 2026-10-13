@@ -277,7 +277,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.5: Leistungsnachweis auf den Zielsystemen
 
-- **Status:** IN ARBEIT (seit 2026-10-13)
+- **Status:** WARTET-AUF-FREIGABE (seit 2026-10-13, Bestätigung ADR-002)
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Lasttest / Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session
@@ -303,7 +303,45 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
   - **Start auf macOS:** Das arm64-Paket (ADR-012) meldet „beschädigt"; `xattr -cr` auf die App hilft, „Dennoch öffnen" fehlt (Anleitung im Messprotokoll). Betrifft das Spieler-Verhalten aus 1.6 → Vorschlag 1.6-N1.
   - **Referenz-PC Windows (Langzeitlauf 612 s):** 59,2–60 Bilder/s (Monitor 60 Hz), 179,6–180 Ticks/s ohne wachsenden Rückstand, volle Neuberechnung im Hintergrund 293 ms im Mittel (höchstens 388 ms, 22 Threads), Bauaktion bis zum Bild 2–3 Bilder, Speicher 702–747 MB ohne Anstieg. Einschränkung: 12 statt 8 Kerne – Neuberechnung auf 8 Kernen nicht gemessen.
   - **Mac M3 Pro (Langzeitlauf 611 s):** 117–120 Bilder/s (Display 120 Hz), 178–180 Ticks/s ohne wachsenden Rückstand (höchstens 33 Ticks), volle Neuberechnung 598 ms im Mittel (höchstens 724 ms, 9 Threads), Bauaktion bis zum Bild 16–48 ms (3–6 Bilder), Speicher 524–715 MB ohne Anstieg.
-  - **Offen:** Wiederholung auf dem Referenz-PC mit `--bg-threads=6` (entspricht 8 Kernen, läuft); Bewertung gegen die Zielwerte; Vorlage zu ADR-002.
+  - **Referenz-PC mit 6 Hintergrund-Threads (Nachbildung 8 Kerne):** 59,6–60 Bilder/s, 180 Ticks/s, Rückstand ≤ 1 Tick, Neuberechnung 662 ms Mittel / 871 ms höchstens, Bauaktion 2–3 Bilder, Speicher 632–713 MB ohne Anstieg.
+  - **Bewertung (Messprotokoll, Abschnitt „Bewertung gegen die Zielwerte"):** mit benannten Maßnahmen erreichbar. Erreicht: 60 Bilder/s, kein Rückstand, Langzeitstabilität, Bauen ohne Wartezeit. Nicht erreicht: Bauaktion im nächsten Bild (2–6 Bilder, weil erst nach Bestätigung durch den Kern gezeichnet) → Maßnahme vorläufiges Zeichnen im Fenster, Landeplatz 1.7. Lücken: schwache integrierte Grafik nicht gemessen (Landeplatz 5.8, FR-041), 8 Kerne nur nachgebildet, Linux 7.2 (ADR-011).
+- **Entscheidungsvorlage ADR-002 (offen):**
+
+  ```text
+  ENTSCHEIDUNG ERFORDERLICH
+  Kategorie: 1 Architektur (Stack-Bestätigung ADR-002, STRATEGISCH)
+  Kontext: ADR-002 wählte Web-Präsentation + Rust-Kern unter der Bedingung des
+      Leistungsnachweises in Phase 1. 1.5 hat ihn auf Referenz-PC und Mac M3 Pro
+      im Referenzszenario mit Reserve über 10 Minuten gemessen.
+  Optionen:
+    A: ADR-002 bestätigen mit Auflagen (Bauaktion sofort zeichnen in 1.7; Lücken
+       schwache integrierte Grafik → 5.8, Linux → 7.2). Stack, Pattern und NFR
+       Performance werden [BELASTBAR].
+       → Für deine Vision: Wir bauen ab Phase 2 auf dem Stack weiter; große
+         Flughäfen laufen auf PC und Mac flüssig. Restrisiko: sehr schwache
+         Laptops sind ungemessen, der Benchmark (5.8) fängt sie über die
+         Kartengröße ab.
+    B: ADR-002 bestätigen, Reifegrade bleiben [VORLÄUFIG] bis zu einer Messung
+       auf schwacher integrierter Grafik.
+       → Für deine Vision: Gleicher Weg, aber Phase 1 bleibt formal offen, bis
+         ein solches Gerät verfügbar ist (derzeit keins).
+    C: ADR-002 verwerfen, Rückfall auf Godot-Präsentation mit Rust-Kern.
+       → Für deine Vision: Neubau der Oberfläche; die Messwerte geben dafür
+         keinen Anlass.
+  Empfehlung: A – die Zielwerte sind auf beiden Zielsystemen erreicht (60 bzw.
+      120 Bilder/s, 180 Ticks/s, stabiler Speicher); die offene Bauaktions-
+      Verzögerung ist eine Darstellungsfrage im Fenster, nicht des Stacks.
+  Trade-off: Fortschritt jetzt / Restrisiko schwache Laptops und Linux bis 5.8 bzw. 7.2.
+  DIE FRAGE AN DICH: Genügt dir für die Untergrenze „lauffähig mit Empfehlung
+      einer kleineren Karte" der Nachweis ohne Messung auf einem schwachen
+      Laptop – oder soll ein solches Gerät vor Phase 2 gemessen werden?
+  Konfidenz: hoch für Referenz-PC und Mac, niedrig für schwache integrierte
+      Grafik – woran ich das festmache: drei Langzeitläufe mit Reserve; für
+      schwache Geräte nur der Software-Grafik-Lauf im Container (20–29 Bilder/s).
+  Umkehrbarkeit: teuer (Stack trägt alle folgenden Phasen)
+  Blockiert Arbeit an: 1.5 (Abschluss, ADR), 1.7, Phase 2
+  ```
+
 - **Entscheidung Rastergröße:** am 2026-10-13 vom Projektinhaber: „b" → ADR-013 (768 × 768 × 5 Etagen).
 - **Entscheidungsvorlage Rastergröße (beantwortet):**
 
