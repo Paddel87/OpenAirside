@@ -24,6 +24,13 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 22:31 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-022 – Kern-Benchmark als CI-Gate und Prüfung der erzeugten TypeScript-Typen.
+- **Tag:** `[OPERATIV]` (in 2.2 als Freigabe geplant).
+- **Auslöser:** Freigabe des Projektinhabers per Auswahldialog: Frage 1 „A: feste Grenze", Frage 2 „A: einchecken + prüfen". Reaktiv-Quote jetzt 4 / 10 (ADR-013 bis ADR-022), weiter über dem Schwellenwert, sinkend.
+- **Mini-Reibung:** Der Commit `abfafd5` entstand ohne Pre-Commit-Hook, weil der frische Container ihn nicht installiert hatte; Hooks danach auf beiden Dateien nachgeholt (grün) und `pre-commit install` ausgeführt. Für neue Cloud-Sessions: Hook-Installation gehört zum Sessionstart.
+
 ### 2026-10-13 22:25 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt:** 2.2, Kategorie 7 (Build- und Deploy-Pipeline), Eskalations-Auslöser 1 – aktive Klasse Entscheidung, kein Modellwechsel nötig.
