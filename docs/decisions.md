@@ -27,10 +27,11 @@
 | 012 | 2026-10-13 | Aktiv | REAKTIV | DEPLOYMENT | Build/Deploy, Projekt-Vorgabe | macOS nur für Apple-Chips, kein Intel- und kein Universal-Build |
 | 013 | 2026-10-13 | Aktiv | ERKENNTNIS | DATENMODELL, PERFORMANCE | Datenmodell | Größte Karte 768 × 768 Zellen je Etage, fünf Etagen |
 | 014 | 2026-10-13 | Aktiv | ERKENNTNIS | STACK, PERFORMANCE | Architektur | Stack aus ADR-002 bestätigt, Leistungsnachweis mit Auflagen erbracht |
+| 015 | 2026-10-13 | Aktiv | REAKTIV | DEPLOYMENT | Build/Deploy | Ad-hoc-Signatur für macOS-Pakete der Spike-Builds |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 2 / 10 über die letzten 10 ADRs (ADR-005 bis ADR-014), 20 % – genau am Schwellenwert, nicht darüber; gesamt 2 / 14
+- **Aktueller Wert:** 3 / 10 über die letzten 10 ADRs (ADR-006 bis ADR-015: ADR-011, ADR-012, ADR-015), 30 % – **über dem Schwellenwert**; gesamt 3 / 15. Reflexion vom 2026-10-13 in `fahrplan.md` Abschnitt „Iterations-Reflexion"
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -94,6 +95,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-012: macOS nur für Apple-Chips, kein Intel- und kein Universal-Build](decisions/ADR-012.md)
 - [ADR-013: Größte Karte 768 × 768 Zellen je Etage, fünf Etagen](decisions/ADR-013.md)
 - [ADR-014: Stack aus ADR-002 bestätigt, Leistungsnachweis mit Auflagen erbracht](decisions/ADR-014.md)
+- [ADR-015: Ad-hoc-Signatur für macOS-Pakete der Spike-Builds](decisions/ADR-015.md)
 
 ---
 

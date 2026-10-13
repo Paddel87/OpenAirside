@@ -24,6 +24,19 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4, 1.5 (ADR-013, A
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 16:05 – [ADR-ANGELEGT]
+
+- **ADR-015:** Ad-hoc-Signatur für macOS-Pakete der Spike-Builds (`[REAKTIV]`, Kategorie 7), Freigabe des Projektinhabers: „A, freigegeben". Grundlage: electron-builder 26.16.1 signiert mit `identity: null` gar nicht; `"-"` schaltet Ad-hoc-Signatur ein, verlangt `hardenedRuntime: false` (Dokumentation in `macOptions.d.ts`).
+- **Reaktiv-Quote 3 / 10 (30 %) über dem Schwellenwert** → STOPP nach `decisions.md` Teil A; Reflexion im Fahrplan („Iterations-Reflexion"), Umsetzung angehalten bis zur Kenntnisnahme. Klassifikation `[REAKTIV]` nach demselben Maßstab wie ADR-011/012.
+- **Korrektur ADR-014:** trug zwei Klassifikations-Tags (`[ERKENNTNIS]` und `[STRATEGISCH]`), `decisions.md` verlangt genau einen; `[STRATEGISCH]` entfernt, `[ERKENNTNIS]` bleibt (Teil A war bereits richtig).
+
+### 2026-10-13 16:00 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 15:52; PR Paddel87/OpenAirside#10 gemergt (`7983004`), Branch `claude/gracious-galileo-2reksz` neu auf `main` gesetzt.
+- **Pflichtlektüre:** fortgeführter Gesprächsverlauf, Stand aus der vorigen Session bekannt; vertieft: ADR-012, `spike-build-1-5.yml`, Build-Konfiguration 1.5.
+- **Geplant:** 1.6-N1 (Ad-hoc-Signatur der Mac-Pakete), Freigabe „A" des Projektinhabers.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` (Quelle: `get_session`) → Entscheidungs-Klasse; Kontext 284.324 Token.
+
 ### 2026-10-13 15:52 – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 100 Minuten seit `[SESSIONSTART]` 14:11 (mit einer Verdichtung des Gesprächsverlaufs dazwischen)
