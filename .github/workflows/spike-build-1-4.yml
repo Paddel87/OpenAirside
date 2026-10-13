@@ -7,6 +7,10 @@
 # die Runner haben keine Grafikkarte, ihre Bildraten sind nicht aussagekräftig.
 # Spike-Werkzeug, kein Release.
 #
+# Kleine Testpakete (2026-10-13, freigegeben vom Projektinhaber): je System nur ein Format
+# (Windows ZIP, macOS DMG, Linux AppImage), macOS nur für Apple-Chips (arm64) statt Universal.
+# Der Universal-Build bleibt durch spike-build.yml und Schritt 1.6 belegt.
+#
 # Action-Versionen wie in ci.yml (geprüft am 2026-10-13).
 
 name: Spike-Build 1.4
@@ -72,16 +76,13 @@ jobs:
             cp target/release/libsim_bridge.so app/native/sim_bridge.node
           fi
 
-      - name: Natives Modul bauen (macOS Universal)
+      - name: Natives Modul bauen (macOS, Apple-Chips)
         if: matrix.platform == 'mac'
         run: |
-          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
           cargo build --release --locked -p sim-bridge --target aarch64-apple-darwin
-          cargo build --release --locked -p sim-bridge --target x86_64-apple-darwin
           mkdir -p app/native
-          lipo -create -output app/native/sim_bridge.node \
-            target/aarch64-apple-darwin/release/libsim_bridge.dylib \
-            target/x86_64-apple-darwin/release/libsim_bridge.dylib
+          cp target/aarch64-apple-darwin/release/libsim_bridge.dylib app/native/sim_bridge.node
           lipo -info app/native/sim_bridge.node
 
       - name: Paket bauen
@@ -115,7 +116,7 @@ jobs:
         if: matrix.platform == 'mac'
         working-directory: spikes/1.4-tabellen/app
         run: |
-          app="$(ls -d release/mac-universal/*.app | head -1)"
+          app="$(ls -d release/mac-arm64/*.app | head -1)"
           lipo -info "$app/Contents/MacOS/"*
           "$app/Contents/MacOS/$(basename "$app" .app)" --enable-unsafe-swiftshader \
             --series=quick --rows=2000 --rate=4 --phase-seconds=1 \
@@ -140,8 +141,6 @@ jobs:
           retention-days: 14
           path: |
             spikes/1.4-tabellen/app/release/*.AppImage
-            spikes/1.4-tabellen/app/release/*.tar.gz
-            spikes/1.4-tabellen/app/release/*.exe
             spikes/1.4-tabellen/app/release/*.zip
             spikes/1.4-tabellen/app/release/*.dmg
             spikes/1.4-tabellen/app/smoke*
