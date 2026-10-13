@@ -17,12 +17,38 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 läuft. Schritt 1.1 erledigt: Kern als napi-rs-Modul im Electron-Utility-Prozess (ADR-009); WebAssembly mit Threads zurückgestellt nach Q.2. Nächster Schritt: 1.2 (parallel möglich: 1.6).
+Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt. Nächster Schritt: 1.3 (parallel möglich: 1.6), in neuer Session.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 02:05 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 60 Minuten seit `[SESSIONSTART]` 01:10
+- **Bearbeitet:** 1.2 (Prototyp, Messreihe, Entscheidungsvorlage, ADR-010); Auslagerung der ADRs nach `docs/decisions/` (ADR-001: ab zweistelliger Anzahl)
+- **Erreicht:** 1.2 `[ERLEDIGT]` nach Freigabe „A, freigegeben, Referenzszenario mit Reserve"; Datenmodell `[OFFEN]` → `[VORLÄUFIG]`; Wegfindung bleibt `[VORLÄUFIG]` bis 1.5; 1.5 um Rastergröße und fünf Etagen ergänzt; Landeplatz für „Suchen ohne Schilder"/Feinwege: 3.3.
+- **Offen geblieben:** CI-Lauf für den Abschluss-Commit beim Schreiben dieses Eintrags noch nicht geprüft; `shellcheck` im Container nicht installiert, `run-all.sh` des Spikes daher ungeprüft (Spike-Skript, nicht in `scripts/`).
+- **Nächster Schritt:** 1.3 – Zustandsübergabe und Spielfeld-Darstellung (parallel möglich 1.6), in neuer Session.
+- **Modell-Bilanz:** aktive Klasse Entscheidung (`claude-opus-5-5`, eingestellt und bedient laut `get_session` zu Sessionbeginn); 0 Schritte oberhalb der Empfehlung; keine Teilarbeiten abgegeben.
+- **Kontextgröße:** rund 370.000 Token (Schätzung aus dem Verlauf; letzte Abfrage 01:05 ergab 307.567); knapp unter der Grenze von 400.000 – nächste Arbeit in neuer Session beginnen.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf.
+- **Drift-Prüfung:** README (Phase, Architektur-Reife, Nächste Schritte) nachgezogen; ADR-010 verweist auf 1.2, 1.5 (existieren); Reifegrade passen zu ADR-009/010; Reaktiv-Quote 0/10; Phase 1 weiter 7 Schritte.
+- **Archivierung:** Teil B von `decisions.md` in Einzeldateien `docs/decisions/ADR-001.md` bis `ADR-010.md` ausgelagert; Logbuch unter 800 Zeilen.
+
+### 2026-10-13 02:00 – [ADR-ANGELEGT]
+
+- **ADR:** ADR-010 „Datenmodell und Parallelisierung im Kern, Übernahme der Wegweiser" (`docs/decisions/ADR-010.md`)
+- **Tag:** `[ERKENNTNIS]`; Reaktiv-Quote 0/10
+- **Auslöser:** Freigabe „A, freigegeben, Referenzszenario mit Reserve"
+
+### 2026-10-13 02:00 – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** Datenmodell und Parallelisierung im Kern
+- **Wechsel:** `[OFFEN]` → `[VORLÄUFIG]` (Wegfindung bleibt `[VORLÄUFIG]`: fünf Etagen und Rastergröße erst in 1.5)
+- **Auslöser:** Spike 1.2, ADR-010
+- **Datum in `architecture.md` Abschnitt 9 nachgetragen:** ja
 
 ### 2026-10-13 01:50 – [BEOBACHTUNG]
 

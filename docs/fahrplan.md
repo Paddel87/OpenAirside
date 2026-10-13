@@ -11,9 +11,9 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** 1.2 – Wegweiser-Prinzip mit 10.000 Personen
+- **Aktiver Schritt:** keiner (1.2 erledigt am 2026-10-13, ADR-010)
 - **Nächster Schritt:** 1.3 – Zustandsübergabe und Spielfeld-Darstellung; parallel möglich: 1.6 – Verpackung für drei Plattformen
-- **Offene STOPP-Situationen:** Schritt 1.2 wartet auf Freigabe (Datenmodell, Parallelisierung, Übernahme der Wegweiser) und auf die Angabe zur Kartengröße – Vorlage im Schritt 1.2
+- **Offene STOPP-Situationen:** keine
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -154,7 +154,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.2: Wegweiser-Prinzip mit 10.000 Personen
 
-- **Status:** WARTET-AUF-FREIGABE (Messungen abgeschlossen 2026-10-13)
+- **Status:** ERLEDIGT (2026-10-13) – Option A freigegeben, ADR-010; größte Karte: Referenzszenario mit Reserve
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Prototyp
 - **Zeitbox (nur ERKUNDUNG):** maximal zwei Sessions, dann Zwischenstand
@@ -177,7 +177,9 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Notizen:** Lehre aus dem Original: keine Prozesse, die sich über die Spielzeit ansammeln; Langzeitlauf mitmessen.
 
 - **Zwischenstand 2026-10-13:** Prototyp und Messprotokoll in `spikes/1.2-wegweiser/README.md` (Rohdaten `results/`). Erkenntnisse zu allen Fragen liegen vor: Schritt 0,2 ms mit 10.000 Personen (4 Threads), Wegweiser 14,5 MB und 0,2–0,4 s Neuberechnung (512² × 2, 29 Ziele, 4 Threads), Unerreichbarkeit mit Ursache erkannt, Determinismus bitgleich bestätigt, Bodenmarkierung als Kostenfaktor erprobt, kein Leistungsabbau über 60.000 Ticks. Offen: Rastergröße des Referenzszenarios und der größten Karte ist nirgends festgelegt (Informationslücke); getestet mit 2 statt 5 Etagen.
-- **Entscheidungsvorlage (offen):**
+- **Entscheidung:** am 2026-10-13 vom Projektinhaber: „A, freigegeben, Referenzszenario mit Reserve" → ADR-010.
+- **Nicht abgedeckt (Hinweis, kein Verschieben):** „Suchen ohne Schilder" und Feinwege zum Einzelziel waren nicht Teil von 1.2; sie gehören zu FR-017 und Landeplatz: Schritt 3.3 (dort als vorgeschaltete Erkundung eingetragen).
+- **Entscheidungsvorlage (beantwortet):**
 
   ```text
   ENTSCHEIDUNG ERFORDERLICH
@@ -273,6 +275,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Eingangskriterien:** Durchstich aus 1.1–1.4 lauffähig; Zugang zu Testsystemen: Mittelklasse-PC (Referenz), Rechner mit integrierter Grafik (z. B. Mac des Projektverantwortlichen), Linux-System
 - **Anforderungen (ab Klasse M):** FR-040
 - **Zu tun:**
+  - Rastergröße des Referenzszenarios mit Reserve festlegen (Vorgabe ADR-010) und Wegweiser mit fünf Etagen messen (Speicher, Neuberechnung).
   - Messung im Szenario mit 10.000 Personen bei höchster Spielgeschwindigkeit: Bildrate, Rechenzeit pro Simulationsschritt, Rückstand, Speicher über einen Langzeitlauf.
   - Wiederholung auf integrierter Grafik und unter Linux (WebGL2).
   - Ergebnis gegen die Zielwerte aus `project-context.md` Abschnitt 6 bewerten.
@@ -346,7 +349,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 |---|---|---|
 | 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
-| 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme | FR-018, FR-043 |
+| 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
 | 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung; davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
 | 3.5 | Abfertigung und Gepäck in Grundform | FR-025, FR-032 |
 | 3.6 | GA und kleine Linienflüge, Flugplaner, Geld und Bewertung in Grundform | FR-030, FR-036 |
@@ -455,6 +458,7 @@ Noch keine abgeschlossene Phase.
 <!-- ANCHOR:replanning-historie -->
 ## Replanning-Historie
 
+- 2026-10-13 – Schritt 1.2 abgeschlossen (ADR-010); 1.5 um Rastergröße und fünf Etagen ergänzt; 3.3 um vorgeschaltete Erkundung „Suchen ohne Schilder"/Feinwege ergänzt (Landeplatz aus 1.2)
 - 2026-10-13 – Schritt 1.1 abgeschlossen (ADR-009); Querschnitt Q.2 als Landeplatz für die zurückgestellte WebAssembly-Variante angelegt (zählt nicht zum Schrittplan von Phase 1); 1.3 um Übertragungsumfang ergänzt
 - 2026-10-13 – Erstplanung in der Initialisierung (ADR-001 bis ADR-008); Nachzug nach aktuellem Regelwerk: Schritt-IDs für Phasen 2–7 mit Anforderungs-Zuordnung, Querschnitt Q.1
 
