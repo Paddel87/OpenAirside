@@ -17,12 +17,21 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 in Arbeit (Session ab 19:44 UTC). Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); nächster Schritt 2.2. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 21:03 (UTC) – [REIFEGRAD-WECHSEL]
+
+- S-2 Befehlskanal, S-3 Ereignisstrom, S-6 Plattform-API `[VORLÄUFIG]` → `[BELASTBAR]`; S-4 Datenpaket-Schema, S-5 Spielstand-Format `[OFFEN]` → `[BELASTBAR]`; S-7 Abfrage neu `[BELASTBAR]` (ADR-021, Regel-007; Bestätigung durch Umsetzung in 2.2, 2.4, 2.5, 2.7).
+
+### 2026-10-13 21:03 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-021** `[ERKENNTNIS]` (Kategorie 5, 1, 6): Schnittstellenverträge S-2 bis S-7. Freigabe des Projektinhabers per Auswahl: „A freigeben", Pause „Ja", Mod-Fehler „Ganzes Paket aus", alte Spielstände „Ab Version 1.0", fehlendes Paket „Erst verweigern, später Factorio-Weg". Erster Auswahldialog war abgelehnt worden; auf Wunsch des Projektinhabers folgten Anzeige des Entwurfs, belegte Vorbilder und Websuche, dann erneute Frage.
+- **Übernahme:** Vertragstext nach `architecture.md` Abschnitt 4 (gemeinsame Grundlagen vor S-1), Modul-Karte um „Abfrage" ergänzt, Reifegrade Abschnitt 9; zwei Unstimmigkeiten des Entwurfs dabei behoben (Rückstau-Regel S-3, fehlende `panel`-Kennung S-7). Landeplätze in 2.2, 2.4, 2.5, 2.7, 6.1, 7.2. Reaktiv-Quote 5 / 10.
 
 ### 2026-10-13 20:53 (UTC) – [BEOBACHTUNG]
 
