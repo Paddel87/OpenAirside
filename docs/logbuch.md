@@ -24,6 +24,12 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 15:20 – [BEOBACHTUNG]
+
+- **Spike 1.5 auf dem Mac M3 Pro** (11 Kerne, 18 GB, Display 120 Hz; abgelegt als `spikes/1.5-leistung/results/mac-m3pro.json`): 611 s, 768² × 5, 10.000 Personen, 60 Bauaktionen. Übersicht 119–120, Verschieben 117–118 Bilder/s; 6 Bilder über 20 ms; 178–180 Ticks/s, Rückstand 4–33 Ticks ohne Wachstum; Neuberechnung 598 ms Mittel / 724 ms höchstens (9 Threads); Bauaktion 3–6 Bilder (16–48 ms); Speicher 524–715 MB ohne Anstieg.
+- **Auffällig:** Beim Verschieben kostet der Panel-Aufbau auf dem Mac 12 ms statt 7 ms (Windows: 6–7 ms in beiden Ansichten); bei 120 Hz fallen dadurch rund 3 Bilder je Sekunde aus. Für 60 Bilder/s ohne Belang, als Hinweis für 1.7 (Panel) festgehalten.
+- **Ablage:** Der Wiederholungslauf auf dem Referenz-PC mit `--bg-threads=6` läuft noch.
+
 ### 2026-10-13 15:05 – [BEOBACHTUNG]
 
 - **Spike 1.5 auf dem Referenz-PC unter Windows** (Ryzen 9 3900X 12 Kerne, RX 7700 XT, 60 Hz; Ergebnisdatei vom Projektinhaber, abgelegt als `spikes/1.5-leistung/results/referenz-pc-windows-rx7700xt.json`): 612 s, 768² × 5, 10.000 Personen, 60 Bauaktionen. 59,2–60 Bilder/s, 45 Bilder über 20 ms (gehäuft 60–120 s), 179,6–180 Ticks/s, Rückstand ≤ 8 Ticks ohne Wachstum, volle Neuberechnung 293 ms Mittel / 388 ms höchstens, Bauaktion 2–3 Bilder, Speicher stabil 702–747 MB.

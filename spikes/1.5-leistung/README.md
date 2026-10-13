@@ -95,6 +95,21 @@ Datei `results/referenz-pc-windows-rx7700xt.json`, Langzeitlauf 612 s, 768² × 
 
 **Einordnung:** Bildrate, Mithalten der Simulation und Speicher erfüllen die Zielwerte über 10 Minuten. Zwei Einschränkungen: (1) Der Referenz-PC hat 12 Kerne, die Zielhardware 8 (`project-context.md` Abschnitt 6); die Neuberechnung lief auf 22 Threads und ist auf 8 Kernen nicht gemessen. (2) Eine Bauaktion erscheint nach 2–3 Bildern, nicht im nächsten – derselbe Befund wie in 1.3/1.4, offen für 1.7.
 
-### Mac M3 Pro
+### Mac M3 Pro (2026-10-13)
 
-Ausstehend. Linux auf echter Hardware: 7.2 (ADR-011).
+Datei `results/mac-m3pro.json`, Langzeitlauf 611 s, gleiche Einstellungen wie oben. Rechner: Apple M3 Pro (11 Kerne: 5 Leistungs-, 6 Effizienzkerne), 18 GB, Grafik über ANGLE/Metal, eingebautes Display 120 Hz (Angabe Projektinhaber), Netzteil angeschlossen. Simulation 4 Threads, Neuberechnung 9 Hintergrund-Threads.
+
+| Messgröße | Ergebnis |
+|---|---|
+| Bilder/s je 30-s-Fenster | Übersicht 119,1–120,0, Verschieben 116,8–117,9 (Displaygrenze 120); Bildzeit p99 Übersicht 9,3–10,3 ms, Verschieben 16,5–16,7 ms |
+| Bilder über 20 / 33 ms | 6 / 3 in 611 s (rund 72.000 Bilder), alle im Fenster bei 450 s |
+| Ticks/s | 178,2–180,0 bei Soll 180; Rückstand 4–33 Ticks je Fenster, wächst nicht |
+| Schrittzeit Simulation | Mittel 0,52–0,84 ms, p99 bis 3,6 ms; höchste Tickrate 8.838/s |
+| Volle Neuberechnung (Hintergrund) | Mittel 598 ms, höchstens 724 ms (≤ 113 Ticks alte Wegweiser in Gebrauch) |
+| Bauaktion bis zum Bild | Median 16–38 ms, höchstens 48 ms, 3–6 Bilder bei 120 Hz |
+| Panel (5.000 Zeilen, 4 Aktualisierungen/s) | Übersicht Mittel 6,6–7,8 ms, Verschieben 11,5–12,8 ms, höchstens 18,8 ms; keine langen Aufgaben |
+| Speicher aller Prozesse | 524–715 MB, Mittel erste 2 min 680 MB, letzte 2 min 642 MB; Kern-Prozess 107–236 MB (Einbrüche vermutlich Speicherkompression von macOS) |
+
+**Einordnung:** Bildrate (weit über 60), Mithalten der Simulation und Speicher erfüllen die Zielwerte über 10 Minuten. Beim Verschieben fallen rund 3 von 120 Bildern aus (Panel-Aufbau 12 ms neben dem Zeichnen); bei 60 Hz bliebe das ohne Wirkung. Die Neuberechnung dauert doppelt so lang wie auf dem Referenz-PC (9 statt 22 Threads, Effizienzkerne). Die Bauaktion erscheint auch hier nicht im nächsten Bild (3–6 Bilder bei 120 Hz, in Zeit 16–48 ms) – offen für 1.7.
+
+Linux auf echter Hardware: 7.2 (ADR-011).

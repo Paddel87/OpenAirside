@@ -302,7 +302,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
   - **Befund:** 1.3 und 1.4 maßen Bauaktionen mit inkrementeller Reparatur (Voreinstellung aus 1.2), nicht mit der in ADR-010 gewählten vollen Neuberechnung; 1.5 misst die volle.
   - **Start auf macOS:** Das arm64-Paket (ADR-012) meldet „beschädigt"; `xattr -cr` auf die App hilft, „Dennoch öffnen" fehlt (Anleitung im Messprotokoll). Betrifft das Spieler-Verhalten aus 1.6 → Vorschlag 1.6-N1.
   - **Referenz-PC Windows (Langzeitlauf 612 s):** 59,2–60 Bilder/s (Monitor 60 Hz), 179,6–180 Ticks/s ohne wachsenden Rückstand, volle Neuberechnung im Hintergrund 293 ms im Mittel (höchstens 388 ms, 22 Threads), Bauaktion bis zum Bild 2–3 Bilder, Speicher 702–747 MB ohne Anstieg. Einschränkung: 12 statt 8 Kerne – Neuberechnung auf 8 Kernen nicht gemessen.
-  - **Offen:** Langzeitlauf auf dem Mac; optional Wiederholung auf dem Referenz-PC mit `--bg-threads=6` (entspricht 8 Kernen); Bewertung gegen die Zielwerte; Vorlage zu ADR-002.
+  - **Mac M3 Pro (Langzeitlauf 611 s):** 117–120 Bilder/s (Display 120 Hz), 178–180 Ticks/s ohne wachsenden Rückstand (höchstens 33 Ticks), volle Neuberechnung 598 ms im Mittel (höchstens 724 ms, 9 Threads), Bauaktion bis zum Bild 16–48 ms (3–6 Bilder), Speicher 524–715 MB ohne Anstieg.
+  - **Offen:** Wiederholung auf dem Referenz-PC mit `--bg-threads=6` (entspricht 8 Kernen, läuft); Bewertung gegen die Zielwerte; Vorlage zu ADR-002.
 - **Entscheidung Rastergröße:** am 2026-10-13 vom Projektinhaber: „b" → ADR-013 (768 × 768 × 5 Etagen).
 - **Entscheidungsvorlage Rastergröße (beantwortet):**
 
