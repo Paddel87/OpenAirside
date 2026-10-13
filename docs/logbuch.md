@@ -29,10 +29,10 @@ Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt. Nächster Sch
 - **Session-Dauer:** ca. 60 Minuten seit `[SESSIONSTART]` 01:10
 - **Bearbeitet:** 1.2 (Prototyp, Messreihe, Entscheidungsvorlage, ADR-010); Auslagerung der ADRs nach `docs/decisions/` (ADR-001: ab zweistelliger Anzahl)
 - **Erreicht:** 1.2 `[ERLEDIGT]` nach Freigabe „A, freigegeben, Referenzszenario mit Reserve"; Datenmodell `[OFFEN]` → `[VORLÄUFIG]`; Wegfindung bleibt `[VORLÄUFIG]` bis 1.5; 1.5 um Rastergröße und fünf Etagen ergänzt; Landeplatz für „Suchen ohne Schilder"/Feinwege: 3.3.
-- **Offen geblieben:** CI-Lauf für den Abschluss-Commit beim Schreiben dieses Eintrags noch nicht geprüft; `shellcheck` im Container nicht installiert, `run-all.sh` des Spikes daher ungeprüft (Spike-Skript, nicht in `scripts/`).
+- **Offen geblieben:** PR Paddel87/OpenAirside#2 wartet auf Review und Merge (CI auf `2befa46` grün, Code-Jobs bis 2.1 übersprungen); `shellcheck` im Container nicht installiert, `run-all.sh` des Spikes daher ungeprüft (Spike-Skript, nicht in `scripts/`).
 - **Nächster Schritt:** 1.3 – Zustandsübergabe und Spielfeld-Darstellung (parallel möglich 1.6), in neuer Session.
-- **Modell-Bilanz:** aktive Klasse Entscheidung (`claude-opus-5-5`, eingestellt und bedient laut `get_session` zu Sessionbeginn); 0 Schritte oberhalb der Empfehlung; keine Teilarbeiten abgegeben.
-- **Kontextgröße:** rund 370.000 Token (Schätzung aus dem Verlauf; letzte Abfrage 01:05 ergab 307.567); knapp unter der Grenze von 400.000 – nächste Arbeit in neuer Session beginnen.
+- **Modell-Bilanz:** aktive Klasse Entscheidung (`claude-opus-5-5`, eingestellt und bedient laut `get_session` am Sessionende); 0 Schritte oberhalb der Empfehlung; keine Teilarbeiten abgegeben.
+- **Kontextgröße:** 440.467 Token laut `get_session` – **über der Grenze von 400.000** (`project-context.md` Abschnitt 6). Hinweis: nächste Arbeit in einer neuen Session beginnen.
 - **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf.
 - **Drift-Prüfung:** README (Phase, Architektur-Reife, Nächste Schritte) nachgezogen; ADR-010 verweist auf 1.2, 1.5 (existieren); Reifegrade passen zu ADR-009/010; Reaktiv-Quote 0/10; Phase 1 weiter 7 Schritte.
 - **Archivierung:** Teil B von `decisions.md` in Einzeldateien `docs/decisions/ADR-001.md` bis `ADR-010.md` ausgelagert; Logbuch unter 800 Zeilen.
