@@ -222,6 +222,8 @@ Zwei Schichten, die identische Checks ausführen: lokale Pre-Commit-Hooks als er
 
 - **Tool:** [z. B. `commitlint` mit Conventional-Commits-Konfiguration; falls nicht verwendet: „nicht aktiv, Begründung: …"]
 - **Erlaubte Typen:** [z. B. feat, fix, refactor, docs, test, chore, perf, build, ci]
+- **Branch-Präfixe:** wie `CLAUDE.md` Abschnitt 11; zusätzlich: [z. B. „keine" oder `init/` für den Initialisierungs-Commit]
+- **Vom Werkzeug vergebene Branch-Namen:** [z. B. „keine" oder „Werkzeug X vergibt `<muster>/…`; Typ und Schritt-ID stehen dann im PR-Titel"]
 
 ### Editor-Integration (empfohlen, nicht erzwungen)
 

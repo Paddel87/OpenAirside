@@ -382,7 +382,27 @@ Fahrplan: [eintrags-id oder phase/schritt-nummer]
 **Branches:**
 
 - Hauptbranch: wie im Repo konfiguriert. Umbenennung ist freigabepflichtig.
-- Feature-Branches: `feat/<kurztitel>`, Bugfix: `fix/<kurztitel>`, Refactor: `refactor/<kurztitel>`.
+- **Schema:** `<präfix>/<schritt-id>-<kurztitel>`, z. B. `fix/16-85-lagerbestand-sperre`. Die Schritt-ID steht mit Bindestrich statt Punkt; der Kurztitel folgt der Namensregel der Anker (Abschnitt 2). Arbeit ohne eigenen Fahrplan-Schritt (z. B. Sessionende): `<präfix>/<kurztitel>`.
+- **Präfix nach Inhalt.** Das Präfix ist der Commit-Typ, der dem Branch sein Ziel gibt:
+
+  | Inhalt des Branches | Präfix |
+  |---|---|
+  | neue oder erweiterte Funktion | `feat/` |
+  | Fehlerbehebung, auch Hotfix | `fix/` |
+  | schneller oder sparsamer, Verhalten unverändert | `perf/` |
+  | Umbau, Verhalten unverändert | `refactor/` |
+  | nur Tests | `test/` |
+  | nur Dokumentation (`docs/`, `README.md`, `CHANGELOG.md`) | `docs/` |
+  | CI-Workflows | `ci/` |
+  | Build, Abhängigkeiten, Sperrdateien | `build/` |
+  | sonstige Pflege ohne Wirkung auf Code oder Verhalten | `chore/` |
+  | ERKUNDUNG-Schritt (Spike, Messung, Prototyp) | `erkundung/` |
+  | Release vorbereiten | `release/vX.Y.Z` |
+
+  Zusätzliche Präfixe und weitere Commit-Typen legt `docs/project-context.md` Abschnitt 7 fest. Mischt ein Branch mehrere Typen, gilt der Typ des Hauptziels; der Rest steht in eigenen Commits (Regel gegen Mix-Commits oben). Ein `erkundung/`-Branch liefert Wissen, keine Funktion (Phasentyp-Disziplin, Abschnitt 6).
+- **PR-Titel** folgt dem Commit-Format, sein Typ stimmt mit dem Präfix überein. Ändert sich der Charakter der Arbeit, wird der Branch vor dem ersten Push umbenannt; danach gilt der Typ im PR-Titel, und die PR-Beschreibung nennt die Abweichung.
+- **Vom Werkzeug vergebene Namen.** Legt das Werkzeug den Branch-Namen fest und lässt keinen eigenen zu, gilt dessen Name. Typ und Schritt-ID stehen dann im PR-Titel.
+- **Ein Branch je PR.** Nach dem Merge wird ein Branch nicht weiterverwendet; Folgearbeit beginnt auf einem neuen Branch vom aktuellen Hauptbranch.
 - Push-Regeln auf Hauptbranch werden in `docs/project-context.md` festgelegt.
 
 ## 12. Sessionende-Disziplin
