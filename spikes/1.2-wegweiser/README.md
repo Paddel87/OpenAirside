@@ -9,6 +9,7 @@ Fahrplan-Schritt 1.2 (Phase 1, ERKUNDUNG, Prototyp). **Wegwerf-Code**, reines Ru
 - `src/sim.rs` – Personen mit Ablaufplan (Abflug: Check-in → ggf. Toilette → ggf. Laden → Gate → Boarding; Ankunft: Gate → Ausgang), Wartezeiten, 90 Ticks an der Kontrolle, Verlangsamung bei Gedränge. Ein Tick hat zwei Phasen: Bewegung (liest die Personendichte des Vortick) und Dichtezählung (vertauschbare Additionen). Bauänderungen wirken sofort auf das Raster; neue Wegweiser rechnet ein Hintergrund-Pool und übernimmt sie **genau 30 Ticks später** (bei Verzug wartet der Takt), damit der Ablauf deterministisch bleibt.
 - Zwei Datenlayouts für Personen: `aos` (ein Datensatz je Person, 52 Byte) und `split` (16 Byte „heiße" Daten je Tick, Rest getrennt).
 - `run-all.sh` – Messreihe; Rohdaten in `results/`.
+- Nachträglich für Spike 1.3 ergänzt (additiv, Messpfad oben unverändert): `Sim::set_walls`, `Sim::poll_async` (Übernahme neuer Wegweiser, sobald fertig – ADR-010 Option A) und `Sim::visit_hot`; siehe `spikes/1.3-spielfeld/README.md`.
 
 Ausführen: `./run-all.sh` oder einzeln `cargo run --release --bin run -- run ticks=6000 bg=4`. Tests: `cargo test --release` (Wegweiser stabil; Reparatur liefert dieselben Distanzen wie die Vollberechnung, jede gespeicherte Richtung ist ein gültiger kürzester Schritt).
 
