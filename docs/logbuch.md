@@ -17,12 +17,37 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt; 1.3 und 1.6 warten auf Messung bzw. Rückmeldung mit den Testprogrammen auf den Rechnern des Projektinhabers. Danach 1.4.
+Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3 und 1.6 erledigt; Linux-Messung nach ADR-011 in 7.2. Nächster Schritt: 1.4.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 13:05 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 15 Minuten Arbeitszeit nach dem `[SESSIONENDE]` von 12:50 (dieselbe Sitzung, Mac-Test begleitet)
+- **Bearbeitet:** 1.3 und 1.6 (Mac-Auswertung, macOS-Startablauf), Beförderung S-1
+- **Erreicht:** 1.3 und 1.6 `[ERLEDIGT]`; S-1 `[BELASTBAR]`; Messprotokolle, Fahrplan, Architektur, README nachgezogen.
+- **Offen geblieben:** CI des Dokumentations-Commits beim Schreiben noch nicht abgewartet. Folgepunkte mit Landeplatz: Bauaktion im übernächsten Bild (1.7), Linux (7.2), Signatur (7.1).
+- **Nächster Schritt:** 1.4 – Großes Tabellen-Panel neben dem Spielfeld, in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session`); 0 Schritte oberhalb der Empfehlung; keine Abgabe.
+- **Kontextgröße:** 680.642 Token laut `get_session` – **über der Grenze von 400.000**. Hinweis: nächste Arbeit in einer neuen Session beginnen.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf. **Drift-Prüfung:** README (Phase, Architektur-Reife, Nächste Schritte) synchron; Reifegrad S-1 im Abschnitt 4 und 9 gleich; keine neuen ADRs; Phase 1 weiter 7 Schritte.
+
+### 2026-10-13 13:00 – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** S-1 Zustandspuffer
+- **Wechsel:** `[VORLÄUFIG]` → `[BELASTBAR]`
+- **Auslöser:** Spike 1.3 auf Referenz-PC (Windows, 60 Bilder/s, Rundlauf 0,6–2,8 ms) und Mac M3 Pro (120 Bilder/s, Rundlauf 0,7–2,1 ms p50); Linux nach ADR-011 in 7.2. Validierung durch Messung, kein Schutzmechanismus im Sinne von `CLAUDE.md` Abschnitt 6. Entscheidungs-Klasse aktiv (`claude-opus-5-5`, `get_session`), Eskalations-Auslöser 4 erfüllt.
+- **Datum in `architecture.md` Abschnitt 9 nachgetragen:** ja
+- **Nicht befördert:** Verpackung bleibt `[VORLÄUFIG]` (unsigniert, Linux-Sandbox).
+
+### 2026-10-13 12:58 – [BEOBACHTUNG]
+
+- **Spike 1.3 auf dem Mac M3 Pro** (eingebautes Display 120 Hz, Pixeldichte 2): 10.000 und 50.000 Personen mit `particles` 120 Bilder/s, Bild p99 ≤ 9,4 ms, kein Bild über 20 ms; Sprites bei 50.000 beim Schwenken 80–109 Bilder/s. Simulationsschritt 0,5–1,5 ms (länger als auf dem Referenz-PC), Baubefehl im Simulations-Thread bis 17,8 ms. Bauaktion p50 27 ms (4 Bilder bei 120 Hz).
+- **macOS-Start ohne Signatur:** Freigabe über Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen" funktioniert; Rechtsklick → „Öffnen" wirkt seit macOS 15 nicht mehr.
+- **1.3 und 1.6 erledigt.** Offene Folgepunkte mit Landeplatz: Bauaktion im übernächsten Bild (1.7), Linux auf echter Hardware und Linux-Sandbox (7.2), Signatur (7.1).
 
 ### 2026-10-13 12:50 – [SESSIONENDE]
 
