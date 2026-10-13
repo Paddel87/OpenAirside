@@ -96,13 +96,13 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Verantwortung:** Führt die Simulation in festen Simulationsschritten aus, unabhängig von der Bildrate; nimmt Befehle aus dem Befehlskanal entgegen, verteilt Arbeit auf die Kern-Module und auf mehrere Threads, schreibt den sichtbaren Zustand in den Zustandspuffer.
 - **Nicht-Verantwortung:** keine Darstellung, keine Dateizugriffe, keine Spielregeln einzelner Fachbereiche.
 - **Öffentliche Schnittstellen:** S-1, S-2, S-3, S-5
-- **Interne Struktur:** Datenorientierte Haltung des Weltzustands (Personen, Fahrzeuge, Objekte als kompakte Datenblöcke statt einzelner Objekte); Parallelisierung über mehrere Kerne. Konkretes Modell `[OFFEN]` bis Schritt 1.2.
+- **Interne Struktur:** Je Objektart getrennte Felder „heiß" (je Tick gebraucht) und „kalt" (nur bei Ereignissen) in eigenem Rust-Code, kein ECS-Paket; Tick in zwei Phasen (Bewegung liest Zustand des Vortick, danach vertauschbare Zählungen), parallel mit rayon; bitgleich über Threadzahlen (ADR-010, `[VORLÄUFIG]`).
 - **Abhängigkeiten (andere Module):** ruft alle Kern-Module je Simulationsschritt auf
 - **Abhängigkeiten (extern):** `rayon` (vorgesehen), `serde`
 - **Technologie:** Rust
 - **NFRs:** Rechenzeit pro Simulationsschritt muss bei höchster Spielgeschwindigkeit im Referenzszenario in das Zeitbudget passen (Abschnitt 6)
 - **Betriebsart:** natives Node-Modul (napi-rs) in einem Electron-Utility-Prozess, Simulation auf eigenen Rust-Threads (ADR-009, `[VORLÄUFIG]`); Kern-Crates ohne Anbindungscode (Regel-006).
-- **Offene Fragen:** Datenmodell und Parallelisierungsstrategie – Schritt 1.2; Determinismus (gleiche Eingaben → gleiche Ergebnisse) als Ziel für Tests und Spielstände – Schritt 1.2
+- **Determinismus:** bitgleich, solange neue Wegweiser zu festem Tick übernommen werden (Prüfmodus für Tests); im normalen Spiel werden sie übernommen, sobald fertig, Spiellogik darf davon nicht abhängen (ADR-010).
 
 ### Modul: Welt & Bau [VORLÄUFIG]
 
@@ -120,10 +120,11 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13, Begründung: Wegweiser-Prinzip per ADR-004 gewählt, Leistung unbelegt
 - **Verantwortung:** Berechnet je Ziel Wegweiser für die ganze Karte (alle Etagen, unter Beachtung von Zonen und Kontrollen); bewertet Kacheln anhand von Bodenmarkierungen und Beschilderung; liefert Grundorientierung ohne Beschilderung (längere Wege, Suchverhalten); erkennt Unerreichbarkeit und deren Ursache für die Erklärung an den Spieler.
 - **Nicht-Verantwortung:** kein Fahrzeug- und Rollverkehr (eigenes Modul); keine Entscheidung, welches Ziel eine Person wählt (Modul Personen).
-- **Interne Struktur:** Wegweiser je Zieltyp und Zielgruppe; inkrementelle Aktualisierung bei Bauänderungen; Feinwege für die letzten Meter zu Einzelzielen (z. B. Sitzplatz).
+- **Interne Struktur:** Ein Wegweiser je Ziel bzw. Zielgruppe, 1 Byte je Zelle, Dijkstra rückwärts vom Ziel mit Zonenregeln (Land → Kontrolle → Luft, Luft → Ausgang → Land) und Kostenfaktoren aus Bodenmarkierungen; Neuberechnung nach Bauänderungen vollständig im Hintergrund auf allen Kernen, Übernahme sobald fertig (ADR-010); Unerreichbarkeit mit Ursache (Zonenregel oder eingeschlossen). Feinwege für die letzten Meter zu Einzelzielen (z. B. Sitzplatz) offen.
+- **Gemessen (Spike 1.2, 4 vCPU):** 512 × 512 × 2 Zellen, 29 Ziele: 14,5 MB, Neuberechnung 0,2–0,4 s; Aufwand linear in Zellen × Ziele.
 - **Abhängigkeiten:** Welt & Bau (Raster, Zonen), Personen (Nachfrage nach Zielen)
 - **NFRs:** Aufwand abhängig von der Zahl der Ziele, nicht der Personen; 10.000 Personen im Referenzszenario
-- **Offene Fragen:** Speicherbedarf bei vielen Zielen und fünf Etagen; Modell für „Suchen ohne Schilder" – Schritt 1.2 und spätere Erkundung
+- **Offene Fragen:** Rastergröße des Referenzszenarios mit Reserve und fünf Etagen – Schritt 1.5; Modell für „Suchen ohne Schilder" und Feinwege – Erkundung vor Schritt 3.3
 
 ### Modul: Verkehr & Verkehrssteuerung [VORLÄUFIG]
 
@@ -357,7 +358,7 @@ Keine personenbezogenen Daten, keine Telemetrie. Abschnitt entfällt im Übrigen
 <!-- ANCHOR:datenmodell -->
 ## 7. Datenmodell
 
-Grobübersicht der wichtigsten Entitäten. Alle Entitäten `[VORLÄUFIG]`; die interne Datenhaltung (z. B. ECS-artig) ist `[OFFEN]` bis Schritt 1.2.
+Grobübersicht der wichtigsten Entitäten. Alle Entitäten `[VORLÄUFIG]`; interne Datenhaltung im Kern: je Objektart getrennte Felder heiß/kalt, kein ECS-Paket (ADR-010, `[VORLÄUFIG]`).
 
 ```mermaid
 erDiagram
@@ -394,11 +395,15 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 - **Stride, Fyrox:** Windows-zentrierter Editor bzw. sehr junge 1.0 mit einem Hauptentwickler – siehe ADR-002
 - **Wegsuche pro Person (A*) als Hauptverfahren:** skaliert mit der Zahl der Personen, Ursache der Leistungsprobleme des Originals – siehe ADR-004
 - **Spiellogik in TypeScript:** würde die Trennung aufweichen und Leistung kosten – siehe ADR-003
+- **Inkrementelle Reparatur der Wegweiser:** gleiche Wege, aber bei Türen langsamer und fünffacher Speicher – siehe ADR-010
+- **Fester Übernahme-Tick für Wegweiser im normalen Spiel:** Stocken nach Umbauten, widerspricht „Bauen ohne Wartezeit"; nur als Prüfmodus für Tests – siehe ADR-010
+- **Hierarchische Wegweiser in Sektoren:** für die gewählte Kartengröße (Referenzszenario mit Reserve) nicht nötig – siehe ADR-010
+- **ECS-Paket für den Weltzustand:** neue Abhängigkeit ohne gemessenen Vorteil – siehe ADR-010
 - **Kern als WebAssembly mit einem Thread:** nur ein Prozessorkern, bei schwerer Last 3,9 × langsamer als nativ mit 4 Threads – siehe ADR-009
 - **Kern als WebAssembly mit mehreren Threads:** derzeit nur mit Nightly-Rust baubar, 1,37–1,50 × langsamer als nativ; nicht endgültig verworfen, sondern zurückgestellt: Neubewertung in Fahrplan-Schritt Q.2 – siehe ADR-009
 
 <!-- ANCHOR:reifegrad-uebersicht -->
-## 9. Reifegrad-Übersicht (Stand vom 2026-10-13, nach ADR-009)
+## 9. Reifegrad-Übersicht (Stand vom 2026-10-13, nach ADR-010)
 
 | Bestandteil | Reifegrad | Seit | Validiert durch / wartet auf |
 |---|---|---|---|
@@ -407,8 +412,8 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Pattern Kern/Präsentation (ADR-003) | VORLÄUFIG | 2026-10-13 | Phase 1, Schritte 1.2–1.5 |
 | Stack Electron/TypeScript/PixiJS/React + Rust (ADR-002) | VORLÄUFIG | 2026-10-13 | Phase 1, Schritt 1.5 (Leistungsnachweis) |
 | Betriebsart des Rust-Kerns (napi-rs, Utility-Prozess) | VORLÄUFIG | 2026-10-13 | ADR-009; Bestätigung durch Leistungsnachweis Schritt 1.5 |
-| Datenmodell und Parallelisierung im Kern | OFFEN | 2026-10-13 | Phase 1, Schritt 1.2 |
-| Wegfindung per Wegweiser-Prinzip (ADR-004) | VORLÄUFIG | 2026-10-13 | Phase 1, Schritt 1.2 |
+| Datenmodell und Parallelisierung im Kern | VORLÄUFIG | 2026-10-13 | ADR-010; Bestätigung im Leistungsnachweis 1.5 |
+| Wegfindung per Wegweiser-Prinzip (ADR-004, ADR-010) | VORLÄUFIG | 2026-10-13 | Spike 1.2 bestanden für 512² × 2; fünf Etagen und Rastergröße in Schritt 1.5 |
 | S-1 Zustandspuffer | VORLÄUFIG | 2026-10-13 | Phase 1, Schritt 1.3 |
 | S-2 Befehlskanal, S-3 Ereignisstrom | VORLÄUFIG | 2026-10-13 | Phase 2 |
 | S-4 Datenpaket-Schema | OFFEN | 2026-10-13 | Phase 2 |

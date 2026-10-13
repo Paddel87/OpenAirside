@@ -30,11 +30,11 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 1: Technischer Durchstich und Leistungsnachweis (ERKUNDUNG); Schritt 1.1 erledigt
+- **Projektphase:** Phase 1: Technischer Durchstich und Leistungsnachweis (ERKUNDUNG); Schritte 1.1 und 1.2 erledigt
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-13
-- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern und Wegfindung VORLÄUFIG bis zum Leistungsnachweis in Phase 1; Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009) VORLÄUFIG; Datenmodell im Kern, Datenpaket- und Spielstand-Format OFFEN
+- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern und Wegfindung VORLÄUFIG bis zum Leistungsnachweis in Phase 1; Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009) VORLÄUFIG; Datenmodell im Kern (ADR-010) VORLÄUFIG; Datenpaket- und Spielstand-Format OFFEN
 - **Aktive Blocker:** 0
 
 ## Quick Start
@@ -78,7 +78,7 @@ Noch nicht verfügbar.
 
 ## Nächste Schritte
 
-- Prototyp mit 10.000 Personen nach dem Wegweiser-Prinzip
+- Zustandsübergabe und Spielfeld mit 10.000 Personen (Schritt 1.3)
 - Verpackung für Windows, Linux und macOS aus der CI
 - Leistungsnachweis: 60 Bilder pro Sekunde auf einem Mittelklasse-PC, lauffähig auf integrierter Grafik, auf Windows, Linux und macOS
 

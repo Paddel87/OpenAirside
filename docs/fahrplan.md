@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** keiner (1.1 erledigt am 2026-10-13, ADR-009)
-- **Nächster Schritt:** 1.2 – Wegweiser-Prinzip mit 10.000 Personen; parallel möglich: 1.6 – Verpackung für drei Plattformen
+- **Aktiver Schritt:** keiner (1.2 erledigt am 2026-10-13, ADR-010)
+- **Nächster Schritt:** 1.3 – Zustandsübergabe und Spielfeld-Darstellung; parallel möglich: 1.6 – Verpackung für drei Plattformen
 - **Offene STOPP-Situationen:** keine
 
 <!-- ANCHOR:phasen-typen -->
@@ -154,7 +154,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.2: Wegweiser-Prinzip mit 10.000 Personen
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT (2026-10-13) – Option A freigegeben, ADR-010; größte Karte: Referenzszenario mit Reserve
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Prototyp
 - **Zeitbox (nur ERKUNDUNG):** maximal zwei Sessions, dann Zwischenstand
@@ -175,6 +175,53 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** Wegfindung `[VORLÄUFIG]` → `[BELASTBAR]` (bei Bestehen); Datenmodell im Kern `[OFFEN]` → `[VORLÄUFIG]`
 - **Artefakte:** Spike-Code, Messprotokoll, ADR (ERKENNTNIS), Update `architecture.md`
 - **Notizen:** Lehre aus dem Original: keine Prozesse, die sich über die Spielzeit ansammeln; Langzeitlauf mitmessen.
+
+- **Zwischenstand 2026-10-13:** Prototyp und Messprotokoll in `spikes/1.2-wegweiser/README.md` (Rohdaten `results/`). Erkenntnisse zu allen Fragen liegen vor: Schritt 0,2 ms mit 10.000 Personen (4 Threads), Wegweiser 14,5 MB und 0,2–0,4 s Neuberechnung (512² × 2, 29 Ziele, 4 Threads), Unerreichbarkeit mit Ursache erkannt, Determinismus bitgleich bestätigt, Bodenmarkierung als Kostenfaktor erprobt, kein Leistungsabbau über 60.000 Ticks. Offen: Rastergröße des Referenzszenarios und der größten Karte ist nirgends festgelegt (Informationslücke); getestet mit 2 statt 5 Etagen.
+- **Entscheidung:** am 2026-10-13 vom Projektinhaber: „A, freigegeben, Referenzszenario mit Reserve" → ADR-010.
+- **Nicht abgedeckt (Hinweis, kein Verschieben):** „Suchen ohne Schilder" und Feinwege zum Einzelziel waren nicht Teil von 1.2; sie gehören zu FR-017 und Landeplatz: Schritt 3.3 (dort als vorgeschaltete Erkundung eingetragen).
+- **Entscheidungsvorlage (beantwortet):**
+
+  ```text
+  ENTSCHEIDUNG ERFORDERLICH
+  Kategorie: 4 Datenmodell (Personen im Kern) und 1 Architektur (Parallelisierung,
+      Übernahme neuer Wegweiser)
+  Kontext: Spike 1.2 zeigt: Personen kosten wenig (0,2 ms je Tick für 10.000),
+      teuer ist die Neuberechnung der Wegweiser nach Bauänderungen (0,2–0,4 s bei
+      512 × 512 × 2, Sekunden bei 1024 × 1024). Feste Übernahme-Zeitpunkte machen
+      den Spielverlauf exakt wiederholbar, lassen das Spiel aber warten.
+  Gemeinsam für alle Optionen (Empfehlung, keine Alternative mit Vorteil gemessen):
+      Personen als getrennte Felder „heiß/kalt" in eigenem Rust-Code (kein ECS-Paket,
+      keine neue Abhängigkeit); Tick in zwei Phasen (Bewegung, Dichtezählung) parallel
+      mit rayon; ein Wegweiser je Ziel, 1 Byte je Zelle; Neuberechnung vollständig im
+      Hintergrund auf allen Kernen (inkrementelle Reparatur nicht als Standard).
+  Optionen:
+    A: Neue Wegweiser übernehmen, sobald fertig; für Tests und Wiederholungen ein
+       Prüfmodus mit festem Übernahme-Tick
+       → Für deine Vision: Bauen ohne Wartezeit bei jeder Größe; Personen finden
+         neue Wege nach Bruchteilen einer Sekunde (große Karten: Sekunden). Ein
+         normales Spiel ist nicht bitgenau wiederholbar, Tests sind es.
+    B: Immer fester Übernahme-Tick
+       → Für deine Vision: jedes Spiel exakt wiederholbar; nach großen Umbauten auf
+         großen Karten stockt das Spiel bei hohem Tempo kurz (gemessen bis 6,8 s
+         bei 1024²) – widerspricht „Bauen ohne Wartezeit".
+    C: Hierarchische Wegweiser (Karte in Sektoren, nur betroffene Sektoren neu)
+       → Für deine Vision: auch riesige Karten mit fünf Etagen bleiben schnell;
+         deutlich mehr Aufwand und Fehlerrisiko; eigener Erkundungsschritt nötig.
+  Empfehlung: A – Default-Bias „die einfachere Option gewinnt, bis das Gegenteil
+      belegt ist" (templates/architektur-heuristiken.md Teil 1): A ist einfach und
+      erfüllt „Bauen ohne Wartezeit"; B verletzt diese Vision-Anforderung; C ist erst
+      belegt nötig, wenn die Karten deutlich größer als 512 × 512 werden.
+  Trade-off: gewinnst sofortiges Bauen und einfache Technik; gibst bitgenaue
+      Wiederholbarkeit normaler Spiele auf (Spielstände bleiben unberührt).
+  DIE FRAGE AN DICH: Wie groß soll die größte Karte sein – etwa so groß, dass das
+      Referenzszenario (3 Terminals, 2 Bahnen, 17 Gates) mit etwas Reserve passt,
+      oder deutlich größer (z. B. ein Drehkreuz mit 100+ Gates)?
+  Konfidenz: mittel – Messungen eindeutig, aber Kartengröße und Etagenzahl des
+      Ernstfalls unbekannt, 4 vCPU statt Referenzhardware.
+  Umkehrbarkeit: billig für A ↔ B (eine Einstellung); C ersetzt nur das Innere des
+      Moduls Wegfindung (Schnittstelle „Richtung je Ziel und Zelle" bleibt).
+  Blockiert Arbeit an: Abschluss 1.2; 1.3 kann parallel beginnen (nutzt den Kern aus 1.2)
+  ```
 
 #### 1.3: Zustandsübergabe und Spielfeld-Darstellung
 
@@ -228,6 +275,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Eingangskriterien:** Durchstich aus 1.1–1.4 lauffähig; Zugang zu Testsystemen: Mittelklasse-PC (Referenz), Rechner mit integrierter Grafik (z. B. Mac des Projektverantwortlichen), Linux-System
 - **Anforderungen (ab Klasse M):** FR-040
 - **Zu tun:**
+  - Rastergröße des Referenzszenarios mit Reserve festlegen (Vorgabe ADR-010) und Wegweiser mit fünf Etagen messen (Speicher, Neuberechnung).
   - Messung im Szenario mit 10.000 Personen bei höchster Spielgeschwindigkeit: Bildrate, Rechenzeit pro Simulationsschritt, Rückstand, Speicher über einen Langzeitlauf.
   - Wiederholung auf integrierter Grafik und unter Linux (WebGL2).
   - Ergebnis gegen die Zielwerte aus `project-context.md` Abschnitt 6 bewerten.
@@ -301,7 +349,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 |---|---|---|
 | 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
-| 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme | FR-018, FR-043 |
+| 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
 | 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung; davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
 | 3.5 | Abfertigung und Gepäck in Grundform | FR-025, FR-032 |
 | 3.6 | GA und kleine Linienflüge, Flugplaner, Geld und Bewertung in Grundform | FR-030, FR-036 |
@@ -410,6 +458,7 @@ Noch keine abgeschlossene Phase.
 <!-- ANCHOR:replanning-historie -->
 ## Replanning-Historie
 
+- 2026-10-13 – Schritt 1.2 abgeschlossen (ADR-010); 1.5 um Rastergröße und fünf Etagen ergänzt; 3.3 um vorgeschaltete Erkundung „Suchen ohne Schilder"/Feinwege ergänzt (Landeplatz aus 1.2)
 - 2026-10-13 – Schritt 1.1 abgeschlossen (ADR-009); Querschnitt Q.2 als Landeplatz für die zurückgestellte WebAssembly-Variante angelegt (zählt nicht zum Schrittplan von Phase 1); 1.3 um Übertragungsumfang ergänzt
 - 2026-10-13 – Erstplanung in der Initialisierung (ADR-001 bis ADR-008); Nachzug nach aktuellem Regelwerk: Schritt-IDs für Phasen 2–7 mit Anforderungs-Zuordnung, Querschnitt Q.1
 

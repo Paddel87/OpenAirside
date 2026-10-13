@@ -1,0 +1,12 @@
+{"mode":"fields","w":256,"h":256,"floors":2,"cells":131072,"fields":29,"threads":1,"build_ms":184.9,"per_field_ms_mean":6.28,"per_field_ms_max":9.12,"field_mb":3.62,"unreachable_cells_max":0}
+{"mode":"fields","w":256,"h":256,"floors":2,"cells":131072,"fields":29,"threads":4,"build_ms":63.6,"per_field_ms_mean":8.00,"per_field_ms_max":11.70,"field_mb":3.62,"unreachable_cells_max":0}
+{"mode":"fields","w":256,"h":256,"floors":2,"cells":131072,"fields":64,"threads":1,"build_ms":496.5,"per_field_ms_mean":7.67,"per_field_ms_max":9.64,"field_mb":8.00,"unreachable_cells_max":0}
+{"mode":"fields","w":256,"h":256,"floors":2,"cells":131072,"fields":64,"threads":4,"build_ms":128.7,"per_field_ms_mean":7.54,"per_field_ms_max":13.57,"field_mb":8.00,"unreachable_cells_max":0}
+{"mode":"fields","w":512,"h":512,"floors":2,"cells":524288,"fields":29,"threads":1,"build_ms":698.1,"per_field_ms_mean":23.71,"per_field_ms_max":30.54,"field_mb":14.50,"unreachable_cells_max":0}
+{"mode":"fields","w":512,"h":512,"floors":2,"cells":524288,"fields":29,"threads":4,"build_ms":195.4,"per_field_ms_mean":24.47,"per_field_ms_max":33.15,"field_mb":14.50,"unreachable_cells_max":0}
+{"mode":"fields","w":512,"h":512,"floors":2,"cells":524288,"fields":64,"threads":1,"build_ms":1735.6,"per_field_ms_mean":26.76,"per_field_ms_max":67.02,"field_mb":32.00,"unreachable_cells_max":0}
+{"mode":"fields","w":512,"h":512,"floors":2,"cells":524288,"fields":64,"threads":4,"build_ms":434.1,"per_field_ms_mean":25.00,"per_field_ms_max":47.46,"field_mb":32.00,"unreachable_cells_max":0}
+{"mode":"fields","w":1024,"h":1024,"floors":2,"cells":2097152,"fields":29,"threads":1,"build_ms":2889.6,"per_field_ms_mean":98.21,"per_field_ms_max":122.74,"field_mb":58.00,"unreachable_cells_max":0}
+{"mode":"fields","w":1024,"h":1024,"floors":2,"cells":2097152,"fields":29,"threads":4,"build_ms":889.2,"per_field_ms_mean":113.15,"per_field_ms_max":147.78,"field_mb":58.00,"unreachable_cells_max":0}
+{"mode":"fields","w":1024,"h":1024,"floors":2,"cells":2097152,"fields":64,"threads":1,"build_ms":6847.1,"per_field_ms_mean":99.48,"per_field_ms_max":168.58,"field_mb":128.00,"unreachable_cells_max":0}
+{"mode":"fields","w":1024,"h":1024,"floors":2,"cells":2097152,"fields":64,"threads":4,"build_ms":1939.0,"per_field_ms_mean":113.19,"per_field_ms_max":230.46,"field_mb":128.00,"unreachable_cells_max":0}
