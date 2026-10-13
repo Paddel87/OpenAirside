@@ -303,6 +303,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** Verpackung `[VORLÄUFIG]` → `[BELASTBAR]` (bei Bestehen)
 - **Artefakte:** Workflow-Entwurf, Erkenntnisnotiz
 - **Notizen:** Änderungen an der Build-Pipeline sind ab Phase 2 freigabepflichtig (CLAUDE.md 4.7).
+- **Zwischenstand 2026-10-13:** Workflow `.github/workflows/spike-build.yml` baut das Spike-1.1-Programm (Electron 44 + napi-Modul) mit electron-builder 26.16.1 für Windows (NSIS, ZIP), macOS Universal (DMG, ZIP, ohne Signatur) und Linux (AppImage, tar.gz) und startet es auf jedem Runner (Lauf 38383032090, alle grün). Befunde im README des Spikes. Offen für den Abschluss: Start auf den Rechnern des Projektinhabers (Windows-PC, Mac M3 Pro, Linux per Live-USB), insbesondere was ein Spieler unter macOS ohne Signatur tun muss – Anleitung im README des Spikes, Abschnitt „Testprogramm herunterladen und starten".
 
 #### 1.7: Auswertung und Entscheidung
 
@@ -398,7 +399,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
 | 7.1 | Gate vor dem ersten öffentlichen Release (CLAUDE.md Abschnitt 12, `templates/gate-deployment.md`): Sicherheits-Review, Vertretung, Notfall-Handbuch, Signatur-Entscheidung | – |
-| 7.2 | Referenzszenario-Nachweis auf allen Plattformen, Langzeitstabilität, Release-Builds v1.0.0 | FR-040, FR-045 |
+| 7.2 | Referenzszenario-Nachweis auf allen Plattformen, Langzeitstabilität, Release-Builds v1.0.0; Linux-Pakete mit funktionierender Chromium-Sandbox (z. B. deb mit SUID-`chrome-sandbox` oder AppArmor-Profil, Befund aus 1.6) | FR-040, FR-045 |
 
 ### Querschnitt: wiederkehrende Schritte
 
