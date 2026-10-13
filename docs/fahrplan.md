@@ -297,6 +297,50 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Artefakte:** Messprotokoll, ADR (ERKENNTNIS), Update `architecture.md` Abschnitt 9
 - **Notizen:** Falls keine Mittelklasse-Referenz verfügbar ist, Messung auf verfügbarer Hardware und Hochrechnung mit Begründung; das Fehlen ist dann als Informationslücke zu melden.
 - **Testsysteme (Stand 2026-10-13, Angabe des Projektinhabers):** Referenz-PC (8 Kerne, Mittelklasse-Grafikkarte) und Mac mit integrierter Grafik verfügbar. Linux: Messung auf echter Hardware verschoben auf 7.2, früher durch Mitwirkende (ADR-011; Live-USB auf dem Referenz-PC vom Projektinhaber abgelehnt, weil die Arbeitsrechner nicht neu gestartet werden sollen).
+- **Zwischenstand 2026-10-13:** Spike und Messprotokoll in `spikes/1.5-leistung/README.md` (Rohdaten `results/`). Kern aus 1.2 additiv auf fünf Etagen verallgemeinert (U-Bahn, Gepäckausgabe, Halle, Abflugebene, Lounges; 36 Wegweiser), Zwei-Etagen-Pfad bitgleich zu 1.2. Testprogramm mit Langzeitlauf (10 min, 180 Ticks/s als Auslegung von „3×", Panel, Bauaktionen alle 10 s, Speicher je Prozess) über `.github/workflows/spike-build-1-5.yml`.
+  - **Container (4 vCPU):** Wegweiser mit fünf Etagen, volle Berechnung: 512² 45 MB / 0,47 s, 768² 101 MB / 0,98 s, 1024² 180 MB / 2,7 s (36 Wegweiser, 4 Threads); mit 64 Wegweisern 80 / 180 / 320 MB und 0,6 / 1,7 / 4,1 s. Speicherspitze während der Neuberechnung etwa doppelt. Simulationsschritt 10.000 Personen auf fünf Etagen 0,25–0,29 ms, höchste Tickrate 3.500–3.900/s – 180 Ticks/s sind unkritisch.
+  - **Befund:** 1.3 und 1.4 maßen Bauaktionen mit inkrementeller Reparatur (Voreinstellung aus 1.2), nicht mit der in ADR-010 gewählten vollen Neuberechnung; 1.5 misst die volle.
+  - **Offen:** Rastergröße (Entscheidungsvorlage unten); Langzeitlauf auf Referenz-PC und Mac; Bewertung gegen die Zielwerte; Vorlage zu ADR-002.
+- **Entscheidungsvorlage Rastergröße (offen):**
+
+  ```text
+  ENTSCHEIDUNG ERFORDERLICH
+  Kategorie: 4 Datenmodell (Größe des Weltrasters), Folge aus ADR-010
+  Kontext: ADR-010 verlangt „Referenzszenario mit Reserve". Das Raster 512 × 512 aus
+      Spike 1.2 fasst die Elemente des Referenzszenarios (17 Gates, Check-in, Kontrolle,
+      zwei Ebenen) ohne Reserve. Wie viele Meter eine Zelle darstellt, ist nirgends
+      festgelegt; die Größe wird deshalb relativ zu diesem Layout gewählt. Kosten mit
+      fünf Etagen im Container gemessen (4 Threads; Referenz-PC hat 8 Kerne).
+      Gemessen ist das Raster, auf dem Personen gehen (Gebäude, Gehwege). Das Layout
+      aus 1.2 enthält keine Bahnen und kein Vorfeld; liegen diese später im selben
+      Raster wie im Original, braucht die Karte mehr Fläche oder Wegweiser nur über
+      bebauten Bereichen – das klärt die Planung von Phase 2 (Schritt 1.7).
+  Optionen:
+    A: 512 × 512 Zellen je Etage (Referenzszenario ohne Reserve)
+       → Für deine Vision: kleinster Speicher (45–80 MB Wegweiser), Wege passen sich
+         nach Umbauten in rund 0,5 s an. Ein Flughafen wie das Referenzszenario passt,
+         größer wird es eng.
+    B: 768 × 768 (gut doppelte Fläche des Referenzszenarios)
+       → Für deine Vision: Platz für das Referenzszenario plus Ausbau (weitere Pier,
+         größere Halle); 100–180 MB, Wege passen sich nach rund 1–1,7 s an (auf
+         8 Kernen voraussichtlich schneller). Bauen selbst wartet nie (ADR-010).
+    C: 1024 × 1024 (vierfache Fläche)
+       → Für deine Vision: Richtung Drehkreuz; 180–320 MB, Anpassung 2,7–4,1 s.
+         Weicht von ADR-010 („Referenzszenario mit Reserve") ab; sinnvoll erst mit
+         sparsamerer Speicherung oder Sektoren (ADR-010 Option C).
+  Empfehlung: B – templates/architektur-heuristiken.md Teil 1, Default-Bias „die
+      einfachere Option gewinnt, bis das Gegenteil belegt ist": A und B sind gleich
+      einfach (eine Zahl), B erfüllt als einzige „mit Reserve" ohne neue Technik.
+  Trade-off: gewinnst Ausbaufläche; gibst gut die doppelte Speicher- und Rechenlast
+      gegenüber A auf.
+  DIE FRAGE AN DICH: Reicht als größte Karte gut die doppelte Fläche des
+      Referenzszenarios (3 Terminals, 2 Bahnen, 17 Gates)?
+  Konfidenz: mittel – Kosten gemessen, aber Zellgröße in Metern und spätere
+      Kartenelemente (Bahnen, Vorfeld, Straßen) im Raster noch nicht festgelegt.
+  Umkehrbarkeit: billig bis Phase 3 (eine Einstellung; Spielstände gibt es noch nicht),
+      danach teuer (Spielstände und Inhalte hängen an der Größe).
+  Blockiert Arbeit an: Bewertung in 1.5; 1.7
+  ```
 
 #### 1.6: Verpackung für drei Plattformen
 

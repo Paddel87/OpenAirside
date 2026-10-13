@@ -24,6 +24,12 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 14:28 – [BEOBACHTUNG]
+
+- **1.3/1.4 maßen Bauaktionen mit inkrementeller Reparatur:** `Sim::new` aus Spike 1.2 setzt `incremental = true`; die Brücke aus 1.3 änderte das nicht. Die in 1.3/1.4 gemessenen 39–54 ms bis zur Übernahme neuer Wegweiser gelten damit für die Reparatur, nicht für die in ADR-010 gewählte volle Neuberechnung (bei 512² × 2 laut 1.2: 0,2–0,4 s auf 4 Threads). Kein Einfluss auf die Akzeptanzkriterien von 1.3/1.4 (Bauaktion sichtbar, Wände wirken sofort); Testprogramm 1.5 misst die volle Neuberechnung. Festgehalten im Messprotokoll 1.5, Befund 4.
+- **Pre-commit-Hook war in diesem Container nicht installiert;** nach `pre-commit install` scheitern `eslint`, `cargo-fmt` und `cargo-clippy` mangels Projektdateien am Repo-Stamm (erst ab 2.1, wie in 1.1–1.4 dokumentiert). Commit des Spike-Codes mit `SKIP=eslint,cargo-fmt,cargo-clippy`; `cargo fmt --check` und `cargo clippy -D warnings` liefen direkt in den drei Spike-Workspaces, übrige Hooks (Prettier, YAML, JSON, Markdown) grün.
+- **Rastergröße nicht aus Dokumenten ableitbar:** keine Zellgröße in Metern festgelegt; Vorlage im Fahrplan 1.5 relativ zum Layout aus 1.2.
+
 ### 2026-10-13 14:11 – [SESSIONSTART]
 
 - **Letzter Stand:** `[SESSIONENDE]` 14:15; PR Paddel87/OpenAirside#9 gemergt (`1b8e76e`), Branch `claude/gracious-galileo-2reksz` neu auf `main` gesetzt.
