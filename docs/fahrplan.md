@@ -11,7 +11,7 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** keiner (1.6-N1 erledigt, ADR-015)
+- **Aktiver Schritt:** 1.7 – Auswertung und Entscheidung
 - **Nächster Schritt:** 1.7 – Auswertung und Entscheidung
 - **Offene STOPP-Situationen:** keine (Reaktiv-Quote 3 / 10 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 bestätigt, siehe „Iterations-Reflexion")
 
@@ -410,7 +410,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.7: Auswertung und Entscheidung
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT (seit 2026-10-13)
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** sonstiges (Auswertung)
 - **Zeitbox (nur ERKUNDUNG):** maximal eine halbe Session
