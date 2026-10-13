@@ -11,7 +11,7 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** 1.6-N1 – Ad-hoc-Signatur der Mac-Pakete (ADR-015)
+- **Aktiver Schritt:** keiner (1.6-N1 erledigt, ADR-015)
 - **Nächster Schritt:** 1.7 – Auswertung und Entscheidung
 - **Offene STOPP-Situationen:** keine (Reaktiv-Quote 3 / 10 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 bestätigt, siehe „Iterations-Reflexion")
 
@@ -405,8 +405,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Zwischenstand 2026-10-13:** Workflow `.github/workflows/spike-build.yml` baut das Spike-1.1-Programm (Electron 44 + napi-Modul) mit electron-builder 26.16.1 für Windows (NSIS, ZIP), macOS Universal (DMG, ZIP, ohne Signatur) und Linux (AppImage, tar.gz) und startet es auf jedem Runner (Lauf 38383032090, alle grün). Befunde im README des Spikes. Windows-PC (2026-10-13, Rückmeldung Projektinhaber): SmartScreen-Warnung beim Start des unsignierten Programms, nach Zulassen lauffähig – wie erwartet. Linux: CI-Rauchtest genügt für 1.6 (ADR-011). macOS (2026-10-13, Projektinhaber): Gatekeeper blockiert das unbeglaubigte Programm; Freigabe über Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen" (Rechtsklick → „Öffnen" wirkt seit macOS 15 nicht mehr). Verpackung bleibt `[VORLÄUFIG]`: unsigniert, Linux-Sandbox offen (7.2), Signatur-Entscheidung in 7.1. Ursprünglich offen für den Abschluss: Start auf Mac M3 Pro, insbesondere was ein Spieler unter macOS ohne Signatur tun muss – Anleitung im README des Spikes, Abschnitt „Testprogramm herunterladen und starten".
 
 - **Nachtrag 2026-10-13 (aus 1.5):** Das Paket nur für Apple-Chips (ADR-012) verhält sich anders als das in 1.6 geprüfte Universal-Paket: macOS meldet „beschädigt" statt der Gatekeeper-Warnung, „Dennoch öffnen" fehlt; Abhilfe `xattr -cr "<App>"`. Vermutete Ursache: fehlende Ad-hoc-Signatur ohne Universal-Zusammenführung (nicht geprüft).
-  - **1.6-N1 `[IN ARBEIT]` (Kategorie 7 Build-Pipeline; freigegeben 2026-10-13 als ADR-015):** arm64-Builds der Spike-Workflows mit Ad-hoc-Signatur (`identity: "-"` bzw. `codesign --force --deep -s -` nach dem Packen) erzeugen und prüfen, ob dann wieder „Dennoch öffnen" erscheint. Ergebnis fließt in die Signatur-Entscheidung von 7.1.
-    - **Umsetzung 2026-10-13:** `identity: "-"`, `hardenedRuntime: false` in `spikes/1.5-leistung/app/package.json`; Workflow prüft `Signature=adhoc` und die Signatur des nativen Moduls. **Offen:** grüner Lauf von „Spike-Build 1.5"; Test des heruntergeladenen Pakets auf dem Mac („Dennoch öffnen" statt „beschädigt"?). Akzeptanz: Wissen, ob die Ad-hoc-Signatur den Startweg ändert.
+  - **1.6-N1 `[ERLEDIGT]` 2026-10-13 (Kategorie 7 Build-Pipeline; ADR-015):** arm64-Builds der Spike-Workflows mit Ad-hoc-Signatur (`identity: "-"` bzw. `codesign --force --deep -s -` nach dem Packen) erzeugen und prüfen, ob dann wieder „Dennoch öffnen" erscheint. Ergebnis fließt in die Signatur-Entscheidung von 7.1.
+    - **Umsetzung 2026-10-13:** `identity: "-"`, `hardenedRuntime: false` in `spikes/1.5-leistung/app/package.json`; Workflow prüft `Signature=adhoc` und die Signatur des nativen Moduls. **Ergebnis:** Lauf 38422799978 grün (`Signature=adhoc`); heruntergeladenes Paket auf dem Mac M3 Pro zeigt die übliche Gatekeeper-Warnung, „Dennoch öffnen" startet das Programm ohne Terminal. Akzeptanz erfüllt: Die Ad-hoc-Signatur ändert den Startweg wie vermutet.
 
 #### 1.7: Auswertung und Entscheidung
 
@@ -428,7 +428,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
   - Bauaktion im nächsten Bild: Fenster zeichnet sie sofort vorläufig und gleicht mit der Bestätigung des Kerns ab (heute 2–6 Bilder).
   - Panel und Sortierung großer Tabellen (Sortieren im Kern, seltener umsortieren, eigenes Sortieren); Panel-Aufbau beim Verschieben auf dem Mac 12 statt 7 ms.
   - Lage von Bahnen, Vorfeld und Straßen im Raster (ADR-013).
-  - 1.6-N1 (Ad-hoc-Signatur der Mac-Pakete, ADR-015): freigegeben; Ergebnis des Mac-Tests übernehmen.
+  - 1.6-N1 (Ad-hoc-Signatur der Mac-Pakete, ADR-015) erledigt: Startweg ohne Terminal; Eingang für die Signatur-Entscheidung in 7.1.
 
 ### Phase 2: Fundament – Typ: UMSETZUNG
 

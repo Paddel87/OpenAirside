@@ -24,6 +24,13 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4, 1.5 (ADR-013, A
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 16:30 – [GELÖST]
+
+- **Problem:** Mac-Paket nur für Apple-Chips meldete „beschädigt" (siehe 14:52).
+- **Lösung:** Ad-hoc-Signatur (ADR-015, Commit `ca19704`). Lauf 38422799978 grün, `Signature=adhoc`. Projektinhaber auf dem Mac M3 Pro: übliche Warnung „Apple konnte nicht überprüfen …" mit „In den Papierkorb" / „Fertig"; Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen" startet das Programm. Kein `xattr` mehr nötig.
+- **Erkenntnis:** Neuere macOS-Versionen bieten im Warn-Dialog selbst kein „Öffnen" mehr; der Weg führt immer über die Systemeinstellungen. Maßnahme (1) der Reaktiv-Reflexion damit erstmals angewendet (Startweg auf echtem Gerät geprüft).
+- **Nachgezogen:** ADR-015 (Ergebnis), Fahrplan 1.6-N1 `[ERLEDIGT]`, Startanleitung `spikes/1.5-leistung/README.md`.
+
 ### 2026-10-13 16:15 – [BEOBACHTUNG]
 
 - **STOPP Reaktiv-Quote aufgehoben:** Projektinhaber stimmt der Reflexion zu („Zustimmung, setze 1.6-N1 um"): kein Architektur-Umbau, Maßnahmen (1) Startweg vor Verpackungs-ADRs prüfen, (2) Verpackungsfragen in 7.1 bündeln.
