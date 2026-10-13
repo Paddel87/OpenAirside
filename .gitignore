@@ -12,3 +12,8 @@ coverage/
 lcov*.info
 *.log
 .DS_Store
+
+# Projektgerüst ab Schritt 2.1 (ADR-018)
+app/native/
+test-results/
+playwright-report/
