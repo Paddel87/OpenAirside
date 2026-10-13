@@ -27,7 +27,7 @@ OpenAirside ist ein lokal laufendes Desktop-Spiel. Es ist aufgebaut wie eine Web
 
 **Architektur-Pattern:** Simulationskern mit austauschbarer Präsentationsschicht (Kern/Hülle-Trennung, datengetriebene Inhalte) `[VORLÄUFIG]` – siehe ADR-003. Validierung durch Phase 1.
 
-**Kommunikations-Grundmodus:** Präsentation → Kern: Befehlsnachrichten. Kern → Präsentation: gemeinsamer Zustandspuffer, je Bild gelesen, plus Ereignisstrom. Präsentation ↔ Plattform: typisierte Electron-Preload-Schnittstelle. `[VORLÄUFIG]`
+**Kommunikations-Grundmodus:** Präsentation → Kern: Befehlsnachrichten. Kern → Präsentation: Zustandspuffer im Kern-Prozess, je Bild als Kopie per `MessagePort` an den Renderer übertragen (ADR-009), plus Ereignisstrom. Präsentation ↔ Plattform: typisierte Electron-Preload-Schnittstelle. `[VORLÄUFIG]`
 
 **Plattformen:** Windows, Linux, macOS (Universal) `[BELASTBAR]` – harte Randbedingung aus der Vision.
 
@@ -41,7 +41,7 @@ Durchgezogene Linie = `[VORLÄUFIG]` festgelegt, gestrichelt = `[OFFEN]`. Nur di
 ```mermaid
 graph TB
   subgraph Electron-Hauptprozess
-    PLAT[Plattform<br/>Fenster, Dateien, Spielstände, Logs]
+    PLAT[Plattform<br/>Fenster, Dateien, Spielstände, Logs, Start des Kern-Prozesses]
   end
   subgraph Präsentation – TypeScript, Renderer
     UI[Oberfläche<br/>React, Panels, Werkzeuge]
@@ -54,7 +54,7 @@ graph TB
     ZUS[Zustandspuffer]
     EVT[Ereignisstrom]
   end
-  subgraph Simulationskern – Rust
+  subgraph Simulationskern – Rust, napi-rs im Electron-Utility-Prozess
     TAKT[Takt & Weltzustand]
     WELT[Welt & Bau]
     WEG[Wegfindung & Passagierführung]
@@ -101,7 +101,8 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Abhängigkeiten (extern):** `rayon` (vorgesehen), `serde`
 - **Technologie:** Rust
 - **NFRs:** Rechenzeit pro Simulationsschritt muss bei höchster Spielgeschwindigkeit im Referenzszenario in das Zeitbudget passen (Abschnitt 6)
-- **Offene Fragen:** Betriebsart (natives Node-Modul oder WebAssembly) – Schritt 1.1; Datenmodell und Parallelisierungsstrategie – Schritt 1.2; Determinismus (gleiche Eingaben → gleiche Ergebnisse) als Ziel für Tests und Spielstände – Schritt 1.2
+- **Betriebsart:** natives Node-Modul (napi-rs) in einem Electron-Utility-Prozess, Simulation auf eigenen Rust-Threads (ADR-009, `[VORLÄUFIG]`); Kern-Crates ohne Anbindungscode (Regel-006).
+- **Offene Fragen:** Datenmodell und Parallelisierungsstrategie – Schritt 1.2; Determinismus (gleiche Eingaben → gleiche Ergebnisse) als Ziel für Tests und Spielstände – Schritt 1.2
 
 ### Modul: Welt & Bau [VORLÄUFIG]
 
@@ -183,8 +184,9 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Verantwortung:** Überträgt Befehle von der Präsentation in den Kern und den sichtbaren Zustand vom Kern in die Präsentation, ohne JSON-Serialisierung großer Datenmengen je Bild.
 - **Nicht-Verantwortung:** keine Spiellogik, keine Darstellung.
 - **Öffentliche Schnittstellen:** S-1, S-2, S-3
-- **Technologie:** Rust und TypeScript; TypeScript-Typen werden aus Rust-Typen erzeugt
-- **Offene Fragen:** gemeinsamer Speicher bei nativer Betriebsart vs. WebAssembly – Schritt 1.1 und 1.3
+- **Technologie:** Rust (eigene Brücken-Crate mit napi-rs, Regel-006) und TypeScript; TypeScript-Typen werden aus Rust-Typen erzeugt
+- **Übertragungsweg:** `MessagePort` zwischen Kern-Prozess und Renderer, Bild je Frame als Kopie (ADR-009)
+- **Offene Fragen:** nur sichtbare oder geänderte Daten übertragen bei großen Datenmengen – Schritt 1.3
 
 ### Modul: Spielfeld [VORLÄUFIG]
 
@@ -211,7 +213,8 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 ### Modul: Plattform [VORLÄUFIG]
 
 - **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13
-- **Verantwortung:** Electron-Hauptprozess: Fenster, Dateisystem (Spielstände, Mods, Logs, Einstellungen), Start des Simulationskerns je nach Betriebsart, typisierte Preload-Schnittstelle.
+- **Verantwortung:** Electron-Hauptprozess: Fenster, Dateisystem (Spielstände, Mods, Logs, Einstellungen), Start und Überwachung des Kern-Prozesses (Electron-Utility-Prozess, ADR-009) einschließlich Neustart nach Absturz, Vermittlung des `MessagePort` zwischen Kern-Prozess und Renderer, typisierte Preload-Schnittstelle.
+- **Offene Fragen:** ob der Kern-Prozess Spielstände selbst schreibt oder über die Plattform – mit S-5 in Phase 2
 - **Nicht-Verantwortung:** keine Spiellogik, keine Oberfläche.
 - **NFRs:** Electron-Härtung laut `project-context.md` Abschnitt 6
 
@@ -233,16 +236,16 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 ### Schnittstelle: S-1 Zustandspuffer (Kern → Präsentation) [VORLÄUFIG]
 
 - **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13
-- **Typ:** gemeinsamer Speicherbereich, je Bild gelesen
+- **Typ:** Puffer im Kern-Prozess, je Bild als Kopie per `MessagePort` an den Renderer übertragen (ADR-009); im Spike 160 KB bei 10.000 Personen, 1,1 ms Übertragung im Mittel
 - **Anbieter:** Takt & Weltzustand
 - **Konsument:** Spielfeld, Oberfläche
 - **Spezifikation:**
   - **Inhalt:** sichtbarer Zustand in kompakter Binärform (z. B. Positionen, Typ, Status, Ausrichtung je Person, Fahrzeug, Flugzeug), plus Zähler für Simulationszeit und Simulationsschritt
-  - **Konsistenz:** Doppel- oder Dreifachpuffer, damit die Präsentation nie einen halb geschriebenen Zustand liest
+  - **Konsistenz:** Doppel- oder Dreifachpuffer im Kern-Prozess, damit nie ein halb geschriebener Zustand übertragen wird
   - **Ausgabe (Fehler):** nicht anwendbar; bei Rückstand meldet der Kern über S-3
   - **Idempotenz:** Lesen ist seiteneffektfrei
 - **Versionierung:** Layout wird aus Rust-Typen erzeugt, eine Layout-Version im Kopf des Puffers
-- **Offene Fragen:** technische Umsetzung je Betriebsart – Schritte 1.1 und 1.3
+- **Offene Fragen:** Umfang je Bild (vollständig, nur Sichtbares oder nur Änderungen) – Schritt 1.3
 
 ### Schnittstelle: S-2 Befehlskanal (Präsentation → Kern) [VORLÄUFIG]
 
@@ -391,9 +394,11 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 - **Stride, Fyrox:** Windows-zentrierter Editor bzw. sehr junge 1.0 mit einem Hauptentwickler – siehe ADR-002
 - **Wegsuche pro Person (A*) als Hauptverfahren:** skaliert mit der Zahl der Personen, Ursache der Leistungsprobleme des Originals – siehe ADR-004
 - **Spiellogik in TypeScript:** würde die Trennung aufweichen und Leistung kosten – siehe ADR-003
+- **Kern als WebAssembly mit einem Thread:** nur ein Prozessorkern, bei schwerer Last 3,9 × langsamer als nativ mit 4 Threads – siehe ADR-009
+- **Kern als WebAssembly mit mehreren Threads:** derzeit nur mit Nightly-Rust baubar, 1,37–1,50 × langsamer als nativ; nicht endgültig verworfen, sondern zurückgestellt: Neubewertung in Fahrplan-Schritt Q.2 – siehe ADR-009
 
 <!-- ANCHOR:reifegrad-uebersicht -->
-## 9. Reifegrad-Übersicht (Stand vom 2026-10-13)
+## 9. Reifegrad-Übersicht (Stand vom 2026-10-13, nach ADR-009)
 
 | Bestandteil | Reifegrad | Seit | Validiert durch / wartet auf |
 |---|---|---|---|
@@ -401,7 +406,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Lokale Desktop-Anwendung ohne Server | BELASTBAR | 2026-10-13 | harte Randbedingung (Vision) |
 | Pattern Kern/Präsentation (ADR-003) | VORLÄUFIG | 2026-10-13 | Phase 1, Schritte 1.2–1.5 |
 | Stack Electron/TypeScript/PixiJS/React + Rust (ADR-002) | VORLÄUFIG | 2026-10-13 | Phase 1, Schritt 1.5 (Leistungsnachweis) |
-| Betriebsart des Rust-Kerns | OFFEN | 2026-10-13 | Phase 1, Schritt 1.1 |
+| Betriebsart des Rust-Kerns (napi-rs, Utility-Prozess) | VORLÄUFIG | 2026-10-13 | ADR-009; Bestätigung durch Leistungsnachweis Schritt 1.5 |
 | Datenmodell und Parallelisierung im Kern | OFFEN | 2026-10-13 | Phase 1, Schritt 1.2 |
 | Wegfindung per Wegweiser-Prinzip (ADR-004) | VORLÄUFIG | 2026-10-13 | Phase 1, Schritt 1.2 |
 | S-1 Zustandspuffer | VORLÄUFIG | 2026-10-13 | Phase 1, Schritt 1.3 |

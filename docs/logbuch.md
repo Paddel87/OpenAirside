@@ -17,12 +17,26 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 läuft. Schritt 1.1 (Betriebsart des Rust-Kerns) ist gemessen und wartet auf Freigabe; Empfehlung: napi-rs im Utility-Prozess. Danach 1.2.
+Phase 1 läuft. Schritt 1.1 erledigt: Kern als napi-rs-Modul im Electron-Utility-Prozess (ADR-009); WebAssembly mit Threads zurückgestellt nach Q.2. Nächster Schritt: 1.2 (parallel möglich: 1.6).
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 00:55 – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** Betriebsart des Rust-Kerns
+- **Wechsel:** `[OFFEN]` → `[VORLÄUFIG]`
+- **Auslöser:** Spike 1.1 und ADR-009; `[BELASTBAR]` erst nach dem Leistungsnachweis 1.5
+- **Datum in `architecture.md` Abschnitt 9 nachgetragen:** ja
+
+### 2026-10-13 00:55 – [ADR-ANGELEGT]
+
+- **ADR:** ADR-009 „Betriebsart des Kerns: napi-rs im Electron-Utility-Prozess“, dazu Regel-006 „Kern frei von Anbindungscode“
+- **Tag:** `[ERKENNTNIS]` – klärt einen in ADR-002 offen gelassenen Punkt, ändert ADR-002 nicht; Reaktiv-Quote 0/9
+- **Auslöser:** Freigabe des Projektinhabers „A, freigegeben, B perspektivisch“. „Perspektivisch“ ausgelegt als: B wird wieder geprüft, sobald WebAssembly-Threads mit stabilem Rust baubar sind → Landeplatz Q.2, Nachprüfung im Ablaufdaten-Register (erstmals 2027-01-02).
+- **Modell:** weiterhin `claude-opus-5-5` (Entscheidungs-Klasse), erneut über `get_session` abgefragt; Kontext 267.791 Token laut Laufzeitumgebung (unter der Grenze von 400.000).
 
 ### 2026-10-13 00:45 – [SESSIONENDE]
 

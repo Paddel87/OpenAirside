@@ -83,6 +83,6 @@ Vollständige Tabelle: [`results/summary.md`](results/summary.md). Kernwerte (10
 7. **Plattform-Modul:** In A kann der Kern-Prozess Spielstände direkt schreiben; in B muss jeder Spielstand über die Preload-Schnittstelle zum Hauptprozess geschickt werden.
 8. **Container-Hinweis:** Electron startet als root nur mit `--no-sandbox`; nur für die Messumgebung relevant.
 
-## Empfehlung
+## Empfehlung und Entscheidung
 
-**Variante A (napi-rs im Electron-Utility-Prozess).** Entscheidungsvorlage: Fahrplan-Schritt 1.1 in `docs/fahrplan.md`. Der ADR entsteht erst nach Freigabe.
+**Variante A (napi-rs im Electron-Utility-Prozess).** Am 2026-10-13 freigegeben, festgehalten in ADR-009 (`docs/decisions.md`). Variante B ist zurückgestellt; Neubewertung in Fahrplan-Schritt Q.2, sobald WebAssembly-Threads mit stabilem Rust baubar sind.

@@ -11,9 +11,9 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** 1.1 – Betriebsart des Rust-Kerns (WARTET-AUF-FREIGABE)
-- **Nächster Schritt:** 1.2 – Wegweiser-Prinzip mit 10.000 Personen (nach Entscheidung zu 1.1)
-- **Offene STOPP-Situationen:** Schritt 1.1 wartet auf Freigabe der Betriebsart (ENTSCHEIDUNG ERFORDERLICH, Kategorie Architektur, Vorlage im Schritt 1.1 unten)
+- **Aktiver Schritt:** keiner (1.1 erledigt am 2026-10-13, ADR-009)
+- **Nächster Schritt:** 1.2 – Wegweiser-Prinzip mit 10.000 Personen; parallel möglich: 1.6 – Verpackung für drei Plattformen
+- **Offene STOPP-Situationen:** keine
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -94,7 +94,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.1: Betriebsart des Rust-Kerns
 
-- **Status:** WARTET-AUF-FREIGABE (Messungen abgeschlossen 2026-10-13, Empfehlung A vorgelegt)
+- **Status:** ERLEDIGT (2026-10-13) – Option A freigegeben, ADR-009; Option B zurückgestellt nach Q.2
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Vergleichsstudie
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session, dann Zwischenstand
@@ -114,7 +114,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Artefakte:** Spike-Code, ADR (ERKENNTNIS), Update `architecture.md`
 - **Notizen:** Electron-Härtung (contextIsolation, Sandbox) von Anfang an beachten, sonst sind Messungen nicht repräsentativ.
 - **Zwischenstand 2026-10-13:** Spike und Messprotokoll in `spikes/1.1-betriebsart/README.md` (Rohdaten `results/matrix.jsonl`). Beide Varianten laufen in gehärtetem Electron 44.7.0; Akzeptanzkriterien „beide laufen" und „Messwerte liegen vor" erfüllt, „begründet empfohlen und vorgelegt" mit der Vorlage unten. Messung auf 4-vCPU-Container ohne GPU, nicht auf Referenzhardware; Windows und macOS nicht gemessen.
-- **Entscheidungsvorlage (offen):**
+- **Entscheidung:** am 2026-10-13 vom Projektinhaber: „A, freigegeben, B perspektivisch“ → ADR-009, Regel-006, Landeplatz für B: Q.2.
+- **Entscheidungsvorlage (beantwortet):**
 
   ```text
   ENTSCHEIDUNG ERFORDERLICH
@@ -187,7 +188,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Eingangskriterien:** Kern aus 1.2 lauffähig
 - **Anforderungen (ab Klasse M):** FR-011, FR-040 (Vorarbeit)
 - **Zu tun:**
-  - Zustandspuffer (S-1) mit Doppel- oder Dreifachpuffer umsetzen.
+  - Zustandspuffer (S-1) mit Doppel- oder Dreifachpuffer im Kern-Prozess umsetzen, Übertragung per `MessagePort` an den Renderer (ADR-009); Port-Übergabe als Handshake.
+  - Übertragungsumfang klären: vollständiges Bild gegen nur Sichtbares (Kamera-Ausschnitt) oder nur Änderungen; Messung auch mit 50.000 Objekten (Spike 1.1: 3,4 ms je Bild bei vollständiger Übertragung).
   - PixiJS-Spielfeld in Electron: Raster, 10.000 Personen als Sprites, Zoom und Verschieben, Etagenwechsel, einfache Detailstufen.
   - Befehlskanal (S-2) in Minimalform: Bauaktion aus dem Spielfeld.
 - **Akzeptanzkriterien:** Wir wissen, wie viele Bilder pro Sekunde das Spielfeld mit 10.000 Personen erreicht, wie lange die Übergabe je Bild dauert und ob eine Bauaktion im nächsten Bild sichtbar ist.
@@ -368,6 +370,28 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Artefakte:** Versions-Tabelle, Folge-ADR, aktualisierte Register
 - **Notizen:** Nach dem ersten Lauf wird ein neuer Q.1-Termin mit der nächsten Frist angelegt.
 
+#### Q.2: Neubewertung WebAssembly mit Threads als Betriebsart
+
+- **Status:** OFFEN (wartet auf Eingangskriterium)
+- **Phasentyp-Kontext:** ERKUNDUNG (wiederkehrende Prüfung, unabhängig von der laufenden Phase)
+- **Schritt-Art (nur ERKUNDUNG):** Vergleichsstudie
+- **Zeitbox (nur ERKUNDUNG):** Prüfung des Eingangskriteriums je Q.1-Lauf 15 Minuten; Vergleichsmessung maximal eine Session
+- **Abhängigkeiten:** 1.1 (Spike als Messgrundlage)
+- **Frist:** erste Nachprüfung 2027-01-02 zusammen mit Q.1, danach bei jedem Q.1-Lauf
+- **Freigabepflichtig:** ja, für einen Wechsel der Betriebsart (Architekturänderung)
+- **Empfohlene Klasse:** Entscheidung – kann ADR-009 ändern (Architekturentscheidung).
+- **Eingangskriterien:** WebAssembly mit Threads ist mit stabilem Rust baubar (Zielfunktion `atomics` stabil und Standardbibliothek ohne `-Z build-std` threadfähig, oder ein gleichwertiger stabiler Weg); bis dahin wird nur das Kriterium geprüft und im Logbuch vermerkt.
+- **Anforderungen (ab Klasse M):** FR-040, FR-045
+- **Zu tun:**
+  - Bei jedem Q.1: Eingangskriterium anhand der Rust-Release-Notes und der wasm-bindgen-Doku prüfen.
+  - Ist es erfüllt: Spike `spikes/1.1-betriebsart/` mit dem aktuellen Kern neu messen (wasmN gegen napi), zusätzlich auf Referenzhardware und unter Windows/macOS; Build-Aufwand für Variante A aus Phase 2 dagegenstellen.
+  - Ergebnis als Entscheidungsvorlage: bei A bleiben, auf B wechseln oder Hybrid (z. B. WebAssembly für Teilaufgaben im Renderer).
+- **Akzeptanzkriterien:** Wir wissen, ob B mit stabilem Rust baubar ist; falls ja, liegen Vergleichswerte und eine begründete Empfehlung vor.
+- **Betroffene Module:** Takt & Weltzustand, Brücke, Plattform
+- **Reifegrad-Wirkung:** keine, außer bei Wechsel (dann Betriebsart per Folge-ADR neu bewertet)
+- **Artefakte:** Logbuch-Vermerk je Prüfung; bei Messung Messprotokoll und ggf. Folge-ADR zu ADR-009
+- **Notizen:** Herkunft: Freigabe von ADR-009 („B perspektivisch“). Regel-006 hält den Kern dafür ohne Anbindungscode baubar für `wasm32-unknown-unknown`.
+
 ---
 
 <!-- ANCHOR:iterations-reflexion -->
@@ -380,12 +404,13 @@ Noch keine abgeschlossene Phase.
 <!-- ANCHOR:parallelisierbarkeit -->
 ## Parallelisierbarkeit
 
-- Schritte **ohne Abhängigkeiten zueinander**: 1.6 parallel zu 1.2–1.4 (nach 1.1); Q.1 unabhängig von allen Phasen
+- Schritte **ohne Abhängigkeiten zueinander**: 1.6 parallel zu 1.2–1.4 (nach 1.1); Q.1 und Q.2 unabhängig von allen Phasen
 - Schritte **mit gemeinsamen Modulen** (Konfliktgefahr): 1.2 und 1.3 (Takt & Weltzustand, Brücke)
 
 <!-- ANCHOR:replanning-historie -->
 ## Replanning-Historie
 
+- 2026-10-13 – Schritt 1.1 abgeschlossen (ADR-009); Querschnitt Q.2 als Landeplatz für die zurückgestellte WebAssembly-Variante angelegt (zählt nicht zum Schrittplan von Phase 1); 1.3 um Übertragungsumfang ergänzt
 - 2026-10-13 – Erstplanung in der Initialisierung (ADR-001 bis ADR-008); Nachzug nach aktuellem Regelwerk: Schritt-IDs für Phasen 2–7 mit Anforderungs-Zuordnung, Querschnitt Q.1
 
 <!-- ANCHOR:archiv-abgeschlossene-phasen -->
