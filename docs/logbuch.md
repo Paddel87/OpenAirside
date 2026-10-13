@@ -24,6 +24,17 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4, 1.5 (ADR-013, A
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 16:40 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 40 Minuten seit `[SESSIONSTART]` 16:00
+- **Bearbeitet:** 1.6-N1 (Ad-hoc-Signatur der Mac-Pakete), ADR-015, Reflexion zur Reaktiv-Quote, Korrektur der Tags in ADR-014
+- **Erreicht:** 1.6-N1 `[ERLEDIGT]`, auf dem Mac bestätigt; ADR-015 mit Ergebnis; Reflexion vom Projektinhaber bestätigt, STOPP aufgehoben.
+- **Offen geblieben:** Reaktiv-Quote bleibt bei 3 / 10 über dem Schwellenwert, bis ADR-011/012 aus dem Fenster fallen (ab ADR-017/018); CI des PR nicht abgewartet.
+- **Nächster Schritt:** 1.7 – Auswertung und Entscheidung (Phasenabschluss) mit Bewertung durch eine getrennte Instanz, in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 16:40); Freigabe Kategorie 7 und Reflexion verlangen Entscheidung, 0 Schritte oberhalb der Empfehlung; keine Abgabe (Probelauf offen).
+- **Kontextgröße:** 363.829 Token laut `get_session`, unter der Grenze von 400.000, aber nahe daran – nächste Arbeit in neuer Session beginnen.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf. **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte, Blocker 0; Verpackung unverändert vorläufig); Reaktiv-Quote 3/10 in Teil A stimmt mit Tags in ADR-006 bis ADR-015 überein; ADR-015 verweist auf 1.6-N1 und 7.1 (vorhanden); keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Phase 1 bei 7 Schritten (1.6-N1 als Nachlauf nicht gezählt).
+
 ### 2026-10-13 16:30 – [GELÖST]
 
 - **Problem:** Mac-Paket nur für Apple-Chips meldete „beschädigt" (siehe 14:52).
