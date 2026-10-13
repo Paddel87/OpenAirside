@@ -167,6 +167,10 @@ impl Topology {
         let (dx, dy) = DIRS[j];
         let nx = (local % BLOCK) as i32 + dx;
         let ny = (local / BLOCK) as i32 + dy;
+        // Fast path: most neighbours lie in the same block.
+        if (0..BLOCK as i32).contains(&nx) && (0..BLOCK as i32).contains(&ny) {
+            return Some((slot * BLOCK_CELLS) as u32 + (ny as u32) * BLOCK as u32 + nx as u32);
+        }
         let block = (nx.div_euclid(BLOCK as i32), ny.div_euclid(BLOCK as i32));
         let target = if block == (0, 0) {
             slot as u32
@@ -254,15 +258,17 @@ fn dijkstra(topo: &Topology, seeds: &[u32], dir: &mut [u8], dist: &mut [u32]) {
         }
     }
     let mut cur: u32 = 0;
+    let mut batch: Vec<u32> = Vec::new();
     while pending > 0 {
         let slot = cur as usize % BUCKETS;
         if buckets[slot].is_empty() {
             cur += 1;
             continue;
         }
-        let batch = std::mem::take(&mut buckets[slot]);
+        // Swap with a spare buffer so that bucket capacity is reused.
+        std::mem::swap(&mut buckets[slot], &mut batch);
         pending -= batch.len();
-        for c in batch {
+        for c in batch.drain(..) {
             if dist[c as usize] != cur {
                 continue;
             }
@@ -280,11 +286,15 @@ fn dijkstra(topo: &Topology, seeds: &[u32], dir: &mut [u8], dist: &mut [u32]) {
                     pending += 1;
                 }
             };
+            // All eight neighbours once; the corner rule reads the
+            // orthogonal ones from this array instead of looking them up again.
+            let around: [Option<u32>; 8] = std::array::from_fn(|j| topo.neighbour(c, j));
+            let open = |k: usize| around[k].is_some_and(|n| topo.walkable(n));
             for (j, &(dx, dy)) in DIRS.iter().enumerate() {
-                let Some(p) = topo.neighbour(c, j) else {
+                let Some(p) = around[j] else {
                     continue;
                 };
-                if !topo.diagonal_open(c, j) {
+                if dx != 0 && dy != 0 && !(open(dir_index(dx, 0)) && open(dir_index(0, dy))) {
                     continue;
                 }
                 let base = if dx != 0 && dy != 0 { 14 } else { 10 };
