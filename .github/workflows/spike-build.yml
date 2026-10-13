@@ -1,0 +1,128 @@
+# Testprogramme des Durchstichs für Windows, macOS und Linux (Fahrplan-Schritt 1.6, ERKUNDUNG).
+# Baut den Spike aus spikes/1.1-betriebsart (Electron 44 + Rust-Kern als napi-Modul) mit
+# electron-builder 26.16.1, startet das fertige Programm auf jedem System einmal (Rauchtest)
+# und stellt die Pakete als Artefakte zum Herunterladen bereit. Spike-Werkzeug, kein Release.
+#
+# Action-Versionen wie in ci.yml (geprüft am 2026-10-13).
+
+name: Spike-Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "spikes/1.1-betriebsart/**"
+      - ".github/workflows/spike-build.yml"
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "26.11.1"     # project-context.md Abschnitt 3
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Paket ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: linux
+          - os: windows-latest
+            platform: win
+          - os: macos-latest
+            platform: mac
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: spikes/1.1-betriebsart
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: spikes/1.1-betriebsart/app/package-lock.json
+      - run: rustup show   # Rust 1.98.1 aus rust-toolchain.toml des Spikes
+      - uses: Swatinem/rust-cache@v2.9.2
+        with:
+          workspaces: spikes/1.1-betriebsart
+
+      - name: Natives Modul bauen (Linux, Windows)
+        if: matrix.platform != 'mac'
+        run: |
+          cargo build --release --locked -p sim-napi
+          mkdir -p app/native
+          if [ "${{ matrix.platform }}" = win ]; then
+            cp target/release/sim_napi.dll app/native/sim_napi.node
+          else
+            cp target/release/libsim_napi.so app/native/sim_napi.node
+          fi
+
+      - name: Natives Modul bauen (macOS Universal)
+        if: matrix.platform == 'mac'
+        run: |
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+          cargo build --release --locked -p sim-napi --target aarch64-apple-darwin
+          cargo build --release --locked -p sim-napi --target x86_64-apple-darwin
+          mkdir -p app/native
+          lipo -create -output app/native/sim_napi.node \
+            target/aarch64-apple-darwin/release/libsim_napi.dylib \
+            target/x86_64-apple-darwin/release/libsim_napi.dylib
+          lipo -info app/native/sim_napi.node
+
+      - name: Paket bauen
+        working-directory: spikes/1.1-betriebsart/app
+        run: |
+          npm ci --no-audit --no-fund
+          npx electron-builder --${{ matrix.platform }} --publish never
+
+      - name: Rauchtest Linux
+        if: matrix.platform == 'linux'
+        working-directory: spikes/1.1-betriebsart/app
+        run: |
+          set +e
+          exe=release/linux-unpacked/openairside-spike-1-1
+          # Erst mit Chromium-Sandbox (Verhalten wie beim Spieler), dann ohne.
+          timeout 90 xvfb-run -a -s "-screen 0 1280x800x24" "$exe" --exit --seconds=5 --out=smoke-sandbox.json > smoke-sandbox.log 2>&1
+          echo "Mit Sandbox: Exit-Code $?"; tail -5 smoke-sandbox.log
+          timeout 90 xvfb-run -a -s "-screen 0 1280x800x24" "$exe" --no-sandbox --exit --seconds=5 --out=smoke.json
+          set -e
+          cat smoke.json
+
+      - name: Rauchtest Windows
+        if: matrix.platform == 'win'
+        working-directory: spikes/1.1-betriebsart/app
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem release/win-unpacked -Filter *.exe | Where-Object { $_.Name -notlike 'Uninstall*' } | Select-Object -First 1
+          $p = Start-Process -FilePath $exe.FullName -ArgumentList '--exit','--seconds=5',"--out=$PWD\smoke.json" -PassThru -Wait
+          "Exit-Code: $($p.ExitCode)"
+          Get-Content smoke.json
+
+      - name: Rauchtest macOS
+        if: matrix.platform == 'mac'
+        working-directory: spikes/1.1-betriebsart/app
+        run: |
+          app="$(ls -d release/mac-universal/*.app | head -1)"
+          lipo -info "$app/Contents/MacOS/"*
+          codesign -dv "$app" 2>&1 || echo "keine Signatur"
+          "$app/Contents/MacOS/$(basename "$app" .app)" --exit --seconds=5 --out="$PWD/smoke.json"
+          cat smoke.json
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: spike-1-1-${{ matrix.platform }}
+          retention-days: 14
+          path: |
+            spikes/1.1-betriebsart/app/release/*.AppImage
+            spikes/1.1-betriebsart/app/release/*.tar.gz
+            spikes/1.1-betriebsart/app/release/*.exe
+            spikes/1.1-betriebsart/app/release/*.zip
+            spikes/1.1-betriebsart/app/release/*.dmg
+            spikes/1.1-betriebsart/app/smoke*.json
+            spikes/1.1-betriebsart/app/smoke*.log
