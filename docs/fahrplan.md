@@ -11,7 +11,7 @@
 - **Stand vom:** 2026-10-13 (Sessionstart 16:40 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (2.1 erledigt am 2026-10-13; Nachlauf 2.1-N1 und 2.1-N2 beim Projektinhaber)
+- **Aktiver Schritt:** keiner (2.1 mit Nachlauf 2.1-N1 und 2.1-N2 erledigt am 2026-10-13)
 - **Nächster Schritt:** 2.8 (Weltmaßstab, Luftseite, Zeitmodell) in einer folgenden Session, danach 2.9
 - **Offene STOPP-Situationen:** keine (Reaktiv-Quote 5 / 10 nach ADR-019 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 zur Kenntnis genommen, siehe „Iterations-Reflexion")
 
@@ -121,8 +121,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Artefakte:** Workspace-Gerüst, Workflows, `.editorconfig`, Runbook, ggf. ADR zur napi-Version
 - **Ergebnis:** `core/` (openairside-core), `bridge/` (napi, `test = false`), `app/` (Electron mit Kern im Utility-Prozess, leeres gehärtetes Fenster), `scripts/check-licenses.mjs`; Gates lokal und in der CI grün. Coverage: Rust-Kern 100 % Lines (1 Test), TypeScript und Skripte 87,2 % Lines (53 Tests; App-Module 100 %, Lizenz-Skript 81,7 %). Rauchtest auf Windows, Linux und macOS (Entwicklungs-Build in `ci.yml`, gepackte Programme in `release.yml`); erzwungener Fehlerfall belegt (ohne natives Modul rot). Runbook am frischen Worktree unter Linux validiert. Abweichung: `c13ebd9` trägt Typ `chore`, enthält aber auch eine CI-Änderung (Logbuch 17:36 UTC).
 - **Nachlauf (zählt nicht zur Phase):**
-  - **2.1-N1 `[OFFEN]` – Branch-Schutz auf `main` (Projektinhaber):** GitHub → Settings → Branches (bzw. Rules → Rulesets) → Regel für `main`: Pull Request vor Merge, Status-Checks der CI als Pflicht, Force-Push und Löschen gesperrt. Frist: vor dem Merge von 2.8.
-  - **2.1-N2 `[OFFEN]` – Startweg heruntergeladener Pakete prüfen (Projektinhaber, Maßnahme 1):** nach `docs/onboarding-runbook.md` Abschnitt 3, Schritt 6, auf Mac und Referenz-PC (Windows) mit den Artefakten des Release-Laufs 38440601610 oder eines neuen manuellen Laufs. Frist: vor Beginn von 2.7.
+  - **2.1-N1 `[ERLEDIGT]` 2026-10-13 – Branch-Schutz auf `main` (Projektinhaber):** Ruleset `main-schutz` (aktiv, Ziel Standard-Branch): Pull Request vor Merge mit 0 Freigaben, 18 Pflicht-Checks (alle Jobs aus `ci.yml` und beide CodeQL-Jobs), Force-Push und Löschen gesperrt; Branch nicht zwingend aktuell. Eingerichtet laut Projektinhaber; von der KI nicht direkt einsehbar, Nachweis beim nächsten PR (Checks als „Required").
+  - **2.1-N2 `[ERLEDIGT]` 2026-10-13 – Startweg heruntergeladener Pakete (Projektinhaber, Maßnahme 1):** Artefakte des Release-Laufs 38440601610. **Windows** 11 Pro 25H2 (Build 26200.9457): keine Browser-Warnung; SmartScreen-Warnung, Zulassen möglich; Installer mit Wahl „für mich / alle Nutzer" und Zielordner; Fenster „OpenAirside" startet. **macOS** (Mac des Projektinhabers, Version nicht erfasst): DMG ohne Browser-Warnung; Gatekeeper-Dialog „In den Papierkorb legen / Fertig", keine Meldung „beschädigt"; Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen" mit Touch ID; Fenster startet. Ad-hoc-Signatur (ADR-015) wirkt auch beim Paket aus `release.yml`. Befunde: Electron-Standardmenü mit „Reload" und „Toggle Developer Tools" (→ 2.7), Standard-Symbol (→ 2.10).
 
 #### 2.8: Weltmaßstab, Luftseite und Zeitmodell
 
@@ -209,7 +209,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – Umsetzung festgelegter Verträge und Härtungsregeln.
 - **Eingangskriterien:** S-1, S-2, S-3, S-6, S-7 `[BELASTBAR]`
 - **Anforderungen (ab Klasse M):** FR-009
-- **Zu tun:** Brücken-Crate mit napi-rs (Regel-006); Dreifachpuffer und kompaktes Bildformat mit Filter auf Etage und Ausschnitt; MessagePort-Handshake; Electron-Härtung (`contextIsolation`, Sandbox, CSP, schmale Preload-API); Spielfeld-Grundgerüst mit PixiJS und Personen im `ParticleContainer`; Konsole/Debug-Panel; Leistungsanzeige.
+- **Zu tun:** Brücken-Crate mit napi-rs (Regel-006); Dreifachpuffer und kompaktes Bildformat mit Filter auf Etage und Ausschnitt; MessagePort-Handshake; Electron-Härtung (`contextIsolation`, Sandbox, CSP, schmale Preload-API; Electron-Standardmenü ersetzen oder entfernen, „Reload" und Entwicklerwerkzeuge nur im Entwicklungs-Build – Befund 2.1-N2); Spielfeld-Grundgerüst mit PixiJS und Personen im `ParticleContainer`; Konsole/Debug-Panel; Leistungsanzeige.
 - **Akzeptanzkriterien:** Härtung durch Tests belegt (`nodeIntegration` aus, Sandbox an, keine entfernten Inhalte); `app/console.test.ts` grün; das Szenario aus Spike 1.5 läuft auf Produktionscode mit gleichwertigen Kernwerten (Abschlusskriterium der Phase), gemessen auf Referenz-PC und Mac des Projektinhabers.
 - **Betroffene Module:** Brücke, Plattform, Spielfeld
 - **Reifegrad-Wirkung:** Brücke und Plattform → `[BELASTBAR]`
@@ -269,7 +269,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – neue Abhängigkeit und Bewertung einer Leistungsmessung (ADR-017).
 - **Eingangskriterien:** Spielfeld-Grundgerüst (2.7)
 - **Anforderungen (ab Klasse M):** FR-050
-- **Zu tun:** Stilleitfaden (Palette, Strichstärken, Maßstab passend zur Zellgröße aus 2.8, Detailgrad); SVG-Quellen im Repository, Rasterung in mehreren Auflösungen im Build (ADR-008), Atlanten; Messung des Spielfelds mit Objekt-Sprites aus den Atlanten, Overlays und 10.000 Personen auf Referenz-PC und Mac.
+- **Zu tun:** Stilleitfaden (Palette, Strichstärken, Maßstab passend zur Zellgröße aus 2.8, Detailgrad); SVG-Quellen im Repository, Rasterung in mehreren Auflösungen im Build (ADR-008), Atlanten; eigenes Programmsymbol für Fenster, Installer und Pakete (Befund 2.1-N2); Messung des Spielfelds mit Objekt-Sprites aus den Atlanten, Overlays und 10.000 Personen auf Referenz-PC und Mac.
 - **Akzeptanzkriterien:** `scripts/assets.test.ts` grün; Messprotokoll zeigt, ob 60 Bilder/s mit echten Grafiken halten; Ergebnis per ADR (NFR Darstellung `[VORLÄUFIG]` → `[BELASTBAR]` oder Maßnahme).
 - **Betroffene Module:** Spielfeld, Build/CI
 - **Reifegrad-Wirkung:** NFR Performance Darstellung mit echten Grafiken `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen

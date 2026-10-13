@@ -124,8 +124,8 @@ Maßnahme 1 der Reaktiv-Reflexion (Fahrplan, „Iterations-Reflexion"); in der C
 
 1. Auf GitHub unter „Actions → Release → Run workflow" einen Lauf auf dem gewünschten Branch starten.
 2. Das Paket der Plattform aus den Artefakten des Laufs herunterladen (`openairside-macOS`, `-Windows`, `-Linux`).
-3. **macOS:** dmg öffnen, App nach „Programme" ziehen, starten. Erwartet: Gatekeeper-Warnung zu einem nicht geprüften Entwickler; „Dennoch öffnen" unter Systemeinstellungen → Datenschutz & Sicherheit startet die App ohne Terminal (ADR-015). Meldung „beschädigt" ist ein Fehler.
-4. **Windows:** Installer starten. Erwartet: SmartScreen „Der Computer wurde durch Windows geschützt"; „Weitere Informationen → Trotzdem ausführen" installiert und startet.
+3. **macOS:** dmg öffnen, App nach „Programme" ziehen, starten. Erwartet: Gatekeeper-Dialog mit „In den Papierkorb legen" oder „Fertig" → „Fertig"; danach Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen", mit Passwort oder Touch ID bestätigen; die App startet ohne Terminal (ADR-015). Meldung „beschädigt" ist ein Fehler. Geprüft am 2026-10-13.
+4. **Windows:** Installer starten. Erwartet: SmartScreen „Der Computer wurde durch Windows geschützt"; „Weitere Informationen → Trotzdem ausführen"; Installer mit Wahl „für mich / alle Nutzer" und Zielordner; danach startet die App. Geprüft am 2026-10-13 (Windows 11 Pro 25H2).
 5. **Linux:** AppImage ausführbar machen (`chmod +x`) und starten, oder `sudo apt install ./openairside_*.deb`.
 6. Ergebnis mit Datum im Logbuch festhalten.
 
