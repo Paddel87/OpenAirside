@@ -6,6 +6,7 @@
 //! per step). Writes the result as JSON for the trend display in the CI.
 //!
 //! Usage: `cargo bench -p openairside-core --bench tick -- [--output FILE]`
+//! (cargo runs the program in `core/`; relative paths start there).
 //! Environment (optional, e.g. for the forced failure of the gate):
 //! `OPENAIRSIDE_BENCH_MAX_MEAN_MS`, `OPENAIRSIDE_BENCH_MAX_P99_MS`,
 //! `OPENAIRSIDE_BENCH_THREADS`.
