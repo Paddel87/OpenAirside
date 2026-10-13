@@ -24,6 +24,17 @@ Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt. Nächster Sch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 02:25 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 20 Minuten nach dem `[SESSIONENDE]` von 02:05 (dieselbe Sitzung)
+- **Bearbeitet:** Merge von PR Paddel87/OpenAirside#2 auf Anweisung; Einschätzung zur Umsetzbarkeit (keine Dokumentänderung); Testsysteme für 1.5 im Fahrplan vermerkt.
+- **Erreicht:** Testsysteme für 1.5 geklärt: Referenz-PC mit AMD Radeon RX 7700 XT (Windows, Linux per Live-USB), Mac M3 Pro mit 18 GB.
+- **Offen geblieben:** Untergrenze „integrierte Grafik" ohne schwaches Testgerät nur hochrechenbar; Intel-Teil des macOS-Universal-Builds ungetestet; Treiberunterstützung RX 7700 XT unter Linux in 1.5 gegen Quellen belegen.
+- **Nächster Schritt:** 1.3 (parallel 1.6) in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session`); 0 Schritte oberhalb der Empfehlung; keine Abgaben.
+- **Kontextgröße:** 456.458 Token laut `get_session` – **über der Grenze von 400.000**. Hinweis: nächste Arbeit in einer neuen Session beginnen.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf. **Drift-Prüfung:** nur Fahrplan-Notizen zu 1.5 geändert, keine Auswirkung auf README oder andere Pflicht-Dokumente.
+
 ### 2026-10-13 02:05 – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 60 Minuten seit `[SESSIONSTART]` 01:10
