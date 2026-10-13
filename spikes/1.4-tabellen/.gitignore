@@ -1,0 +1,5 @@
+/target/
+/app/native/
+/app/release/
+/app/node_modules/
+/app/renderer/dist/
