@@ -34,6 +34,10 @@ pub enum Cause {
     Enclosed,
 }
 
+/// Result of one field computation: directions, distances, relaxed bitset,
+/// unreachable walkable cells, milliseconds.
+type FieldResult = (Vec<u8>, Vec<u32>, Option<Vec<u64>>, u32, f64);
+
 /// All direction fields for one grid state, immutable once built.
 pub struct Fields {
     pub cells: usize,
@@ -78,7 +82,7 @@ impl Fields {
     pub fn build(grid: &Grid) -> Self {
         let start = Instant::now();
         let cells = grid.cells();
-        let results: Vec<(Vec<u8>, Vec<u32>, Option<Vec<u64>>, u32, f64)> = (0..grid.targets.len())
+        let results: Vec<FieldResult> = (0..grid.targets.len())
             .into_par_iter()
             .map(|k| {
                 let t0 = Instant::now();

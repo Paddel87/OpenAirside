@@ -24,6 +24,13 @@ Phase 1 läuft. Schritt 1.1 erledigt: Kern als napi-rs-Modul im Electron-Utility
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 01:50 – [BEOBACHTUNG]
+
+- **Spike 1.2 abgeschlossen bis zur Entscheidung:** Messreihe in `spikes/1.2-wegweiser/results/`, Auswertung in dessen README. Vorlage im Fahrplan 1.2.
+- **Inkrementelle Reparatur der Wegweiser** liefert exakt dieselben Distanzen wie die Vollberechnung (Test), ist aber beim Schließen und Öffnen von Türen langsamer, weil Türen Engstellen sind. Erster Versuch scheiterte am Test: Neue Wände verbieten auch diagonale Schritte der Nachbarzellen (Eckregel); Lösung: Nachbarn geänderter Zellen als zusätzliche Wurzeln.
+- **Informationslücke:** Rastergröße des Referenzszenarios und der größten Karte ist in keinem Dokument festgelegt; als Frage in die Entscheidungsvorlage aufgenommen. Spike lief mit 2 statt 5 Etagen (BAU-07).
+- **Widerspruch erkannt, nicht aufgelöst:** Determinismus (Architektur-Ziel) gegen „Bauen ohne Wartezeit" (Vision) bei langen Neuberechnungen – Teil der Entscheidungsvorlage.
+
 ### 2026-10-13 01:10 – [SESSIONSTART]
 
 - **Letzter Stand:** `[SESSIONENDE]` 01:05; PR Paddel87/OpenAirside#1 gemergt (`5813931`), Branch auf `main` vorgespult.

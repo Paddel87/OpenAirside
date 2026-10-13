@@ -30,7 +30,7 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 1: Technischer Durchstich und Leistungsnachweis (ERKUNDUNG); Schritt 1.1 erledigt
+- **Projektphase:** Phase 1: Technischer Durchstich und Leistungsnachweis (ERKUNDUNG); Schritt 1.1 erledigt, Schritt 1.2 gemessen und wartet auf Freigabe
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-13
