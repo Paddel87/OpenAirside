@@ -24,6 +24,11 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3 und 1.6 erledigt; Lin
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 14:00 – [BEOBACHTUNG]
+
+- **Spike 1.4 auf dem Referenz-PC unter Windows** (Ergebnisdatei vom Projektinhaber, `spikes/1.4-tabellen/results/referenz-pc-windows-rx7700xt.json`): virtualisiertes Panel ohne Einfluss auf die Bildrate bis 5.000 sortierte Zeilen bei jeder Rate und bis 20.000 sortierte Zeilen bei bis zu 30 Aktualisierungen/s; 20.000 sortierte Zeilen kosten rund 20 ms je Aktualisierung (TanStack-Sortierung 17–19 ms). Ohne Virtualisierung 17–46 Bilder/s bei 2.000 Zeilen. Offen: Mac.
+- **Wiedereinstieg nach Neustart der Laufzeitumgebung:** Spike 1.4 und ADR-012 entstanden in einer Session, deren Verlauf hier nicht vorliegt; Stand aus Logbuch 13:10–13:45, Fahrplan 1.4, ADR-012 und Messprotokoll 1.4 nachgelesen, bevor ausgewertet wurde.
+
 ### 2026-10-13 13:45 – [ADR-ANGELEGT]
 
 - **ADR-012:** macOS nur für Apple-Chips, kein Intel- und kein Universal-Build (`[REAKTIV]`, ändert eine Konsequenz von ADR-009 innerhalb von 14 Tagen). Freigabe des Projektinhabers: „A, nur Apple-Chips". Anlass: kleinere Testpakete; Apple beendet die Intel-Unterstützung mit macOS 26; Intel nie testbar.

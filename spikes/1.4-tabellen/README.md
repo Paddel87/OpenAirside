@@ -68,12 +68,35 @@ Lange Aufgaben (> 50 ms) gab es nur bei 20.000 sortierten Zeilen ab 4/s (1–8 j
 - **Ohne Virtualisierung** dominiert der DOM: 2.000 Zeilen × 11 Zellen kosten 120–180 ms je Aktualisierung (Modell nur 2–2,4 ms).
 - Das **Panel ohne Aktualisierung** kostet beim Durchscrollen nichts Messbares.
 
+## Messung auf echter Grafik
+
+### Referenz-PC, Windows (2026-10-13)
+
+Datei `results/referenz-pc-windows-rx7700xt.json`, Testprogramm aus „Spike-Build 1.4", Messreihe `quick` (106 s), mit Zeichnen. Rechner: AMD Ryzen 9 3900X, 32 GB, AMD Radeon RX 7700 XT, Windows, Bildschirm 60 Hz, Fenster 1264 × 735. Spielfeld 10.000 Personen (`particles`, Ausschnitt), Ansicht schwenkt während jeder Phase.
+
+| Panel | Zeilen | Rate | Bilder/s | Bilder > 20 ms | Update Mittel / max | davon Modell | Updates/s erreicht |
+|---|---|---|---|---|---|---|---|
+| aus | – | – | 60,0 | 0 | – | – | – |
+| ohne Aktualisierung, scrollt | 5.000 | 0 | 60,0 | 0 | – | – | – |
+| sortiert | 2.000 | 1–60/s | 60,0 | 0 | 3,0–4,1 / ≤ 6,2 ms | 1,4–2,4 ms | wie angefordert |
+| sortiert | 5.000 | 1–60/s | 60,0–60,2 | 0 | 5,4–6,3 / ≤ 10 ms | 3,8–4,7 ms | wie angefordert (60/s: 59,5) |
+| sortiert | 20.000 | 1–30/s | 60,0 | 0 | 19,7–20,8 / ≤ 24,7 ms | 17,7–19,1 ms | wie angefordert |
+| sortiert | 20.000 | 60/s | 59,7 | 1 | 19,7 / 24,1 ms | 17,7 ms | nur 30 |
+| unsortiert | 20.000 | 10/s | 60,0 | 0 | 3,9 / 6,1 ms | 2,1 ms | 10 |
+| alle Zeilen im DOM | 2.000 | 1/s | **46,4** | 5 | 85 / 90 ms | 2,3 ms | 1 |
+| alle Zeilen im DOM | 2.000 | 4/s | **16,9** | 18 | 80 / 98 ms | 1,9 ms | 3,9 |
+| aus (Ende) | – | – | 60,2 | 0 | – | – | – |
+
+Lange Aufgaben (> 50 ms) gab es nur ohne Virtualisierung (4 bzw. 16 je Phase).
+
+**Bewertung:** Auf dem Referenz-PC drückt das virtualisierte Panel die Bildrate bis 5.000 sortierte Zeilen bei keiner Rate und bis 20.000 sortierte Zeilen bei bis zu 30 Aktualisierungen je Sekunde nicht. Eine einzelne Aktualisierung mit 20.000 sortierten Zeilen kostet aber rund 20 ms und damit mehr als ein Bild (16,7 ms); bei angeforderten 60/s schafft das Panel nur 30. Die Sortierung über TanStack bleibt der größte Posten (17–19 ms bei 20.000 Zeilen). Ohne Virtualisierung bricht die Bildrate auch hier schon bei 2.000 Zeilen ein (17–46 Bilder/s). Die Folgerungen aus dem Container gelten damit, mit mehr Spielraum: Virtualisierung ist Pflicht; „wenige Male pro Sekunde" ist bis 20.000 Zeilen tragbar; die Maßnahmen für große Tabellen unten bleiben für schwächere Rechner und mehr Spalten relevant.
+
 ## Bewertung gegen die Akzeptanzkriterien
 
 1. **Drückt das Panel die Bildrate des Spielfelds?** Im Container (Kontrolle): **nein** bis 5.000 Zeilen mit Sortierung nach einer Live-Spalte bei jeder Rate bis 60/s (höchstens 2 Bilder über 20 ms in 4 s) und bei 20.000 Zeilen ohne Sortierung. **Ja** bei 20.000 sortierten Zeilen ab 4/s (57 Bilder/s, 13 Bilder über 20 ms; ab 30/s nur noch 40 Bilder/s) und **immer ohne Virtualisierung** (schon 2.000 Zeilen: 6–31 Bilder/s, Hänger bis 0,6 s). Virtualisierung ist damit Pflicht.
 2. **Tragbare Aktualisierungsrate:** bis 5.000 sortierte Zeilen ist jede Rate bis 60/s tragbar; empfohlen sind die in `project-context.md` Abschnitt 6 vorgesehenen „wenige Male pro Sekunde" (4/s kostet bei 5.000 Zeilen rund 10 ms alle 250 ms). Bei 20.000 sortierten Zeilen trägt nur 1/s; mehr verlangt eine andere Sortierung (unten). Die Grenze liegt dort, wo eine einzelne Aktualisierung in die Nähe eines Bildes (16,7 ms) kommt, weil sie den Hauptthread in einem Stück belegt.
 
-**Vorbehalt:** Container-Prozessor statt Referenzhardware. Die Messung auf dem Referenz-PC und dem Mac mit dem Testprogramm steht aus; bis dahin bleibt „Oberfläche mit großen Tabellen" `[VORLÄUFIG]`.
+**Vorbehalt:** Die Werte oben stammen aus dem Container. Referenz-PC unter Windows gemessen (Abschnitt „Messung auf echter Grafik"): gleiche Folgerungen mit mehr Spielraum. Die Messung auf dem Mac steht aus; bis dahin bleibt „Oberfläche mit großen Tabellen" `[VORLÄUFIG]`.
 
 ### Mögliche Maßnahmen für große Tabellen (nicht umgesetzt, Entscheidung in 1.7 bzw. Phase 2)
 
