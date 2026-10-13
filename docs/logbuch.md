@@ -24,6 +24,19 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 21:03 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 80 Minuten seit `[SESSIONSTART]` 19:44 UTC.
+- **Bearbeitet:** 2.9 – Schnittstellenverträge S-2 bis S-7.
+- **Erreicht:** 2.9 `[ERLEDIGT]` mit ADR-021; Verträge in `architecture.md` Abschnitt 4, S-2 bis S-7 `[BELASTBAR]`; getrennte Prüfung erfolgt (13 von 15 Befunden eingearbeitet); Vorbilder per Websuche belegt; Landeplätze in 2.2, 2.4, 2.5, 2.7, 6.1, 7.2.
+- **Offen geblieben:** Kein PR geöffnet (nicht angefragt); Branch `claude/gracious-galileo-2reksz` liegt mit 2.9 vor `main`, Merge nur per PR (Ruleset `main-schutz`). Nur Dokumentation geändert, daher keine Code-Gates außer markdownlint (lokal grün).
+- **Nächster Schritt:** 2.2 – Simulationskern (Takt, Zeitsteuerung, Befehle und Ereignisse nach ADR-021); zu Beginn Freigabe Kategorie 7 (Benchmark-Job, Prüfung der ts-rs-Typen). Vertiefung: `architecture.md` Abschnitt 4 (Grundlagen, S-2, S-3), ADR-020 (Zeitmodell), ADR-010 (Prüfmodus).
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 21:03 UTC); 2.9 empfiehlt Entscheidung, 0 Schritte oberhalb der Empfehlung; keine Teilarbeit abgegeben (Prüfung durch Unteragent ist keine Abgabe).
+- **Kontextgröße:** 314.544 Token laut `get_session`, unter der Grenze von 400.000.
+- **Kontingent:** 5-Stunden-Fenster `allowed`.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf; Runner-Umstellung auf Ubuntu 26 ab 2026-10-19 weiter in Q.1 zu beobachten.
+- **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte, Blocker 0); ADR-021 verweist auf vorhandene Schritte (2.2, 2.4, 2.5, 2.7, 3.1, 6.1, 7.2); Reifegrade passend zu ADR-021; Reaktiv-Quote 5 / 10 stimmt mit den Tags von ADR-012 bis ADR-021; Modul-Liste unverändert (S-7 ist Schnittstelle, kein Modul); keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Phase 2 weiter bei 10 Schritten; Größen: `project-context.md` 361 Zeilen, Logbuch unter 800.
+
 ### 2026-10-13 21:03 (UTC) – [REIFEGRAD-WECHSEL]
 
 - S-2 Befehlskanal, S-3 Ereignisstrom, S-6 Plattform-API `[VORLÄUFIG]` → `[BELASTBAR]`; S-4 Datenpaket-Schema, S-5 Spielstand-Format `[OFFEN]` → `[BELASTBAR]`; S-7 Abfrage neu `[BELASTBAR]` (ADR-021, Regel-007; Bestätigung durch Umsetzung in 2.2, 2.4, 2.5, 2.7).
