@@ -111,7 +111,7 @@ Datei `results/referenz-pc-windows-rx7700xt.json`, Testprogramm aus „Spike-Bui
 
 **Bauaktion:** 24 Bauaktionen je Personenzahl, Klick bis gezeichnetes Bild p50 33,5 ms, max 50,3 ms; **2 Bilder (max 3)** – wie im Container im übernächsten Bild. Neuberechnung der Wegweiser 39–45 ms im Mittel, max 100 ms (≤ 7 Ticks).
 
-**Bewertung:** 10.000 Personen erreichen auf dem Referenz-PC unter Windows durchgehend die Bildwiederholrate des Bildschirms (60 Bilder/s, vermutlich durch die vertikale Synchronisation begrenzt), ohne ein einziges Bild über 20 ms – mit beiden Zeichenarten. Bei 50.000 Personen hält nur `particles` die 60 Bilder/s; `sprites` fällt beim Schwenken auf 46 Bilder/s. Das bestätigt die Empfehlung `ParticleContainer`. Die Reserve über 60 Bilder/s ist mit dieser Messung nicht bestimmbar; die Rechenzeit im Renderer (≤ 1,3 ms mit `particles`) deutet auf viel Reserve.
+**Bewertung:** 10.000 Personen erreichen auf dem Referenz-PC unter Windows durchgehend die Bildwiederholrate des Bildschirms (60 Bilder/s; der Bildschirm ist laut Projektinhaber auf 60 Hz begrenzt), ohne ein einziges Bild über 20 ms – mit beiden Zeichenarten. Bei 50.000 Personen hält nur `particles` die 60 Bilder/s; `sprites` fällt beim Schwenken auf 46 Bilder/s. Das bestätigt die Empfehlung `ParticleContainer`. Die Reserve über 60 Bilder/s ist mit dieser Messung nicht bestimmbar; die Rechenzeit im Renderer (≤ 1,3 ms mit `particles`) deutet auf viel Reserve.
 
 ## Bewertung gegen die Akzeptanzkriterien
 
