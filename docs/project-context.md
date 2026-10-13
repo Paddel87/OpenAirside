@@ -259,6 +259,8 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 
 - **Tool:** nicht aktiv, Begründung: Commit-Format nach `CLAUDE.md` Abschnitt 11 wird über die DoD geprüft.
 - **Erlaubte Typen:** Bereichs-Präfixe nach `CLAUDE.md` Abschnitt 11
+- **Branch-Präfixe:** wie `CLAUDE.md` Abschnitt 11; zusätzlich: keine
+- **Vom Werkzeug vergebene Branch-Namen:** Claude-Code-Cloud-Sessions können `claude/<zufallsname>` vergeben (so PR #1 bis #3, `claude/gracious-galileo-2reksz`); Typ und Schritt-ID stehen dann im PR-Titel
 
 ### Editor-Integration (empfohlen, nicht erzwungen)
 

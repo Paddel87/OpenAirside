@@ -88,7 +88,7 @@ Noch nicht verfügbar.
 
 Beiträge sind willkommen, sobald ein lauffähiger Stand existiert, insbesondere Grafiken, Airlines, Lackierungen und Übersetzungen.
 
-- **Branch-Konvention:** `feat/<kurztitel>`, `fix/<kurztitel>`, `refactor/<kurztitel>`
+- **Branch-Konvention:** `<präfix>/<schritt-id>-<kurztitel>`, z. B. `erkundung/1-3-zustandsuebergabe`; Präfix nach Inhalt (`feat/`, `fix/`, `docs/`, `erkundung/` usw., Tabelle in `CLAUDE.md` Abschnitt 11); ein Branch je PR
 - **Commit-Format:** `<bereich>: <kurze beschreibung im imperativ>` mit Fahrplan-Referenz (siehe `CLAUDE.md` Abschnitt 11)
 - **Code-Standards:** siehe [`docs/project-context.md`](docs/project-context.md) Abschnitt 7
 - **Wichtig:** Kein Material aus Airport CEO oder dessen Mods, auch nicht als Vorlage.
