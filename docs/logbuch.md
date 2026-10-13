@@ -24,6 +24,17 @@ Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt; 1.3 und 1.6 w
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 12:50 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 40 Minuten seit `[SESSIONSTART]` 12:10
+- **Bearbeitet:** 1.3 (Auswertung Windows-Ergebnis), 1.6 (Windows-Rückmeldung), ADR-011 (Linux-Messung verschoben auf 7.2)
+- **Erreicht:** Windows-Werte von Spike 1.3 im Messprotokoll (60 Bilder/s bei 10.000 und 50.000 Personen mit `particles`); SmartScreen-Verhalten unter Windows belegt; ADR-011 mit Nachzug in `project-context.md` Abschnitt 6 und Fahrplan 1.3/1.5/1.6/7.2; Reifegrad-Vermerk S-1 aktualisiert (bleibt `[VORLÄUFIG]`).
+- **Offen geblieben:** 1.3 und 1.6 `[IN ARBEIT]`, warten nur noch auf die Mac-Messung (Projektinhaber ab 14:45 Uhr).
+- **Nächster Schritt:** Ergebnisdatei und Startverhalten vom Mac auswerten, 1.3 und 1.6 abschließen, S-1 ggf. auf `[BELASTBAR]` (Eskalations-Auslöser 4); danach 1.4.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session`); 0 Schritte oberhalb der Empfehlung; keine Abgabe.
+- **Kontextgröße:** 625.658 Token laut `get_session` – **über der Grenze von 400.000**. Hinweis: nächste Arbeit in einer neuen Session beginnen.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf (Umstellung `ubuntu-latest` ab 2026-10-19 bleibt bei Q.1). **Drift-Prüfung:** README unverändert gültig; ADR-011 verweist auf 1.3, 1.5, 1.6, 7.2 (existieren); Reaktiv-Quote 1/10 stimmt mit Teil B überein; Phase 1 weiter 7 Schritte.
+
 ### 2026-10-13 12:40 – [ADR-ANGELEGT]
 
 - **ADR:** ADR-011 „Linux-Leistungsmessung auf echter Hardware verschoben auf Schritt 7.2" (`docs/decisions/ADR-011.md`)

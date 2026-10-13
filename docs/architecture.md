@@ -414,7 +414,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Betriebsart des Rust-Kerns (napi-rs, Utility-Prozess) | VORLÄUFIG | 2026-10-13 | ADR-009; Bestätigung durch Leistungsnachweis Schritt 1.5 |
 | Datenmodell und Parallelisierung im Kern | VORLÄUFIG | 2026-10-13 | ADR-010; Bestätigung im Leistungsnachweis 1.5 |
 | Wegfindung per Wegweiser-Prinzip (ADR-004, ADR-010) | VORLÄUFIG | 2026-10-13 | Spike 1.2 bestanden für 512² × 2; fünf Etagen und Rastergröße in Schritt 1.5 |
-| S-1 Zustandspuffer | VORLÄUFIG | 2026-10-13 | Spike 1.3: Dreifachpuffer und Übergabe gemessen (0,5–2,6 ms je Bild); wartet auf Bildrate auf echter Grafik (Testprogramm 1.3) |
+| S-1 Zustandspuffer | VORLÄUFIG | 2026-10-13 | Spike 1.3: Dreifachpuffer und Übergabe gemessen (0,5–2,6 ms je Bild); Bildrate auf Referenz-PC/Windows 60 Bilder/s gemessen; wartet auf Mac (Linux: ADR-011) |
 | S-2 Befehlskanal, S-3 Ereignisstrom | VORLÄUFIG | 2026-10-13 | Phase 2 |
 | S-4 Datenpaket-Schema | OFFEN | 2026-10-13 | Phase 2 |
 | S-5 Spielstand-Format | OFFEN | 2026-10-13 | Phase 2 |
