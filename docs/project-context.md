@@ -349,6 +349,10 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 - **Rollweg-Knoten:** vom Spieler gezogene Mittellinien auf Rollwegen, entlang derer Flugzeuge rollen.
 - **Verkehrssteuerung:** automatisches System in der Rolle von Tower und Rollkontrolle, das Rollrouten zuweist und Konflikte nach der Vorrang-Rangfolge löst.
 - **Simulationsschritt (Tick):** fester Zeitschritt, in dem die Simulation ihren Zustand fortschreibt, unabhängig von der Bildrate.
+- **Zelle:** kleinste Einheit des Weltrasters, 2 m × 2 m (ADR-020); Gebäude, Straßen, Vorfeld, Rollwege und Bahnen liegen im selben Raster.
+- **Block:** 32 × 32 Zellen einer Etage; Speichereinheit für Raster und Wegweiser, existiert nur, wo gebaut bzw. begehbar ist (ADR-020).
+- **Wegenetz:** aus den Bauten abgeleitetes Netz aus Fahrspuren, Rollweg-Knoten und Bahnen, auf dem Fahrzeuge und Flugzeuge fahren.
+- **Spieltag:** 24 Spielstunden; dauert bei 1× 72 Minuten, bei 3× 24 Minuten (Tick = 1/3 Spielsekunde, ADR-020).
 - **PAX:** Passagiere.
 
 ---
