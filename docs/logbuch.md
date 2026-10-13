@@ -24,6 +24,42 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4, 1.5 (ADR-013, A
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 16:40 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 40 Minuten seit `[SESSIONSTART]` 16:00
+- **Bearbeitet:** 1.6-N1 (Ad-hoc-Signatur der Mac-Pakete), ADR-015, Reflexion zur Reaktiv-Quote, Korrektur der Tags in ADR-014
+- **Erreicht:** 1.6-N1 `[ERLEDIGT]`, auf dem Mac bestätigt; ADR-015 mit Ergebnis; Reflexion vom Projektinhaber bestätigt, STOPP aufgehoben.
+- **Offen geblieben:** Reaktiv-Quote bleibt bei 3 / 10 über dem Schwellenwert, bis ADR-011/012 aus dem Fenster fallen (ab ADR-017/018); CI des PR nicht abgewartet.
+- **Nächster Schritt:** 1.7 – Auswertung und Entscheidung (Phasenabschluss) mit Bewertung durch eine getrennte Instanz, in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 16:40); Freigabe Kategorie 7 und Reflexion verlangen Entscheidung, 0 Schritte oberhalb der Empfehlung; keine Abgabe (Probelauf offen).
+- **Kontextgröße:** 363.829 Token laut `get_session`, unter der Grenze von 400.000, aber nahe daran – nächste Arbeit in neuer Session beginnen.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf. **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte, Blocker 0; Verpackung unverändert vorläufig); Reaktiv-Quote 3/10 in Teil A stimmt mit Tags in ADR-006 bis ADR-015 überein; ADR-015 verweist auf 1.6-N1 und 7.1 (vorhanden); keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Phase 1 bei 7 Schritten (1.6-N1 als Nachlauf nicht gezählt).
+
+### 2026-10-13 16:30 – [GELÖST]
+
+- **Problem:** Mac-Paket nur für Apple-Chips meldete „beschädigt" (siehe 14:52).
+- **Lösung:** Ad-hoc-Signatur (ADR-015, Commit `ca19704`). Lauf 38422799978 grün, `Signature=adhoc`. Projektinhaber auf dem Mac M3 Pro: übliche Warnung „Apple konnte nicht überprüfen …" mit „In den Papierkorb" / „Fertig"; Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen" startet das Programm. Kein `xattr` mehr nötig.
+- **Erkenntnis:** Neuere macOS-Versionen bieten im Warn-Dialog selbst kein „Öffnen" mehr; der Weg führt immer über die Systemeinstellungen. Maßnahme (1) der Reaktiv-Reflexion damit erstmals angewendet (Startweg auf echtem Gerät geprüft).
+- **Nachgezogen:** ADR-015 (Ergebnis), Fahrplan 1.6-N1 `[ERLEDIGT]`, Startanleitung `spikes/1.5-leistung/README.md`.
+
+### 2026-10-13 16:15 – [BEOBACHTUNG]
+
+- **STOPP Reaktiv-Quote aufgehoben:** Projektinhaber stimmt der Reflexion zu („Zustimmung, setze 1.6-N1 um"): kein Architektur-Umbau, Maßnahmen (1) Startweg vor Verpackungs-ADRs prüfen, (2) Verpackungsfragen in 7.1 bündeln.
+- **1.6-N1 umgesetzt** (Commit `ca19704`): Ad-hoc-Signatur in der Build-Konfiguration von Spike 1.5, Prüfschritt im Workflow. Wartet auf den CI-Lauf und den Test auf dem Mac.
+
+### 2026-10-13 16:05 – [ADR-ANGELEGT]
+
+- **ADR-015:** Ad-hoc-Signatur für macOS-Pakete der Spike-Builds (`[REAKTIV]`, Kategorie 7), Freigabe des Projektinhabers: „A, freigegeben". Grundlage: electron-builder 26.16.1 signiert mit `identity: null` gar nicht; `"-"` schaltet Ad-hoc-Signatur ein, verlangt `hardenedRuntime: false` (Dokumentation in `macOptions.d.ts`).
+- **Reaktiv-Quote 3 / 10 (30 %) über dem Schwellenwert** → STOPP nach `decisions.md` Teil A; Reflexion im Fahrplan („Iterations-Reflexion"), Umsetzung angehalten bis zur Kenntnisnahme. Klassifikation `[REAKTIV]` nach demselben Maßstab wie ADR-011/012.
+- **Korrektur ADR-014:** trug zwei Klassifikations-Tags (`[ERKENNTNIS]` und `[STRATEGISCH]`), `decisions.md` verlangt genau einen; `[STRATEGISCH]` entfernt, `[ERKENNTNIS]` bleibt (Teil A war bereits richtig).
+
+### 2026-10-13 16:00 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 15:52; PR Paddel87/OpenAirside#10 gemergt (`7983004`), Branch `claude/gracious-galileo-2reksz` neu auf `main` gesetzt.
+- **Pflichtlektüre:** fortgeführter Gesprächsverlauf, Stand aus der vorigen Session bekannt; vertieft: ADR-012, `spike-build-1-5.yml`, Build-Konfiguration 1.5.
+- **Geplant:** 1.6-N1 (Ad-hoc-Signatur der Mac-Pakete), Freigabe „A" des Projektinhabers.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` (Quelle: `get_session`) → Entscheidungs-Klasse; Kontext 284.324 Token.
+
 ### 2026-10-13 15:52 – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 100 Minuten seit `[SESSIONSTART]` 14:11 (mit einer Verdichtung des Gesprächsverlaufs dazwischen)

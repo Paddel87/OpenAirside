@@ -48,7 +48,8 @@
           ]
         }
       ],
-      "identity": null,
+      "identity": "-",
+      "hardenedRuntime": false,
       "category": "public.app-category.simulation-games"
     },
     "win": {

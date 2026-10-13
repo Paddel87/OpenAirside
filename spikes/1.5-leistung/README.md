@@ -74,6 +74,8 @@ Der Workflow `.github/workflows/spike-build-1-5.yml` baut das Programm für alle
 
 **macOS, Abweichung zu 1.3/1.4 (Rückmeldung Projektinhaber 2026-10-13):** Das Paket nur für Apple-Chips (ADR-012) meldet beim Start „ist beschädigt und kann nicht geöffnet werden" und bietet nur „In den Papierkorb" oder „Fertig"; „Dennoch öffnen" erscheint nicht. Abhilfe: Programm in „Programme" ziehen, dann im Terminal `xattr -cr "/Applications/OpenAirside Spike 1.5.app"` und erneut starten (bestätigt auf dem Mac M3 Pro; `codesign` war nicht nötig). Vermutete, nicht geprüfte Ursache: Ohne Universal-Zusammenführung fehlt dem arm64-Paket die Ad-hoc-Signatur, die Apple-Chips verlangen.
 
+**Behoben seit Lauf 38422799978 (ADR-015, 1.6-N1):** Pakete werden ad hoc signiert. macOS zeigt jetzt die übliche Warnung („Apple konnte nicht überprüfen, ob … frei von Schadsoftware ist", Knöpfe „In den Papierkorb" / „Fertig"). Weg: „Fertig" → Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen" → erneut starten → „Öffnen". Kein Terminal nötig (bestätigt auf dem Mac M3 Pro, 2026-10-13).
+
 Das Programm misst nach dem Start **rund 11 Minuten** selbständig. Bitte währenddessen nichts bedienen, das Fenster nicht verdecken, nicht verkleinern und keine anderen rechenintensiven Programme laufen lassen; Netzteil anschließen. Danach steht oben rechts, wo das Ergebnis gespeichert wurde (Ordner „Downloads", Datei `openairside-spike-1-5-…json`). Diese Datei bitte schicken, mit Rechner und Bildschirm.
 
 ## Messung auf echter Grafik
