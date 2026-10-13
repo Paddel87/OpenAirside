@@ -17,12 +17,70 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019); Nachlauf 2.1-N1/N2 erledigt; nächster Schritt 2.8 in neuer Session.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); nächster Schritt 2.9 in neuer Session. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 19:22 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 22 Minuten seit `[SESSIONSTART]` 19:00 UTC; ersetzt als Wiedereinstiegspunkt den Eintrag 19:14 (danach nur die Kenntnisnahme 19:20).
+- **Bearbeitet:** 2.8 – Weltmaßstab, Luftseite und Zeitmodell
+- **Erreicht:** 2.8 `[ERLEDIGT]` mit ADR-020 (Details im Eintrag 19:14); Reflexion zur Reaktiv-Quote vom Projektinhaber zur Kenntnis genommen, keine offene STOPP-Situation.
+- **Offen geblieben:** Branch `claude/gracious-galileo-2reksz` liegt 6 Commits vor `main` (`d9cbf8a` bis `9f2456d`), kein PR geöffnet (nicht angefragt). Merge auf `main` nur per PR (Ruleset `main-schutz`); dabei Nachweis 2.1-N1 (Pflicht-Checks als „Required") prüfen. Neuberechnung in Blöcken nur ersatzweise gemessen, Bestätigung in 2.3.
+- **Nächster Schritt:** 2.9 – Schnittstellenverträge S-2 bis S-7 (Entwurfsschritt, Entscheidungs-Klasse, Freigabe Kategorie 5 und 1). Einstieg: zuerst klären, ob der Branch gemergt ist (sonst auf ihm weiterarbeiten bzw. nach Merge neu von `main`); Vertiefung: `architecture.md` Abschnitt 4 (Schnittstellenverträge), ADR-020 (Adressierung in Weltkoordinaten, Zeitmodell), ADR-009/ADR-010 (Übernahme der Wegweiser, Prüfmodus), Spike 1.4 (`readTable`) für S-7, `project-context.md` Abschnitt 6 (Sicherheit: Validierung von Spielständen und Mods) für S-4/S-5/S-6.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 19:20 UTC); 0 Schritte oberhalb der Empfehlung; keine Teilarbeit abgegeben (Probelauf offen).
+- **Kontextgröße:** 285.309 Token laut `get_session` 19:20 UTC, unter der Grenze von 400.000. Korrektur zum Eintrag 19:14: der dort genannte Wert war veraltet.
+- **Kontingent:** 5-Stunden-Fenster `allowed`.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf.
+- **Drift-Prüfung:** unverändert gegenüber 19:14 (README, ADR-Verweise, Reifegrade, Reaktiv-Quote 6 / 10, Blocker 0, Phase 2 bei 10 Schritten); Fahrplan „Aktueller Stand" ohne offene STOPP-Situation.
+
+### 2026-10-13 19:20 (UTC) – [BEOBACHTUNG]
+
+- **Kenntnisnahme:** Projektinhaber hat die Reflexion zur Reaktiv-Quote (Anlass ADR-020, 6 / 10) zur Kenntnis genommen; kein Umbau, Maßnahme (5) gilt. Damit keine offene STOPP-Situation.
+
+### 2026-10-13 19:14 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 14 Minuten seit `[SESSIONSTART]` 19:00 UTC
+- **Bearbeitet:** 2.8 – Weltmaßstab, Luftseite und Zeitmodell
+- **Erreicht:** 2.8 `[ERLEDIGT]`. Messung `spikes/2.8-weltmassstab/` (Referenzterminal aus 1.5 in Welten 1536²–3072² eingebettet, dicht gegen 32 × 32-Blöcke, Simulationsschritt, Blocktabelle). ADR-020 freigegeben (A: 2 m je Zelle, Luftseite im Raster in echten Maßen, Karten 1536²/2048², Blöcke, Wegenetze; Spieltag 72 min bei 1×; Vorfeld nur auf Gehwegen). ADR-013 überholt. `architecture.md` 3/6/7/9, Fahrplan (2.2, 2.3, 2.9, 2.10, 3.4, 5.8, Abschlusskriterium Phase 2), Glossar in `project-context.md`, README nachgezogen.
+- **Offen geblieben:** Kenntnisnahme der Reflexion „Anlass ADR-020" (Reaktiv-Quote 6 / 10) durch den Projektinhaber. Neuberechnung in Blöcken nur ersatzweise gemessen – Bestätigung durch Benchmark in 2.3. Kein PR geöffnet (nicht angefragt).
+- **Nächster Schritt:** 2.9 (Schnittstellenverträge S-2 bis S-7) in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 19:13 UTC); 2.8 empfiehlt Entscheidung, 0 Schritte oberhalb der Empfehlung; keine Teilarbeit abgegeben (Probelauf offen).
+- **Kontextgröße:** `get_session` meldet 102.635 Token, derselbe Wert wie zu Sessionbeginn – vermutlich nicht nachgeführt; unter der Grenze von 400.000.
+- **Kontingent:** 5-Stunden-Fenster `allowed` (19:13 UTC).
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf; Runner-Umstellung auf Ubuntu 26 ab 2026-10-19 weiter in Q.1 zu beobachten.
+- **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte, Blocker 0); ADR-020 verweist auf vorhandene Schritte (2.2, 2.3, 2.9, 2.10, 3.4, 5.8); Reifegrade passend zu ADR-020; Reaktiv-Quote 6 / 10 stimmt mit den Tags von ADR-011 bis ADR-020; keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Phase 2 weiter bei 10 Schritten; Größen: `project-context.md` 360 Zeilen, Logbuch unter 800.
+
+### 2026-10-13 19:12 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-020** `[REAKTIV]` (Kategorie 4): Weltmaßstab 2 m je Zelle, Luftseite im Raster, Wegweiser in Blöcken, Zeitmodell. Freigabe des Projektinhabers per Auswahl: „A: 2 m, echte Maße", „72 Minuten", „Nur markierte Gehwege".
+- **Reaktiv** allein wegen der 14-Tage-Regel (ändert ADR-013 vom selben Tag); Reflexion mit Maßnahme (5) in `fahrplan.md` ergänzt.
+- **Reifegrad:** keine Beförderung; Datenmodell und Wegweiser-Prinzip bleiben `[BELASTBAR]`, offene Frage „Lage von Bahnen und Vorfeld" geschlossen.
+
+### 2026-10-13 19:10 (UTC) – [BEOBACHTUNG]
+
+- **Messmethode 2.8:** Die Rechenzeit einer Block-Speicherung wurde nicht mit einer eigenen Block-Implementierung gemessen, sondern auf dem Ausschnitt mit denselben begehbaren Zellen; Speicher aus der exakten Zahl belegter Blöcke. Mehraufwand der Block-Adressierung getrennt per Mikromessung (+3 ns je Zugriff). Der Benchmark in 2.3 bestätigt das am Produktionscode.
+- **Mini-Reibung:** `/usr/bin/time` fehlt im Container; Prozess-Spitze stattdessen aus `VmHWM` im Programm. Zeitstempel des Eintrags `[ENTSCHEIDUNG-VORGELEGT]` zunächst mit 19:40 statt 19:08 geschrieben, vor dem Commit korrigiert – Uhrzeit immer mit `date -u` holen.
+- **Original:** Spieltag-Länge nicht offiziell belegt; Forum-Angaben 1–4 s je Spielminute widersprechen sich (Versionen).
+
+### 2026-10-13 19:08 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 2.8, Kategorie 4 (Datenmodell), ändert ADR-013.
+- **Grundlage:** Messung `spikes/2.8-weltmassstab/` (Container, 4 vCPU): Luftseite im selben Raster mit dichter Speicherung 720 MB / 2,3 s (2048²) bis 1,6 GB / 5,2 s (3072²) für dasselbe Terminal; in 32×32-Blöcken über begehbaren Flächen 25,5 MB / 0,4 s unabhängig von der Weltgröße, Terminal 768² mit 64 Wegweisern 98 MB / 1,6 s. Schritt 0,23–0,28 ms, Blocktabelle +3 ns je Zugriff.
+- **Vorgelegt:** Maßstab (2 m je Zelle, Luftseite in realen Abmessungen, Karten 1536² / 2048², Block-Speicherung, Graphen für Straßen, Rollwege, Bahnen), Zeitmodell (60 Ticks/s bei 1×, gleiche Tick-Länge bis 3×, Spieltag bei 1×), Begehbarkeit des Vorfelds.
+- **Hinweis:** Der Folge-ADR ändert ADR-013 innerhalb von 14 Tagen und ist damit nach `CLAUDE.md` Abschnitt 6 `[REAKTIV]`; Reaktiv-Quote stiege auf 6 / 10.
+
+### 2026-10-13 19:00 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 17:47 UTC plus `[BEOBACHTUNG]` 18:46 UTC (Nachlauf 2.1 erledigt); PR Paddel87/OpenAirside#14 gemergt (`0049866`), Branch `claude/gracious-galileo-2reksz` neu auf `main` gesetzt.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant:** 2.8 – Weltmaßstab, Luftseite und Zeitmodell (Entwurfsschritt, Vergleichsstudie mit Messung, Zeitbox eine Session).
+- **Vorabprüfung:** Eingangskriterium Datenmodell `[BELASTBAR]` (ADR-010, ADR-014) erfüllt; Ergebnis ist freigabepflichtig (Kategorie 4).
+- **Modus/Werkzeug:** Claude Code, Cloud-Session, semi-autonom.
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` (Quelle: `get_session` 19:00 UTC) – Entscheidungs-Klasse; entspricht der Empfehlung für 2.8.
 
 ### 2026-10-13 18:46 (UTC) – [BEOBACHTUNG]
 

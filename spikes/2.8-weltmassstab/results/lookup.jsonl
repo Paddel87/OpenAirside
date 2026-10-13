@@ -1,0 +1,2 @@
+{"mode":"lookup","W":2048,"H":2048,"block":32,"persons":10000,"dense_ns":5.24,"sparse_ns":8.19,"check":0}
+{"mode":"lookup","W":2048,"H":2048,"block":64,"persons":10000,"dense_ns":4.99,"sparse_ns":8.22,"check":1}
