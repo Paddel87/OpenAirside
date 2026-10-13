@@ -24,6 +24,11 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4, 1.5 (ADR-013, A
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 16:15 – [BEOBACHTUNG]
+
+- **STOPP Reaktiv-Quote aufgehoben:** Projektinhaber stimmt der Reflexion zu („Zustimmung, setze 1.6-N1 um"): kein Architektur-Umbau, Maßnahmen (1) Startweg vor Verpackungs-ADRs prüfen, (2) Verpackungsfragen in 7.1 bündeln.
+- **1.6-N1 umgesetzt** (Commit `ca19704`): Ad-hoc-Signatur in der Build-Konfiguration von Spike 1.5, Prüfschritt im Workflow. Wartet auf den CI-Lauf und den Test auf dem Mac.
+
 ### 2026-10-13 16:05 – [ADR-ANGELEGT]
 
 - **ADR-015:** Ad-hoc-Signatur für macOS-Pakete der Spike-Builds (`[REAKTIV]`, Kategorie 7), Freigabe des Projektinhabers: „A, freigegeben". Grundlage: electron-builder 26.16.1 signiert mit `identity: null` gar nicht; `"-"` schaltet Ad-hoc-Signatur ein, verlangt `hardenedRuntime: false` (Dokumentation in `macOptions.d.ts`).

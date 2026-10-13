@@ -11,9 +11,9 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** keiner (1.5 erledigt, ADR-014)
+- **Aktiver Schritt:** 1.6-N1 – Ad-hoc-Signatur der Mac-Pakete (ADR-015)
 - **Nächster Schritt:** 1.7 – Auswertung und Entscheidung
-- **Offene STOPP-Situationen:** Reaktiv-Quote 3 / 10 über dem Schwellenwert (ADR-015); Reflexion unten im Abschnitt „Iterations-Reflexion", Umsetzung von 1.6-N1 angehalten bis zur Kenntnisnahme durch den Projektinhaber
+- **Offene STOPP-Situationen:** keine (Reaktiv-Quote 3 / 10 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 bestätigt, siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -405,7 +405,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Zwischenstand 2026-10-13:** Workflow `.github/workflows/spike-build.yml` baut das Spike-1.1-Programm (Electron 44 + napi-Modul) mit electron-builder 26.16.1 für Windows (NSIS, ZIP), macOS Universal (DMG, ZIP, ohne Signatur) und Linux (AppImage, tar.gz) und startet es auf jedem Runner (Lauf 38383032090, alle grün). Befunde im README des Spikes. Windows-PC (2026-10-13, Rückmeldung Projektinhaber): SmartScreen-Warnung beim Start des unsignierten Programms, nach Zulassen lauffähig – wie erwartet. Linux: CI-Rauchtest genügt für 1.6 (ADR-011). macOS (2026-10-13, Projektinhaber): Gatekeeper blockiert das unbeglaubigte Programm; Freigabe über Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen" (Rechtsklick → „Öffnen" wirkt seit macOS 15 nicht mehr). Verpackung bleibt `[VORLÄUFIG]`: unsigniert, Linux-Sandbox offen (7.2), Signatur-Entscheidung in 7.1. Ursprünglich offen für den Abschluss: Start auf Mac M3 Pro, insbesondere was ein Spieler unter macOS ohne Signatur tun muss – Anleitung im README des Spikes, Abschnitt „Testprogramm herunterladen und starten".
 
 - **Nachtrag 2026-10-13 (aus 1.5):** Das Paket nur für Apple-Chips (ADR-012) verhält sich anders als das in 1.6 geprüfte Universal-Paket: macOS meldet „beschädigt" statt der Gatekeeper-Warnung, „Dennoch öffnen" fehlt; Abhilfe `xattr -cr "<App>"`. Vermutete Ursache: fehlende Ad-hoc-Signatur ohne Universal-Zusammenführung (nicht geprüft).
-  - **1.6-N1 `[WARTET-AUF-FREIGABE]` (Kategorie 7 Build-Pipeline; freigegeben 2026-10-13 als ADR-015, Umsetzung angehalten wegen Reaktiv-Quote):** arm64-Builds der Spike-Workflows mit Ad-hoc-Signatur (`identity: "-"` bzw. `codesign --force --deep -s -` nach dem Packen) erzeugen und prüfen, ob dann wieder „Dennoch öffnen" erscheint. Ergebnis fließt in die Signatur-Entscheidung von 7.1.
+  - **1.6-N1 `[IN ARBEIT]` (Kategorie 7 Build-Pipeline; freigegeben 2026-10-13 als ADR-015):** arm64-Builds der Spike-Workflows mit Ad-hoc-Signatur (`identity: "-"` bzw. `codesign --force --deep -s -` nach dem Packen) erzeugen und prüfen, ob dann wieder „Dennoch öffnen" erscheint. Ergebnis fließt in die Signatur-Entscheidung von 7.1.
+    - **Umsetzung 2026-10-13:** `identity: "-"`, `hardenedRuntime: false` in `spikes/1.5-leistung/app/package.json`; Workflow prüft `Signature=adhoc` und die Signatur des nativen Moduls. **Offen:** grüner Lauf von „Spike-Build 1.5"; Test des heruntergeladenen Pakets auf dem Mac („Dennoch öffnen" statt „beschädigt"?). Akzeptanz: Wissen, ob die Ad-hoc-Signatur den Startweg ändert.
 
 #### 1.7: Auswertung und Entscheidung
 
@@ -560,7 +561,7 @@ Noch keine abgeschlossene Phase.
 - **Befund:** 3 / 10 `[REAKTIV]` (ADR-011, ADR-012, ADR-015) über ADR-006 bis ADR-015, 30 % bei Schwellenwert 20 %.
 - **Gemeinsamkeit:** Alle drei betreffen Testlogistik und Verpackung (Linux-Testhardware nicht verfügbar; Mac-Paketgröße und Ende von Intel-Macs; fehlende Signatur des arm64-Pakets als Folge von ADR-012). Kein reaktiver ADR betrifft Kern, Brücke, Datenmodell, Wegfindung oder Präsentation; diese sind per Spike (`[ERKENNTNIS]`) entschieden und seit ADR-014 `[BELASTBAR]`.
 - **Ursache:** Verpackung ist in Phase 1 bewusst nur auf „baut und startet" erkundet (1.6), Signatur auf 7.1 gelegt. ADR-012 hat die Folgen für den Startweg auf macOS nicht geprüft – ADR-015 repariert diese Lücke.
-- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI). Die Häufung zeigt eine unreife Verpackung, die als `[VORLÄUFIG]` geführt ist, keine schwache Modularchitektur.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI; vom Projektinhaber am 2026-10-13 bestätigt: „Zustimmung"). Die Häufung zeigt eine unreife Verpackung, die als `[VORLÄUFIG]` geführt ist, keine schwache Modularchitektur.
 - **Maßnahmen:** (1) Jede Änderung an Paketziel oder Signatur prüft vor dem ADR den Startweg eines heruntergeladenen Pakets auf jeder betroffenen Plattform (Gatekeeper, SmartScreen). (2) Weitere Verpackungsfragen sammeln, nicht einzeln entscheiden; gebündelt in 7.1, sofern sie nicht Tests blockieren.
 - **Ausblick:** Die Quote bleibt über dem Schwellenwert, bis ADR-011 aus dem Fenster fällt (ab ADR-017, falls nicht reaktiv) bzw. ADR-012 (ab ADR-018).
 
