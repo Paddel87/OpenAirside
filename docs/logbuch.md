@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 23:08 (UTC) – [BEOBACHTUNG]
+
+- **PR Paddel87/OpenAirside#18 gemergt** (`be53a27`, Merge-Commit) durch den Projektinhaber; vorher alle 39 Prüfläufe auf `3aec3dc` grün, PR konfliktfrei. Beobachtung des PR beendet, Sicherheits-Check-in gelöscht. Dieser Eintrag liegt nach `project-context.md` Abschnitt 10 nur auf dem Branch und geht mit dem PR des nächsten Schritts (2.3) nach `main`.
+
 ### 2026-10-13 23:02 (UTC) – [BEOBACHTUNG]
 
 - **Ruleset `main-schutz`:** Der Projektinhaber hat „Require branches to be up to date before merging" ausgeschaltet. Geprüft über `rules/branches/main`: `strict_required_status_checks_policy: false`, 19 Pflicht-Checks inklusive „Kern-Benchmark". Fahrplan 2.1-N1 („Branch nicht zwingend aktuell") entspricht damit wieder dem Ist-Zustand.
