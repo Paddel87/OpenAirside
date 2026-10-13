@@ -24,6 +24,19 @@ Phase 1 läuft. Schritte 1.1 (ADR-009) und 1.2 (ADR-010) erledigt; 1.3 und 1.6 w
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 12:15 – [BEOBACHTUNG]
+
+- **Spike 1.3 auf dem Referenz-PC unter Windows** (Ryzen 9 3900X, RX 7700 XT, Ergebnisdatei vom Projektinhaber): 10.000 Personen 60 Bilder/s ohne ein Bild über 20 ms (beide Zeichenarten), 50.000 mit `particles` 60 Bilder/s, mit `sprites` bis 46 Bilder/s. Bauaktion im übernächsten Bild (p50 33,5 ms). Ein Baubefehl kostet im Simulations-Thread bis 17 ms (Raster-Schnappschuss) – Ansatzpunkt für Phase 2, kein Rückstand gemessen. Details im Messprotokoll.
+- **Nebenbefund 1.6:** Das Windows-Paket von Spike 1.3 lief auf dem Referenz-PC; die Rückmeldung zum Startablauf (SmartScreen) fehlt noch.
+
+### 2026-10-13 12:10 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 11:45 (Spike 1.3 in einer anderen Session gebaut, PR Paddel87/OpenAirside#6 gemergt als `2436e99`); Branch neu auf `main`.
+- **Pflichtlektüre:** Änderungen seit dem letzten Lesen in dieser Sitzung gezielt gelesen (`git diff 1c5c9fb 2436e99` für `docs/` und README; Logbuch 11:10–11:45; Messprotokoll `spikes/1.3-spielfeld/README.md`).
+- **Geplant:** Ergebnisdatei des Testprogramms 1.3 vom Referenz-PC (Windows) auswerten.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` → Entscheidungs-Klasse (`get_session`); 1.3 empfiehlt Entscheidung.
+- **Kontextgröße:** 528.832 Token laut `get_session` – über der Grenze von 400.000 (Fortsetzung dieser Sitzung auf Wunsch des Projektinhabers).
+
 ### 2026-10-13 11:45 – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 35 Minuten seit `[SESSIONSTART]` 11:10
