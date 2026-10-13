@@ -240,7 +240,10 @@ impl Host {
     #[must_use]
     pub fn max_frame_bytes(&self, format: Format) -> usize {
         // A single build command may exceed the per-frame limit on its own.
-        HEADER_BYTES + self.persons * format.person_bytes() + 4 + (MAX_CHANGES_PER_FRAME + MAX_BRUSH * MAX_BRUSH) * 8
+        HEADER_BYTES
+            + self.persons * format.person_bytes()
+            + 4
+            + (MAX_CHANGES_PER_FRAME + MAX_BRUSH * MAX_BRUSH) * 8
     }
 
     pub fn set_hz(&self, hz: u32) {
@@ -326,7 +329,10 @@ fn encode_frame(frame: &Frame, changes: &[Change], req: &Request, out: &mut [u8]
     let mut count: u32 = 0;
     let (lo, hi) = match req.rect {
         Some([x0, y0, x1, y1]) => (
-            [(x0 * SUBCELL).max(0.0) as u16, (y0 * SUBCELL).max(0.0) as u16],
+            [
+                (x0 * SUBCELL).max(0.0) as u16,
+                (y0 * SUBCELL).max(0.0) as u16,
+            ],
             [
                 (x1 * SUBCELL).min(65535.0) as u16,
                 (y1 * SUBCELL).min(65535.0) as u16,
@@ -435,7 +441,11 @@ fn run(
             if !changed.is_empty() {
                 let mut log = shared.changes.lock().expect("changes lock");
                 for c in changed {
-                    log.push((grid_version, c, sim.grid.flags[c as usize] & (WALL | STAIRS)));
+                    log.push((
+                        grid_version,
+                        c,
+                        sim.grid.flags[c as usize] & (WALL | STAIRS),
+                    ));
                 }
             }
             last_cmd = cmd.id;

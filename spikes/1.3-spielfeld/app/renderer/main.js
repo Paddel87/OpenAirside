@@ -5,7 +5,8 @@
 // state. A wall appears when the frame from the core contains it.
 
 const PIXI = globalThis.PIXI;
-const { Application, Container, Particle, ParticleContainer, Sprite, Texture } = PIXI;
+const { Application, Container, Particle, ParticleContainer, Sprite, Texture } =
+  PIXI;
 
 // PixiJS 8.20.1: the global build of `unsafe-eval` replaces the eval-based
 // particle upload only in its own bundled copy of ParticleBuffer, not in the
@@ -14,8 +15,12 @@ Object.assign(PIXI.ParticleBuffer.prototype, {
   generateParticleUpdate: PIXI.generateParticleUpdatePolyfill,
 });
 
-window.addEventListener("error", (e) => window.spike.log(`error: ${e.message} @${e.lineno}`));
-window.addEventListener("unhandledrejection", (e) => window.spike.log(`rejection: ${e.reason}`));
+window.addEventListener("error", (e) =>
+  window.spike.log(`error: ${e.message} @${e.lineno}`),
+);
+window.addEventListener("unhandledrejection", (e) =>
+  window.spike.log(`rejection: ${e.reason}`),
+);
 
 const hudEl = document.getElementById("hud");
 const statusEl = document.getElementById("status");
@@ -63,14 +68,18 @@ function gpuName() {
   if (!gl) return `renderer type ${app.renderer.name}`;
   const ext = gl.getExtension("WEBGL_debug_renderer_info");
   return String(
-    ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+    ext
+      ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)
+      : gl.getParameter(gl.RENDERER),
   );
 }
 
 const env = {
   gpu: gpuName(),
   pixiRenderer: app.renderer.name,
-  webgl2: Boolean(app.renderer.gl && app.renderer.gl instanceof WebGL2RenderingContext),
+  webgl2: Boolean(
+    app.renderer.gl && app.renderer.gl instanceof WebGL2RenderingContext,
+  ),
   screen: {
     w: window.innerWidth,
     h: window.innerHeight,
@@ -104,7 +113,10 @@ const squareTex = canvasTexture(4, (ctx) => {
 const NEAR_SIZE = 0.8; // cells
 const FAR_SIZE = 1.2; // cells
 
-const PALETTE = [0xe8554e, 0xf2a541, 0x4fb286, 0x3c91e6, 0xa266dd, 0xf3e37c, 0x5bc0be, 0xf28cb1];
+const PALETTE = [
+  0xe8554e, 0xf2a541, 0x4fb286, 0x3c91e6, 0xa266dd, 0xf3e37c, 0x5bc0be,
+  0xf28cb1,
+];
 
 // Cell colours (RGBA) by zone; walls, stairs and void override.
 const ZONE_RGB = [
@@ -155,7 +167,12 @@ function paintCell(i) {
   const f = Math.floor(i / per);
   const j = i % per;
   const flags = S.flags[i];
-  const rgb = flags & 1 ? WALL_RGB : flags & 2 ? STAIRS_RGB : ZONE_RGB[S.zone[i]] ?? WALL_RGB;
+  const rgb =
+    flags & 1
+      ? WALL_RGB
+      : flags & 2
+        ? STAIRS_RGB
+        : (ZONE_RGB[S.zone[i]] ?? WALL_RGB);
   const d = S.floorImages[f].data;
   d[j * 4] = rgb[0];
   d[j * 4 + 1] = rgb[1];
@@ -218,7 +235,12 @@ function makePersonLayers(max) {
   }
   const root = new Container();
   world.addChild(root);
-  const layers = { root, max, render: S.render, lastField: new Int16Array(max).fill(-1) };
+  const layers = {
+    root,
+    max,
+    render: S.render,
+    lastField: new Int16Array(max).fill(-1),
+  };
   if (S.render === "particles") {
     const mk = (texture, size) => {
       const pc = new ParticleContainer({
@@ -229,7 +251,13 @@ function makePersonLayers(max) {
       const scale = size / texture.width;
       for (let i = 0; i < max; i++) {
         pool.push(
-          new Particle({ texture, scaleX: scale, scaleY: scale, anchorX: 0.5, anchorY: 0.5 }),
+          new Particle({
+            texture,
+            scaleX: scale,
+            scaleY: scale,
+            anchorX: 0.5,
+            anchorY: 0.5,
+          }),
         );
       }
       root.addChild(pc);
@@ -313,7 +341,10 @@ function updatePersons() {
 function applyCamera() {
   const { x, y, zoom } = S.cam;
   world.scale.set(zoom);
-  world.position.set(window.innerWidth / 2 - x * zoom, window.innerHeight / 2 - y * zoom);
+  world.position.set(
+    window.innerWidth / 2 - x * zoom,
+    window.innerHeight / 2 - y * zoom,
+  );
 }
 
 function viewRect(margin = 4) {
@@ -325,7 +356,8 @@ function viewRect(margin = 4) {
 function fitMap() {
   S.cam.x = S.w / 2;
   S.cam.y = S.h / 2;
-  S.cam.zoom = Math.min(window.innerWidth / S.w, window.innerHeight / S.h) * 0.95;
+  S.cam.zoom =
+    Math.min(window.innerWidth / S.w, window.innerHeight / S.h) * 0.95;
 }
 
 function screenToCell(sx, sy) {
@@ -386,7 +418,15 @@ function request() {
 function build(cx, cy, wall) {
   const id = ++cmdId;
   builds.set(id, { t: performance.now(), raf: rafCount, seen: false });
-  port.postMessage({ type: "build", id, x: cx, y: cy, floor: S.floor, size: BRUSH, wall });
+  port.postMessage({
+    type: "build",
+    id,
+    x: cx,
+    y: cy,
+    floor: S.floor,
+    size: BRUSH,
+    wall,
+  });
 }
 
 function ensureCapacity(n) {
@@ -575,7 +615,10 @@ app.canvas.addEventListener(
       S.cam.x + (e.clientX - window.innerWidth / 2) / S.cam.zoom,
       S.cam.y + (e.clientY - window.innerHeight / 2) / S.cam.zoom,
     ];
-    S.cam.zoom = Math.min(64, Math.max(0.5, S.cam.zoom * (e.deltaY > 0 ? 1 / 1.15 : 1.15)));
+    S.cam.zoom = Math.min(
+      64,
+      Math.max(0.5, S.cam.zoom * (e.deltaY > 0 ? 1 / 1.15 : 1.15)),
+    );
     S.cam.x = bx - (e.clientX - window.innerWidth / 2) / S.cam.zoom;
     S.cam.y = by - (e.clientY - window.innerHeight / 2) / S.cam.zoom;
   },
@@ -608,7 +651,13 @@ function init(persons) {
       makePersonLayers(persons);
       resolve(m.initMs);
     };
-    port.postMessage({ type: "init", persons, threads: cfg.threads, hz: cfg.hz, size: cfg.size });
+    port.postMessage({
+      type: "init",
+      persons,
+      threads: cfg.threads,
+      hz: cfg.hz,
+      size: cfg.size,
+    });
   });
 }
 
@@ -662,7 +711,8 @@ function findHotspot() {
     counts[Math.floor(S.py[i] / B) * bw + Math.floor(S.px[i] / B)]++;
   }
   let best = 0;
-  for (let i = 1; i < counts.length; i++) if (counts[i] > counts[best]) best = i;
+  for (let i = 1; i < counts.length; i++)
+    if (counts[i] > counts[best]) best = i;
   hotspot = [(best % bw) * B + B / 2, Math.floor(best / bw) * B + B / 2];
 }
 
@@ -690,7 +740,8 @@ async function measureBuilds(count) {
   await sleep(500);
   rec = newRec();
   let seed = 12345;
-  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const rnd = () =>
+    (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
   const placed = [];
   const [x0, y0, x1, y1] = viewRect(-8);
   for (let i = 0; i < count; i++) {
@@ -727,7 +778,8 @@ function seriesPlan() {
   ];
   if (cfg.series === "full") combos.push(["full", 1, "particles"]);
   if (cfg.transfer) combos = combos.filter((c) => c[0] === cfg.transfer);
-  if (cfg.format) combos = combos.filter((c) => c[1] === (cfg.format === "f32" ? 1 : 0));
+  if (cfg.format)
+    combos = combos.filter((c) => c[1] === (cfg.format === "f32" ? 1 : 0));
   if (cfg.render) combos = combos.filter((c) => c[2] === cfg.render);
   return { persons, combos };
 }

@@ -42,7 +42,9 @@ const config = {
   render: arg("render", ""),
   hz: Number(arg("hz", "60")),
   size: Number(arg("size", "512")),
-  threads: Number(arg("threads", String(Math.min(4, os.availableParallelism())))),
+  threads: Number(
+    arg("threads", String(Math.min(4, os.availableParallelism()))),
+  ),
   phaseSeconds: Number(arg("phase-seconds", "4")),
   // Control measurement: skip drawing (transfer and decoding only).
   draw: arg("draw", "1") !== "0",
@@ -61,7 +63,11 @@ const MIME = {
 const pixiDist = path.join(here, "node_modules", "pixi.js", "dist");
 const VENDOR = {
   "/vendor/pixi.min.js": path.join(pixiDist, "pixi.min.js"),
-  "/vendor/unsafe-eval.min.js": path.join(pixiDist, "packages", "unsafe-eval.min.js"),
+  "/vendor/unsafe-eval.min.js": path.join(
+    pixiDist,
+    "packages",
+    "unsafe-eval.min.js",
+  ),
 };
 
 protocol.registerSchemesAsPrivileged([
@@ -81,7 +87,8 @@ app.whenReady().then(async () => {
       const body = await readFile(file);
       return new Response(body, {
         headers: {
-          "Content-Type": MIME[path.extname(file)] ?? "application/octet-stream",
+          "Content-Type":
+            MIME[path.extname(file)] ?? "application/octet-stream",
         },
       });
     } catch {
@@ -133,7 +140,9 @@ app.whenReady().then(async () => {
     if (exitAfterRun) setTimeout(() => app.exit(0), 100);
     return target;
   });
-  ipcMain.on("log", (_event, msg) => process.stderr.write(`[renderer] ${msg}\n`));
+  ipcMain.on("log", (_event, msg) =>
+    process.stderr.write(`[renderer] ${msg}\n`),
+  );
 
   const host = utilityProcess.fork(path.join(here, "simhost.mjs"), [], {
     serviceName: "sim-core",
@@ -158,10 +167,13 @@ app.whenReady().then(async () => {
   }
 
   if (exitAfterRun) {
-    setTimeout(() => {
-      process.stderr.write("timeout\n");
-      app.exit(2);
-    }, 30 * 60 * 1000);
+    setTimeout(
+      () => {
+        process.stderr.write("timeout\n");
+        app.exit(2);
+      },
+      30 * 60 * 1000,
+    );
   }
 
   await win.loadURL("app://spike/index.html");
