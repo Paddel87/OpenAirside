@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** keiner (1.4 erledigt am 2026-10-13)
-- **Nächster Schritt:** 1.5 – Leistungsnachweis auf den Zielsystemen
+- **Aktiver Schritt:** keiner (1.5 erledigt, ADR-014)
+- **Nächster Schritt:** 1.7 – Auswertung und Entscheidung
 - **Offene STOPP-Situationen:** keine
 
 <!-- ANCHOR:phasen-typen -->
@@ -277,7 +277,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.5: Leistungsnachweis auf den Zielsystemen
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT (2026-10-13) – ADR-002 bestätigt mit Auflagen (ADR-014, Option A, freigegeben vom Projektinhaber)
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Lasttest / Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session
@@ -296,7 +296,94 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** bei Bestehen: Stack, Pattern, NFR Performance `[VORLÄUFIG]` → `[BELASTBAR]`; bei Scheitern: ADR mit Neubewertung (Rückfalloption Godot-Präsentation mit Rust-Kern)
 - **Artefakte:** Messprotokoll, ADR (ERKENNTNIS), Update `architecture.md` Abschnitt 9
 - **Notizen:** Falls keine Mittelklasse-Referenz verfügbar ist, Messung auf verfügbarer Hardware und Hochrechnung mit Begründung; das Fehlen ist dann als Informationslücke zu melden.
-- **Testsysteme (Stand 2026-10-13, Angabe des Projektinhabers):** Referenz-PC (8 Kerne, Mittelklasse-Grafikkarte) und Mac mit integrierter Grafik verfügbar. Linux: Messung auf echter Hardware verschoben auf 7.2, früher durch Mitwirkende (ADR-011; Live-USB auf dem Referenz-PC vom Projektinhaber abgelehnt, weil die Arbeitsrechner nicht neu gestartet werden sollen).
+- **Testsysteme (Stand 2026-10-13, Angabe des Projektinhabers):** Referenz-PC (Ryzen 9 3900X, 12 Kerne – mehr als die Zielhardware mit 8; RX 7700 XT) und Mac mit integrierter Grafik verfügbar. Linux: Messung auf echter Hardware verschoben auf 7.2, früher durch Mitwirkende (ADR-011; Live-USB auf dem Referenz-PC vom Projektinhaber abgelehnt, weil die Arbeitsrechner nicht neu gestartet werden sollen).
+- **Zwischenstand 2026-10-13:** Spike und Messprotokoll in `spikes/1.5-leistung/README.md` (Rohdaten `results/`). Kern aus 1.2 additiv auf fünf Etagen verallgemeinert (U-Bahn, Gepäckausgabe, Halle, Abflugebene, Lounges; 36 Wegweiser), Zwei-Etagen-Pfad bitgleich zu 1.2. Testprogramm mit Langzeitlauf (10 min, 180 Ticks/s als Auslegung von „3×", Panel, Bauaktionen alle 10 s, Speicher je Prozess) über `.github/workflows/spike-build-1-5.yml` (Lauf 38413460079: alle drei Plattformen grün).
+  - **Container (4 vCPU):** Wegweiser mit fünf Etagen, volle Berechnung: 512² 45 MB / 0,47 s, 768² 101 MB / 0,98 s, 1024² 180 MB / 2,7 s (36 Wegweiser, 4 Threads); mit 64 Wegweisern 80 / 180 / 320 MB und 0,6 / 1,7 / 4,1 s. Speicherspitze während der Neuberechnung etwa doppelt. Simulationsschritt 10.000 Personen auf fünf Etagen 0,25–0,29 ms, höchste Tickrate 3.500–3.900/s – 180 Ticks/s sind unkritisch.
+  - **Befund:** 1.3 und 1.4 maßen Bauaktionen mit inkrementeller Reparatur (Voreinstellung aus 1.2), nicht mit der in ADR-010 gewählten vollen Neuberechnung; 1.5 misst die volle.
+  - **Start auf macOS:** Das arm64-Paket (ADR-012) meldet „beschädigt"; `xattr -cr` auf die App hilft, „Dennoch öffnen" fehlt (Anleitung im Messprotokoll). Betrifft das Spieler-Verhalten aus 1.6 → Vorschlag 1.6-N1.
+  - **Referenz-PC Windows (Langzeitlauf 612 s):** 59,2–60 Bilder/s (Monitor 60 Hz), 179,6–180 Ticks/s ohne wachsenden Rückstand, volle Neuberechnung im Hintergrund 293 ms im Mittel (höchstens 388 ms, 22 Threads), Bauaktion bis zum Bild 2–3 Bilder, Speicher 702–747 MB ohne Anstieg. Einschränkung: 12 statt 8 Kerne – Neuberechnung auf 8 Kernen nicht gemessen.
+  - **Mac M3 Pro (Langzeitlauf 611 s):** 117–120 Bilder/s (Display 120 Hz), 178–180 Ticks/s ohne wachsenden Rückstand (höchstens 33 Ticks), volle Neuberechnung 598 ms im Mittel (höchstens 724 ms, 9 Threads), Bauaktion bis zum Bild 16–48 ms (3–6 Bilder), Speicher 524–715 MB ohne Anstieg.
+  - **Referenz-PC mit 6 Hintergrund-Threads (Nachbildung 8 Kerne):** 59,6–60 Bilder/s, 180 Ticks/s, Rückstand ≤ 1 Tick, Neuberechnung 662 ms Mittel / 871 ms höchstens, Bauaktion 2–3 Bilder, Speicher 632–713 MB ohne Anstieg.
+  - **Bewertung (Messprotokoll, Abschnitt „Bewertung gegen die Zielwerte"):** mit benannten Maßnahmen erreichbar. Erreicht: 60 Bilder/s, kein Rückstand, Langzeitstabilität, Bauen ohne Wartezeit. Nicht erreicht: Bauaktion im nächsten Bild (2–6 Bilder, weil erst nach Bestätigung durch den Kern gezeichnet) → Maßnahme vorläufiges Zeichnen im Fenster, Landeplatz 1.7. Lücken: schwache integrierte Grafik nicht gemessen (Landeplatz 5.8, FR-041), 8 Kerne nur nachgebildet, Linux 7.2 (ADR-011).
+- **Entscheidung ADR-002:** am 2026-10-13 vom Projektinhaber: „A, freigegeben. Die Trade-offs nehme ich gerne in Kauf." → ADR-014; Reifegrade Stack, Pattern, Betriebsart, Datenmodell, Wegweiser-Prinzip und NFR Performance (Gesamtsystem, Langzeit) `[BELASTBAR]`.
+- **Entscheidungsvorlage ADR-002 (beantwortet):**
+
+  ```text
+  ENTSCHEIDUNG ERFORDERLICH
+  Kategorie: 1 Architektur (Stack-Bestätigung ADR-002, STRATEGISCH)
+  Kontext: ADR-002 wählte Web-Präsentation + Rust-Kern unter der Bedingung des
+      Leistungsnachweises in Phase 1. 1.5 hat ihn auf Referenz-PC und Mac M3 Pro
+      im Referenzszenario mit Reserve über 10 Minuten gemessen.
+  Optionen:
+    A: ADR-002 bestätigen mit Auflagen (Bauaktion sofort zeichnen in 1.7; Lücken
+       schwache integrierte Grafik → 5.8, Linux → 7.2). Stack, Pattern und NFR
+       Performance werden [BELASTBAR].
+       → Für deine Vision: Wir bauen ab Phase 2 auf dem Stack weiter; große
+         Flughäfen laufen auf PC und Mac flüssig. Restrisiko: sehr schwache
+         Laptops sind ungemessen, der Benchmark (5.8) fängt sie über die
+         Kartengröße ab.
+    B: ADR-002 bestätigen, Reifegrade bleiben [VORLÄUFIG] bis zu einer Messung
+       auf schwacher integrierter Grafik.
+       → Für deine Vision: Gleicher Weg, aber Phase 1 bleibt formal offen, bis
+         ein solches Gerät verfügbar ist (derzeit keins).
+    C: ADR-002 verwerfen, Rückfall auf Godot-Präsentation mit Rust-Kern.
+       → Für deine Vision: Neubau der Oberfläche; die Messwerte geben dafür
+         keinen Anlass.
+  Empfehlung: A – die Zielwerte sind auf beiden Zielsystemen erreicht (60 bzw.
+      120 Bilder/s, 180 Ticks/s, stabiler Speicher); die offene Bauaktions-
+      Verzögerung ist eine Darstellungsfrage im Fenster, nicht des Stacks.
+  Trade-off: Fortschritt jetzt / Restrisiko schwache Laptops und Linux bis 5.8 bzw. 7.2.
+  DIE FRAGE AN DICH: Genügt dir für die Untergrenze „lauffähig mit Empfehlung
+      einer kleineren Karte" der Nachweis ohne Messung auf einem schwachen
+      Laptop – oder soll ein solches Gerät vor Phase 2 gemessen werden?
+  Konfidenz: hoch für Referenz-PC und Mac, niedrig für schwache integrierte
+      Grafik – woran ich das festmache: drei Langzeitläufe mit Reserve; für
+      schwache Geräte nur der Software-Grafik-Lauf im Container (20–29 Bilder/s).
+  Umkehrbarkeit: teuer (Stack trägt alle folgenden Phasen)
+  Blockiert Arbeit an: 1.5 (Abschluss, ADR), 1.7, Phase 2
+  ```
+
+- **Entscheidung Rastergröße:** am 2026-10-13 vom Projektinhaber: „b" → ADR-013 (768 × 768 × 5 Etagen).
+- **Entscheidungsvorlage Rastergröße (beantwortet):**
+
+  ```text
+  ENTSCHEIDUNG ERFORDERLICH
+  Kategorie: 4 Datenmodell (Größe des Weltrasters), Folge aus ADR-010
+  Kontext: ADR-010 verlangt „Referenzszenario mit Reserve". Das Raster 512 × 512 aus
+      Spike 1.2 fasst die Elemente des Referenzszenarios (17 Gates, Check-in, Kontrolle,
+      zwei Ebenen) ohne Reserve. Wie viele Meter eine Zelle darstellt, ist nirgends
+      festgelegt; die Größe wird deshalb relativ zu diesem Layout gewählt. Kosten mit
+      fünf Etagen im Container gemessen (4 Threads; Referenz-PC hat 8 Kerne).
+      Gemessen ist das Raster, auf dem Personen gehen (Gebäude, Gehwege). Das Layout
+      aus 1.2 enthält keine Bahnen und kein Vorfeld; liegen diese später im selben
+      Raster wie im Original, braucht die Karte mehr Fläche oder Wegweiser nur über
+      bebauten Bereichen – das klärt die Planung von Phase 2 (Schritt 1.7).
+  Optionen:
+    A: 512 × 512 Zellen je Etage (Referenzszenario ohne Reserve)
+       → Für deine Vision: kleinster Speicher (45–80 MB Wegweiser), Wege passen sich
+         nach Umbauten in rund 0,5 s an. Ein Flughafen wie das Referenzszenario passt,
+         größer wird es eng.
+    B: 768 × 768 (gut doppelte Fläche des Referenzszenarios)
+       → Für deine Vision: Platz für das Referenzszenario plus Ausbau (weitere Pier,
+         größere Halle); 100–180 MB, Wege passen sich nach rund 1–1,7 s an (auf
+         8 Kernen voraussichtlich schneller). Bauen selbst wartet nie (ADR-010).
+    C: 1024 × 1024 (vierfache Fläche)
+       → Für deine Vision: Richtung Drehkreuz; 180–320 MB, Anpassung 2,7–4,1 s.
+         Weicht von ADR-010 („Referenzszenario mit Reserve") ab; sinnvoll erst mit
+         sparsamerer Speicherung oder Sektoren (ADR-010 Option C).
+  Empfehlung: B – templates/architektur-heuristiken.md Teil 1, Default-Bias „die
+      einfachere Option gewinnt, bis das Gegenteil belegt ist": A und B sind gleich
+      einfach (eine Zahl), B erfüllt als einzige „mit Reserve" ohne neue Technik.
+  Trade-off: gewinnst Ausbaufläche; gibst gut die doppelte Speicher- und Rechenlast
+      gegenüber A auf.
+  DIE FRAGE AN DICH: Reicht als größte Karte gut die doppelte Fläche des
+      Referenzszenarios (3 Terminals, 2 Bahnen, 17 Gates)?
+  Konfidenz: mittel – Kosten gemessen, aber Zellgröße in Metern und spätere
+      Kartenelemente (Bahnen, Vorfeld, Straßen) im Raster noch nicht festgelegt.
+  Umkehrbarkeit: billig bis Phase 3 (eine Einstellung; Spielstände gibt es noch nicht),
+      danach teuer (Spielstände und Inhalte hängen an der Größe).
+  Blockiert Arbeit an: Bewertung in 1.5; 1.7
+  ```
 
 #### 1.6: Verpackung für drei Plattformen
 
@@ -317,6 +404,9 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Notizen:** Änderungen an der Build-Pipeline sind ab Phase 2 freigabepflichtig (CLAUDE.md 4.7).
 - **Zwischenstand 2026-10-13:** Workflow `.github/workflows/spike-build.yml` baut das Spike-1.1-Programm (Electron 44 + napi-Modul) mit electron-builder 26.16.1 für Windows (NSIS, ZIP), macOS Universal (DMG, ZIP, ohne Signatur) und Linux (AppImage, tar.gz) und startet es auf jedem Runner (Lauf 38383032090, alle grün). Befunde im README des Spikes. Windows-PC (2026-10-13, Rückmeldung Projektinhaber): SmartScreen-Warnung beim Start des unsignierten Programms, nach Zulassen lauffähig – wie erwartet. Linux: CI-Rauchtest genügt für 1.6 (ADR-011). macOS (2026-10-13, Projektinhaber): Gatekeeper blockiert das unbeglaubigte Programm; Freigabe über Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen" (Rechtsklick → „Öffnen" wirkt seit macOS 15 nicht mehr). Verpackung bleibt `[VORLÄUFIG]`: unsigniert, Linux-Sandbox offen (7.2), Signatur-Entscheidung in 7.1. Ursprünglich offen für den Abschluss: Start auf Mac M3 Pro, insbesondere was ein Spieler unter macOS ohne Signatur tun muss – Anleitung im README des Spikes, Abschnitt „Testprogramm herunterladen und starten".
 
+- **Nachtrag 2026-10-13 (aus 1.5):** Das Paket nur für Apple-Chips (ADR-012) verhält sich anders als das in 1.6 geprüfte Universal-Paket: macOS meldet „beschädigt" statt der Gatekeeper-Warnung, „Dennoch öffnen" fehlt; Abhilfe `xattr -cr "<App>"`. Vermutete Ursache: fehlende Ad-hoc-Signatur ohne Universal-Zusammenführung (nicht geprüft).
+  - **1.6-N1 `[WARTET-AUF-FREIGABE]` (Vorschlag, Kategorie 7 Build-Pipeline):** arm64-Builds der Spike-Workflows mit Ad-hoc-Signatur (`identity: "-"` bzw. `codesign --force --deep -s -` nach dem Packen) erzeugen und prüfen, ob dann wieder „Dennoch öffnen" erscheint. Ergebnis fließt in die Signatur-Entscheidung von 7.1.
+
 #### 1.7: Auswertung und Entscheidung
 
 - **Status:** OFFEN
@@ -328,12 +418,16 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Pflichtfrage am Phasenende und ERKENNTNIS-ADR zu ADR-002.
 - **Eingangskriterien:** alle Messprotokolle liegen vor
 - **Anforderungen (ab Klasse M):** keine (Auswertung)
-- **Zu tun:** Erkenntnisse zusammenfassen, ADR-002 bestätigen oder verwerfen (ERKENNTNIS-ADR), Reifegrade nachziehen, Iterations-Reflexion schreiben, Phase 2 im vollen Schrittformat verfeinern.
+- **Zu tun:** Erkenntnisse zusammenfassen (ADR-002 bereits in 1.5 bestätigt, ADR-014; Reifegrade nachgezogen), Pflichtfrage „Weiterbauen, umbauen oder neu aufsetzen?" (CLAUDE.md Abschnitt 12), Iterations-Reflexion schreiben, Phase 2 im vollen Schrittformat verfeinern.
 - **Akzeptanzkriterien:** Entscheidung des Projektverantwortlichen liegt vor; Phase 2 ist ausgeplant.
 - **Betroffene Module:** –
 - **Reifegrad-Wirkung:** siehe Phasenziel
 - **Artefakte:** ADR, Reflexion, verfeinerter Fahrplan
-- **Notizen:** –
+- **Notizen:** Übergaben aus 1.3–1.6 und Auflagen aus ADR-014 in die Planung von Phase 2:
+  - Bauaktion im nächsten Bild: Fenster zeichnet sie sofort vorläufig und gleicht mit der Bestätigung des Kerns ab (heute 2–6 Bilder).
+  - Panel und Sortierung großer Tabellen (Sortieren im Kern, seltener umsortieren, eigenes Sortieren); Panel-Aufbau beim Verschieben auf dem Mac 12 statt 7 ms.
+  - Lage von Bahnen, Vorfeld und Straßen im Raster (ADR-013).
+  - Vorschlag 1.6-N1 (Ad-hoc-Signatur der Mac-Pakete) wartet auf Freigabe.
 
 ### Phase 2: Fundament – Typ: UMSETZUNG
 
@@ -374,7 +468,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 4.1 | Referenzszenario baubar, Leistungstest als CI-Gate | FR-040 |
+| 4.1 | Referenzszenario baubar, Leistungstest als CI-Gate; Messung auf echter 8-Kern-Hardware (Auflage ADR-014) | FR-040 |
 | 4.2 | Coverage auf Mindestwerte, Langzeittest, erste Funktionsgleichheits-Prüfung der umgesetzten Inventar-IDs | – |
 
 ### Phase 5: Ausbau in die Breite – Typ: UMSETZUNG
@@ -390,7 +484,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | 5.5 | Airside, Gepäck mit dreistufiger Kontrolle, Flüge, Abfertigung vollständig, Startfreigabe | FR-025, FR-026, FR-027, FR-029, FR-030, FR-032 |
 | 5.6 | Personal, Wirtschaft, Forschung, Serviceziele, Notfälle, Störungen, Tutorial, Erfolge | FR-007, FR-008, FR-033 bis FR-038 |
 | 5.7 | Flugzeugtypen und Airlines inklusive Add-on-Klassen | FR-031 |
-| 5.8 | Benchmark mit Empfehlung, Leistungsbewusstsein | FR-041, FR-042 |
+| 5.8 | Benchmark mit Empfehlung, Leistungsbewusstsein; Messung auf schwacher integrierter Grafik (Auflage ADR-014) | FR-041, FR-042 |
 
 ### Phase 6: Inhalte, Mods und Atmosphäre – Typ: UMSETZUNG
 

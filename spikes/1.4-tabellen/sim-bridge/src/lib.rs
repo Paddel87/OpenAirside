@@ -1,4 +1,4 @@
-//! Spike 1.4: thin napi-rs binding of `bridge-core` (spike 1.3, unchanged) and
+//! Spike 1.4 (used unchanged by spike 1.5, options added): thin napi-rs binding of `bridge-core` (spike 1.3, unchanged) and
 //! `panel-core` for the Electron utility process. No logic here.
 
 use bridge_core::{Config, Format, Host, Request};
@@ -11,6 +11,14 @@ pub struct SimOptions {
     pub threads: u32,
     pub hz: u32,
     pub size: u32,
+    /// Spike 1.5 (optional): 5 = five-floor scenario; default two floors.
+    pub floors: Option<u32>,
+    /// Spike 1.5 (optional): false = full recomputation (ADR-010); default true.
+    pub incremental: Option<bool>,
+    /// Spike 1.5 (optional): number of gates; default 17.
+    pub gates: Option<u32>,
+    /// Spike 1.5 (optional): threads for background field recomputation; default 1.
+    pub bg_threads: Option<u32>,
 }
 
 #[napi(object)]
@@ -47,6 +55,10 @@ impl Simulation {
                 hz: opts.hz,
                 w: size,
                 h: size,
+                floors: opts.floors.unwrap_or(2) as u8,
+                incremental: opts.incremental.unwrap_or(true),
+                gates: opts.gates.map_or(17, |g| g.clamp(1, 200) as u8),
+                bg_threads: opts.bg_threads.map_or(1, |n| n.max(1) as usize),
                 ..Config::default()
             }),
         }

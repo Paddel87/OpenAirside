@@ -17,12 +17,82 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt; Linux-Messung nach ADR-011 in 7.2. Nächster Schritt: 1.5.
+Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4, 1.5 (ADR-013, ADR-014) und 1.6 erledigt; Linux-Messung nach ADR-011 in 7.2. Nächster Schritt: 1.7.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 15:52 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 100 Minuten seit `[SESSIONSTART]` 14:11 (mit einer Verdichtung des Gesprächsverlaufs dazwischen)
+- **Bearbeitet:** 1.5 (Container-Messung, Rastergröße ADR-013, Testprogramm, Langzeitläufe Referenz-PC mit 22 und 6 Hintergrund-Threads und Mac M3 Pro, Bewertung, Vorlage ADR-002), Nachtrag 1.6 (Mac-Paket nur für Apple-Chips meldet „beschädigt", Vorschlag 1.6-N1)
+- **Erreicht:** 1.5 `[ERLEDIGT]`; ADR-013 und ADR-014; Stack, Pattern, Betriebsart, Datenmodell, Wegweiser-Prinzip und NFR Performance (Gesamtsystem, Langzeit) `[BELASTBAR]`; Messprotokoll, Fahrplan, Architektur, Decisions, README nachgezogen.
+- **Offen geblieben:** Vorschlag 1.6-N1 (Ad-hoc-Signatur der Mac-Pakete im Workflow) wartet auf Freigabe; CI des PR nicht abgewartet. Auflagen aus ADR-014 mit Landeplatz in 1.7, 4.1, 5.8, 7.2.
+- **Nächster Schritt:** 1.7 – Auswertung und Entscheidung (Phasenabschluss), mit Bewertung „Weiterbauen, umbauen oder neu aufsetzen?" durch eine getrennte Instanz und Vision-Abgleich gegen `docs/vision.md`.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 15:50); 1.5 empfiehlt Entscheidung, 0 Schritte oberhalb der Empfehlung (Nachtrag 1.6 war Dokumentationspflege innerhalb von 1.5); keine Abgabe (Probelauf offen).
+- **Kontextgröße:** 253.095 Token laut `get_session` (nach der Verdichtung), unter der Grenze von 400.000.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf (Electron 44: Vorlauf ab 2027-01-02; Umstellung `ubuntu-latest` ab 2026-10-19 bei Q.1). **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte, Blocker 0); Reifegrade in Abschnitt 1, 3, 6 und 9 von `architecture.md` gleich und passend zu ADR-014; ADR-Schrittverweise (1.7, 4.1, 5.8, 7.2) existieren; Reaktiv-Quote 2/10 stimmt mit Teil A; Phase 1 bei 7 Schritten wie ursprünglich geplant; keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Größen: `logbuch.md` unter 800 Zeilen, `project-context.md` 354 Zeilen.
+
+### 2026-10-13 15:45 – [REIFEGRAD-WECHSEL]
+
+- `[VORLÄUFIG]` → `[BELASTBAR]` per ADR-014: Stack (ADR-002), Pattern Kern/Präsentation (ADR-003), Betriebsart des Kerns (ADR-009), Datenmodell und Parallelisierung (ADR-010), Wegweiser-Prinzip (ADR-004/010/013), NFR Performance Gesamtsystem und Langzeit. Bedingungen: Linux 7.2, schwache integrierte Grafik 5.8, echte 8-Kern-Hardware 4.1.
+- Bleibt `[VORLÄUFIG]`: NFR „Bauaktion im nächsten Bild" (1.7); alle Module und Schnittstellen außer S-1 bis zu ihrer eigenen Umsetzung.
+- Über die Vorlage hinaus befördert, weil ihre Validierung ausdrücklich auf 1.5 wartete: Betriebsart, Datenmodell, Wegweiser-Prinzip.
+
+### 2026-10-13 15:44 – [ADR-ANGELEGT]
+
+- **ADR-014:** Stack aus ADR-002 bestätigt, Leistungsnachweis mit Auflagen erbracht (`[ERKENNTNIS]` `[STRATEGISCH]`); Freigabe Projektinhaber: „A, freigegeben. Die Trade-offs nehme ich gerne in Kauf."
+- **Nachgezogen:** `decisions.md` (Teil A, Index, Reaktiv-Quote 2/10 über ADR-005 bis ADR-014), ADR-002 Status, `architecture.md` (Überblick, NFR, Wegfindung, Reifegrad-Übersicht), Fahrplan 1.5 `[ERLEDIGT]`, Auflagen in 1.7, 4.1, 5.8; README.
+
+### 2026-10-13 15:30 – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Spike 1.5, Referenz-PC mit `--bg-threads=6`** (Nachbildung 8 Kerne; abgelegt als `results/referenz-pc-windows-rx7700xt-6-threads.json`): 59,6–60 Bilder/s, 180 Ticks/s, Rückstand ≤ 1 Tick, Neuberechnung 662 / 871 ms, Speicher 632–713 MB stabil. Weniger Hintergrund-Threads verdoppeln die Neuberechnung, entlasten aber die Simulation.
+- **Bewertung 1.5:** mit benannten Maßnahmen erreichbar (Messprotokoll, Abschnitt „Bewertung gegen die Zielwerte"). Bauaktion erst nach 2–6 Bildern sichtbar, weil das Fenster sie erst nach Bestätigung durch den Kern zeichnet (geprüft in `renderer/main.js`) → 1.7.
+- **Vorlage ADR-002** (Optionen A/B/C, Empfehlung A) im Fahrplan 1.5; Schritt auf `[WARTET-AUF-FREIGABE]`.
+- **Modellklasse:** get_session 15:30 – eingestellt und bedient claude-opus-5-5, Entscheidungs-Klasse; Eskalations-Auslöser 1 (ENTSCHEIDUNG) erfüllt, kein Wechsel nötig.
+
+### 2026-10-13 15:20 – [BEOBACHTUNG]
+
+- **Spike 1.5 auf dem Mac M3 Pro** (11 Kerne, 18 GB, Display 120 Hz; abgelegt als `spikes/1.5-leistung/results/mac-m3pro.json`): 611 s, 768² × 5, 10.000 Personen, 60 Bauaktionen. Übersicht 119–120, Verschieben 117–118 Bilder/s; 6 Bilder über 20 ms; 178–180 Ticks/s, Rückstand 4–33 Ticks ohne Wachstum; Neuberechnung 598 ms Mittel / 724 ms höchstens (9 Threads); Bauaktion 3–6 Bilder (16–48 ms); Speicher 524–715 MB ohne Anstieg.
+- **Auffällig:** Beim Verschieben kostet der Panel-Aufbau auf dem Mac 12 ms statt 7 ms (Windows: 6–7 ms in beiden Ansichten); bei 120 Hz fallen dadurch rund 3 Bilder je Sekunde aus. Für 60 Bilder/s ohne Belang, als Hinweis für 1.7 (Panel) festgehalten.
+- **Ablage:** Der Wiederholungslauf auf dem Referenz-PC mit `--bg-threads=6` läuft noch.
+
+### 2026-10-13 15:05 – [BEOBACHTUNG]
+
+- **Spike 1.5 auf dem Referenz-PC unter Windows** (Ryzen 9 3900X 12 Kerne, RX 7700 XT, 60 Hz; Ergebnisdatei vom Projektinhaber, abgelegt als `spikes/1.5-leistung/results/referenz-pc-windows-rx7700xt.json`): 612 s, 768² × 5, 10.000 Personen, 60 Bauaktionen. 59,2–60 Bilder/s, 45 Bilder über 20 ms (gehäuft 60–120 s), 179,6–180 Ticks/s, Rückstand ≤ 8 Ticks ohne Wachstum, volle Neuberechnung 293 ms Mittel / 388 ms höchstens, Bauaktion 2–3 Bilder, Speicher stabil 702–747 MB.
+- **Abweichung zur Zielhardware:** Der Referenz-PC hat 12 Kerne, `project-context.md` nennt 8; der Fahrplan führte „8 Kerne" für den Referenz-PC. Die Neuberechnung nutzte 22 Threads. Für 8 Kerne kann der Lauf mit `--bg-threads=6` wiederholt werden.
+- **Rechnerkennung:** Die Ergebnisdatei enthält System, Prozessor, Speicher und Grafikchip; die Bildwiederholrate des Monitors nicht.
+
+### 2026-10-13 14:52 – [GELÖST]
+
+- **Problem:** Mac-Paket Spike 1.5 (arm64 only, ADR-012) startet nicht: „ist beschädigt und kann nicht geöffnet werden", nur „In den Papierkorb"/„Fertig"; der Weg über „Dennoch öffnen" aus 1.3/1.4 (Universal) steht nicht zur Verfügung.
+- **Lösung:** `xattr -cr "/Applications/OpenAirside Spike 1.5.app"` (Projektinhaber, M3 Pro); `codesign` nicht nötig. Messung läuft.
+- **Vermutete Ursache (nicht geprüft):** ohne Universal-Zusammenführung fehlt die Ad-hoc-Signatur, die Apple-Chips verlangen.
+- **Nachgezogen:** Anleitung `spikes/1.5-leistung/README.md`, Fahrplan 1.5 und Nachtrag 1.6 mit Vorschlag 1.6-N1 (Ad-hoc-Signatur im Workflow, wartet auf Freigabe, Kategorie 7).
+- **Ablauf-Notiz:** Nach `/clear` hatte ich 1.5 fälschlich einer anderen Session zugeschrieben; der Projektinhaber stellte klar, dass der Verlauf hier fortgeführt wird.
+
+### 2026-10-13 14:38 – [ADR-ANGELEGT]
+
+- **ADR-013:** Größte Karte 768 × 768 Zellen je Etage, fünf Etagen (`[ERKENNTNIS]`, füllt die an 1.5 übergebene Festlegung aus ADR-010 aus, ändert ADR-010 nicht). Freigabe des Projektinhabers: „b".
+- **Nachgezogen:** `decisions.md` (Teil A, Index, Reaktiv-Quote 2/10 über ADR-004 bis ADR-013), `fahrplan.md` 1.5, `architecture.md` Modul Wegfindung und Reifegrad-Übersicht (bleibt `[VORLÄUFIG]`).
+- **Modellklasse:** Entscheidungs-Block nach Abschnitt 4 → Eskalations-Auslöser 1; aktiv `claude-opus-5-5` (Entscheidungs-Klasse), kein Wechsel nötig.
+
+### 2026-10-13 14:28 – [BEOBACHTUNG]
+
+- **1.3/1.4 maßen Bauaktionen mit inkrementeller Reparatur:** `Sim::new` aus Spike 1.2 setzt `incremental = true`; die Brücke aus 1.3 änderte das nicht. Die in 1.3/1.4 gemessenen 39–54 ms bis zur Übernahme neuer Wegweiser gelten damit für die Reparatur, nicht für die in ADR-010 gewählte volle Neuberechnung (bei 512² × 2 laut 1.2: 0,2–0,4 s auf 4 Threads). Kein Einfluss auf die Akzeptanzkriterien von 1.3/1.4 (Bauaktion sichtbar, Wände wirken sofort); Testprogramm 1.5 misst die volle Neuberechnung. Festgehalten im Messprotokoll 1.5, Befund 4.
+- **Pre-commit-Hook war in diesem Container nicht installiert;** nach `pre-commit install` scheitern `eslint`, `cargo-fmt` und `cargo-clippy` mangels Projektdateien am Repo-Stamm (erst ab 2.1, wie in 1.1–1.4 dokumentiert). Commit des Spike-Codes mit `SKIP=eslint,cargo-fmt,cargo-clippy`; `cargo fmt --check` und `cargo clippy -D warnings` liefen direkt in den drei Spike-Workspaces, übrige Hooks (Prettier, YAML, JSON, Markdown) grün.
+- **Rastergröße nicht aus Dokumenten ableitbar:** keine Zellgröße in Metern festgelegt; Vorlage im Fahrplan 1.5 relativ zum Layout aus 1.2.
+
+### 2026-10-13 14:11 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 14:15; PR Paddel87/OpenAirside#9 gemergt (`1b8e76e`), Branch `claude/gracious-galileo-2reksz` neu auf `main` gesetzt.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 1, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht); vertieft: ADR-010, Messprotokolle 1.2 und 1.3.
+- **Geplant für diese Session:** 1.5 – Leistungsnachweis auf den Zielsystemen: Messung im Container (Rastergrößen, fünf Etagen), Testprogramm für Referenz-PC und Mac.
+- **Vorabprüfung:** ERKUNDUNG, keine BELASTBAR-Pflicht; Abhängigkeiten 1.2, 1.3, 1.4 erledigt; Testsysteme laut Fahrplan verfügbar. Ergebnis ist freigabepflichtig (Bestätigung oder Verwerfung von ADR-002).
+- **Modus/Werkzeug:** Claude Code (Cloud-Session, Desktop-App).
+- **Modell:** eingestellt und bedient `claude-opus-5-5` (Quelle: `get_session`, `configured_model` und `last_served_model`) → Entscheidungs-Klasse; entspricht der Empfehlung von 1.5. Kontext zu Sessionbeginn laut `get_session`: 102.629 Token (Zählung nach `/clear`). Zeitstempel ab hier nach Systemuhr (UTC); die Stempel der Vorsession waren geschätzt.
 
 ### 2026-10-13 14:15 – [SESSIONENDE]
 
