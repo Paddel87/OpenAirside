@@ -169,7 +169,7 @@ Keine externen APIs im Spiel.
 
 - **Projektlizenz:** MIT für den Code; eigene Grafiken unter CC0.
 - **Audio:** freie Bibliotheken und KI-generierte Sounds erlaubt. → Regel: Audio-Dateien mit abweichenden Bedingungen liegen in einem eigenen Verzeichnis mit Lizenzhinweis-Datei.
-- **Erlaubte Abhängigkeitslizenzen:** MIT, BSD, Apache-2.0, ISC, zlib, MPL-2.0, Unicode-3.0. → Regel: `cargo-deny` (Rust) und Lizenzprüfung für npm in der CI.
+- **Erlaubte Abhängigkeitslizenzen:** MIT, BSD (2- und 3-Klausel), Apache-2.0, ISC, zlib, MPL-2.0, Unicode-3.0, BlueOak-1.0.0, 0BSD, Python-2.0, WTFPL (letzte vier seit ADR-019, gelten für ausgelieferte Teile und Werkzeuge gleichermaßen). → Regel: `cargo-deny` (Rust) und Lizenzprüfung für npm in der CI.
 - **Ausgeschlossene Lizenzen:** GPL, AGPL und proprietäre Lizenzen, die Mitwirkende an ein Konto oder eine Lizenzvereinbarung binden.
 
 ### Methodik-Schwellenwerte
