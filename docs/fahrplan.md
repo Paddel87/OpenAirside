@@ -13,7 +13,7 @@
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
 - **Aktiver Schritt:** keiner (2.8 erledigt am 2026-10-13, ADR-020; 2.1 mit Nachlauf erledigt)
 - **Nächster Schritt:** 2.9 (Schnittstellenverträge S-2 bis S-7) in einer folgenden Session
-- **Offene STOPP-Situationen:** Reaktiv-Quote 6 / 10 nach ADR-020 über dem Schwellenwert; Reflexion „Anlass ADR-020" in „Iterations-Reflexion" liegt dem Projektinhaber zur Kenntnisnahme vor
+- **Offene STOPP-Situationen:** keine (Reaktiv-Quote 6 / 10 nach ADR-020 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 zur Kenntnis genommen, siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -427,7 +427,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Muster:** Neben dem Werkzeug-Umfeld (Maßnahme 4) zeigt sich eine zweite Quelle: Festlegungen auf einer Größe, deren Einheit noch nicht bestimmt war.
 - **Maßnahme (5):** Eine Größenfestlegung (Raster, Karte, Puffer, Grenzwert) nennt ihre Einheit und den Ausschnitt des Systems, an dem sie bemessen wurde; fehlt eines davon, wird sie als vorläufig mit Landeplatz geführt, nicht per ADR fixiert.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 5 / 10 ab ADR-021, 4 / 10 ab ADR-022, 3 / 10 ab ADR-025, 2 / 10 (Schwellenwert eingehalten) ab ADR-027. 2.9 entscheidet die geplanten Verträge, ohne zuvor fixierte ADRs zu ändern.
-- **Kenntnisnahme:** offen (dem Projektinhaber am 2026-10-13 vorgelegt).
+- **Kenntnisnahme:** Projektinhaber am 2026-10-13: „Reflexion zur Kenntnis genommen"; kein Umbau, Maßnahme (5) gilt.
 
 ---
 
