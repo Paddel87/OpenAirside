@@ -24,6 +24,20 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 19:34 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 34 Minuten seit `[SESSIONSTART]` 19:00 UTC; ersetzt als Wiedereinstiegspunkt den Eintrag 19:22.
+- **Bearbeitet:** 2.8 – Weltmaßstab, Luftseite und Zeitmodell; PR Paddel87/OpenAirside#15
+- **Erreicht:** 2.8 `[ERLEDIGT]` (ADR-020), PR #15 vom Projektinhaber um 19:30 UTC gemergt (`a3a8b65`). CI auf `main` nach dem Merge (Lauf 38455440587) und Security (38455439937) grün.
+- **Nachweis 2.1-N1:** Beim Öffnen des PR zeigte GitHub kurz „Merge nicht möglich" mit einer roten Prüfung, nach Aktualisierung alles grün und Merge möglich – die Regel `main-schutz` sperrt rote Prüfungen. Einzelliste der 18 Pflicht-Checks nicht geprüft.
+- **Mini-Reibung:** Rauchtest Electron (macOS) im Push-Lauf 38454141711 rot, weil der Runner das Electron-Binary nicht laden konnte (`TypeError: fetch failed`, vor dem Test). Kein Bezug zum PR; einmal neu gestartet, danach grün (2:15 min). Bei Wiederholung: Electron-Download im Workflow zwischenspeichern (Vorschlag, kein Schritt).
+- **Offen geblieben:** Dieser Eintrag liegt nur auf dem Branch `claude/gracious-galileo-2reksz` (neu auf `main` aufgesetzt) und kommt mit dem PR der nächsten Session nach `main`. Neuberechnung in Blöcken nur ersatzweise gemessen, Bestätigung in 2.3.
+- **Nächster Schritt:** 2.9 – Schnittstellenverträge S-2 bis S-7 (Entwurfsschritt, Entscheidungs-Klasse, Freigabe Kategorie 5 und 1). Vertiefung: `architecture.md` Abschnitt 4, ADR-020, ADR-009/ADR-010, Spike 1.4 (`readTable`) für S-7, `project-context.md` Abschnitt 6 für S-4/S-5/S-6.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 19:20 UTC); 0 Schritte oberhalb der Empfehlung; keine Teilarbeit abgegeben (Probelauf offen).
+- **Kontextgröße:** 285.309 Token laut `get_session` 19:20 UTC, unter der Grenze von 400.000.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf.
+- **Drift-Prüfung:** unverändert gegenüber 19:14; README synchron; keine offene STOPP-Situation.
+
 ### 2026-10-13 19:22 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 22 Minuten seit `[SESSIONSTART]` 19:00 UTC; ersetzt als Wiedereinstiegspunkt den Eintrag 19:14 (danach nur die Kenntnisnahme 19:20).
