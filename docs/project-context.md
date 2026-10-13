@@ -51,9 +51,11 @@ Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachwei
 
 #### Rust-Kern und Anbindung
 
-- Betriebsart des Kerns `[OFFEN]` bis Phase 1, Schritt 1.1. Kandidaten:
+- Betriebsart des Kerns: natives Node-Modul (napi-rs) in einem Electron-Utility-Prozess (ADR-009, `[VORLÄUFIG]` bis 1.5)
   - napi 3.12.7, napi-derive 3.6.8, @napi-rs/cli 3.9.1 (Node-API 10 in Electron 44) — Verifiziert: 2026-10-13, Quelle: crates.io, npm
-  - wasm-bindgen 0.2.128 (wasm-bindgen-cli in exakt gleicher Version) — Verifiziert: 2026-10-13, Quelle: crates.io
+  - napi-build 2.4.4 (Begleit-Crate, von napi 3.12.7 mit `^2.4.4` verlangt) — Verifiziert: 2026-10-13, Quelle: crates.io
+  - napi-derive-backend 6.1.4 per `Cargo.lock` festgesetzt (6.1.5 bricht den Build mit napi-derive 3.6.8) — Verifiziert: 2026-10-13, Quelle: Build im Spike 1.1
+  - zurückgestellt, nicht im Stack: wasm-bindgen 0.2.128 für WebAssembly mit Threads, Neubewertung in Fahrplan-Schritt Q.2
 - serde 1.0.229, rayon 1.12.0, ts-rs 12.0.1 — Verifiziert: 2026-10-13, Quelle: crates.io
 
 #### Persistenz und Paketverwaltung
@@ -93,7 +95,7 @@ Nicht unterstützt: 32-Bit-Windows und Linux armv7 (Electron 44 liefert keine Bu
 <!-- ANCHOR:architektur-grobstruktur -->
 ## 4. Architektur-Grobstruktur
 
-Das Spiel ist aufgebaut wie eine Web-Anwendung mit Backend und Frontend, die beide lokal laufen. Der Rust-Simulationskern enthält die gesamte Spiellogik, läuft in festen Simulationsschritten in eigenen Threads und kennt keine Darstellung. Die TypeScript-Präsentation (Oberfläche, Spielfeld, Ton) liest den Zustand aus einem gemeinsamen Speicherbereich und schickt Befehle des Spielers an den Kern. Inhalte (Flugzeugtypen, Airlines, Gebäude, Fahrzeuge) sind Daten, keine Programmlogik. Details in `architecture.md`.
+Das Spiel ist aufgebaut wie eine Web-Anwendung mit Backend und Frontend, die beide lokal laufen. Der Rust-Simulationskern enthält die gesamte Spiellogik, läuft in festen Simulationsschritten in eigenen Threads und kennt keine Darstellung. Die TypeScript-Präsentation (Oberfläche, Spielfeld, Ton) erhält den sichtbaren Zustand je Bild aus dem Kern-Prozess (Electron-Utility-Prozess, ADR-009) und schickt Befehle des Spielers an den Kern. Inhalte (Flugzeugtypen, Airlines, Gebäude, Fahrzeuge) sind Daten, keine Programmlogik. Details in `architecture.md`.
 
 **Module (Kurzübersicht):**
 
@@ -115,7 +117,7 @@ Das Spiel ist aufgebaut wie eine Web-Anwendung mit Backend und Frontend, die bei
 - Lokalisierung (TypeScript) – Sprachpakete
 - Benchmark und Leistungsüberwachung (Rust/TypeScript)
 
-**Kommunikationsmuster:** Präsentation → Kern über einen Befehlskanal (Nachrichten); Kern → Präsentation über einen gemeinsamen Zustandspuffer, der je Bild gelesen wird, plus einen Ereignisstrom für Benachrichtigungen. Präsentation ↔ Plattform über die abgesicherte Electron-Schnittstelle (Preload). Details und Reifegrade in `architecture.md`.
+**Kommunikationsmuster:** Präsentation → Kern über einen Befehlskanal (Nachrichten); Kern → Präsentation über einen Zustandspuffer im Kern-Prozess, der je Bild per `MessagePort` an den Renderer übertragen wird (ADR-009), plus einen Ereignisstrom für Benachrichtigungen. Präsentation ↔ Plattform über die abgesicherte Electron-Schnittstelle (Preload). Details und Reifegrade in `architecture.md`.
 
 <!-- ANCHOR:externe-abhaengigkeiten -->
 ## 5. Externe Abhängigkeiten
@@ -181,9 +183,9 @@ Keine externen APIs im Spiel.
   - **Routine-Klasse:** Claude Sonnet 5.5 – Probelauf: offen
   - **Entscheidungs-Klasse:** Claude Opus 5.5 – stärkstes regulär eingesetztes Modell
   - **Ausnahme-Klasse:** Claude Fable 5.1, falls im Abo verfügbar – nur auf Vorschlag mit Freigabe
-  - **Bezugsmodell und knappe Ressource:** Claude-Abo des Projektinhabers; knapp ist das Nutzungskontingent (Art und Zurücksetz-Zeitpunkt beim ersten `[SESSIONSTART]` in Claude Code eintragen)
+  - **Bezugsmodell und knappe Ressource:** Claude-Abo des Projektinhabers; knapp ist das Nutzungskontingent (rollierendes 5-Stunden-Fenster laut Laufzeitumgebung, Stand 2026-10-13)
   - **Abgabe an Unteragenten:** Claude Code erlaubt Unteragenten mit fest eingestelltem Modell (`model` im Agenten-Aufruf bzw. in `.claude/agents/*.md`); Abgabe erst nach bestandenem Probelauf
-  - **Meldet die Laufzeitumgebung das Modell / das Kontingent?** Modell ja, über den Systemkontext der Session; Kontingent: beim ersten Sessionstart prüfen – Stand 2026-10-13
+  - **Meldet die Laufzeitumgebung das Modell / das Kontingent?** Modell ja, über den Systemkontext und die Abfrage `get_session` (eingestelltes und bedientes Modell); Kontingent ja, über `get_session` (`rate_limit_info`: Art „five_hour“, Status, Zurücksetz-Zeitpunkt) – geprüft 2026-10-13
   - **Preise je Klasse:** offen, beim Probelauf mit Quelle nachtragen
   - **Grenze der Sessiongröße:** 400.000 Token Kontext
   - **Kontingent-Warnung:** inaktiv, Begründung: erst nach Prüfung in der ersten Claude-Code-Session (`templates/werkzeuge/claude-code/`)
@@ -273,7 +275,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 - **macOS-Signatur:** vorerst unsigniert; Entscheidung über Signatur (Kosten im Rahmen unten) vor Phase 7
 - **Vertretung:** offen bis zum Deployment-Gate vor dem ersten öffentlichen Release (Phase 7)
 - **Notfall-Handbuch:** `docs/onboarding-runbook.md` Abschnitt „Notfall"; noch nicht erprobt
-- **KI im Betrieb:** Claude-Abo des Projektinhabers; Kontingent und Zurücksetz-Zeitpunkt werden beim ersten Sessionstart in Claude Code eingetragen; Rückfallweg ohne KI: Entwicklung pausiert, das veröffentlichte Spiel ist unabhängig
+- **KI im Betrieb:** Claude-Abo des Projektinhabers; Kontingent: rollierendes 5-Stunden-Fenster, Zurücksetz-Zeitpunkt je Session über `get_session` (geprüft 2026-10-13); Rückfallweg ohne KI: Entwicklung pausiert, das veröffentlichte Spiel ist unabhängig
 - **Zugriff der KI auf die Produktion:** kein Zugriff auf Spielerrechner; im Repository Schreibrechte über Claude Code; Releases nur nach Freigabe
 - **Unbeaufsichtigtes Handeln der KI:** nein
 
@@ -291,7 +293,8 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 | Übrige npm-Werkzeuge und Crates (ohne formale Richtlinie) | Nachprüfung 2027-04-13 | – | npm, crates.io | Q.1 |
 | Runner-Image `ubuntu-latest` → Ubuntu 26 | ab 2026-10-19 (Umstellung durch GitHub) | – | CI-Annotation, actions/runner-images#14748 | Q.1 (erster Lauf nach der Umstellung beobachten) |
 | Node 20 in GitHub Actions (abgekündigt) | behoben am 2026-10-13: pre-commit/action ersetzt | – | CI-Protokoll, GitHub-Changelog 2025-09-19 | – |
-| Claude-Kontingent | Zurücksetz-Zeitpunkt offen | – | Abo | beim ersten Sessionstart eintragen |
+| WebAssembly-Threads mit stabilem Rust (`atomics`, threadfähige Standardbibliothek ohne `build-std`) | Nachprüfung 2027-01-02, danach bei jedem Q.1 | – | rust-lang/rust RELEASES.md, wasm-bindgen-Doku | Q.2 |
+| Claude-Kontingent | rollierendes 5-Stunden-Fenster („five_hour“), Zurücksetz-Zeitpunkt je Session über `get_session` | – | Laufzeitumgebung, geprüft 2026-10-13 | – (kein Fristablauf) |
 
 ### Kosten
 
@@ -323,7 +326,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 <!-- ANCHOR:offene-grundsatzfragen -->
 ## 11. Offene Grundsatzfragen
 
-- **Betriebsart des Rust-Kerns** (natives Node-Modul oder WebAssembly) – Klärung in Phase 1, Schritt 1.1
+- **Betriebsart des Rust-Kerns** – entschieden in ADR-009 (napi-rs im Utility-Prozess); WebAssembly mit Threads wird in Q.2 neu bewertet
 - **Umfang der Mod-Unterstützung** (nur Datenpakete oder auch ausführbarer Code) – Entscheidung in Schritt 6.1 vor der Umsetzung des Mod-Systems
 
 <!-- ANCHOR:glossar -->

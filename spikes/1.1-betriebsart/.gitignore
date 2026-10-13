@@ -1,0 +1,5 @@
+# Build-Ausgaben des Spikes (werden mit den Befehlen aus README.md erzeugt)
+target-mt/
+app/native/
+app/renderer/pkg-st/
+app/renderer/pkg-mt/

@@ -1,0 +1,15 @@
+{
+  "name": "openairside-spike-1-1",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Spike 1.1: operating mode of the Rust core (napi-rs vs. WebAssembly) in Electron",
+  "license": "MIT",
+  "type": "module",
+  "main": "main.mjs",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "44.7.0"
+  }
+}
