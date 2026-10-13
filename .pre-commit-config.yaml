@@ -38,7 +38,7 @@ repos:
 
       - id: eslint
         name: ESLint
-        entry: npx --no-install eslint --max-warnings 0 --report-unused-disable-directives
+        entry: npx --no-install eslint --max-warnings 0 --report-unused-disable-directives --no-warn-ignored
         language: system
         types_or: [javascript, jsx, ts, tsx]
         pass_filenames: true
