@@ -8,7 +8,18 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[features]
+# Export of TypeScript types with ts-rs (ADR-021, ADR-022). Not binding code (rule 006).
+ts = ["dep:ts-rs"]
+
 [dependencies]
+serde.workspace = true
+rayon.workspace = true
+ts-rs = { workspace = true, optional = true }
+
+[[bench]]
+name = "tick"
+harness = false
 
 [lints]
 workspace = true
