@@ -11,9 +11,9 @@
 - **Stand vom:** 2026-10-13 (Sessionstart 19:00 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.8 (Weltmaßstab, Luftseite, Zeitmodell); 2.1 mit Nachlauf 2.1-N1 und 2.1-N2 erledigt am 2026-10-13
-- **Nächster Schritt:** 2.8 (Weltmaßstab, Luftseite, Zeitmodell) in einer folgenden Session, danach 2.9
-- **Offene STOPP-Situationen:** keine (Reaktiv-Quote 5 / 10 nach ADR-019 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 zur Kenntnis genommen, siehe „Iterations-Reflexion")
+- **Aktiver Schritt:** keiner (2.8 erledigt am 2026-10-13, ADR-020; 2.1 mit Nachlauf erledigt)
+- **Nächster Schritt:** 2.9 (Schnittstellenverträge S-2 bis S-7) in einer folgenden Session
+- **Offene STOPP-Situationen:** Reaktiv-Quote 6 / 10 nach ADR-020 über dem Schwellenwert; Reflexion „Anlass ADR-020" in „Iterations-Reflexion" liegt dem Projektinhaber zur Kenntnisnahme vor
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -86,7 +86,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 **Ziel:** Produktionsreife Grundlage auf Basis der Erkenntnisse aus Phase 1, mit vorab festgelegtem Weltmaßstab und belastbaren Schnittstellenverträgen (ADR-016).
 
-**Abschlusskriterium:** leerer, aber vollständig lauffähiger Spielrahmen mit grüner CI auf drei Plattformen; das Szenario aus Spike 1.5 (10.000 Personen, 768² × 5, Bauaktionen) läuft auf Produktionscode mit gleichwertigen Kernwerten (Simulationsschritt, Neuberechnung der Wegweiser, Speicher ohne Anstieg).
+**Abschlusskriterium:** leerer, aber vollständig lauffähiger Spielrahmen mit grüner CI auf drei Plattformen; das Szenario aus Spike 1.5 (10.000 Personen, Terminal 768² × 5 in einer Welt 2048² nach ADR-020, Bauaktionen) läuft auf Produktionscode mit gleichwertigen Kernwerten (Simulationsschritt, Neuberechnung der Wegweiser, Speicher ohne Anstieg).
 
 **Reifegrad-Erwartung am Phasenende:** S-2 bis S-7 `[BELASTBAR]` (per ADR in 2.9, bestätigt durch Umsetzung); Module Takt & Weltzustand, Welt & Bau (Grundraster), Brücke, Plattform, Inhalte (Lader), Lokalisierung `[BELASTBAR]` durch Umsetzung; NFR Darstellung mit echten Grafiken nach Messung in 2.10.
 
@@ -126,7 +126,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.8: Weltmaßstab, Luftseite und Zeitmodell
 
-- **Status:** WARTET-AUF-FREIGABE (seit 2026-10-13 19:08 UTC; Messung `spikes/2.8-weltmassstab/`, Vorschlag im Logbuch)
+- **Status:** ERLEDIGT 2026-10-13 (ADR-020)
 - **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt in Phase 2, ADR-016)
 - **Schritt-Art (nur ERKUNDUNG):** Vergleichsstudie mit Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session
@@ -145,6 +145,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Takt & Weltzustand, Welt & Bau, Wegfindung & Passagierführung, Verkehr & Verkehrssteuerung
 - **Reifegrad-Wirkung:** Datenmodell im Kern bleibt `[BELASTBAR]` (bei Änderung per ADR fortgeschrieben)
 - **Artefakte:** ADR(s), Messnotiz, Architektur-Update
+- **Ergebnis:** ADR-020 (freigegeben 2026-10-13): 2 m je Zelle, ein Raster für Gebäude, Straßen, Vorfeld, Rollwege und Bahnen in echten Maßen; Karten 1536² und 2048²; Raster und Wegweiser in 32 × 32-Blöcken; Wegenetze für Fahrzeuge und Flugzeuge im Weltzustand; Vorfeld nur auf Vorfeld-Gehwegen begehbar; Tick = 1/3 Spielsekunde, 60/120/180 Ticks/s (Spieltag 72 min bei 1×). Messnotiz `spikes/2.8-weltmassstab/README.md`: dicht 720 MB / 2,3 s (2048²) bis 1.620 MB / 5,2 s (3072²), in Blöcken 25,5 MB / 0,4 s (Terminal 512²) bzw. 98 MB / 1,6 s (Terminal 768², 64 Wegweiser) bei jeder Weltgröße; Rechenzeit der Blöcke ersatzweise auf dem Ausschnitt gemessen, Bestätigung durch den Benchmark in 2.3. `architecture.md` Abschnitte 3, 6, 7 und 9 nachgezogen. ADR-013 überholt; ADR-020 ist nach `CLAUDE.md` Abschnitt 6 `[REAKTIV]` (Änderung binnen 14 Tagen).
 
 #### 2.9: Schnittstellenverträge S-2 bis S-7
 
@@ -165,6 +166,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
   - S-5 Spielstand-Format: Versionierung, Prüfsumme; identischer Zustand nach Laden auch bei laufender Neuberechnung der Wegweiser (FR-004, ADR-010).
   - S-6 Plattform-API: Dateizugriff, Spielstände, Logs über die Preload-Schnittstelle.
   - TypeScript-Typen aus Rust-Typen (ts-rs).
+  - Adressierung in Weltkoordinaten (x, y, Etage) bei 2 m je Zelle und Karten bis 2048² (ADR-020).
 - **Akzeptanzkriterien:** Für jede Schnittstelle steht in `architecture.md` Abschnitt 4 ein Vertrag mit Eingabe, Ausgabe, Fehlern und Versionierung; per ADR freigegeben; S-2 bis S-7 sind damit `[BELASTBAR]` (Regel-007).
 - **Betroffene Module:** Brücke, Plattform, Oberfläche, Inhalte & Mods, Takt & Weltzustand
 - **Reifegrad-Wirkung:** S-2, S-3, S-6 `[VORLÄUFIG]` → `[BELASTBAR]`; S-4, S-5 `[OFFEN]` → `[BELASTBAR]`; S-7 neu `[BELASTBAR]`
@@ -179,7 +181,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Freigabe des Benchmark-Gates; die Umsetzung selbst ist Routine und abgebbar.
 - **Eingangskriterien:** S-2, S-3 `[BELASTBAR]` (2.9); Zeitmodell (2.8)
 - **Anforderungen (ab Klasse M):** FR-003
-- **Zu tun:** Takt mit festen Simulationsschritten auf eigenen Threads (rayon), Zeitsteuerung Pause/1×–3×/Nachtsprung/Kalender, Befehlsverarbeitung mit Kennung und Bestätigung, Ereignisstrom; Prüfmodus mit festem Übernahme-Tick; Kern-Benchmark „Tick mit 10.000 Personen" headless in der CI mit Schwelle und Trend.
+- **Zu tun:** Takt mit festen Simulationsschritten auf eigenen Threads (rayon), Tick = 1/3 Spielsekunde mit 60/120/180 Ticks/s (ADR-020), Zeitsteuerung Pause/1×–3×/Nachtsprung/Kalender, Befehlsverarbeitung mit Kennung und Bestätigung, Ereignisstrom; Prüfmodus mit festem Übernahme-Tick; Kern-Benchmark „Tick mit 10.000 Personen" headless in der CI mit Schwelle und Trend.
 - **Akzeptanzkriterien:** `core/tests/time.rs` grün; Simulation bitgleich über verschiedene Threadzahlen im Prüfmodus; Benchmark-Job läuft und schlägt bei Überschreitung der Schwelle fehl (durch erzwungenen Fehler belegt, `CLAUDE.md` Abschnitt 6); Coverage Kern ≥ 85 %.
 - **Betroffene Module:** Takt & Weltzustand, Benchmark & Leistung
 - **Reifegrad-Wirkung:** Modul Takt & Weltzustand → `[BELASTBAR]` durch Umsetzung
@@ -191,10 +193,10 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.2, 2.8
 - **Freigabepflichtig:** nein (Datenmodell in 2.8 entschieden)
-- **Empfohlene Klasse:** Routine – klar spezifizierte Umsetzung nach ADR-010, ADR-013 und 2.8.
+- **Empfohlene Klasse:** Routine – klar spezifizierte Umsetzung nach ADR-010 und ADR-020.
 - **Eingangskriterien:** Datenmodell `[BELASTBAR]`, Weltmaßstab aus 2.8
 - **Anforderungen (ab Klasse M):** FR-046, FR-017 (Kern des Wegweiser-Prinzips; Passagierführung in 3.3)
-- **Zu tun:** Raster mit fünf Etagen, Zonen-Grundlage, heiße und kalte Felder je Objektart, Ladungsart „Fracht" im Schema; Wegweiser-Berechnung neu aufgebaut nach `spikes/1.2-wegweiser/src/field.rs` mit Neuberechnung im Hintergrund und Übernahme sobald fertig (ADR-010); Benchmark Wegweiser 768² × 5 in der CI.
+- **Zu tun:** Raster mit fünf Etagen in 32 × 32-Blöcken (2 m je Zelle, Erdgeschoss voll, übrige Etagen nur belegt; ADR-020), Wegenetze für Straßen, Rollwege und Bahnen als Datenstrukturen im Weltzustand (ohne Verkehrslogik, die folgt in 3.4), Zonen-Grundlage, heiße und kalte Felder je Objektart, Ladungsart „Fracht" im Schema; Wegweiser-Berechnung neu aufgebaut nach `spikes/1.2-wegweiser/src/field.rs` mit Neuberechnung im Hintergrund und Übernahme sobald fertig (ADR-010), Wegweiser nur in Blöcken mit begehbaren Zellen (ADR-020); Benchmark Wegweiser „Terminal 768² × 5 in Welt 2048²" in der CI.
 - **Akzeptanzkriterien:** `core/tests/cargo_ready.rs` und Wegweiser-Tests grün (Distanzen gleich der Vollberechnung nach Bauaktionen); `core/benches/flowfield.rs` mit 10.000 Personen ≤ 4 ms je Simulationsschritt (FR-017) und Neuberechnung im Bereich der Werte aus 1.5; Coverage Kern ≥ 85 %.
 - **Betroffene Module:** Takt & Weltzustand, Welt & Bau, Wegfindung & Passagierführung
 - **Reifegrad-Wirkung:** Modul Welt & Bau (Grundraster) → `[BELASTBAR]`
@@ -269,7 +271,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – neue Abhängigkeit und Bewertung einer Leistungsmessung (ADR-017).
 - **Eingangskriterien:** Spielfeld-Grundgerüst (2.7)
 - **Anforderungen (ab Klasse M):** FR-050
-- **Zu tun:** Stilleitfaden (Palette, Strichstärken, Maßstab passend zur Zellgröße aus 2.8, Detailgrad); SVG-Quellen im Repository, Rasterung in mehreren Auflösungen im Build (ADR-008), Atlanten; eigenes Programmsymbol für Fenster, Installer und Pakete (Befund 2.1-N2); Messung des Spielfelds mit Objekt-Sprites aus den Atlanten, Overlays und 10.000 Personen auf Referenz-PC und Mac.
+- **Zu tun:** Stilleitfaden (Palette, Strichstärken, Maßstab 2 m je Zelle nach ADR-020, Detailgrad); SVG-Quellen im Repository, Rasterung in mehreren Auflösungen im Build (ADR-008), Atlanten; eigenes Programmsymbol für Fenster, Installer und Pakete (Befund 2.1-N2); Messung des Spielfelds mit Objekt-Sprites aus den Atlanten, Overlays und 10.000 Personen auf Referenz-PC und Mac.
 - **Akzeptanzkriterien:** `scripts/assets.test.ts` grün; Messprotokoll zeigt, ob 60 Bilder/s mit echten Grafiken halten; Ergebnis per ADR (NFR Darstellung `[VORLÄUFIG]` → `[BELASTBAR]` oder Maßnahme).
 - **Betroffene Module:** Spielfeld, Build/CI
 - **Reifegrad-Wirkung:** NFR Performance Darstellung mit echten Grafiken `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen
@@ -286,7 +288,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
 | 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
-| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung; davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
+| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
 | 3.5 | Abfertigung und Gepäck in Grundform | FR-025, FR-032 |
 | 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform | FR-030, FR-036, FR-039 |
 
@@ -312,7 +314,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | 5.5 | Airside, Gepäck mit dreistufiger Kontrolle, Flüge, Abfertigung vollständig, Startfreigabe | FR-025, FR-026, FR-027, FR-029, FR-030, FR-032 |
 | 5.6 | Personal, Wirtschaft, Forschung, Serviceziele, Notfälle, Störungen, Tutorial, Erfolge; große Tabellen für Personal und Finanzen | FR-007, FR-008, FR-033 bis FR-039 |
 | 5.7 | Flugzeugtypen und Airlines inklusive Add-on-Klassen | FR-031 |
-| 5.8 | Benchmark mit Empfehlung, Leistungsbewusstsein; Messung auf schwacher integrierter Grafik (Auflage ADR-014) | FR-041, FR-042 |
+| 5.8 | Benchmark mit Empfehlung, Leistungsbewusstsein (Empfehlung und Warnung nach bebauter, begehbarer Fläche und Zahl der Ziele, ADR-020); Messung auf schwacher integrierter Grafik (Auflage ADR-014) | FR-041, FR-042 |
 
 ### Phase 6: Inhalte, Mods und Atmosphäre – Typ: UMSETZUNG
 
@@ -417,6 +419,16 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs sinkt die Quote ab ADR-021 (ADR-011 fällt heraus) auf 4 / 10, ab ADR-022 auf 3 / 10, ab ADR-025 auf 2 / 10 (20 %, Schwellenwert eingehalten).
 - **Kenntnisnahme:** Projektinhaber am 2026-10-13: „Zur Kenntnis genommen"; kein Umbau, Maßnahme (4) gilt.
 
+### Ergänzung Reaktiv-Quote (2026-10-13, Anlass ADR-020)
+
+- **Befund:** 6 / 10 `[REAKTIV]` (ADR-011, ADR-012, ADR-015, ADR-017, ADR-019, ADR-020) über ADR-011 bis ADR-020, 60 %.
+- **Ursache von ADR-020:** formal die 14-Tage-Regel (`CLAUDE.md` Abschnitt 6): ADR-020 ändert ADR-013 am Tag seiner Anlage. Inhaltlich war die Neubewertung geplant – ADR-013 (Konsequenzen) und ADR-016 haben sie an 2.8 übergeben. Die eigentliche Ursache liegt in 1.5: Die Kartengröße wurde festgelegt, bevor Zellgröße und Lage der Luftseite geklärt waren (Befund 8 der getrennten Instanz, `docs/research/phasenabschluss-1.md`: „Maßeinheit der Welt zuerst").
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI). ADR-020 ändert die Speicherung der Wegweiser hinter derselben Schnittstelle („Richtung je Ziel und Zelle", ADR-010) und ergänzt Wegenetze, die der Verkehr ohnehin vorsah; Kern, Brücke, Takt und Prinzip der Wegfindung bleiben. Noch kein Weltcode betroffen (2.3 offen).
+- **Muster:** Neben dem Werkzeug-Umfeld (Maßnahme 4) zeigt sich eine zweite Quelle: Festlegungen auf einer Größe, deren Einheit noch nicht bestimmt war.
+- **Maßnahme (5):** Eine Größenfestlegung (Raster, Karte, Puffer, Grenzwert) nennt ihre Einheit und den Ausschnitt des Systems, an dem sie bemessen wurde; fehlt eines davon, wird sie als vorläufig mit Landeplatz geführt, nicht per ADR fixiert.
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs 5 / 10 ab ADR-021, 4 / 10 ab ADR-022, 3 / 10 ab ADR-025, 2 / 10 (Schwellenwert eingehalten) ab ADR-027. 2.9 entscheidet die geplanten Verträge, ohne zuvor fixierte ADRs zu ändern.
+- **Kenntnisnahme:** offen (dem Projektinhaber am 2026-10-13 vorgelegt).
+
 ---
 
 <!-- ANCHOR:parallelisierbarkeit -->
@@ -428,6 +440,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 <!-- ANCHOR:replanning-historie -->
 ## Replanning-Historie
 
+- 2026-10-13 – Schritt 2.8 abgeschlossen (ADR-020): 2.2, 2.3, 2.9, 2.10, 3.4, 5.8 und das Abschlusskriterium von Phase 2 um Weltmaßstab, Blöcke, Wegenetze, Vorfeld-Gehwege und Zeitmodell ergänzt; keine neuen Schritte
 - 2026-10-13 – Schritt 1.7 abgeschlossen (ADR-016, ADR-017): Phase 2 im vollen Format mit 10 Schritten (neu 2.8, 2.9, 2.10; 2.6 geteilt); FR-039 in 3.6 und 5.6; neuer Schritt 7.3; Phase 1 archiviert
 - 2026-10-13 – Schritt 1.2 abgeschlossen (ADR-010); 1.5 um Rastergröße und fünf Etagen ergänzt; 3.3 um vorgeschaltete Erkundung „Suchen ohne Schilder"/Feinwege ergänzt (Landeplatz aus 1.2)
 - 2026-10-13 – Schritt 1.1 abgeschlossen (ADR-009); Querschnitt Q.2 als Landeplatz für die zurückgestellte WebAssembly-Variante angelegt (zählt nicht zum Schrittplan von Phase 1); 1.3 um Übertragungsumfang ergänzt

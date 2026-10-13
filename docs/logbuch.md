@@ -17,12 +17,37 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019); Nachlauf 2.1-N1/N2 erledigt; nächster Schritt 2.8 in neuer Session.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); nächster Schritt 2.9 in neuer Session. Reflexion Reaktiv-Quote (Anlass ADR-020) wartet auf Kenntnisnahme.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-13 19:14 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 14 Minuten seit `[SESSIONSTART]` 19:00 UTC
+- **Bearbeitet:** 2.8 – Weltmaßstab, Luftseite und Zeitmodell
+- **Erreicht:** 2.8 `[ERLEDIGT]`. Messung `spikes/2.8-weltmassstab/` (Referenzterminal aus 1.5 in Welten 1536²–3072² eingebettet, dicht gegen 32 × 32-Blöcke, Simulationsschritt, Blocktabelle). ADR-020 freigegeben (A: 2 m je Zelle, Luftseite im Raster in echten Maßen, Karten 1536²/2048², Blöcke, Wegenetze; Spieltag 72 min bei 1×; Vorfeld nur auf Gehwegen). ADR-013 überholt. `architecture.md` 3/6/7/9, Fahrplan (2.2, 2.3, 2.9, 2.10, 3.4, 5.8, Abschlusskriterium Phase 2), Glossar in `project-context.md`, README nachgezogen.
+- **Offen geblieben:** Kenntnisnahme der Reflexion „Anlass ADR-020" (Reaktiv-Quote 6 / 10) durch den Projektinhaber. Neuberechnung in Blöcken nur ersatzweise gemessen – Bestätigung durch Benchmark in 2.3. Kein PR geöffnet (nicht angefragt).
+- **Nächster Schritt:** 2.9 (Schnittstellenverträge S-2 bis S-7) in neuer Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 19:13 UTC); 2.8 empfiehlt Entscheidung, 0 Schritte oberhalb der Empfehlung; keine Teilarbeit abgegeben (Probelauf offen).
+- **Kontextgröße:** `get_session` meldet 102.635 Token, derselbe Wert wie zu Sessionbeginn – vermutlich nicht nachgeführt; unter der Grenze von 400.000.
+- **Kontingent:** 5-Stunden-Fenster `allowed` (19:13 UTC).
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf; Runner-Umstellung auf Ubuntu 26 ab 2026-10-19 weiter in Q.1 zu beobachten.
+- **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte, Blocker 0); ADR-020 verweist auf vorhandene Schritte (2.2, 2.3, 2.9, 2.10, 3.4, 5.8); Reifegrade passend zu ADR-020; Reaktiv-Quote 6 / 10 stimmt mit den Tags von ADR-011 bis ADR-020; keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Phase 2 weiter bei 10 Schritten; Größen: `project-context.md` 360 Zeilen, Logbuch unter 800.
+
+### 2026-10-13 19:12 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-020** `[REAKTIV]` (Kategorie 4): Weltmaßstab 2 m je Zelle, Luftseite im Raster, Wegweiser in Blöcken, Zeitmodell. Freigabe des Projektinhabers per Auswahl: „A: 2 m, echte Maße", „72 Minuten", „Nur markierte Gehwege".
+- **Reaktiv** allein wegen der 14-Tage-Regel (ändert ADR-013 vom selben Tag); Reflexion mit Maßnahme (5) in `fahrplan.md` ergänzt.
+- **Reifegrad:** keine Beförderung; Datenmodell und Wegweiser-Prinzip bleiben `[BELASTBAR]`, offene Frage „Lage von Bahnen und Vorfeld" geschlossen.
+
+### 2026-10-13 19:10 (UTC) – [BEOBACHTUNG]
+
+- **Messmethode 2.8:** Die Rechenzeit einer Block-Speicherung wurde nicht mit einer eigenen Block-Implementierung gemessen, sondern auf dem Ausschnitt mit denselben begehbaren Zellen; Speicher aus der exakten Zahl belegter Blöcke. Mehraufwand der Block-Adressierung getrennt per Mikromessung (+3 ns je Zugriff). Der Benchmark in 2.3 bestätigt das am Produktionscode.
+- **Mini-Reibung:** `/usr/bin/time` fehlt im Container; Prozess-Spitze stattdessen aus `VmHWM` im Programm. Zeitstempel des Eintrags `[ENTSCHEIDUNG-VORGELEGT]` zunächst mit 19:40 statt 19:08 geschrieben, vor dem Commit korrigiert – Uhrzeit immer mit `date -u` holen.
+- **Original:** Spieltag-Länge nicht offiziell belegt; Forum-Angaben 1–4 s je Spielminute widersprechen sich (Versionen).
 
 ### 2026-10-13 19:08 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
