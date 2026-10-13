@@ -78,4 +78,23 @@ Das Programm misst nach dem Start **rund 11 Minuten** selbständig. Bitte währe
 
 ## Messung auf echter Grafik
 
-Ausstehend: Referenz-PC (Windows) und Mac M3 Pro. Linux auf echter Hardware: 7.2 (ADR-011).
+### Referenz-PC, Windows (2026-10-13)
+
+Datei `results/referenz-pc-windows-rx7700xt.json`, Langzeitlauf 612 s, 768² × 5 Etagen, 10.000 Personen, Partikel, 180 Ticks/s, Bauaktion alle 10 s (60 Bauaktionen, 60 volle Neuberechnungen). Rechner: AMD Ryzen 9 3900X (12 Kerne, 24 Threads), 32 GB, AMD Radeon RX 7700 XT (D3D11 über ANGLE, WebGL2), Monitor 60 Hz (Angabe Projektinhaber). Simulation 4 Threads, Neuberechnung 22 Hintergrund-Threads (Voreinstellung: Kerne − 2).
+
+| Messgröße | Ergebnis |
+|---|---|
+| Bilder/s je 30-s-Fenster | 59,2–60,0 (Monitorgrenze); Bildzeit p50 16,7 ms, p99 16,9–17,0 ms, einmal 33,2 ms (Fenster 120 s) |
+| Bilder über 20 / 33 ms | 45 / 18 in 612 s (rund 36.700 Bilder), gehäuft zwischen 60 und 120 s, ab 300 s fast keine |
+| Ticks/s | 179,6–180,0 bei Soll 180; Rückstand höchstens 8 Ticks, wächst nicht |
+| Schrittzeit Simulation | Mittel 0,33–0,42 ms, p99 bis 1,4 ms; höchste Tickrate 3.577/s |
+| Volle Neuberechnung (Hintergrund) | Mittel 293 ms, höchstens 388 ms (≤ 71 Ticks alte Wegweiser in Gebrauch) |
+| Bauaktion bis zum Bild | Median 27–43 ms, höchstens 69 ms, 2–3 Bilder |
+| Panel (5.000 Zeilen, 4 Aktualisierungen/s) | Mittel 6,0–7,5 ms, höchstens 19,5 ms; keine langen Aufgaben |
+| Speicher aller Prozesse | 675 MB beim Start, 702–747 MB im Lauf, Mittel erste 2 min 714 MB, letzte 2 min 728 MB; Kern-Prozess 194–217 MB ohne Anstieg |
+
+**Einordnung:** Bildrate, Mithalten der Simulation und Speicher erfüllen die Zielwerte über 10 Minuten. Zwei Einschränkungen: (1) Der Referenz-PC hat 12 Kerne, die Zielhardware 8 (`project-context.md` Abschnitt 6); die Neuberechnung lief auf 22 Threads und ist auf 8 Kernen nicht gemessen. (2) Eine Bauaktion erscheint nach 2–3 Bildern, nicht im nächsten – derselbe Befund wie in 1.3/1.4, offen für 1.7.
+
+### Mac M3 Pro
+
+Ausstehend. Linux auf echter Hardware: 7.2 (ADR-011).

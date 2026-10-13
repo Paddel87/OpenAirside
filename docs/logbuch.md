@@ -24,6 +24,12 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 15:05 – [BEOBACHTUNG]
+
+- **Spike 1.5 auf dem Referenz-PC unter Windows** (Ryzen 9 3900X 12 Kerne, RX 7700 XT, 60 Hz; Ergebnisdatei vom Projektinhaber, abgelegt als `spikes/1.5-leistung/results/referenz-pc-windows-rx7700xt.json`): 612 s, 768² × 5, 10.000 Personen, 60 Bauaktionen. 59,2–60 Bilder/s, 45 Bilder über 20 ms (gehäuft 60–120 s), 179,6–180 Ticks/s, Rückstand ≤ 8 Ticks ohne Wachstum, volle Neuberechnung 293 ms Mittel / 388 ms höchstens, Bauaktion 2–3 Bilder, Speicher stabil 702–747 MB.
+- **Abweichung zur Zielhardware:** Der Referenz-PC hat 12 Kerne, `project-context.md` nennt 8; der Fahrplan führte „8 Kerne" für den Referenz-PC. Die Neuberechnung nutzte 22 Threads. Für 8 Kerne kann der Lauf mit `--bg-threads=6` wiederholt werden.
+- **Rechnerkennung:** Die Ergebnisdatei enthält System, Prozessor, Speicher und Grafikchip; die Bildwiederholrate des Monitors nicht.
+
 ### 2026-10-13 14:52 – [GELÖST]
 
 - **Problem:** Mac-Paket Spike 1.5 (arm64 only, ADR-012) startet nicht: „ist beschädigt und kann nicht geöffnet werden", nur „In den Papierkorb"/„Fertig"; der Weg über „Dennoch öffnen" aus 1.3/1.4 (Universal) steht nicht zur Verfügung.
