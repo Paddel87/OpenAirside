@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-13
+- **Stand vom:** 2026-10-13 (Sessionstart 16:40 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (Phase 1 abgeschlossen, ADR-016)
-- **Nächster Schritt:** 2.1 (Repository-Struktur, CI-Gates) und 2.8 (Weltmaßstab, Luftseite, Zeitmodell), parallel möglich
+- **Aktiver Schritt:** 2.1 – wartet auf Freigabe (Kategorie 7 und 3)
+- **Nächster Schritt:** 2.1 umsetzen nach Freigabe; 2.8 (Weltmaßstab, Luftseite, Zeitmodell) in einer folgenden Session
 - **Offene STOPP-Situationen:** keine (Reaktiv-Quote 4 / 10 über dem Schwellenwert; Reflexion zu ADR-017 vom Projektinhaber am 2026-10-13 bestätigt, siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
@@ -100,7 +100,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.1: Repository-Struktur, CI-Gates und Werkzeuge
 
-- **Status:** OFFEN
+- **Status:** WARTET-AUF-FREIGABE (Vorschlag vom 2026-10-13, Logbuch `[ENTSCHEIDUNG-VORGELEGT]` 16:55 UTC)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 1.7
 - **Freigabepflichtig:** ja (Kategorie 7 Build- und Deploy-Pipeline; Kategorie 3 bei Änderung der napi-Versionen)
