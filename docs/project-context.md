@@ -248,7 +248,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
   - Tests inklusive Coverage-Mindestwert
   - Leistungstest Referenzszenario (ab Phase 4, sobald das Referenzszenario baubar ist)
 - **Branch-Protection auf `main`:** alle Pflicht-Gates grün; Force-Push gesperrt (einzurichten in Schritt 2.1).
-- **Bis Schritt 2.1** laufen die Code-Jobs nur, wenn `Cargo.toml` bzw. `package.json` existiert; bis dahin prüft die CI nur die Dokumentation.
+- **Seit Schritt 2.1** laufen alle Code-Jobs bei jedem Push (ADR-018): Rust (fmt, clippy, cargo-deny, Tests auf drei Plattformen, Coverage Kern ≥ 85 % und gesamt ≥ 70 %), TypeScript (ESLint, Prettier, tsc, npm audit, Lizenz-Skript, Vitest mit Coverage auf drei Plattformen) und der Electron-Rauchtest auf drei Plattformen; die Brücken-Crate hat keine cargo-Tests und wird über den Rauchtest geprüft.
 
 ### Coverage-Mindestwerte
 
@@ -297,6 +297,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 | Runner-Image `ubuntu-latest` → Ubuntu 26 | ab 2026-10-19 (Umstellung durch GitHub) | – | CI-Annotation, actions/runner-images#14748 | Q.1 (erster Lauf nach der Umstellung beobachten) |
 | Node 20 in GitHub Actions (abgekündigt) | behoben am 2026-10-13: pre-commit/action ersetzt | – | CI-Protokoll, GitHub-Changelog 2025-09-19 | – |
 | WebAssembly-Threads mit stabilem Rust (`atomics`, threadfähige Standardbibliothek ohne `build-std`) | Nachprüfung 2027-01-02, danach bei jedem Q.1 | – | rust-lang/rust RELEASES.md, wasm-bindgen-Doku | Q.2 |
+| Abgekündigte Unterpakete von electron-builder 26.16.1 (inflight 1.0.6, rimraf 2.6.3, glob 7.2.3, boolean 3.2.0; Hinweise bei `npm install`) | keine Frist, Nachprüfung bei jedem Q.1 | – | npm-Installationsprotokoll 2026-10-13 | Q.1 (electron-builder-Version prüfen, ob die Unterpakete ersetzt sind) |
 | Claude-Kontingent | rollierendes 5-Stunden-Fenster („five_hour“), Zurücksetz-Zeitpunkt je Session über `get_session` | – | Laufzeitumgebung, geprüft 2026-10-13 | – (kein Fristablauf) |
 
 ### Kosten

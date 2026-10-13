@@ -344,7 +344,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Wahl neuer Linien ist eine Entscheidung über externe Abhängigkeiten.
 - **Eingangskriterien:** Vorlauf im Ablaufdaten-Register erreicht
 - **Anforderungen (ab Klasse M):** FR-045
-- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge; Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
+- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge, abgekündigte Unterpakete von electron-builder (Register-Eintrag vom 2026-10-13); Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
 - **Akzeptanzkriterien:** Keine fixierte Version ist über ihrem Lebensende; Register und `Verifiziert`-Vermerke aktuell; CI grün auf drei Plattformen.
 - **Betroffene Module:** Plattform, Build/CI
 - **Reifegrad-Wirkung:** keine

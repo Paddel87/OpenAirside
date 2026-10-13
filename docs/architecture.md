@@ -439,4 +439,4 @@ Reifegrad-Skala `[ROH]` → `[GEHÄRTET]` → `[KRITISCH]` und Beförderungsrege
 
 | Skript | Zweck | Reifegrad | Plattform-Matrix | Voraussetzungen | Idempotenz |
 |---|---|---|---|---|---|
-| – | noch keine Skripte; erste entstehen in Schritt 2.1 (Grundgerüst) und 2.6 (Grafik-Pipeline) | – | – | – | – |
+| `scripts/check-licenses.mjs` | prüft die Lizenzen aller npm-Pakete aus `package-lock.json` gegen die erlaubte Liste (`project-context.md` Abschnitt 6, ADR-019); CI-Job `ts-security` | ROH (seit 2026-10-13, Schritt 2.1; Unit-Tests `scripts/check-licenses.test.mjs`, erzwungener Fehlerfall in Tests belegt) | Linux, macOS, Windows | Node 26.11.1, `package-lock.json` v3 | ja, nur lesend |
