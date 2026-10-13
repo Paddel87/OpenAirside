@@ -8,6 +8,9 @@
 # Grafikkarte, ihre Bildraten sind nicht aussagekräftig. Spike-Werkzeug, kein Release.
 #
 # Kleine Testpakete wie 1.4 (freigegeben 2026-10-13): Windows ZIP, macOS DMG (arm64), Linux AppImage.
+# macOS: Ad-hoc-Signatur (identity "-", hardenedRuntime false in package.json; ADR-015,
+# Fahrplan 1.6-N1), damit macOS beim heruntergeladenen Paket „Dennoch öffnen" anbietet statt
+# „beschädigt" zu melden. Keine Beglaubigung durch Apple (Signatur-Entscheidung in 7.1).
 #
 # Action-Versionen wie in ci.yml (geprüft am 2026-10-13).
 
@@ -112,6 +115,16 @@ jobs:
           $exe = Get-ChildItem release/win-unpacked -Filter *.exe | Where-Object { $_.Name -notlike 'Uninstall*' } | Select-Object -First 1
           $p = Start-Process -FilePath $exe.FullName -ArgumentList '--enable-unsafe-swiftshader','--series=longrun','--minutes=1','--exit',"--out=$PWD\smoke.json","--screenshot=$PWD\smoke.png" -PassThru -Wait
           "Exit-Code: $($p.ExitCode)"
+
+      - name: Signatur prüfen (macOS, ad hoc)
+        if: matrix.platform == 'mac'
+        working-directory: spikes/1.5-leistung/app
+        run: |
+          app="$(ls -d release/mac-arm64/*.app | head -1)"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -dv "$app" 2>&1 | tee codesign.txt
+          grep -q "Signature=adhoc" codesign.txt
+          codesign --verify --verbose=2 "$app/Contents/Resources/app/native/sim_bridge.node"
 
       - name: Rauchtest macOS
         if: matrix.platform == 'mac'
