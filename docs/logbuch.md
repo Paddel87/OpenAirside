@@ -24,6 +24,17 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4, 1.5 (ADR-013, A
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 15:52 – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 100 Minuten seit `[SESSIONSTART]` 14:11 (mit einer Verdichtung des Gesprächsverlaufs dazwischen)
+- **Bearbeitet:** 1.5 (Container-Messung, Rastergröße ADR-013, Testprogramm, Langzeitläufe Referenz-PC mit 22 und 6 Hintergrund-Threads und Mac M3 Pro, Bewertung, Vorlage ADR-002), Nachtrag 1.6 (Mac-Paket nur für Apple-Chips meldet „beschädigt", Vorschlag 1.6-N1)
+- **Erreicht:** 1.5 `[ERLEDIGT]`; ADR-013 und ADR-014; Stack, Pattern, Betriebsart, Datenmodell, Wegweiser-Prinzip und NFR Performance (Gesamtsystem, Langzeit) `[BELASTBAR]`; Messprotokoll, Fahrplan, Architektur, Decisions, README nachgezogen.
+- **Offen geblieben:** Vorschlag 1.6-N1 (Ad-hoc-Signatur der Mac-Pakete im Workflow) wartet auf Freigabe; CI des PR nicht abgewartet. Auflagen aus ADR-014 mit Landeplatz in 1.7, 4.1, 5.8, 7.2.
+- **Nächster Schritt:** 1.7 – Auswertung und Entscheidung (Phasenabschluss), mit Bewertung „Weiterbauen, umbauen oder neu aufsetzen?" durch eine getrennte Instanz und Vision-Abgleich gegen `docs/vision.md`.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 15:50); 1.5 empfiehlt Entscheidung, 0 Schritte oberhalb der Empfehlung (Nachtrag 1.6 war Dokumentationspflege innerhalb von 1.5); keine Abgabe (Probelauf offen).
+- **Kontextgröße:** 253.095 Token laut `get_session` (nach der Verdichtung), unter der Grenze von 400.000.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf (Electron 44: Vorlauf ab 2027-01-02; Umstellung `ubuntu-latest` ab 2026-10-19 bei Q.1). **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte, Blocker 0); Reifegrade in Abschnitt 1, 3, 6 und 9 von `architecture.md` gleich und passend zu ADR-014; ADR-Schrittverweise (1.7, 4.1, 5.8, 7.2) existieren; Reaktiv-Quote 2/10 stimmt mit Teil A; Phase 1 bei 7 Schritten wie ursprünglich geplant; keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Größen: `logbuch.md` unter 800 Zeilen, `project-context.md` 354 Zeilen.
+
 ### 2026-10-13 15:45 – [REIFEGRAD-WECHSEL]
 
 - `[VORLÄUFIG]` → `[BELASTBAR]` per ADR-014: Stack (ADR-002), Pattern Kern/Präsentation (ADR-003), Betriebsart des Kerns (ADR-009), Datenmodell und Parallelisierung (ADR-010), Wegweiser-Prinzip (ADR-004/010/013), NFR Performance Gesamtsystem und Langzeit. Bedingungen: Linux 7.2, schwache integrierte Grafik 5.8, echte 8-Kern-Hardware 4.1.
