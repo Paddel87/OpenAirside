@@ -30,11 +30,11 @@ Plattform-Matrix: `docs/project-context.md` Abschnitt 3. Pflichtwerkzeuge: Git, 
 # Systempakete für Electron (z. B. libnss3, libgtk-3) praktisch ermitteln
 ```
 
-### macOS 13+ (Apple Silicon und Intel)
+### macOS 13+ (Apple-Chips, ADR-012)
 
 ```bash
-# TBD (Schritt 2.1): Xcode Command Line Tools, Node 26, rustup,
-# Ziel x86_64-apple-darwin zusätzlich für den Universal-Build
+# TBD (Schritt 2.1): Xcode Command Line Tools, Node 26, rustup
+# (Ziel aarch64-apple-darwin; kein Intel- und kein Universal-Build)
 ```
 
 ### Windows 11 (PowerShell oder Git Bash)
@@ -44,7 +44,7 @@ Plattform-Matrix: `docs/project-context.md` Abschnitt 3. Pflichtwerkzeuge: Git, 
 # (Visual Studio Build Tools mit „Desktopentwicklung mit C++"), pre-commit
 ```
 
-**Nicht unterstützte Plattformen:** 32-Bit-Windows und Linux armv7 (Electron 44 liefert keine Builds); macOS unter 13 (Electron 44 setzt macOS 13 voraus).
+**Nicht unterstützte Plattformen:** 32-Bit-Windows und Linux armv7 (Electron 44 liefert keine Builds); macOS unter 13 (Electron 44 setzt macOS 13 voraus); Intel-Macs (ADR-012).
 
 <!-- ANCHOR:setup -->
 ## 3. Setup (End-to-End)

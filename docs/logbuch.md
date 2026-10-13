@@ -24,6 +24,13 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3 und 1.6 erledigt; Lin
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 13:45 – [ADR-ANGELEGT]
+
+- **ADR-012:** macOS nur für Apple-Chips, kein Intel- und kein Universal-Build (`[REAKTIV]`, ändert eine Konsequenz von ADR-009 innerhalb von 14 Tagen). Freigabe des Projektinhabers: „A, nur Apple-Chips". Anlass: kleinere Testpakete; Apple beendet die Intel-Unterstützung mit macOS 26; Intel nie testbar.
+- **Nachgezogen:** `project-context.md` (Abschnitte 2, 3, 6), `architecture.md` Abschnitt 1, `onboarding-runbook.md` Abschnitt 2, `release.yml`, Teil A und Reaktiv-Quote in `decisions.md` (2/10 = 20 %, genau am Schwellenwert, kein STOPP).
+- **Vorher, ebenfalls freigegeben:** `spike-build-1-4.yml` baut je System nur ein Format (Windows ZIP, macOS DMG arm64, Linux AppImage).
+- **Modellklasse:** Entscheidungs-Block nach Abschnitt 4 → Eskalations-Auslöser 1; aktiv `claude-opus-5-5` (Entscheidungs-Klasse, `get_session`), kein Wechsel nötig.
+
 ### 2026-10-13 13:25 – [BEOBACHTUNG]
 
 - **Spike 1.4 im Container** (`spikes/1.4-tabellen`, Messprotokoll im README): Das Panel drückt die Bildrate bis 5.000 nach einer Live-Spalte sortierte Zeilen bei keiner Rate bis 60/s; 20.000 sortierte Zeilen ab 4/s schon (TanStack sortiert 24–30 ms je Aktualisierung, reines `Array.sort` der Zeilennummern 4,8 ms). Ohne Virtualisierung kosten 2.000 Zeilen 120–180 ms je Aktualisierung.

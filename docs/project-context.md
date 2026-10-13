@@ -21,7 +21,7 @@
 - **Primäre Nutzer:** Spieler von Aufbau- und Wirtschaftssimulationen, insbesondere die Community von Airport CEO; Maßstab für das Spielerlebnis ist der Projektinhaber. Kein technisches Vorwissen nötig. Beteiligte und Anwendungsfälle: `docs/requirements.md`.
 - **Sekundäre Nutzer / Betreiber:** keine Betreiber. Spieler installieren das Spiel lokal aus GitHub Releases. Später Modder, Übersetzer und Grafiker als Mitwirkende.
 - **Erwartete Last:** Einzelspieler, lokal. Simulationslast: Referenzszenario mit mindestens 10.000 gleichzeitig simulierten Personen (Abschnitt 6, Performance).
-- **Nutzungsumgebung:** Desktop unter Windows, Linux und macOS 13+ (Apple Silicon und Intel). Hardware-Untergrenze: integrierte Grafik. Zielhardware: Mittelklasse-PC (Abschnitt 6).
+- **Nutzungsumgebung:** Desktop unter Windows, Linux und macOS 13+ auf Apple-Chips (ADR-012). Hardware-Untergrenze: integrierte Grafik. Zielhardware: Mittelklasse-PC (Abschnitt 6).
 
 <!-- ANCHOR:technischer-stack -->
 ## 3. Technischer Stack
@@ -80,15 +80,15 @@ Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachwei
 
 ### Unterstützte Entwickler-Plattformen
 
-| Aspekt | Linux (Ubuntu 24.04+ / Fedora 42+) | macOS 13+ (Apple Silicon und Intel) | Windows 11 (PowerShell oder Git Bash) |
+| Aspekt | Linux (Ubuntu 24.04+ / Fedora 42+) | macOS 13+ (Apple-Chips, ADR-012) | Windows 11 (PowerShell oder Git Bash) |
 |---|---|---|---|
 | **Rust-Kern** | ✓ | ✓ | ✓ |
 | **Präsentation (Electron/TypeScript)** | ✓ | ✓ | ✓ |
 | **Hilfsskripte (`scripts/`)** | ✓ | ✓ | ✓ nur als Node-Skripte, keine Shell-Skripte |
-| **Verpackung** | ✓ (AppImage, deb) | ✓ (dmg, Universal; unsigniert) | ✓ (NSIS) |
+| **Verpackung** | ✓ (AppImage, deb) | ✓ (dmg, arm64; unsigniert) | ✓ (NSIS) |
 | **CI-Pipeline** | ✓ (GitHub-Hosted) | ✓ (GitHub-Hosted) | ✓ (GitHub-Hosted) |
 
-Nicht unterstützt: 32-Bit-Windows und Linux armv7 (Electron 44 liefert keine Builds), macOS unter 13. Hilfsskripte sind Node-Skripte, damit alle drei Plattformen ohne Zusatzwerkzeuge laufen.
+Nicht unterstützt: 32-Bit-Windows und Linux armv7 (Electron 44 liefert keine Builds), macOS unter 13, Intel-Macs (ADR-012). Hilfsskripte sind Node-Skripte, damit alle drei Plattformen ohne Zusatzwerkzeuge laufen.
 
 **Pflege-Regel:** Tabelle bei jedem Touch an `scripts/`, `package.json`, `Cargo.toml` (Top-Level-Dependencies) oder bei neuen Plattform-Blockern re-validieren; Verstöße im selben Commit korrigieren.
 
@@ -160,7 +160,7 @@ Keine externen APIs im Spiel.
 
 ### Plattform und Kompatibilität
 
-- Windows 10/11 x64 und arm64, Linux x64 und arm64, macOS 13+ als Universal-Build (Apple Silicon und Intel).
+- Windows 10/11 x64 und arm64, Linux x64 und arm64, macOS 13+ nur für Apple-Chips (arm64); kein Intel- und kein Universal-Build (ADR-012).
 - Grafik über WebGL2. Leistungsnachweis in Phase 1 auf Windows und macOS; Linux bis Schritt 7.2 mit der Zusicherung „baut und startet im CI", Leistungsmessung mit gängigen Treibern (Intel, AMD, NVIDIA) in 7.2 oder früher durch Mitwirkende (ADR-011).
 - Hardware-Untergrenze: integrierte Grafik, lauffähig, mit Benchmark-Empfehlung zur Kartengröße.
 - Zielhardware (Referenz): Mittelklasse-PC mit 8 CPU-Kernen, 16 GB RAM und einer Mittelklasse-Grafikkarte der aktuellen Generation.

@@ -29,7 +29,7 @@ OpenAirside ist ein lokal laufendes Desktop-Spiel. Es ist aufgebaut wie eine Web
 
 **Kommunikations-Grundmodus:** Präsentation → Kern: Befehlsnachrichten. Kern → Präsentation: Zustandspuffer im Kern-Prozess, je Bild als Kopie per `MessagePort` an den Renderer übertragen (ADR-009), plus Ereignisstrom. Präsentation ↔ Plattform: typisierte Electron-Preload-Schnittstelle. `[VORLÄUFIG]`
 
-**Plattformen:** Windows, Linux, macOS (Universal) `[BELASTBAR]` – harte Randbedingung aus der Vision.
+**Plattformen:** Windows, Linux, macOS (nur Apple-Chips, ADR-012) `[BELASTBAR]` – harte Randbedingung aus der Vision.
 
 **Auslieferungseinheit:** eine Desktop-Anwendung je Plattform, keine Server, keine Online-Dienste `[BELASTBAR]` – harte Randbedingung aus der Vision.
 

@@ -1,5 +1,5 @@
 # Release-Builds für OpenAirside (Klasse G, Aufteilung nach templates/projektstart.md Schritt 10).
-# Trigger: Tag v* (z. B. v0.1.0). Baut Windows, Linux und macOS (Universal) mit electron-builder
+# Trigger: Tag v* (z. B. v0.1.0). Baut Windows, Linux und macOS (Apple-Chips, ADR-012) mit electron-builder
 # 26.16.1 und legt einen Release-ENTWURF an; veröffentlicht wird von Hand nach Freigabe.
 # Änderungen an dieser Datei sind freigabepflichtig (CLAUDE.md 4.7).
 # Vor dem ersten öffentlichen Release gilt das Gate aus Fahrplan-Schritt 7.1.
@@ -49,7 +49,7 @@ jobs:
           cache: npm
       - run: rustup show
       - if: runner.os == 'macOS'
-        run: rustup target add x86_64-apple-darwin aarch64-apple-darwin   # Universal-Build
+        run: rustup target add aarch64-apple-darwin   # nur Apple-Chips (ADR-012)
       - uses: Swatinem/rust-cache@v2.9.2
       - run: npm ci
       - name: Paket bauen (unsigniert, siehe project-context.md Abschnitt 8)
