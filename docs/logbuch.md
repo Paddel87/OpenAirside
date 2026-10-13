@@ -24,6 +24,15 @@ Phase 1 läuft. Schritte 1.1 (ADR-009), 1.2 (ADR-010), 1.3, 1.4 und 1.6 erledigt
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 14:11 – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 14:15; PR Paddel87/OpenAirside#9 gemergt (`1b8e76e`), Branch `claude/gracious-galileo-2reksz` neu auf `main` gesetzt.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 1, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht); vertieft: ADR-010, Messprotokolle 1.2 und 1.3.
+- **Geplant für diese Session:** 1.5 – Leistungsnachweis auf den Zielsystemen: Messung im Container (Rastergrößen, fünf Etagen), Testprogramm für Referenz-PC und Mac.
+- **Vorabprüfung:** ERKUNDUNG, keine BELASTBAR-Pflicht; Abhängigkeiten 1.2, 1.3, 1.4 erledigt; Testsysteme laut Fahrplan verfügbar. Ergebnis ist freigabepflichtig (Bestätigung oder Verwerfung von ADR-002).
+- **Modus/Werkzeug:** Claude Code (Cloud-Session, Desktop-App).
+- **Modell:** eingestellt und bedient `claude-opus-5-5` (Quelle: `get_session`, `configured_model` und `last_served_model`) → Entscheidungs-Klasse; entspricht der Empfehlung von 1.5. Kontext zu Sessionbeginn laut `get_session`: 102.629 Token (Zählung nach `/clear`). Zeitstempel ab hier nach Systemuhr (UTC); die Stempel der Vorsession waren geschätzt.
+
 ### 2026-10-13 14:15 – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 65 Minuten seit `[SESSIONSTART]` 13:10 (mit Neustart der Laufzeitumgebung dazwischen)

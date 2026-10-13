@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-13
 - **Laufende Phase:** Phase 1 – Technischer Durchstich und Leistungsnachweis
 - **Phasentyp:** ERKUNDUNG
-- **Aktiver Schritt:** keiner (1.4 erledigt am 2026-10-13)
-- **Nächster Schritt:** 1.5 – Leistungsnachweis auf den Zielsystemen
+- **Aktiver Schritt:** 1.5 – Leistungsnachweis auf den Zielsystemen
+- **Nächster Schritt:** 1.7 – Auswertung und Entscheidung
 - **Offene STOPP-Situationen:** keine
 
 <!-- ANCHOR:phasen-typen -->
@@ -277,7 +277,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 1.5: Leistungsnachweis auf den Zielsystemen
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT (seit 2026-10-13)
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Lasttest / Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session
