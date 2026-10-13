@@ -284,7 +284,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** bei Bestehen: Stack, Pattern, NFR Performance `[VORLÄUFIG]` → `[BELASTBAR]`; bei Scheitern: ADR mit Neubewertung (Rückfalloption Godot-Präsentation mit Rust-Kern)
 - **Artefakte:** Messprotokoll, ADR (ERKENNTNIS), Update `architecture.md` Abschnitt 9
 - **Notizen:** Falls keine Mittelklasse-Referenz verfügbar ist, Messung auf verfügbarer Hardware und Hochrechnung mit Begründung; das Fehlen ist dann als Informationslücke zu melden.
-- **Testsysteme (Stand 2026-10-13, Angabe des Projektinhabers):** Referenz-PC (8 Kerne, Mittelklasse-Grafikkarte) und Mac mit integrierter Grafik verfügbar. Linux-System schwierig; Vorschlag: Ubuntu als Live-USB auf dem Referenz-PC (ohne Installation). Offen bis zur Klärung: Grafikkarten-Hersteller des Referenz-PCs (bei NVIDIA läuft im Live-System nur der freie Treiber nouveau).
+- **Testsysteme (Stand 2026-10-13, Angabe des Projektinhabers):** Referenz-PC (8 Kerne, Mittelklasse-Grafikkarte) und Mac mit integrierter Grafik verfügbar. Linux-System schwierig; Vorschlag: Ubuntu als Live-USB auf dem Referenz-PC (ohne Installation). Grafikkarte des Referenz-PCs: AMD Radeon RX 7700 XT – der freie Linux-Treiber (amdgpu/Mesa) ist im Live-System enthalten, Linux-Messung damit aussagekräftig (Treiberunterstützung in 1.5 gegen Quellen belegen). Die Karte ist eine Generation älter als „Mittelklasse der aktuellen Generation" (`project-context.md` Abschnitt 6); Messwerte sind dadurch eher vorsichtig.
 
 #### 1.6: Verpackung für drei Plattformen
 
