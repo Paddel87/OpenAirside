@@ -24,6 +24,11 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-13 17:55 (UTC) – [BEOBACHTUNG]
+
+- **STOPP Reaktiv-Quote aufgehoben:** Projektinhaber: „Zur Kenntnis genommen" (Reflexion Anlass ADR-019). 2.1 wird fortgesetzt.
+- **Worker-Neustart der Session:** Arbeitsbaum (unversionierte Gerüst-Dateien, `node_modules`, Node 26 unter `/opt/node26`, cargo-deny) blieb erhalten.
+
 ### 2026-10-13 17:45 (UTC) – [ADR-ANGELEGT]
 
 - **ADR:** ADR-019 – Erlaubte Lizenzen um BlueOak-1.0.0, 0BSD, Python-2.0 und WTFPL erweitert

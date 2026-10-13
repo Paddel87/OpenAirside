@@ -13,7 +13,7 @@
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
 - **Aktiver Schritt:** 2.1 – in Arbeit (ADR-018)
 - **Nächster Schritt:** nach 2.1: (Weltmaßstab, Luftseite, Zeitmodell) in einer folgenden Session
-- **Offene STOPP-Situationen:** Reaktiv-Quote 5 / 10 nach ADR-019; Reflexion ergänzt, Kenntnisnahme des Projektinhabers ausstehend (siehe „Iterations-Reflexion")
+- **Offene STOPP-Situationen:** keine (Reaktiv-Quote 5 / 10 nach ADR-019 über dem Schwellenwert; Reflexion vom Projektinhaber am 2026-10-13 zur Kenntnis genommen, siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -411,7 +411,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Muster:** Vier der fünf reaktiven ADRs (ADR-011, ADR-012, ADR-015, ADR-019) entstehen an der Grenze zu Werkzeugen, Plattformen und Verpackung; ADR-017 an einer zu breiten Reifegrad-Aussage. Die Häufung zeigt, dass Annahmen über das Werkzeug-Umfeld vor der ersten Nutzung nicht geprüft wurden.
 - **Maßnahme (4):** Vor jeder neuen Prüfung oder Liste mit Freigabe-Wirkung (Lizenzen, Audits, Plattformziele) läuft sie einmal gegen den tatsächlichen Bestand, und der Befund geht in dieselbe Freigabe ein. Für 2.1 bereits angewandt: `cargo deny check` und die npm-Zählung liefen vor dem Lizenz-Skript.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs sinkt die Quote ab ADR-021 (ADR-011 fällt heraus) auf 4 / 10, ab ADR-022 auf 3 / 10, ab ADR-025 auf 2 / 10 (20 %, Schwellenwert eingehalten).
-- **Kenntnisnahme:** ausstehend.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-13: „Zur Kenntnis genommen"; kein Umbau, Maßnahme (4) gilt.
 
 ---
 
