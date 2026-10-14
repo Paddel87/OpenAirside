@@ -13,6 +13,7 @@ pub mod frame;
 pub mod geometry;
 pub mod grid;
 pub mod hash;
+pub mod host;
 pub mod network;
 pub mod pacer;
 pub mod port;
