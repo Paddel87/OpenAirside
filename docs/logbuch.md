@@ -17,36 +17,77 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); nächster Schritt 2.7. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 in Arbeit (ADR-024), offen sind Messwerkzeug und Messung auf Referenz-PC und Mac. Neuer Entwurfsschritt 3.7 vor 3.1. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
-### 2026-10-14 05:05 (UTC) – [ADR-ANGELEGT]
+### 2026-10-14 05:32 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 65 Minuten seit Sessionstart 04:28 UTC (Eintrag `[SESSIONSTART]` 04:47).
+- **Bearbeitet:** Fragen zu 2.8 (Zellgröße im Original, Personen auf dem Vorfeld); neuer Entwurfsschritt 3.7; 2.7 – Brücke und Plattformschicht.
+- **Erreicht:** 3.7 im Fahrplan (vor 3.1). ADR-024 freigegeben (napi `serde-json`, `serde_json =1.0.151`). 2.7 umgesetzt bis auf Messwerkzeug und Messung: Bildformat S-1 mit Dreifachpuffer, Port-Protokoll mit Handshake und Sitzungen, Debug-Befehle, S-7 mit Test-Tabelle, napi-Klasse `Core`, Port-Vermittlung und Neustart im Hauptprozess, Preload S-6 mit Absenderprüfung, PixiJS-Spielfeld, Konsole und Leistungsanzeige. Kern 96 Unit-Tests, TypeScript 120 Tests (Coverage 94 % Lines), Rauchtest lokal grün. CI-Lauf 38516083109 (`4edcdab`) grün auf allen Jobs.
+- **Offen geblieben:** 2.7 bleibt `[IN ARBEIT]` – Messwerkzeug (Messreihe mit JSON-Ausgabe, Kennzahlen des Takts im Status) und Messung auf Referenz-PC und Mac. CI-Lauf 38516637456 für `86bb713` (S-7) lief bei Sessionende noch; die Doku-Commits dieser Session lösen einen weiteren Lauf aus. Kein PR geöffnet (nicht angefragt). Kein CHANGELOG im Repository; Einträge ab dem ersten Release.
+- **Nächster Schritt:** 2.7 abschließen: Messwerkzeug bauen, dem Projektinhaber die Messanleitung geben, Messwerte eintragen, Brücke und Plattform befördern (Auslöser 4 → Entscheidungs-Klasse).
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, laut `get_session` 04:47 und 05:28 UTC eingestellt und bedient) für die ganze Session. Freigabe ADR-024 auf der Entscheidungs-Klasse (Pflicht). Die Umsetzung von 2.7 (Empfehlung Routine) lief oberhalb der Empfehlung: 1 Schritt; keine Abgabe an Unteragenten, weil der Probelauf offen ist (`templates/wirtschaftlichkeit.md`). Eine Warnung zu Beginn des Schritts fehlte – Abweichung von `CLAUDE.md` Abschnitt 0, hier nachgetragen.
+- **Kontextgröße:** nicht verlässlich feststellbar: `get_session` meldete 169.106 Token zu Beginn und am Ende unverändert (Wert offenbar nicht aktualisiert). Eigene Schätzung aus dem verbrauchten Kontingent der Session: rund 340.000 Token, unter der Grenze von 400.000, aber nahe daran – die nächste Arbeit in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed`.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf (Electron 44: Vorlauf ab 2027-01-02); Runner-Umstellung auf Ubuntu 26 ab 2026-10-19 in Q.1 zu beobachten.
+- **Drift-Prüfung:** README nachgezogen (Phase, Quick Start, Verwendung, Nächste Schritte); ADR-024 verweist auf den vorhandenen Schritt 2.7; Reifegrade unverändert (Brücke und Plattform bleiben `[VORLÄUFIG]` bis zum Abschluss); Reaktiv-Quote 4 / 10 (ADR-015 bis ADR-024) stimmt mit den Tags; Modul-Liste unverändert (neue Kern-Dateien `frame`, `port`, `host`, `query` gehören zu Brücke bzw. Takt & Weltzustand, `architecture.md` Abschnitt 3 und 4 nachgezogen); keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Phase 2 weiter bei 10 Schritten, Phase 3 ohne festgehaltenen Schrittplan; Größen: `project-context.md` 366 Zeilen, Logbuch unter 800.
+
+### 2026-10-14 05:28 (UTC) – [BEOBACHTUNG]
+
+- **Abfrage S-7 im Container:** Rundlauf im Fenster 136–187 ms für 10.000 Zeilen (Fenster 1.000), kernseitig aber nur 1,7–1,9 ms (direkt über das native Modul gemessen); ein Bild kodieren 0,1 ms. Der Rest ist der Renderer, der ohne Grafikkarte auf der CPU zeichnet (PixiJS fällt ohne WebGL auf Canvas zurück). Aussagekräftig nur auf echter Grafik (Messung durch den Projektinhaber).
+- **Brücken-Logik im Kern-Crate:** Port-Zustand, Ereignisauslieferung und Abfragen liegen in `core/src/port.rs`, `host.rs`, `query.rs` statt in der Brücken-Crate, weil diese keine cargo-Tests hat (`test = false`). Kein napi im Kern, keine Spiellogik in der Brücke – Regel-006 gewahrt; in `architecture.md` (Modul Brücke) beschrieben.
+
+### 2026-10-14 05:22 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** PixiJS im Container, Sichtprüfung mit 10.000 Personen.
+- **Symptome:** (1) Personen in der Übersicht unsichtbar (0,8 Zellen bei 0,38 Pixel je Zelle); (2) Leistungsanzeige nannte keine GPU.
+- **Ursachen:** (1) feste Größe in Zellen; (2) ohne Grafikkarte nutzt PixiJS den Canvas-Renderer, es gibt keinen WebGL-Kontext.
+- **Lösung:** (1) Mindestgröße 2 Pixel, Skalierung bei Zoom; (2) Anzeige von WebGL-Version und GPU aus dem Canvas-Kontext, sonst „renderer canvas". Mit `--enable-unsafe-swiftshader` läuft WebGL2 samt `ParticleContainer` unter der strengen CSP.
+- **Aufwand:** etwa 10 Minuten.
+
+### 2026-10-14 05:15 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** Rauchtest, Neuladen der Seite.
+- **Symptom:** Nach dem Neuladen kam keine Sitzung 2 an.
+- **Ursache:** Der Renderer registrierte den Empfang des Ports erst nach dem asynchronen Start von PixiJS; der Port kam vorher und ging verloren.
+- **Lösung:** Empfang sofort beim Laden registrieren, Ports bis zum Start puffern. Der Rauchtest prüft das Neuladen jetzt mit.
+- **Aufwand:** etwa 5 Minuten.
+
+### 2026-10-14 05:10 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** Werkzeuge im frischen Container.
+- **Symptome:** (1) `node` war 22.22, die Shell vergisst `nvm use` zwischen Aufrufen; ein `npm install` mit npm 10 entfernte die `libc`-Felder aus `package-lock.json`. (2) Electron-Binärdatei fehlte nach `npm ci` (Installationsskript nicht ausgeführt). (3) `cargo-deny` nicht installiert.
+- **Lösung:** (1) Sperrdatei zurückgesetzt und mit Node 26.11.1 neu erzeugt; jeder Befehl lädt nvm. (2) `node node_modules/electron/install.js`. (3) Binärdatei 0.20.2 aus dem GitHub-Release.
+- **Aufwand:** etwa 10 Minuten.
+
+### 2026-10-14 04:53 (UTC) – [ADR-ANGELEGT]
 
 - **ADR:** ADR-024 – Umwandlung JS ↔ Rust in der Brücke mit napi `serde-json`.
 - **Tag:** `[OPERATIV]` (in ADR-021 für 2.7 vorgesehen).
 - **Auslöser:** Freigabe des Projektinhabers („A, serde_json 1.0.151“) auf der Entscheidungs-Klasse (`claude-opus-5-5`, `get_session` 04:47 UTC). Reaktiv-Quote 4 / 10 (ADR-015 bis ADR-024).
 
-### 2026-10-14 05:00 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+### 2026-10-14 04:51 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt:** 2.7, Kategorie 3 (Externe Abhängigkeiten); Eskalations-Auslöser 1 – aktive Klasse bereits Entscheidung, kein Stopp nötig.
 - **Frage:** Umwandlung JS ↔ Rust: A napi `serde-json` (Empfehlung), B JSON-Text über die Grenze, C von Hand. Version: `serde_json` 1.0.151 statt der drei Tage alten 1.0.154 (crates.io, geprüft 2026-10-14).
 - **Stand:** 2.7 `[IN ARBEIT]`.
 
-### 2026-10-14 04:52 (UTC) – [BEOBACHTUNG]
+### 2026-10-14 04:49 (UTC) – [BEOBACHTUNG]
 
 - **Pre-Commit-Hook fehlte im frischen Container:** `.git/hooks/pre-commit` war nicht installiert; der Commit `d0c41e2` (nur Doku) lief ohne Hook. Nachgeholt mit `pip install pre-commit && pre-commit install` und `pre-commit run --files docs/fahrplan.md docs/logbuch.md`: alle Prüfungen grün. Runbook Schritt „pre-commit install“ gilt auch für Cloud-Sessions.
 
-### 2026-10-14 04:50 (UTC) – [BEOBACHTUNG]
+### 2026-10-14 04:48 (UTC) – [BEOBACHTUNG]
 
 - **Personengruppen auf dem Vorfeld nicht geregelt:** ADR-020 („Personen betreten Vorfeld, Rollwege und Bahnen nicht; Ausnahme Vorfeld-Gehwege“) ist mit Blick auf Fluggäste formuliert. Der Kern kennt bisher nur eine Personenart mit den Zonenregeln der Fluggäste (`core/src/grid.rs`, `Zone`). Nicht betrachtet: Vorfeldagenten (TURN-03, GEP-06, GATE-06), Servicetechniker, übriges Personal mit Personalzonen (ZON-02), Franchise-Personal, Bauarbeiter (BAU-03); im Inventar fehlen Crew und Einweiser.
 - **Erfahrung des Projektinhabers mit dem Original:** Vorfeldagenten kamen nur per Servicewagen über eine Straße vom Terminal zum Stellplatz; ohne diese Straße fand die Service-Runde nie statt, ohne dass das Spiel die Ursache nannte. Bauarbeiter liefen ohne Kollision über laufende Bahnen. Wunsch: Fluggäste nur auf dem Weg vom Gate zur Parkposition auf dem Vorfeld, und dann kein Fahrzeug über diese Querung.
 - **Folge:** Entwurfsschritt 3.7 vor 3.1 angelegt (Fahrplan, Replanning-Historie). 2.7 bis 2.10 sind nicht betroffen.
 
-### 2026-10-14 04:48 (UTC) – [SESSIONSTART]
+### 2026-10-14 04:47 (UTC) – [SESSIONSTART]
 
 - **Letzter Stand:** 2.3 erledigt (ADR-023), PR #19 nach `main` gemergt (`70d29e5`), Sessionende-Commit `998e941` darin enthalten; nächster Schritt 2.7.
 - **Geplant für diese Session:** Fragen des Projektinhabers zu 2.8 (Zellgröße im Original, Personen auf dem Vorfeld); Schritt 3.7 anlegen; 2.7 beginnen, zuerst Freigabe der Abhängigkeit für JS ↔ Rust (Kategorie 3).

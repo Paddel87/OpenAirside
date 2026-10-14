@@ -8,10 +8,10 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-14 (Session ab 04:28 UTC)
+- **Stand vom:** 2026-10-14 (Session 04:28–05:30 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.7 (Brücke und Plattformschicht), `[IN ARBEIT]` seit 2026-10-14; Abhängigkeit für JS ↔ Rust freigegeben (ADR-024)
+- **Aktiver Schritt:** 2.7 (Brücke und Plattformschicht), `[IN ARBEIT]` seit 2026-10-14; umgesetzt bis auf Messwerkzeug und Messung auf Referenz-PC und Mac (siehe Schritt 2.7, „Offen bis zum Abschluss")
 - **Nächster Schritt:** 2.4 nach Abschluss von 2.7
 - **Offene STOPP-Situationen:** keine (Stopp aus 2.3 aufgehoben nach Wechsel auf die Entscheidungs-Klasse am 2026-10-13 23:50 UTC); Reaktiv-Quote 4 / 10 nach ADR-022 weiter über dem Schwellenwert, aber sinkend (Reflexionen siehe „Iterations-Reflexion")
 
@@ -223,6 +223,18 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Brücke, Plattform, Spielfeld
 - **Reifegrad-Wirkung:** Brücke und Plattform → `[BELASTBAR]`
 - **Artefakte:** Brücken-Crate, Electron-Hauptprozess, Preload, Renderer-Gerüst, Messprotokoll
+- **Zwischenstand (2026-10-14, Entscheidungs-Klasse):** umgesetzt und mit Tests belegt, CI-Lauf 38516083109 grün auf drei Plattformen (Stand `4edcdab`); Lauf für `86bb713` (S-7) stand bei Sessionende noch aus.
+  - Kern (`core/src/`): `frame` (Bildformat S-1, Layout-Version 1: 32 Byte Kopf, 6 Byte je Person, Filter auf Etage und Ausschnitt mit 4 Zellen Rand), Dreifachpuffer in `runner` (Bild und Ereignisse unter einer Sperre, Ereignisse nach Sitzung gruppiert), `port` (Nachrichten, Handshake, Sitzungsprüfung, Zähler), `host` (Port-Zustand mit Takt-Thread, Ereignisse ohne Bild spätestens alle 250 ms), `query` (S-7: Test-Tabelle `debugPersons` mit Filter, Sortierung, Fenster, Wörterbuch, Detail), Befehl `debug` mit `spawnPersons`, `clearPersons`, `setWalls`, `loadScenario` (FR-009), Antwort `invalidArgument` für unlesbare Befehle bekannter Art, `default_threads` (Tick ein Viertel der Kerne, 1–4; Hintergrund der Rest minus ein Kern).
+  - Brücke: Klasse `Core` mit napi `serde-json` (ADR-024); Nachrichten über 1 MB werden verworfen und gezählt.
+  - Plattform: frischer Port je geladener Seite, neue Sitzung nach Neuladen, Neustart des Kern-Prozesses höchstens 3-mal in 60 s, Absenderprüfung per `senderFrame` und URL-Parser, `app.info`/`app.quit`, Preload `window.openairside` (apiVersion 1), Navigation per URL-Parser, Release-Builds ohne Menüpunkte „Reload" und Entwicklerwerkzeuge.
+  - Renderer: PixiJS 8.20.1 mit Personen im `ParticleContainer` (CSP ohne `unsafe-eval`), Kamera, Etagenwechsel, Konsole (`speed`, `night`, `spawn`, `clear`, `walls`, `scenario`, `table`), Leistungsanzeige; Start mit `--scenario=referenceTerminal --persons=10000`.
+  - Tests: Kern 96 Unit-Tests grün; TypeScript 120 Tests, Coverage gesamt 94 % Lines (Renderer-Module 99 %, Hauptprozess-Module 100 %; ausgenommen Einstiegspunkte und WebGL-Zeichnen); Rauchtest mit Handshake, Bildern, Befehlen, S-6, S-7 und neuer Sitzung nach Neuladen.
+  - Messung im Container (4 vCPU, ohne Grafikkarte, nicht aussagekräftig für Bildraten): Bild kodieren 0,1 ms, Tabellenabfrage 10.000 Zeilen mit Fenster 1.000 im Kern 1,7–1,9 ms; mit SwiftShader WebGL2 läuft das Spielfeld unter der strengen CSP.
+- **Offen bis zum Abschluss:**
+  - Messwerkzeug: eingebaute Messreihe wie in Spike 1.5 (Bildrate und Bildzeit, Ticks/s und Rückstand, Schrittzeit, Dauer der Neuberechnung, Bauaktion bis zum Bild über `setWalls`, Tabellenabfrage 4-mal je Sekunde, Speicher aller Prozesse) mit Ausgabe als JSON-Datei; dazu Kennzahlen des Takts (Schrittzeit, Neuberechnung) im Status.
+  - Messung durch den Projektinhaber auf Referenz-PC und Mac (Abschlusskriterium von Phase 2), dabei Prüfung der Schwelle der Rückstandsmeldung (3 Ticks) und der Standardaufteilung der Threads.
+  - `app/console.test.ts` liegt als `app/renderer/console.test.ts` neben dem Modul (Ablage wie alle Renderer-Tests).
+- **Landeplätze der übrigen S-6-Funktionen:** `saves.*` und `logs.*` in 2.5, `packs.*` in 2.4, `settings.*` in 2.6. Darstellung des Rasters im Spielfeld (`TODO(fahrplan-ref: 3.1)` in `app/renderer/playfield.ts`) in 3.1.
 
 #### 2.4: Datenpaket-Schema und Lader
 
@@ -248,7 +260,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Freigabe neuer Abhängigkeiten; die Umsetzung des Vertrags S-5 ist Routine und abgebbar.
 - **Eingangskriterien:** S-5, S-6 `[BELASTBAR]`
 - **Anforderungen (ab Klasse M):** FR-004
-- **Zu tun:** Spielstand-Container nach S-5 (ADR-021) mit Grenzen, Prüfreihenfolge und Fehlerkatalog; Höchstzahlen für Objekte, Personen und Fahrzeuge als Konstanten; Speichern und Laden über S-6 (`saves.*`), Schnellspeichern, Autosave mit Rotation (1–20), Vorschaubild; fehlendes Paket: Laden verweigern mit Liste; Laden validiert und meldet Fehler verständlich.
+- **Zu tun:** Spielstand-Container nach S-5 (ADR-021) mit Grenzen, Prüfreihenfolge und Fehlerkatalog; Höchstzahlen für Objekte, Personen und Fahrzeuge als Konstanten; Speichern und Laden über S-6 (`saves.*`); `logs.write` und `logs.openFolder` mit Rotation (S-6, aus 2.7); Schnellspeichern, Autosave mit Rotation (1–20), Vorschaubild; fehlendes Paket: Laden verweigern mit Liste; Laden validiert und meldet Fehler verständlich.
 - **Akzeptanzkriterien:** `core/tests/savegame_roundtrip.rs` grün: identische Prüfsumme nach Laden, auch während einer laufenden Neuberechnung der Wegweiser; manipulierter Spielstand führt zu einer Meldung statt zum Absturz.
 - **Betroffene Module:** Takt & Weltzustand, Plattform
 - **Reifegrad-Wirkung:** S-5 durch Umsetzung bestätigt
@@ -263,7 +275,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – klar spezifizierte Umsetzung; Entscheidung nur für eine neue Abhängigkeit.
 - **Eingangskriterien:** Oberfläche startet (2.7)
 - **Anforderungen (ab Klasse M):** FR-006
-- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner.
+- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7).
 - **Akzeptanzkriterien:** `app/i18n.test.ts` grün; ein Sprachpaket aus dem Ordner wird erkannt.
 - **Betroffene Module:** Lokalisierung, Oberfläche
 - **Reifegrad-Wirkung:** Modul Lokalisierung → `[BELASTBAR]`
@@ -293,7 +305,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
 | 3.7 | **Vor 3.1:** Entwurfsschritt (Phasentyp-Kontext ERKUNDUNG) „Personengruppen, Begehbarkeit und Querungen“: Gruppen aus dem Inventar (PAX-*, PAX-09, STAFF-01, SHOP-03, BAU-03; offen: Crew, Einweiser) mit Begehbarkeit je Gruppe einschließlich Personalzonen (ZON-02); Personal auf dem Vorfeld (nur per Fahrzeug, Stellplatzfläche begehbar oder beides, jeweils mit Erklärung bei Unerreichbarkeit; TURN-03, GEP-06, GATE-06); Bauarbeiter und laufende Bahnen; Querungen und Sperrung von Betriebsstraßen beim Walk-out-Boarding (MOD-13); Messung, wie Personal neben den Wegweisern geführt wird; Ergebnis ADR in Ergänzung von ADR-020 (Kategorie 1 und 4) | FR-018 (vorbereitend) |
-| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Bewegung der Bauarbeiter nach 3.7 | FR-010, FR-011 |
+| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7); Bewegung der Bauarbeiter nach 3.7 | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
 | 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
 | 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |

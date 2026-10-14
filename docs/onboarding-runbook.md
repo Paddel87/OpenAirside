@@ -99,7 +99,15 @@ pre-commit run --all-files
 npm start
 ```
 
-**Erwartetes Ergebnis:** Der erste Lauf baut den Rust-Kern und die Brücke (`app/native/openairside-bridge.node`, einige Minuten), dann den Hauptprozess (`app/dist/main`) und die Oberfläche (`app/dist/renderer`). Es öffnet sich ein leeres, dunkles Fenster „OpenAirside". Unter Linux als root oder in Containern ist `--no-sandbox` nötig (`npx electron . --no-sandbox`, Abschnitt 4).
+**Erwartetes Ergebnis:** Der erste Lauf baut den Rust-Kern und die Brücke (`app/native/openairside-bridge.node`, einige Minuten), dann den Hauptprozess (`app/dist/main`) und die Oberfläche (`app/dist/renderer`). Es öffnet sich das Fenster „OpenAirside" mit leerer Karte und dem Debug-Panel oben links (Leistungsanzeige, Protokoll, Konsole; `help` zeigt die Befehle). Unter Linux als root oder in Containern ist `--no-sandbox` nötig (`npx electron . --no-sandbox`, Abschnitt 4).
+
+Mit dem Referenz-Terminal aus Spike 1.5 (768² × 5 in einer Karte 2048², 10.000 Personen) starten:
+
+```bash
+npx electron . --scenario=referenceTerminal --persons=10000
+```
+
+In der Konsole beschleunigt `speed x3` das Spiel; Mausrad zoomt, Ziehen verschiebt, Bild auf/ab wechselt die Etage. In Containern ohne Grafikkarte zeichnet PixiJS auf der CPU (Anzeige „renderer canvas"); mit `--enable-unsafe-swiftshader` läuft WebGL2 über SwiftShader, die Bildraten sind dort ohne Aussage.
 
 ### Schritt 5: Verifikation (alle Pflicht-Gates wie in der CI)
 

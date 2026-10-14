@@ -202,6 +202,7 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Technologie:** Rust (eigene Brücken-Crate mit napi-rs, Regel-006) und TypeScript; TypeScript-Typen werden aus Rust-Typen erzeugt
 - **Übertragungsweg:** `MessagePort` zwischen Kern-Prozess und Renderer, Bild je Frame als Kopie (ADR-009)
 - **Offene Fragen:** Übertragungsumfang – geklärt in Spike 1.3: kompaktes Vollbild mit Filter auf Etage und Kamera-Ausschnitt, keine Änderungslisten (97–99 % der Personen bewegen sich je Tick). Abfrage-Schnittstelle für Tabellen – geklärt in ADR-021 (S-7)
+- **Umsetzung (Schritt 2.7, Stand 2026-10-14, Schritt noch offen):** Der Rust-Teil ohne Anbindungscode liegt im Kern-Crate, damit er ohne Electron testbar ist (Regel-006 bleibt gewahrt: kein napi im Kern, keine Spiellogik in der Brücken-Crate): `core/src/port.rs` (Nachrichten, Handshake, Sitzungsprüfung, Zähler verworfener Nachrichten), `core/src/host.rs` (ein Port mit dem Takt-Thread, Ereignisse mit dem Bild oder spätestens alle 250 ms), Dreifachpuffer in `core/src/runner.rs`. Die Brücken-Crate `bridge/` wandelt nur um (Klasse `Core`, napi `serde-json`, ADR-024). Auf der TypeScript-Seite: `app/src/main/core-host.ts` (Utility-Prozess), `app/renderer/core-client.ts` (Renderer). Handles in der Test-Tabelle tragen die Sitzung als Generation.
 
 ### Modul: Spielfeld [VORLÄUFIG]
 
@@ -210,6 +211,7 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Nicht-Verantwortung:** keine Spielregeln; wertet nur den Zustand aus und schickt Befehle.
 - **Abhängigkeiten:** Zustandspuffer, Grafik-Atlanten aus der SVG-Pipeline
 - **NFRs:** 60 Bilder pro Sekunde im Referenzszenario auf der Zielhardware
+- **Umsetzung (Schritt 2.7, Stand 2026-10-14):** `app/renderer/playfield.ts` mit PixiJS 8.20.1, Personen als Partikel eines `ParticleContainer` (Mindestgröße 2 Pixel), Kamera mit Zoom und Verschieben (`camera.ts`), Etagenwechsel; `pixi.js/unsafe-eval` ersetzt den eval-basierten Partikel-Upload, die CSP bleibt ohne `unsafe-eval`. Ohne WebGL fällt PixiJS auf das Canvas-Zeichnen zurück; die Leistungsanzeige nennt dann „renderer canvas". Das Raster selbst wird noch nicht gezeichnet (3.1).
 
 ### Modul: Oberfläche [VORLÄUFIG]
 
@@ -233,6 +235,7 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Offene Fragen:** ob der Kern-Prozess Spielstände selbst schreibt oder über die Plattform – geklärt in ADR-021: der Kern liefert die Bytes, die Plattform schreibt die Datei (S-5, S-6)
 - **Nicht-Verantwortung:** keine Spiellogik, keine Oberfläche.
 - **NFRs:** Electron-Härtung laut `project-context.md` Abschnitt 6
+- **Umsetzung (Schritt 2.7, Stand 2026-10-14):** `app/src/main/main.ts` vermittelt je geladener Seite einen frischen Port (`MessageChannelMain`), startet den Kern-Prozess nach einem Absturz neu (höchstens 3-mal in 60 s, `restartDecision`) und meldet das Ende über `core:exit`; Absenderprüfung jedes IPC-Aufrufs mit `isTrustedSender` (Hauptframe, Fenster-ID, Startseite per URL-Parser); Navigation per URL-Parser (`isAllowedNavigation`); in Release-Builds Entwicklerwerkzeuge aus und Menü ohne „Reload" (`menuTemplate`). Preload `app/src/main/preload.cts` (CommonJS wegen Sandbox). Befehlszeilen-Schalter für den Kern: `--scenario=openHall|referenceTerminal`, `--persons=`, `--threads=`, `--background-threads=`, `--map-size=1536|2048`.
 
 ### Modul: Inhalte & Mods [VORLÄUFIG]
 
@@ -320,6 +323,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
   - **Ausgabe (Fehler):** nicht anwendbar; bei Rückstand meldet der Kern über S-3
   - **Idempotenz:** Lesen ist seiteneffektfrei
 - **Versionierung:** Layout wird aus Rust-Typen erzeugt, eine Layout-Version im Kopf des Puffers
+- **Layout-Version 1 (Schritt 2.7, `core/src/frame.rs`):** Kopf 32 Byte (Layout-Version, Kopfgröße, Sitzung, Tick, Kartenbreite und -höhe, Personen gesamt, Personen im Bild, Etage des Filters oder 127 für alle, Bytes je Person, Revision der Wegweiser), danach je Person 6 Byte: x und y als u16 in 1/32 Zelle, Etage i8, Richtung u8. Die Anforderung `frameRequest { session, filter: { floor?, view? }, ack }` quittiert zugleich die Ereignisse bis `ack`. Der Leser im Renderer (`app/renderer/frame-reader.ts`) prüft alle Längen gegen `byteLength`.
 - **Offene Fragen:** Umfang je Bild – geklärt in Spike 1.3 (kompaktes Vollbild mit Filter auf Etage und Ausschnitt); Ereignisse kommen mit dem Bild (S-3, ADR-021)
 
 ### Schnittstelle: S-2 Befehlskanal (Präsentation → Kern) [BELASTBAR]
@@ -336,6 +340,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 - **Prüfung und Ablehnungscodes:** `invalidArgument` (Feld fehlt, falscher Typ, `x1 ≤ x0`, `floor` außerhalb −2 … +2, `rotation` außerhalb 0 … 3), `outOfMap` (Zelle oder Rechteck außerhalb der Karte), `unknownContent` (`object` keine geladene Datenpaket-ID; höchstens 129 Zeichen), `areaTooLarge`, `notReady` (Kern in `loading`), sowie fachliche Codes der Module (z. B. `notEnoughMoney`, `zoneNotAllowed`). Kosten und Flächen rechnet der Kern mit Überlaufprüfung.
 - **Fachliche Codes des Takts (seit 2.2, additiv):** `notNight` (Nachtsprung außerhalb 18:00–06:00), `nightSkipBlocked` (Personen anwesend; Flugzeuge in Bewegung ab 3.4), `tickLimit`. Textschlüssel: `command.rejected.<code>` für Ablehnungen, `notice.<code>` für Meldungen.
 - **Stand der Umsetzung (2.2):** `setSpeed`, `skipNight` und `demolish` (ohne Wirkung, solange die Welt keine Bauten hat; Bauen in 3.1) sind umgesetzt; `build` und `buildArea` werden nach der Strukturprüfung mit `unknownContent` abgelehnt, bis der Lader aus 2.4 Datenpakete bereitstellt. `debug` folgt mit dem Debug-Panel in 2.7.
+- **Debug-Aktionen (Schritt 2.7, additiv):** `debug { action }` mit `spawnPersons { count }` (1 … 10.000, sonst `invalidArgument` bzw. `limitExceeded`), `clearPersons {}`, `setWalls { area, wall }` (Wände setzen oder entfernen und Neuberechnung im Hintergrund wie eine Bauaktion) und `loadScenario { scenario: "openHall" | "referenceTerminal", persons }` (neue Sitzung nach der Antwort; höchstens 200.000 Personen). Ein Befehl bekannter Art mit unlesbaren Feldern wird mit `invalidArgument` beantwortet, ein Befehl unbekannter Art verworfen und gezählt.
 - **Debug-Befehle** (FR-009) sind auch in Releases verfügbar wie im Original (META-15: Nutzung deaktiviert Erfolge); ihre Nutzung wird im Spielstand vermerkt.
 - **Vorläufiges Zeichnen (NFR „Bauaktion im nächsten Bild", ADR-014 Auflage 1):** Das Spielfeld zeichnet eine Bauaktion sofort als Vorschau, gekennzeichnet mit der Befehls-`id`. Die Vorschau entfällt, sobald (a) `commandRejected` mit dieser `id` eintrifft (dann Hinweis mit Grund) oder (b) ein Bild mit Tick ≥ `tick` aus `commandAccepted` gezeichnet wird. Die Vorschau prüft nichts (Regel-002); ob gebaut werden darf, entscheidet allein der Kern.
 - **Grenzen:** höchstens 4.096 Befehle je Simulationsschritt; darüber hinausgehende bleiben in der Warteschlange für den nächsten Schritt (keine Ablehnung, keine Verluste). `buildArea` und `demolish` höchstens 512 × 512 Zellen je Befehl (sonst Ablehnung `areaTooLarge`).
@@ -372,6 +377,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 - **Fehler:** `queryError { id, code, textKey }` mit Codes `unknownTable`, `unknownColumn`, `invalidFilter`, `limitExceeded` (Programmfehler, werden geloggt), `staleHandle` bei Detailabfragen und `sessionEnded` für Abfragen einer beendeten Sitzung.
 - **Leser im Renderer:** prüft alle Längenangaben des Kopfs gegen `byteLength` des Puffers, bevor er Sichten anlegt.
 - **Tabellen in Phase 2:** keine fachlichen (Flüge, Personal und Finanzen folgen ab 3.6 und 5.6); 2.7 liefert eine Test-Tabelle für Debug-Panel und Leistungstest. Neue Tabellen und Spalten sind additiv.
+- **Umsetzung (Schritt 2.7, `core/src/query.rs`):** Test-Tabelle `debugPersons` aus dem Schnappschuss des zuletzt übergebenen Bildes mit den Spalten `handle` (8 Byte), `x`, `y` (f32), `floor` (i8), `heading` (u8), `state` (u16, Wörterbuch: walking, stairs, arrived, unreachable); Filter `eq|ne|lt|le|gt|ge` mit endlichem Zahlwert; Tabellen- und Spalten-IDs als Text, damit unbekannte mit `unknownTable`/`unknownColumn` beantwortet werden. Antworten `queryResult { session, id, buf | dictionary | detail }` und `queryError { session, id, code, textKey }`. Kernseitig 1,7–1,9 ms für 10.000 Zeilen mit Fenster 1.000 (Container). Der Renderer hält je Panel höchstens eine Tabellenabfrage unterwegs.
 
 ### Schnittstelle: S-4 Datenpaket-Schema (Inhalte → Kern) [BELASTBAR]
 
@@ -428,6 +434,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 - **Datenweg Spielstand:** Der Renderer löst nur aus. Der Hauptprozess holt die Bytes vom Kern-Prozess, erzeugt das Vorschaubild und schreibt die Datei; der Weltzustand läuft nie durch den Renderer. Laden umgekehrt.
 - **Prüfung im Hauptprozess:** Jeder IPC-Aufruf prüft den Absender – `event.senderFrame` ist der Hauptframe (keine Unterframes), gehört zum Spielfenster (`webContents.id`) und zeigt genau die gebündelte Startseite (Vergleich mit einem URL-Parser, nicht per Zeichenkettenvergleich; Electron-Sicherheits-Checkliste Punkt 13 und 17) – und die Argumente (Typ, Länge, erlaubte Werte); ungültige Aufrufe werden abgewiesen und geloggt. Navigation, `window.open` und `webview` bleiben gesperrt (`project-context.md` Abschnitt 6).
 - **Port-Übergabe:** `onCorePort` liefert je Laden der Seite genau einmal einen frischen Port; der Port verbindet nur dieses Fenster mit dem Kern.
+- **Umsetzung der Port-Übergabe (Schritt 2.7):** Ein `MessagePort` kann die Context Bridge nicht als Argument passieren. Der Preload reicht ihn per `window.postMessage("openairside:core-port", "*", ports)` an die Seite weiter; `onCorePort` in `app/renderer/platform.ts` nimmt nur Nachrichten des eigenen Fensters mit diesem Kennzeichen an. `onCoreExit` und `app.*` stellt der Preload bereit.
 - **Gleichzeitigkeit:** Spielstand- und Paket-Operationen laufen nacheinander; ein Aufruf während einer laufenden Operation wird mit `busy` abgewiesen.
 - **Fehler:** Promise wird abgewiesen mit `{ code, textKey, params }`.
 - **Absturz des Kerns:** Der Hauptprozess meldet `onCoreExit`; die Oberfläche bietet an, den letzten Autosave zu laden (Neustart des Kern-Prozesses durch die Plattform, neue Sitzung). Höchstens 3 Neustarts in 60 Sekunden, danach eine Fehlermeldung mit Verweis auf die Logdatei. Ein Speichervorgang, den der Absturz unterbricht, hinterlässt nur eine temporäre Datei (Aufräumen beim Start).
