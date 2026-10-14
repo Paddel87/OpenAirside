@@ -24,6 +24,21 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-14 04:50 (UTC) – [BEOBACHTUNG]
+
+- **Personengruppen auf dem Vorfeld nicht geregelt:** ADR-020 („Personen betreten Vorfeld, Rollwege und Bahnen nicht; Ausnahme Vorfeld-Gehwege“) ist mit Blick auf Fluggäste formuliert. Der Kern kennt bisher nur eine Personenart mit den Zonenregeln der Fluggäste (`core/src/grid.rs`, `Zone`). Nicht betrachtet: Vorfeldagenten (TURN-03, GEP-06, GATE-06), Servicetechniker, übriges Personal mit Personalzonen (ZON-02), Franchise-Personal, Bauarbeiter (BAU-03); im Inventar fehlen Crew und Einweiser.
+- **Erfahrung des Projektinhabers mit dem Original:** Vorfeldagenten kamen nur per Servicewagen über eine Straße vom Terminal zum Stellplatz; ohne diese Straße fand die Service-Runde nie statt, ohne dass das Spiel die Ursache nannte. Bauarbeiter liefen ohne Kollision über laufende Bahnen. Wunsch: Fluggäste nur auf dem Weg vom Gate zur Parkposition auf dem Vorfeld, und dann kein Fahrzeug über diese Querung.
+- **Folge:** Entwurfsschritt 3.7 vor 3.1 angelegt (Fahrplan, Replanning-Historie). 2.7 bis 2.10 sind nicht betroffen.
+
+### 2026-10-14 04:48 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** 2.3 erledigt (ADR-023), PR #19 nach `main` gemergt (`70d29e5`), Sessionende-Commit `998e941` darin enthalten; nächster Schritt 2.7.
+- **Geplant für diese Session:** Fragen des Projektinhabers zu 2.8 (Zellgröße im Original, Personen auf dem Vorfeld); Schritt 3.7 anlegen; 2.7 beginnen, zuerst Freigabe der Abhängigkeit für JS ↔ Rust (Kategorie 3).
+- **Vorabprüfung:** 2.7 setzt S-1, S-2, S-3, S-6, S-7 `[BELASTBAR]` voraus – erfüllt (`architecture.md` Abschnitt 9); Module Brücke und Plattform gehen nach Regel-007 `[VORLÄUFIG]` in ihre erste Umsetzung. Keine aktiven Blocker. Reaktiv-Quote 4 / 10 über dem Schwellenwert, Reflexion liegt vor (Fahrplan „Iterations-Reflexion“).
+- **Modus/Werkzeug:** Claude Code, Cloud-Session (Start über iOS), Branch `claude/naechster-schritt-2-8-736kf4` (vom Werkzeug vergeben) auf Stand `main`.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` laut `get_session` 04:47 UTC – Entscheidungs-Klasse. Kontext 169.106 Token; 5-Stunden-Fenster `allowed`.
+- **Hinweis:** Der Eintrag entstand erst nach drei reinen Auskunftsfragen ohne Dateiänderung (2.8, Zellgröße im Original mit Websuche, Personengruppen), nicht direkt nach der Mindest-Lektüre.
+
 ### 2026-10-14 00:05 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 50 Minuten seit `[SESSIONSTART]` 2026-10-13 23:16 UTC.
