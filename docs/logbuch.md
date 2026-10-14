@@ -24,6 +24,20 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-14 07:00 (UTC) – [BEOBACHTUNG]
+
+- **Messwerkzeug 2.7 umgesetzt** (`dd762ea` Kern, `ebe0342` Renderer und Plattform): `TickStats` im Status des Takts und Port-Nachricht `coreStats` je Sekunde (additiv, `protocol` bleibt 1); Konsolenbefehl `measure [Minuten]`; S-6 `measure.start`/`measure.report` (additiv, `apiVersion` bleibt 1) mit Speicher aller Prozesse und JSON-Datei im Download-Ordner. Einordnung: im Fahrplan-Schritt 2.7 vorgesehen („Messwerkzeug … mit Ausgabe als JSON-Datei; dazu Kennzahlen des Takts im Status“), additive Erweiterungen bestehender Verträge, keine neue Abhängigkeit – daher ohne Freigabe nach `CLAUDE.md` Abschnitt 4. Der neue IPC-Aufruf schreibt eine Datei; Ordner und Name wählt der Hauptprozess, ein Bericht je gestarteter Messung, höchstens 1 MB, nie überschreiben, Absenderprüfung wie alle Aufrufe.
+- **Probelauf im Container** (`measure 1`, 4 vCPU, SwiftShader): läuft Ende-zu-Ende, Datei vollständig (Systemdaten, 2 Fenster, 16 Speicherproben). Werte im Messprotokoll `docs/research/2.7-messung.md`; ohne Aussage für die Zielhardware.
+- **Download-Ordner im Container:** `app.getPath("downloads")` liefert ohne `~/Downloads` den Home-Ordner (`/root`); unter Windows und macOS gibt es den Ordner immer. Im Runbook vermerkt.
+
+### 2026-10-14 06:58 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** erster Probelauf des Messwerkzeugs.
+- **Symptom:** Die dichteste Stelle für die Kamera kam als Kartenmitte (1024, 1024) zurück – Rückfallwert für „keine Personen“.
+- **Ursache:** Die Suche lief auf Etage 1 (wie Spike 1.5: Abflugebene). Nach 10 s Aufwärmen bei 3× stehen aber alle 10.000 Personen noch im Erdgeschoss (geprüft: Etage 0 10.000, Etage 1 0, Etage 2 0); Spike 1.5 spulte vorher ungebremst vor, das gibt es im Produktionskern nicht.
+- **Lösung:** Übersicht und Kreisen im Erdgeschoss; Test prüft die Etage und den Mittelpunkt des Kreisens. Zweiter Probelauf: dichteste Stelle (1224, 1256) in der Halle.
+- **Aufwand:** etwa 5 Minuten.
+
 ### 2026-10-14 06:55 (UTC) – [SESSIONSTART]
 
 - **Letzter Stand:** 2.7 `[IN ARBEIT]`, umgesetzt bis auf Messwerkzeug und Messung (Sessionende 05:32 UTC); PR #20 als Entwurf offen auf diesem Branch.

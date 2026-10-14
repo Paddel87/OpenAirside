@@ -8,10 +8,10 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-14 (Session 04:28–05:30 UTC)
+- **Stand vom:** 2026-10-14 (Session ab 06:40 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.7 (Brücke und Plattformschicht), `[IN ARBEIT]` seit 2026-10-14; umgesetzt bis auf Messwerkzeug und Messung auf Referenz-PC und Mac (siehe Schritt 2.7, „Offen bis zum Abschluss")
+- **Aktiver Schritt:** 2.7 (Brücke und Plattformschicht), `[IN ARBEIT]` seit 2026-10-14; umgesetzt einschließlich Messwerkzeug, offen ist die Messung auf Referenz-PC und Mac (siehe Schritt 2.7, „Offen bis zum Abschluss")
 - **Nächster Schritt:** 2.4 nach Abschluss von 2.7
 - **Offene STOPP-Situationen:** keine (Stopp aus 2.3 aufgehoben nach Wechsel auf die Entscheidungs-Klasse am 2026-10-13 23:50 UTC); Reaktiv-Quote 4 / 10 nach ADR-022 weiter über dem Schwellenwert, aber sinkend (Reflexionen siehe „Iterations-Reflexion")
 
@@ -230,9 +230,15 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
   - Renderer: PixiJS 8.20.1 mit Personen im `ParticleContainer` (CSP ohne `unsafe-eval`), Kamera, Etagenwechsel, Konsole (`speed`, `night`, `spawn`, `clear`, `walls`, `scenario`, `table`), Leistungsanzeige; Start mit `--scenario=referenceTerminal --persons=10000`.
   - Tests: Kern 96 Unit-Tests grün; TypeScript 120 Tests, Coverage gesamt 94 % Lines (Renderer-Module 99 %, Hauptprozess-Module 100 %; ausgenommen Einstiegspunkte und WebGL-Zeichnen); Rauchtest mit Handshake, Bildern, Befehlen, S-6, S-7 und neuer Sitzung nach Neuladen.
   - Messung im Container (4 vCPU, ohne Grafikkarte, nicht aussagekräftig für Bildraten): Bild kodieren 0,1 ms, Tabellenabfrage 10.000 Zeilen mit Fenster 1.000 im Kern 1,7–1,9 ms; mit SwiftShader WebGL2 läuft das Spielfeld unter der strengen CSP.
+- **Messwerkzeug (2026-10-14, Entscheidungs-Klasse):** umgesetzt und im Container Ende-zu-Ende gelaufen.
+  - Kern: `TickStats` im Status des Takts (`core/src/runner.rs`: Ticks/s, Schrittzeit Mittel/p99/Maximum je Sekunde, Rückstand, Neuberechnung mit Dauer von Anforderung bis Übernahme aus `core/src/simulation.rs`, Threads); Port-Nachricht `coreStats` etwa je Sekunde (`core/src/host.rs`, additiv). Kern 100 Unit-Tests.
+  - Renderer: Konsolenbefehl `measure [Minuten 1–60]` (Standard 10) mit der Messreihe in `app/renderer/measure.ts` (Ablauf siehe `architecture.md`, Modul Benchmark & Leistung); Leistungsanzeige mit Ticks/s, Schrittzeit und Dauer der Neuberechnung.
+  - Plattform: S-6 `measure.start`/`measure.report` (additiv): Speicher aller Prozesse alle 5 s, Datei `openairside-measure-<Plattform>-<Zeit>.json` im Download-Ordner (`app/src/main/measure.ts`).
+  - Tests: TypeScript 178 Tests, Coverage 96 % Lines (`measure.ts` im Renderer 98 %, im Hauptprozess 100 %); Rauchtest prüft `coreStats` in der Leistungsanzeige und die Ablehnung eines Berichts ohne gestartete Messung.
+  - Probelauf im Container (4 vCPU, SwiftShader, 1 Minute): 2 Fenster, 178–180 Ticks/s, je Fenster 3 Neuberechnungen mit 2,9–3,3 s, Bauaktion bis zum Bild 143–252 ms, Tabellenabfrage Median 51–62 ms, Speicher aller Prozesse 676 → 765 MB. Bildraten 12–16 und Schrittzeiten p99 bis 16 ms sind durch die Software-Grafik auf denselben 4 Kernen verfälscht, ohne Aussage.
+  - Abweichung von Spike 1.5: Die Kamera kreist über dem Erdgeschoss statt über der Etage darüber, weil nach 10 s Aufwärmen bei 3× noch alle Personen im Erdgeschoss stehen (Spike 1.5 spulte ungebremst vor; das gibt es im Produktionskern nicht). Höchste Tickrate ohne Bremse wird nicht gemessen; maßgeblich ist die Schrittzeit.
 - **Offen bis zum Abschluss:**
-  - Messwerkzeug: eingebaute Messreihe wie in Spike 1.5 (Bildrate und Bildzeit, Ticks/s und Rückstand, Schrittzeit, Dauer der Neuberechnung, Bauaktion bis zum Bild über `setWalls`, Tabellenabfrage 4-mal je Sekunde, Speicher aller Prozesse) mit Ausgabe als JSON-Datei; dazu Kennzahlen des Takts (Schrittzeit, Neuberechnung) im Status.
-  - Messung durch den Projektinhaber auf Referenz-PC und Mac (Abschlusskriterium von Phase 2), dabei Prüfung der Schwelle der Rückstandsmeldung (3 Ticks) und der Standardaufteilung der Threads.
+  - Messung durch den Projektinhaber auf Referenz-PC und Mac nach der Anleitung in [`docs/research/2.7-messung.md`](research/2.7-messung.md) (Messprotokoll) (Abschlusskriterium von Phase 2), dabei Prüfung der Schwelle der Rückstandsmeldung (3 Ticks) und der Standardaufteilung der Threads.
   - `app/console.test.ts` liegt als `app/renderer/console.test.ts` neben dem Modul (Ablage wie alle Renderer-Tests).
 - **Landeplätze der übrigen S-6-Funktionen:** `saves.*` und `logs.*` in 2.5, `packs.*` in 2.4, `settings.*` in 2.6. Darstellung des Rasters im Spielfeld (`TODO(fahrplan-ref: 3.1)` in `app/renderer/playfield.ts`) in 3.1.
 
