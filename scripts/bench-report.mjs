@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// Writes the result of the core benchmark (core/benches/tick.rs) as a Markdown table for
-// the job summary of the CI, compared with the last result on main if one is given
-// (trend display only, ADR-022). The limits are enforced by the benchmark itself.
+// Writes the result of a core benchmark (core/benches/tick.rs, ADR-022, or
+// core/benches/flowfield.rs, ADR-023) as a Markdown table for the job summary of the CI,
+// compared with the last result on main if one is given (trend display only). The limits
+// are enforced by the benchmark programs themselves.
 //
 // Aufruf: node scripts/bench-report.mjs <aktuell.json> [<main.json>]
 // Voraussetzungen: Node 26.11.1 (project-context.md Abschnitt 3)
@@ -14,20 +15,39 @@
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
-/** Rows of the table: key in the JSON, label, whether a limit exists. */
-const ROWS = [
-  ["meanMs", "Mittelwert je Schritt (ms)", "meanMs"],
-  ["p50Ms", "Median (ms)", null],
-  ["p99Ms", "p99 (ms)", "p99Ms"],
-  ["maxMs", "Höchstwert (ms)", null],
-];
+/**
+ * Table layout per benchmark: title and rows of key in the JSON, label, key of the limit
+ * (or null), decimals and scale factor of the displayed value.
+ */
+const LAYOUTS = {
+  tick: {
+    title: "Kern-Benchmark",
+    rows: [
+      ["meanMs", "Mittelwert je Schritt (ms)", "meanMs", 3, 1],
+      ["p50Ms", "Median (ms)", null, 3, 1],
+      ["p99Ms", "p99 (ms)", "p99Ms", 3, 1],
+      ["maxMs", "Höchstwert (ms)", null, 3, 1],
+    ],
+  },
+  flowfield: {
+    title: "Wegweiser-Benchmark",
+    rows: [
+      ["recomputeMs", "Neuberechnung aller Wegweiser (ms)", "recomputeMs", 0, 1],
+      ["fieldBytes", "Speicher der Wegweiser (MB)", null, 1, 1e-6],
+      ["meanMs", "Schritt während Neuberechnung, Mittel (ms)", null, 3, 1],
+      ["p99Ms", "Schritt während Neuberechnung, p99 (ms)", "p99Ms", 3, 1],
+      ["maxMs", "Schritt, Höchstwert (ms)", null, 3, 1],
+      ["adoptionMaxMs", "Schritt mit Übernahme (ms)", null, 3, 1],
+    ],
+  },
+};
 
 function number(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-function format(value) {
-  return value === null ? "–" : value.toFixed(3);
+function format(value, digits, scale) {
+  return value === null ? "–" : (value * scale).toFixed(digits);
 }
 
 function change(current, previous) {
@@ -40,22 +60,28 @@ function change(current, previous) {
 
 /** Builds the Markdown summary from the parsed results; `previous` may be null. */
 export function renderReport(current, previous) {
+  const layout = LAYOUTS[current.benchmark] ?? LAYOUTS.tick;
+  const threads =
+    current.backgroundThreads === undefined
+      ? `${String(current.threads)} Threads`
+      : `${String(current.threads)} + ${String(current.backgroundThreads)} Threads`;
+  const targets = current.targets === undefined ? "" : `${String(current.targets)} Ziele, `;
   const lines = [
-    `### Kern-Benchmark: ${current.passed === true ? "bestanden" : "Grenze überschritten"}`,
+    `### ${layout.title}: ${current.passed === true ? "bestanden" : "Grenze überschritten"}`,
     "",
-    `${String(current.persons)} Personen, ${String(current.threads)} Threads ` +
+    `${targets}${String(current.persons)} Personen, ${threads} ` +
       `(${String(current.cpus)} CPUs, ${String(current.os)}), ${String(current.ticks)} Schritte`,
     "",
     "| Kennzahl | aktuell | Grenze | letzter Lauf auf main | Änderung |",
     "|---|---|---|---|---|",
   ];
-  for (const [key, label, limitKey] of ROWS) {
+  for (const [key, label, limitKey, digits, scale] of layout.rows) {
     const now = number(current[key]);
     const before = previous === null ? null : number(previous[key]);
     const limit = limitKey === null ? null : number(current.limits?.[limitKey]);
     lines.push(
-      `| ${label} | ${format(now)} | ${limit === null ? "–" : String(limit)} | ` +
-        `${format(before)} | ${change(now, before)} |`,
+      `| ${label} | ${format(now, digits, scale)} | ${limit === null ? "–" : String(limit)} | ` +
+        `${format(before, digits, scale)} | ${change(now, before)} |`,
     );
   }
   if (previous === null) {
@@ -63,7 +89,7 @@ export function renderReport(current, previous) {
   }
   lines.push(
     "",
-    "Die Änderung ist nur eine Anzeige; rot wird der Lauf allein über die Grenzen (ADR-022).",
+    "Die Änderung ist nur eine Anzeige; rot wird der Lauf allein über die Grenzen (ADR-022, ADR-023).",
   );
   return `${lines.join("\n")}\n`;
 }

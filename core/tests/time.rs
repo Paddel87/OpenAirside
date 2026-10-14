@@ -14,6 +14,7 @@ fn simulation_at(start_tick: Tick, persons: u32) -> Simulation {
     Simulation::new(SimulationConfig {
         map: MapSize::new(128, 128).unwrap(),
         threads: 2,
+        background_threads: 1,
         adoption: AdoptionMode::WhenReady,
         persons,
         seed: 11,

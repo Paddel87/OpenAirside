@@ -21,5 +21,9 @@ ts-rs = { workspace = true, optional = true }
 name = "tick"
 harness = false
 
+[[bench]]
+name = "flowfield"
+harness = false
+
 [lints]
 workspace = true

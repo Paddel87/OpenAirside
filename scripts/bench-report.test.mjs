@@ -38,6 +38,40 @@ describe("renderReport", () => {
   });
 });
 
+describe("renderReport for the flow field benchmark", () => {
+  const flowfield = {
+    benchmark: "flowfield",
+    targets: 64,
+    persons: 10000,
+    threads: 2,
+    backgroundThreads: 2,
+    cpus: 4,
+    os: "linux",
+    ticks: 2000,
+    recomputeMs: 1646.3,
+    fieldBytes: 100716544,
+    meanMs: 0.29,
+    p99Ms: 0.9,
+    maxMs: 4.8,
+    adoptionMaxMs: 0.3,
+    limits: { recomputeMs: 4000, p99Ms: 4 },
+    passed: true,
+  };
+
+  it("shows recomputation, memory and step times with their limits", () => {
+    const text = renderReport(flowfield, { ...flowfield, recomputeMs: 1500 });
+    expect(text).toContain("### Wegweiser-Benchmark: bestanden");
+    expect(text).toContain("64 Ziele, 10000 Personen, 2 + 2 Threads (4 CPUs, linux)");
+    expect(text).toContain("| Neuberechnung aller Wegweiser (ms) | 1646 | 4000 | 1500 | +9.8 % |");
+    expect(text).toContain("| Speicher der Wegweiser (MB) | 100.7 | – | 100.7 | +0.0 % |");
+    expect(text).toContain("| Schritt während Neuberechnung, p99 (ms) | 0.900 | 4 |");
+  });
+
+  it("falls back to the tick layout for unknown benchmarks", () => {
+    expect(renderReport({ ...current, benchmark: "other" }, null)).toContain("### Kern-Benchmark");
+  });
+});
+
 describe("readResult and main", () => {
   const files = { "now.json": JSON.stringify(current), "bad.json": "{" };
   const read = (path) => {

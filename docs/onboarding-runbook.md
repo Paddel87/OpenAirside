@@ -114,7 +114,8 @@ npm run typecheck
 npm test                              # Vitest mit Coverage ≥ 70 %
 npm run check:licenses
 npm run check:types                   # erzeugte TypeScript-Typen aktuell (nach Änderung an Kern-Typen: npm run gen:types)
-cargo bench -p openairside-core --bench tick   # Kern-Benchmark mit Grenzen aus ADR-022
+cargo bench -p openairside-core --bench tick        # Kern-Benchmark mit Grenzen aus ADR-022
+cargo bench -p openairside-core --bench flowfield   # Wegweiser-Benchmark: Neuberechnung und Schrittzeit (Schritt 2.3)
 npm run test:e2e                      # Linux ohne Desktop: xvfb-run -a npm run test:e2e
 ```
 

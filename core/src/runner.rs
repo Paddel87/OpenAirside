@@ -263,6 +263,7 @@ mod tests {
         Runner::start(SimulationConfig {
             map: MapSize::new(64, 64).unwrap(),
             threads: 1,
+            background_threads: 1,
             adoption: AdoptionMode::WhenReady,
             persons: 100,
             seed: 3,

@@ -248,6 +248,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
   - Tests inklusive Coverage-Mindestwert
   - Kern-Benchmark „Tick mit 10.000 Personen" (seit Schritt 2.2, ADR-022: rot bei Mittelwert > 1 ms oder p99 > 4 ms)
   - Prüfung der erzeugten TypeScript-Typen gegen die Rust-Typen (seit Schritt 2.2, ADR-022, im Job „Rust Lint & Format")
+  - Wegweiser-Benchmark im Referenz-Terminal (seit Schritt 2.3, ADR-023, im Job „Kern-Benchmark": rot bei Neuberechnung > 4 s oder Schritt p99 > 4 ms)
   - Leistungstest Referenzszenario (ab Phase 4, sobald das Referenzszenario baubar ist)
 - **Branch-Protection auf `main`:** alle Pflicht-Gates grün; Force-Push gesperrt (einzurichten in Schritt 2.1).
 - **Seit Schritt 2.1** laufen alle Code-Jobs bei jedem Push (ADR-018): Rust (fmt, clippy, cargo-deny, Tests auf drei Plattformen, Coverage Kern ≥ 85 % und gesamt ≥ 70 %), TypeScript (ESLint, Prettier, tsc, npm audit, Lizenz-Skript, Vitest mit Coverage auf drei Plattformen) und der Electron-Rauchtest auf drei Plattformen; die Brücken-Crate hat keine cargo-Tests und wird über den Rauchtest geprüft.

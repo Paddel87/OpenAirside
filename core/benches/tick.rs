@@ -1,7 +1,8 @@
 //! Core benchmark "tick with 10,000 persons" (roadmap step 2.2, ADR-022).
 //!
 //! Runs headless: 200 warm-up and 2,000 measured simulation steps at 3× on a
-//! 2048² map with 4 worker threads. Fails with exit code 1 if the mean step
+//! 2048² map with 4 worker threads; the 10,000 persons walk to random targets
+//! through the reference terminal (768² × 5, 64 targets) by flow fields. Fails with exit code 1 if the mean step
 //! time exceeds 1 ms or the 99th percentile exceeds 4 ms (3× leaves 5.5 ms
 //! per step). Writes the result as JSON for the trend display in the CI.
 //!
@@ -17,10 +18,14 @@ use std::time::Instant;
 use openairside_core::adoption::AdoptionMode;
 use openairside_core::command::Command;
 use openairside_core::geometry::MapSize;
+use openairside_core::scenario::reference_terminal;
 use openairside_core::simulation::{Simulation, SimulationConfig};
 use openairside_core::time::Speed;
 
 const PERSONS: u32 = 10_000;
+/// Edge of the reference terminal and gates for 64 targets (45 + 19).
+const TERMINAL_EDGE: u16 = 768;
+const GATES: u8 = 45;
 const WARM_UP: usize = 200;
 const MEASURED: usize = 2_000;
 const DEFAULT_THREADS: usize = 4;
@@ -57,14 +62,20 @@ fn run() -> Result<bool, String> {
     let max_mean = env_number("OPENAIRSIDE_BENCH_MAX_MEAN_MS", DEFAULT_MAX_MEAN_MS)?;
     let max_p99 = env_number("OPENAIRSIDE_BENCH_MAX_P99_MS", DEFAULT_MAX_P99_MS)?;
     let map = MapSize::new(2048, 2048).ok_or("invalid map size")?;
-    let mut sim = Simulation::new(SimulationConfig {
-        map,
-        threads,
-        adoption: AdoptionMode::WhenReady,
-        persons: PERSONS,
-        seed: 2026,
-        start_tick: 0,
-    })
+    let world = reference_terminal(map, TERMINAL_EDGE, GATES, PERSONS, 2026)
+        .ok_or("the terminal does not fit on the map")?;
+    let mut sim = Simulation::with_world(
+        SimulationConfig {
+            map,
+            threads,
+            background_threads: 1,
+            adoption: AdoptionMode::WhenReady,
+            persons: PERSONS,
+            seed: 2026,
+            start_tick: 0,
+        },
+        world,
+    )
     .map_err(|err| err.to_string())?;
     sim.submit(sim.session(), 1, Command::SetSpeed { speed: Speed::X3 });
 
