@@ -1,7 +1,13 @@
 //! Real-time driver of the simulation on its own thread: paces the ticks to
-//! the game speed (ADR-020), reports lag (S-3) and exchanges commands,
-//! acknowledgements and events with the caller. The bridge (step 2.7)
-//! connects it to the `MessagePort`.
+//! the game speed (ADR-020), reports lag (S-3), exchanges commands,
+//! acknowledgements and events with the caller and publishes a snapshot of
+//! the visible state after every work slice (S-1). The bridge connects it
+//! to the `MessagePort` (step 2.7).
+//!
+//! Snapshot and events are published together under one short lock, as a
+//! triple buffer (spike 1.3): the driver owns its back snapshot, the reader
+//! its front snapshot, and both only swap with the middle one. A reader
+//! therefore never gets a frame whose events are missing (S-3).
 
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
@@ -10,9 +16,12 @@ use std::time::{Duration, Instant};
 
 use crate::command::Command;
 use crate::event::{EventRecord, MAX_IN_FLIGHT};
+use crate::frame::Snapshot;
 use crate::pacer::{LagMonitor, Pacer};
+use crate::scenario::scenario_world;
 use crate::simulation::{CoreState, Simulation, SimulationConfig, SimulationError};
 use crate::time::{Speed, Tick};
+use crate::world::World;
 
 /// Longest work slice before the driver looks at new input again.
 const SLICE: Duration = Duration::from_millis(16);
@@ -24,6 +33,10 @@ enum Input {
         session: u32,
         id: u32,
         command: Command,
+    },
+    Invalid {
+        session: u32,
+        id: u32,
     },
     Ack {
         session: u32,
@@ -48,9 +61,45 @@ pub struct Status {
     pub ticks_per_second: u32,
 }
 
+/// Events of one session, in stream order.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SessionEvents {
+    /// Session of the events.
+    pub session: u32,
+    /// The events.
+    pub events: Vec<EventRecord>,
+}
+
+/// Result of [`Runner::poll`].
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Poll {
+    /// `true` if the front snapshot was replaced by a newer one.
+    pub fresh: bool,
+    /// Events published since the last poll, grouped by session; a session
+    /// change (debug scenario) leaves the old group in front.
+    pub events: Vec<SessionEvents>,
+}
+
 struct Shared {
     status: Status,
-    events: Vec<EventRecord>,
+    events: Vec<SessionEvents>,
+    middle: Snapshot,
+    fresh: bool,
+}
+
+impl Shared {
+    fn push_events(&mut self, session: u32, records: Vec<EventRecord>) {
+        if records.is_empty() {
+            return;
+        }
+        match self.events.last_mut() {
+            Some(group) if group.session == session => group.events.extend(records),
+            _ => self.events.push(SessionEvents {
+                session,
+                events: records,
+            }),
+        }
+    }
 }
 
 fn lock(shared: &Mutex<Shared>) -> MutexGuard<'_, Shared> {
@@ -82,10 +131,30 @@ impl Runner {
     ///
     /// Fails if the simulation cannot be created.
     pub fn start(config: SimulationConfig) -> Result<Self, SimulationError> {
-        let sim = Simulation::new(config)?;
+        Self::spawn(Simulation::new(config)?)
+    }
+
+    /// Creates the simulation in `world` (flow fields are computed before
+    /// the thread starts) and starts its thread.
+    ///
+    /// # Errors
+    ///
+    /// Fails if the simulation cannot be created.
+    pub fn start_with_world(
+        config: SimulationConfig,
+        world: World,
+    ) -> Result<Self, SimulationError> {
+        Self::spawn(Simulation::with_world(config, world)?)
+    }
+
+    fn spawn(sim: Simulation) -> Result<Self, SimulationError> {
+        let mut middle = Snapshot::default();
+        middle.capture(sim.session(), sim.tick(), sim.world());
         let shared = Arc::new(Mutex::new(Shared {
             status: status_of(&sim, 0),
             events: Vec::new(),
+            middle,
+            fresh: true,
         }));
         let (input, inbox) = mpsc::channel();
         let thread_shared = Arc::clone(&shared);
@@ -109,6 +178,12 @@ impl Runner {
         });
     }
 
+    /// Passes a command whose fields could not be read; it is answered with
+    /// `invalidArgument` (S-2).
+    pub fn invalid_command(&self, session: u32, id: u32) {
+        let _ = self.input.send(Input::Invalid { session, id });
+    }
+
     /// Acknowledges events up to `seq` (S-3).
     pub fn ack(&self, session: u32, seq: u32) {
         let _ = self.input.send(Input::Ack { session, seq });
@@ -119,10 +194,28 @@ impl Runner {
         let _ = self.input.send(Input::Restart);
     }
 
-    /// Takes the events published so far.
+    /// Takes the events published so far, of all sessions.
     #[must_use]
     pub fn take_events(&self) -> Vec<EventRecord> {
         std::mem::take(&mut lock(&self.shared).events)
+            .into_iter()
+            .flat_map(|group| group.events)
+            .collect()
+    }
+
+    /// Swaps `front` with the newest published snapshot, if there is a newer
+    /// one, and takes the events published so far, both under one lock.
+    pub fn poll(&self, front: &mut Snapshot) -> Poll {
+        let mut shared = lock(&self.shared);
+        let fresh = shared.fresh;
+        if fresh {
+            std::mem::swap(&mut shared.middle, front);
+            shared.fresh = false;
+        }
+        Poll {
+            fresh,
+            events: std::mem::take(&mut shared.events),
+        }
     }
 
     /// Latest published status.
@@ -169,6 +262,7 @@ fn apply(sim: &mut Simulation, input: Input, shared: &Mutex<Shared>) -> bool {
             id,
             command,
         } => sim.submit(session, id, command),
+        Input::Invalid { session, id } => sim.submit_invalid(session, id),
         Input::Ack { session, seq } => sim.ack(session, seq),
         Input::Restart => {
             sim.restart();
@@ -189,6 +283,7 @@ fn drive(mut sim: Simulation, inbox: &Receiver<Input>, shared: &Arc<Mutex<Shared
     let mut window_start = origin;
     let mut window_ticks = 0u32;
     let mut measured_tps = 0u32;
+    let mut back = Snapshot::default();
     loop {
         let wait = pacer.until_next().unwrap_or(IDLE_WAIT).min(IDLE_WAIT);
         match inbox.recv_timeout(wait) {
@@ -245,11 +340,41 @@ fn drive(mut sim: Simulation, inbox: &Receiver<Input>, shared: &Arc<Mutex<Shared
             sim.report(event);
         }
 
-        let records = sim.take_events(MAX_IN_FLIGHT as usize);
-        let mut out = lock(shared);
-        out.events.extend(records);
-        out.status = status_of(&sim, measured_tps);
+        publish(&mut sim, &mut back, shared, measured_tps);
+        if let Some((scenario, persons)) = sim.take_scenario() {
+            load_scenario(&mut sim, scenario, persons, &mut back, shared);
+        }
     }
+}
+
+/// Publishes the events and a snapshot of the current state.
+fn publish(sim: &mut Simulation, back: &mut Snapshot, shared: &Mutex<Shared>, tps: u32) {
+    let records = sim.take_events(MAX_IN_FLIGHT as usize);
+    back.capture(sim.session(), sim.tick(), sim.world());
+    let mut out = lock(shared);
+    out.push_events(sim.session(), records);
+    std::mem::swap(&mut out.middle, back);
+    out.fresh = true;
+    out.status = status_of(sim, tps);
+}
+
+/// Starts a new session with a debug scenario after the answer to
+/// `loadScenario` went out; the state reads `loading` meanwhile.
+fn load_scenario(
+    sim: &mut Simulation,
+    scenario: crate::command::Scenario,
+    persons: u32,
+    back: &mut Snapshot,
+    shared: &Mutex<Shared>,
+) {
+    lock(shared).status.state = CoreState::Loading;
+    let config = sim.config();
+    // Checked by the command (`fits_reference_terminal`); an impossible
+    // scenario keeps the old session.
+    if let Some(world) = scenario_world(scenario, config.map, persons, config.seed) {
+        sim.restart_with_world(world);
+    }
+    publish(sim, back, shared, 0);
 }
 
 #[cfg(test)]
@@ -365,6 +490,107 @@ mod tests {
     }
 
     #[test]
+    fn poll_hands_out_snapshots_with_their_events() {
+        let runner = runner();
+        let mut front = Snapshot::default();
+        let first = runner.poll(&mut front);
+        assert!(first.fresh, "the start state is published");
+        assert_eq!((front.session(), front.persons()), (1, 100));
+        runner.command(1, 1, Command::SetSpeed { speed: Speed::X3 });
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let mut seen = Vec::new();
+        while front.tick() < 10 {
+            let poll = runner.poll(&mut front);
+            for group in poll.events {
+                assert_eq!(group.session, 1);
+                seen.extend(group.events);
+            }
+            if let Some(last) = seen.last() {
+                runner.ack(1, last.seq);
+            }
+            assert!(Instant::now() < deadline, "no frames");
+            thread::sleep(Duration::from_millis(5));
+        }
+        // Every event handed out so far belongs to a tick the reader has seen.
+        assert!(seen.iter().all(|r| r.tick <= front.tick()));
+        assert!(
+            seen.iter()
+                .any(|r| matches!(r.event, Event::CommandAccepted { id: 1, .. }))
+        );
+        runner.stop().unwrap();
+    }
+
+    #[test]
+    fn unreadable_command_is_answered_with_invalid_argument() {
+        let runner = runner();
+        runner.invalid_command(1, 1);
+        let mut seen = Vec::new();
+        wait_for(&runner, &mut seen, |seen, _| {
+            seen.iter().any(|r| {
+                matches!(&r.event, Event::CommandRejected { id: 1, reason, .. }
+                    if reason.code == "invalidArgument")
+            })
+        });
+        runner.stop().unwrap();
+    }
+
+    #[test]
+    fn debug_scenario_starts_a_new_session_after_the_answer() {
+        use crate::command::{DebugAction, Scenario};
+        let runner = runner();
+        runner.command(
+            1,
+            1,
+            Command::Debug {
+                action: DebugAction::LoadScenario {
+                    scenario: Scenario::OpenHall,
+                    persons: 7,
+                },
+            },
+        );
+        let mut front = Snapshot::default();
+        let mut groups = Vec::new();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while front.session() != 2 {
+            groups.extend(runner.poll(&mut front).events);
+            assert!(Instant::now() < deadline, "no new session");
+            thread::sleep(Duration::from_millis(5));
+        }
+        assert_eq!(front.persons(), 7);
+        let old = groups.iter().find(|g| g.session == 1).expect("old group");
+        assert!(
+            old.events
+                .iter()
+                .any(|r| matches!(r.event, Event::CommandAccepted { id: 1, .. }))
+        );
+        assert_eq!(runner.status().state, CoreState::Ready);
+        runner.stop().unwrap();
+    }
+
+    #[test]
+    fn start_with_world_uses_the_given_world() {
+        let config = SimulationConfig {
+            map: MapSize::new(64, 64).unwrap(),
+            threads: 1,
+            background_threads: 1,
+            adoption: AdoptionMode::WhenReady,
+            persons: 0,
+            seed: 3,
+            start_tick: 0,
+        };
+        let world = World::open_hall(config.map, 5, 1);
+        let runner = Runner::start_with_world(config, world).unwrap();
+        let mut front = Snapshot::default();
+        assert!(runner.poll(&mut front).fresh);
+        assert_eq!(front.persons(), 5);
+        let zero = SimulationConfig {
+            threads: 0,
+            ..config
+        };
+        assert!(Runner::start_with_world(zero, World::new(config.map)).is_err());
+    }
+
+    #[test]
     fn panicking_driver_marks_the_core_as_failed() {
         let shared = Arc::new(Mutex::new(Shared {
             status: Status {
@@ -375,6 +601,8 @@ mod tests {
                 ticks_per_second: 0,
             },
             events: Vec::new(),
+            middle: Snapshot::default(),
+            fresh: false,
         }));
         let guard_shared = Arc::clone(&shared);
         let result = thread::spawn(move || {

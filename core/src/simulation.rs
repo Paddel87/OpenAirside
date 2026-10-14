@@ -10,7 +10,9 @@ use rayon::ThreadPool;
 use serde::{Deserialize, Serialize};
 
 use crate::adoption::{Adoption, AdoptionMode};
-use crate::command::{self, Command, MAX_COMMANDS_PER_STEP, code, rejection};
+use crate::command::{
+    self, Command, DebugAction, MAX_COMMANDS_PER_STEP, Scenario, code, rejection,
+};
 use crate::event::{Event, EventQueue, EventRecord, MAX_IN_FLIGHT, SpeedChangeReason};
 use crate::flowfield::FieldSet;
 use crate::geometry::MapSize;
@@ -59,6 +61,19 @@ pub struct SimulationConfig {
     pub start_tick: Tick,
 }
 
+/// Default split of `cores` logical cores into tick threads and background
+/// threads (step 2.3, observation of 2026-10-13): the tick needs little
+/// time, so it gets a quarter of the cores (1 … 4); the background gets the
+/// rest except one core for the JavaScript threads of the core process and
+/// the renderer. The sum never exceeds `cores` when `cores` ≥ 2; one core
+/// gets one thread of each kind.
+#[must_use]
+pub fn default_threads(cores: usize) -> (usize, usize) {
+    let threads = (cores / 4).clamp(1, 4);
+    let background = cores.saturating_sub(threads + 1).max(1);
+    (threads, background)
+}
+
 /// Errors when creating a simulation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SimulationError {
@@ -98,7 +113,12 @@ pub struct Simulation {
     tick: Tick,
     speed: Speed,
     backpressure: Option<Speed>,
-    inbox: VecDeque<(u32, Command)>,
+    /// Waiting commands; `Err` marks a command that could not be read
+    /// and is answered with `invalidArgument`.
+    inbox: VecDeque<(u32, Result<Command, Reason>)>,
+    /// Scenario requested by the debug action `loadScenario`, started by
+    /// the caller after the answer went out ([`Simulation::take_scenario`]).
+    scenario: Option<(Scenario, u32)>,
     last_command_id: u32,
     counters: Counters,
     events: EventQueue,
@@ -148,6 +168,7 @@ impl Simulation {
             speed: Speed::Paused,
             backpressure: None,
             inbox: VecDeque::new(),
+            scenario: None,
             last_command_id: 0,
             counters: Counters::default(),
             events: EventQueue::new(),
@@ -174,6 +195,7 @@ impl Simulation {
         self.speed = Speed::Paused;
         self.backpressure = None;
         self.inbox.clear();
+        self.scenario = None;
         self.last_command_id = 0;
         self.events = EventQueue::new();
         self.world = world;
@@ -253,6 +275,16 @@ impl Simulation {
     /// Accepts a command of the renderer (S-2). Commands of another session
     /// and ids not larger than the last one are discarded and counted.
     pub fn submit(&mut self, session: u32, id: u32, command: Command) {
+        self.enqueue(session, id, Ok(command));
+    }
+
+    /// Accepts a command whose `kind` is known but whose fields could not be
+    /// read; it is answered with `invalidArgument` in its turn (S-2).
+    pub fn submit_invalid(&mut self, session: u32, id: u32) {
+        self.enqueue(session, id, Err(rejection(code::INVALID_ARGUMENT)));
+    }
+
+    fn enqueue(&mut self, session: u32, id: u32, command: Result<Command, Reason>) {
         if session != self.session {
             self.counters.foreign_session = self.counters.foreign_session.saturating_add(1);
         } else if id <= self.last_command_id {
@@ -261,6 +293,13 @@ impl Simulation {
             self.last_command_id = id;
             self.inbox.push_back((id, command));
         }
+    }
+
+    /// Takes the scenario requested by the debug action `loadScenario`. The
+    /// caller hands out the events of the old session first and then starts
+    /// the new one with [`Simulation::restart_with_world`].
+    pub fn take_scenario(&mut self) -> Option<(Scenario, u32)> {
+        self.scenario.take()
     }
 
     /// Acknowledges events up to `seq` (S-3 flow control).
@@ -334,7 +373,8 @@ impl Simulation {
         let mut others = Vec::new();
         let batch = self.inbox.len().min(MAX_COMMANDS_PER_STEP);
         for (id, command) in self.inbox.drain(..batch).collect::<Vec<_>>() {
-            answers.push((id, self.execute(&command, &mut others)));
+            let result = command.and_then(|command| self.execute(&command, &mut others));
+            answers.push((id, result));
         }
 
         if let Some((revision, fields)) = self.fields.poll(self.tick) {
@@ -420,6 +460,38 @@ impl Simulation {
             // The world holds no buildings yet, so there is nothing to remove.
             // TODO(fahrplan-ref: 3.1): remove the objects in the area.
             Command::Demolish { .. } => Ok(()),
+            Command::Debug { action } => self.debug(action),
+        }
+    }
+
+    fn debug(&mut self, action: &DebugAction) -> Result<(), Reason> {
+        match action {
+            DebugAction::SpawnPersons { count } => {
+                let seed =
+                    self.config.seed ^ u64::from(self.tick) ^ u64::from(self.last_command_id);
+                self.world.spawn_random(*count, seed);
+                Ok(())
+            }
+            DebugAction::ClearPersons {} => {
+                self.world.clear_persons();
+                Ok(())
+            }
+            DebugAction::SetWalls { area, wall } => {
+                self.world
+                    .set_walls(*area, *wall)
+                    .map_err(|_| rejection(code::OUT_OF_MAP))?;
+                self.request_recompute();
+                Ok(())
+            }
+            DebugAction::LoadScenario { scenario, persons } => {
+                if *scenario == Scenario::ReferenceTerminal
+                    && !crate::scenario::fits_reference_terminal(self.config.map)
+                {
+                    return Err(rejection(code::OUT_OF_MAP));
+                }
+                self.scenario = Some((*scenario, *persons));
+                Ok(())
+            }
         }
     }
 
@@ -597,6 +669,106 @@ mod tests {
         };
         assert!(after.contains(&resumed), "resume is reported");
         assert_eq!(sim.speed(), Speed::X3, "the waiting command was processed");
+    }
+
+    #[test]
+    fn default_threads_never_exceed_the_cores() {
+        assert_eq!(default_threads(1), (1, 1));
+        assert_eq!(default_threads(2), (1, 1));
+        assert_eq!(default_threads(4), (1, 2));
+        assert_eq!(default_threads(8), (2, 5));
+        assert_eq!(default_threads(16), (4, 11));
+        assert_eq!(default_threads(64), (4, 59));
+        for cores in 2..=64 {
+            let (t, b) = default_threads(cores);
+            assert!(t + b <= cores && t >= 1 && b >= 1, "{cores}");
+        }
+    }
+
+    fn debug(sim: &mut Simulation, id: u32, action: DebugAction) -> Event {
+        sim.submit(sim.session(), id, Command::Debug { action });
+        sim.step();
+        events(sim).into_iter().next().unwrap()
+    }
+
+    #[test]
+    fn debug_actions_change_persons_and_walls() {
+        let mut sim = Simulation::new(config(0)).unwrap();
+        let ok = |e: &Event| matches!(e, Event::CommandAccepted { .. });
+        assert!(ok(&debug(
+            &mut sim,
+            1,
+            DebugAction::SpawnPersons { count: 50 }
+        )));
+        assert_eq!(sim.world().persons(), 50);
+        let area = crate::geometry::CellRect {
+            floor: 0,
+            x0: 10,
+            y0: 10,
+            x1: 20,
+            y1: 20,
+        };
+        assert!(ok(&debug(
+            &mut sim,
+            2,
+            DebugAction::SetWalls { area, wall: true }
+        )));
+        let inside = crate::geometry::CellPos {
+            x: 15,
+            y: 15,
+            floor: 0,
+        };
+        assert!(!sim.world().grid().walkable(inside));
+        assert!(ok(&debug(
+            &mut sim,
+            3,
+            DebugAction::SetWalls { area, wall: false }
+        )));
+        assert!(sim.world().grid().walkable(inside));
+        assert!(ok(&debug(&mut sim, 4, DebugAction::ClearPersons {})));
+        assert_eq!(sim.world().persons(), 0);
+        let rejected = debug(&mut sim, 5, DebugAction::SpawnPersons { count: 10_001 });
+        assert!(
+            matches!(rejected, Event::CommandRejected { reason, .. } if reason.code == "limitExceeded")
+        );
+    }
+
+    #[test]
+    fn reference_scenario_needs_room_on_the_map() {
+        let mut sim = Simulation::new(config(0)).unwrap();
+        let action = DebugAction::LoadScenario {
+            scenario: Scenario::ReferenceTerminal,
+            persons: 10,
+        };
+        let rejected = debug(&mut sim, 1, action);
+        assert!(
+            matches!(rejected, Event::CommandRejected { reason, .. } if reason.code == "outOfMap")
+        );
+        assert_eq!(sim.take_scenario(), None);
+        let open = DebugAction::LoadScenario {
+            scenario: Scenario::OpenHall,
+            persons: 10,
+        };
+        assert!(matches!(
+            debug(&mut sim, 2, open),
+            Event::CommandAccepted { .. }
+        ));
+        assert_eq!(sim.take_scenario(), Some((Scenario::OpenHall, 10)));
+    }
+
+    #[test]
+    fn invalid_command_is_answered_in_order() {
+        let mut sim = Simulation::new(config(0)).unwrap();
+        sim.submit_invalid(1, 1);
+        sim.submit(1, 2, Command::SetSpeed { speed: Speed::X1 });
+        sim.submit_invalid(1, 2); // stale id, dropped
+        sim.step();
+        let got = events(&mut sim);
+        assert!(
+            matches!(&got[0], Event::CommandRejected { id: 1, reason, .. } if reason.code == "invalidArgument")
+        );
+        assert!(matches!(got[1], Event::CommandAccepted { id: 2, .. }));
+        assert_eq!(sim.counters().stale_commands, 1);
     }
 
     #[test]
