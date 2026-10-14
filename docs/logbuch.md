@@ -24,6 +24,15 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-14 23:40 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** 2.7 `[IN ARBEIT]`, umgesetzt einschließlich Messwerkzeug; offen ist nur die Messung durch den Projektinhaber auf Referenz-PC und Mac nach `docs/research/2.7-messung.md`. PR Paddel87/OpenAirside#20 als Entwurf offen (Kopf `bbdd5c8`). Die Session ab 06:55 UTC endete ohne `[SESSIONENDE]`-Eintrag (letzter Eintrag 07:00 UTC); Fahrplan „Aktueller Stand" ist dort aber nachgezogen.
+- **Branches:** Session-Branch `scp/friendly-einstein-rggagz` (vom Werkzeug vergeben, stand auf `main` `70d29e5`) per Fast-Forward auf `claude/naechster-schritt-2-8-736kf4` (`bbdd5c8`) gesetzt, keine Historie geändert. Daneben liegt `claude/messwerkzeug-2-7-rb2hq7` mit einer abgebrochenen Parallel-Session (06:29–06:45 UTC, nur Logbuch, Freigabe zu 2.7 mit „Abbruch" beantwortet); ihr Inhalt ist durch ADR-024 überholt und wird nicht übernommen.
+- **Geplant für diese Session:** offen – Auftrag des Projektinhabers steht aus („Neue Session." ohne Arbeitsauftrag). Naheliegend: Messergebnisse 2.7 auswerten, falls vorhanden; sonst 2.4 vorbereiten.
+- **Vorabprüfung:** keine aktiven Blocker; Reaktiv-Quote 4 / 10 über dem Schwellenwert, Reflexionen liegen vor; Phase 2 bei 10 Schritten (ursprünglicher Plan 10).
+- **Modus/Werkzeug:** Claude Code, Cloud-Session (Start über Desktop-App). Pre-Commit-Hook im frischen Container nachinstalliert.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` laut `get_session` 23:38 UTC – Entscheidungs-Klasse. Kontextgröße meldet `get_session` mit 0 (nicht aussagekräftig); Kontingent-Angaben (`rate_limit_info`) fehlten in der Antwort.
+
 ### 2026-10-14 07:00 (UTC) – [BEOBACHTUNG]
 
 - **Messwerkzeug 2.7 umgesetzt** (`dd762ea` Kern, `ebe0342` Renderer und Plattform): `TickStats` im Status des Takts und Port-Nachricht `coreStats` je Sekunde (additiv, `protocol` bleibt 1); Konsolenbefehl `measure [Minuten]`; S-6 `measure.start`/`measure.report` (additiv, `apiVersion` bleibt 1) mit Speicher aller Prozesse und JSON-Datei im Download-Ordner. Einordnung: im Fahrplan-Schritt 2.7 vorgesehen („Messwerkzeug … mit Ausgabe als JSON-Datei; dazu Kennzahlen des Takts im Status“), additive Erweiterungen bestehender Verträge, keine neue Abhängigkeit – daher ohne Freigabe nach `CLAUDE.md` Abschnitt 4. Der neue IPC-Aufruf schreibt eine Datei; Ordner und Name wählt der Hauptprozess, ein Bericht je gestarteter Messung, höchstens 1 MB, nie überschreiben, Absenderprüfung wie alle Aufrufe.
