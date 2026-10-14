@@ -4,7 +4,8 @@
  * Starts the simulation core in a utility process (ADR-009), restarts it
  * after a crash (at most 3 times in 60 s), hands a fresh `MessagePort` to
  * every loaded page of the hardened game window and answers the platform
- * API S-6 after checking the sender (ADR-021).
+ * API S-6 after checking the sender (ADR-021), including the result file
+ * of the measurement tool (step 2.7).
  */
 import {
   app,
@@ -17,13 +18,18 @@ import {
   utilityProcess,
   type UtilityProcess,
 } from "electron";
+import { mkdir, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseCoreArgs } from "./core-port.js";
 import {
   type CoreStatus,
   exitedCoreStatus,
   nextCoreStatus,
   restartDecision,
 } from "./core-status.js";
+import { MeasureRun, MEMORY_INTERVAL_MS, reportFileName } from "./measure.js";
 import {
   hardenedWebPreferences,
   isAllowedNavigation,
@@ -42,6 +48,9 @@ const rendererRoot = new URL("../renderer/", import.meta.url);
 const rendererEntry = new URL("index.html", rendererRoot);
 const coreHostPath = fileURLToPath(new URL("core-host.js", import.meta.url));
 const preloadPath = fileURLToPath(new URL("preload.cjs", import.meta.url));
+
+/** Service name of the core process; also names it in the memory samples. */
+const CORE_SERVICE = "OpenAirside Core";
 
 let core: UtilityProcess | undefined;
 let gameWindow: BrowserWindow | undefined;
@@ -67,7 +76,7 @@ function startCore(): void {
   globalThis.openairsideCoreStatus = { state: "starting" };
   // Flags such as --scenario= reach the core; it ignores everything else.
   const process = utilityProcess.fork(coreHostPath, globalThis.process.argv.slice(1), {
-    serviceName: "OpenAirside Core",
+    serviceName: CORE_SERVICE,
   });
   core = process;
   process.on("message", (message: unknown) => {
@@ -104,14 +113,64 @@ function trusted(event: IpcMainInvokeEvent): boolean {
   );
 }
 
-function handle(channel: string, answer: () => unknown): void {
-  ipcMain.handle(channel, (event) => {
+function handle(channel: string, answer: (arg: unknown) => unknown): void {
+  ipcMain.handle(channel, (event, arg: unknown) => {
     if (!trusted(event)) {
       console.warn(`rejected IPC call ${channel} from an untrusted sender`);
       throw new Error("untrusted sender");
     }
-    return answer();
+    return answer(arg);
   });
+}
+
+const measureRun = new MeasureRun();
+let measureTimer: NodeJS.Timeout | undefined;
+
+function sampleMemory(): void {
+  measureRun.sample(app.getAppMetrics(), CORE_SERVICE, Date.now());
+}
+
+/** S-6 `measure.start`: begins sampling the memory of all processes. */
+function startMeasure(): null {
+  if (!measureRun.start(Date.now())) {
+    throw new Error("measurement already running");
+  }
+  sampleMemory();
+  measureTimer = setInterval(sampleMemory, MEMORY_INTERVAL_MS);
+  return null;
+}
+
+/** S-6 `measure.report`: writes the result file into the downloads folder. */
+async function reportMeasure(result: unknown): Promise<string> {
+  sampleMemory();
+  const cpus = os.cpus();
+  const done = measureRun.finish(result, {
+    appVersion: app.getVersion(),
+    packaged: app.isPackaged,
+    platform: process.platform,
+    arch: process.arch,
+    osRelease: os.release(),
+    electron: process.versions.electron,
+    chrome: process.versions.chrome,
+    cpus: cpus.length,
+    cpuModel: cpus[0]?.model ?? "",
+    memGb: Math.round(os.totalmem() / 2 ** 30),
+    gpuFeatureStatus: app.getGPUFeatureStatus(),
+    coreOptions: parseCoreArgs(process.argv),
+    finishedAt: new Date().toISOString(),
+  });
+  if (!done.ok) {
+    throw new Error(`measurement report refused: ${done.error}`);
+  }
+  clearInterval(measureTimer);
+  measureTimer = undefined;
+  const folder = app.getPath("downloads");
+  await mkdir(folder, { recursive: true });
+  const file = path.join(folder, reportFileName(process.platform, new Date()));
+  // "wx": never overwrite an existing file.
+  await writeFile(file, done.json, { flag: "wx" });
+  console.log(`measurement written to ${file}`);
+  return file;
 }
 
 function createWindow(): void {
@@ -169,6 +228,8 @@ void app.whenReady().then(() => {
     app.quit();
     return null;
   });
+  handle("measure:start", startMeasure);
+  handle("measure:report", reportMeasure);
   startCore();
   createWindow();
 });

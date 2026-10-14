@@ -11,8 +11,10 @@ import { Application, Container, Graphics, Particle, ParticleContainer, Texture 
 // Replaces the eval-based particle upload, so that the CSP needs no 'unsafe-eval' (spike 1.3).
 import "pixi.js/unsafe-eval";
 import type { FrameFilter } from "../src/generated/FrameFilter.js";
-import { type Camera, fitCamera, pan, visibleRect, zoomAt } from "./camera.js";
+import { type Camera, centerCamera, fitCamera, pan, visibleRect, zoomAt } from "./camera.js";
 import { type Frame, type PersonRecord, readPerson } from "./frame-reader.js";
+import { densestSpot } from "./hotspot.js";
+import type { View } from "./measure.js";
 
 /** Lowest and highest floor (BAU-07). */
 const MIN_FLOOR = -2;
@@ -111,6 +113,28 @@ export class Playfield {
   /** Shows the floor above (`+1`) or below (`-1`). */
   changeFloor(step: number): void {
     this.#floor = Math.min(MAX_FLOOR, Math.max(MIN_FLOOR, this.#floor + step));
+  }
+
+  /** Points the camera for the measurement series (step 2.7). */
+  view(view: View): void {
+    this.#floor = Math.min(MAX_FLOOR, Math.max(MIN_FLOOR, view.floor));
+    const { width, height } = this.#app.screen;
+    if (view.kind === "overview") {
+      this.#setCamera(fitCamera(this.#map.width, this.#map.height, width, height));
+      return;
+    }
+    const x = view.x + Math.cos(view.angle) * view.radius;
+    const y = view.y + Math.sin(view.angle) * view.radius;
+    this.#setCamera(centerCamera(view.zoom, x, y, width, height));
+  }
+
+  /** Centre of the densest 16 × 16 cells among the persons drawn now. */
+  hotspot(): { x: number; y: number } {
+    return densestSpot(
+      this.#pool.slice(0, this.#shown).map((p) => ({ x: p.x, y: p.y })),
+      this.#map.width,
+      this.#map.height,
+    );
   }
 
   /** Draws the persons of `frame`. */

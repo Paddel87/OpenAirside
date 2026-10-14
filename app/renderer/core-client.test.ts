@@ -14,6 +14,7 @@ function setup() {
     frame: vi.fn(),
     queryResult: vi.fn(),
     queryError: vi.fn(),
+    stats: vi.fn(),
     dropped: vi.fn(),
   } satisfies ClientHandlers;
   let time = 0;
@@ -188,5 +189,39 @@ describe("CoreClient", () => {
     expect(handlers.dropped).toHaveBeenLastCalledWith("queryError");
     client.handle({ type: "sessionStarted", session: 2, tick: 0 });
     expect(client.query(table)).toBe(1);
+  });
+
+  it("passes the tick figures of the own session and drops malformed ones", () => {
+    const { client, handlers } = setup();
+    const stats = {
+      ticksPerSecond: 180,
+      stepMeanUs: 400,
+      stepP99Us: 900,
+      stepMaxUs: 1200,
+      behindTicks: 0,
+      recomputing: false,
+      lastRecompute: { revision: 2, millis: 1100 },
+      threads: 2,
+      backgroundThreads: 5,
+    };
+    client.handle({ type: "coreStats", session: 1, tick: 9, stats });
+    expect(handlers.stats).not.toHaveBeenCalled();
+    expect(handlers.dropped).toHaveBeenLastCalledWith("coreStats");
+    client.handle({ type: "welcome", protocol: 1, core, session: 1 });
+    client.handle({ type: "coreStats", session: 1, tick: 9, stats });
+    expect(handlers.stats).toHaveBeenLastCalledWith(9, stats);
+    const withoutRecompute: Partial<typeof stats> = { ...stats };
+    delete withoutRecompute.lastRecompute;
+    client.handle({ type: "coreStats", session: 1, tick: 10, stats: withoutRecompute });
+    expect(handlers.stats).toHaveBeenLastCalledWith(10, withoutRecompute);
+    for (const bad of [
+      { ...stats, stepP99Us: -1 },
+      { ...stats, recomputing: "no" },
+      { ...stats, lastRecompute: { revision: 1 } },
+      null,
+    ]) {
+      client.handle({ type: "coreStats", session: 1, tick: 11, stats: bad });
+    }
+    expect(handlers.stats).toHaveBeenCalledTimes(2);
   });
 });

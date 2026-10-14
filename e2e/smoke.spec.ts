@@ -50,6 +50,19 @@ test("window opens and core reports ready", async () => {
     });
     expect(info?.apiVersion).toBe(1);
     expect(info?.info.version).toBe("0.0.0");
+    // Measurement tool (step 2.7): no report without a started run.
+    const refused = await window.evaluate(async () => {
+      const api = (
+        globalThis as { openairside?: { measure: { report(r: unknown): Promise<string> } } }
+      ).openairside;
+      try {
+        await api?.measure.report({});
+        return "accepted";
+      } catch (error) {
+        return String(error);
+      }
+    });
+    expect(refused).toContain("notStarted");
 
     // Console commands reach the core and take effect in the frames (S-2, S-3, FR-009).
     const input = window.locator("#console-input");
@@ -67,6 +80,8 @@ test("window opens and core reports ready", async () => {
     await input.fill("table 3");
     await input.press("Enter");
     await expect(window.locator("#log")).toContainText("table: 3 of 500 rows");
+    // Figures of the tick arrive about once per second (coreStats).
+    await expect(window.locator("#hud")).toContainText("ticks/s");
     await input.fill("speed x4");
     await input.press("Enter");
     await expect(window.locator("#log")).toContainText("speed paused|x1|x2|x3");

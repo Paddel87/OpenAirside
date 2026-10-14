@@ -8,11 +8,13 @@ import type { Command } from "../src/generated/Command.js";
 import type { Query } from "../src/generated/Query.js";
 import type { Scenario } from "../src/generated/Scenario.js";
 import type { Speed } from "../src/generated/Speed.js";
+import { MAX_MINUTES } from "./measure.js";
 
 /** Result of parsing one console line. */
 export type ConsoleResult =
   | { readonly kind: "command"; readonly command: Command }
   | { readonly kind: "query"; readonly query: Query }
+  | { readonly kind: "measure"; readonly minutes: number }
   | { readonly kind: "help"; readonly text: string }
   | { readonly kind: "error"; readonly text: string };
 
@@ -25,6 +27,7 @@ export const HELP = [
   "walls <floor> <x0> <y0> <x1> <y1> on|off",
   "scenario hall|reference [persons]",
   "table [rows 1–1000] – persons of the newest frame, sorted by y and x (S-7)",
+  `measure [minutes 1–${String(MAX_MINUTES)}] – measurement series, result as JSON file (default 10)`,
 ].join("\n");
 
 /** Panel id of the console's table query. */
@@ -124,6 +127,13 @@ export function parseConsoleLine(line: string): ConsoleResult {
           window: { offset: 0, limit },
         },
       };
+    }
+    case "measure": {
+      const minutes = args[0] === undefined ? 10 : integer(args[0]);
+      if (minutes === undefined || minutes < 1 || minutes > MAX_MINUTES) {
+        return error(`measure [minutes 1–${String(MAX_MINUTES)}]`);
+      }
+      return { kind: "measure", minutes };
     }
     default:
       return error(`unknown command "${name}" – try help`);

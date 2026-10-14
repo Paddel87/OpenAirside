@@ -22,6 +22,13 @@ export interface OpenAirsideApi {
     info(): Promise<AppInfo>;
     quit(): Promise<null>;
   };
+  /** Measurement tool of step 2.7: memory sampling and the result file. */
+  readonly measure: {
+    /** Starts sampling the memory of all processes; rejects while a run is open. */
+    start(): Promise<null>;
+    /** Writes the result with system data and memory; returns the file path. */
+    report(result: unknown): Promise<string>;
+  };
   onCoreExit(callback: (code: number) => void): void;
 }
 

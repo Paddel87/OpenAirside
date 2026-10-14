@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fitCamera, MAX_ZOOM, MIN_ZOOM, pan, visibleRect, zoomAt } from "./camera.js";
+import { centerCamera, fitCamera, MAX_ZOOM, MIN_ZOOM, pan, visibleRect, zoomAt } from "./camera.js";
 
 describe("camera", () => {
   it("fits the map and centres it", () => {
@@ -23,5 +23,11 @@ describe("camera", () => {
 
   it("pans opposite to the drag", () => {
     expect(pan({ zoom: 2, x: 10, y: 10 }, 20, -4)).toEqual({ zoom: 2, x: 0, y: 12 });
+  });
+
+  it("centres a cell on the screen", () => {
+    const camera = centerCamera(4, 100, 50, 800, 400);
+    expect(visibleRect(camera, 800, 400)).toEqual({ x0: 0, y0: 0, x1: 200, y1: 100 });
+    expect(centerCamera(100, 0, 0, 10, 10).zoom).toBe(MAX_ZOOM);
   });
 });

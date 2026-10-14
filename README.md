@@ -82,11 +82,11 @@ graph LR
 
 ## Verwendung
 
-Noch nicht spielbar. `npm start` öffnet das Spielfenster mit leerer Karte; der Simulationskern läuft in einem eigenen Prozess. Im Debug-Panel oben links zeigt `help` die Konsolenbefehle (z. B. `spawn 1000`, `speed x3`, `scenario reference 10000`). Das Referenz-Terminal aus dem Leistungsnachweis startet direkt mit `npx electron . --scenario=referenceTerminal --persons=10000`.
+Noch nicht spielbar. `npm start` öffnet das Spielfenster mit leerer Karte; der Simulationskern läuft in einem eigenen Prozess. Im Debug-Panel oben links zeigt `help` die Konsolenbefehle (z. B. `spawn 1000`, `speed x3`, `scenario reference 10000`). Das Referenz-Terminal aus dem Leistungsnachweis startet direkt mit `npx electron . --scenario=referenceTerminal --persons=10000`. `measure` startet eine zehnminütige Messreihe und speichert das Ergebnis als JSON-Datei im Download-Ordner.
 
 ## Nächste Schritte
 
-- 2.7 (in Arbeit): Brücke und Plattformschicht – umgesetzt bis auf Messwerkzeug und Messung auf Referenz-PC und Mac
+- 2.7 (in Arbeit): Brücke und Plattformschicht – umgesetzt mit Messwerkzeug; offen ist die Messung auf Referenz-PC und Mac
 - 2.4: Datenpaket-Schema und Lader
 - Phase 2 insgesamt: lauffähiger, leerer Spielrahmen mit grüner CI auf drei Plattformen
 

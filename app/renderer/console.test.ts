@@ -58,6 +58,9 @@ describe("parseConsoleLine", () => {
     "scenario hall -5",
     "table 0",
     "table 1001",
+    "measure 0",
+    "measure 61",
+    "measure soon",
     "fly",
   ])("rejects %j with a hint", (line) => {
     expect(parseConsoleLine(line).kind).toBe("error");
@@ -84,5 +87,11 @@ describe("parseConsoleLine", () => {
     expect(short.kind === "query" && short.query.kind === "table" && short.query.window.limit).toBe(
       5,
     );
+  });
+
+  it("starts the measurement series", () => {
+    expect(parseConsoleLine("measure")).toEqual({ kind: "measure", minutes: 10 });
+    expect(parseConsoleLine("MEASURE 3")).toEqual({ kind: "measure", minutes: 3 });
+    expect(parseConsoleLine("measure 60")).toEqual({ kind: "measure", minutes: 60 });
   });
 });

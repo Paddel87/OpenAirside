@@ -1,11 +1,13 @@
 /**
  * Renderer entry of OpenAirside: connects to the core over the port of the
  * platform (S-6), shows the playfield (PixiJS) and the debug panel with
- * console and performance display (FR-009). The interface panels (React)
- * follow from roadmap step 3.6 on.
+ * console, performance display and measurement series (FR-009, step 2.7).
+ * The interface panels (React) follow from roadmap step 3.6 on.
  */
+import type { TickStats } from "../src/generated/TickStats.js";
 import { type ClientHandlers, CoreClient } from "./core-client.js";
 import { parseConsoleLine, TABLE_COLUMNS } from "./console.js";
+import { defaultConfig, MeasureSeries, type SeriesHost } from "./measure.js";
 import { PerfMeter } from "./perf.js";
 import { onCorePort } from "./platform.js";
 import { Playfield } from "./playfield.js";
@@ -50,6 +52,8 @@ async function start(): Promise<void> {
   let client: CoreClient | undefined;
   const queriesSent = new Map<number, number>();
   let states: readonly string[] = [];
+  let stats: TickStats | undefined;
+  let series: MeasureSeries | undefined;
 
   const handlers: ClientHandlers = {
     welcome: (core, session) => {
@@ -62,8 +66,10 @@ async function start(): Promise<void> {
     sessionStarted: (session, at) => {
       root.dataset.session = String(session);
       write(`session ${String(session)} at tick ${String(at)}`);
+      series?.onSession(session);
     },
-    events: (_session, events) => {
+    events: (session, events) => {
+      series?.onEvents(performance.now(), session, events);
       for (const { event } of events) {
         switch (event.kind) {
           case "commandAccepted":
@@ -91,15 +97,29 @@ async function start(): Promise<void> {
       personsTotal = frame.header.personsTotal;
       root.dataset.tick = String(tick);
       playfield.show(frame);
-      perf.frame(performance.now(), performance.now() - requestedAt);
+      const now = performance.now();
+      const rtt = now - requestedAt;
+      perf.frame(now, rtt);
+      series?.onFrame(now, frame.header, rtt);
+    },
+    stats: (_tick, figures) => {
+      stats = figures;
+      series?.onStats(figures);
     },
     queryResult: (id, answer) => {
-      const ms = performance.now() - (queriesSent.get(id) ?? performance.now());
-      queriesSent.delete(id);
+      const now = performance.now();
       if (answer.dictionary !== undefined) {
         states = answer.dictionary.entries;
         return;
       }
+      const sentAt = queriesSent.get(id);
+      if (sentAt === undefined) {
+        // Not a console query: one of the measurement series.
+        series?.onQuery(now, id);
+        return;
+      }
+      queriesSent.delete(id);
+      const ms = now - sentAt;
       if (answer.buf === undefined) return;
       const result = readTable(answer.buf, TABLE_COLUMNS);
       if (!result.ok) {
@@ -121,6 +141,7 @@ async function start(): Promise<void> {
     },
     queryError: (id, code) => {
       queriesSent.delete(id);
+      series?.onQuery(performance.now(), id);
       write(`query #${String(id)} failed: ${code}`);
     },
     dropped: (reason) => {
@@ -144,12 +165,75 @@ async function start(): Promise<void> {
     write(`core process ended (code ${String(code)}); restarting`);
   });
 
+  const host: SeriesHost = {
+    now: () => performance.now(),
+    sleep: (ms) =>
+      new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      }),
+    command: (command) => client?.send(command) ?? 0,
+    query: (query) => client?.query(query) ?? 0,
+    view: (view) => {
+      playfield.view(view);
+    },
+    hotspot: () => playfield.hotspot(),
+    status: write,
+  };
+  try {
+    // Long tasks (> 50 ms) of the renderer's main thread, for the series.
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) series?.onLongTask(entry.duration);
+    }).observe({ type: "longtask", buffered: false });
+  } catch {
+    write("long task observer not available");
+  }
+
+  const measure = async (minutes: number): Promise<void> => {
+    const api = window.openairside;
+    if (api === undefined || client === undefined) {
+      write("measure: not connected");
+      return;
+    }
+    await api.measure.start();
+    const run = new MeasureSeries(host, defaultConfig(minutes));
+    run.onSession(client.session);
+    series = run;
+    try {
+      const result = await run.run();
+      const file = await api.measure.report({
+        series: result,
+        renderer: {
+          gpu: playfield.gpu,
+          screenWidth: window.screen.width,
+          screenHeight: window.screen.height,
+          devicePixelRatio: window.devicePixelRatio,
+          windowWidth: window.innerWidth,
+          windowHeight: window.innerHeight,
+        },
+      });
+      write(`measure: done, result saved to ${file}`);
+      root.dataset.measure = "done";
+    } finally {
+      series = undefined;
+    }
+  };
+
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const line = input.value;
     input.value = "";
     const result = parseConsoleLine(line);
-    if (result.kind === "command") {
+    if (series !== undefined) {
+      write("measurement running – please wait");
+      return;
+    }
+    if (result.kind === "measure") {
+      write(`measure: ${String(result.minutes)} min – do not touch, keep the window visible`);
+      measure(result.minutes).catch((error: unknown) => {
+        write(`measure failed: ${error instanceof Error ? error.message : String(error)}`);
+        root.dataset.measure = "failed";
+      });
+    } else if (result.kind === "command") {
       const id = client?.send(result.command) ?? 0;
       write(id === 0 ? "not connected" : `#${String(id)} ${line}`);
     } else if (result.kind === "query") {
@@ -181,6 +265,9 @@ async function start(): Promise<void> {
       hud.textContent = [
         `${String(s.fps)} fps · frame ${s.rttMs.toFixed(1)} ms (max ${s.rttMaxMs.toFixed(1)})`,
         `tick ${String(tick)} · floor ${String(playfield.floor)} · persons ${String(playfield.shown)}/${String(personsTotal)}`,
+        stats === undefined
+          ? "tick figures pending"
+          : `${String(stats.ticksPerSecond)} ticks/s · step ${(stats.stepMeanUs / 1000).toFixed(2)} ms (p99 ${(stats.stepP99Us / 1000).toFixed(2)}) · recompute ${stats.recomputing ? "running" : stats.lastRecompute === undefined ? "–" : `${(stats.lastRecompute.millis / 1000).toFixed(2)} s`}`,
         `${playfield.gpu}${lag === "" ? "" : ` · ${lag}`}${client === undefined ? "" : ` · gaps ${String(client.gaps)}`}`,
       ].join("\n");
     }

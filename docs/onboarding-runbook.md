@@ -107,7 +107,7 @@ Mit dem Referenz-Terminal aus Spike 1.5 (768² × 5 in einer Karte 2048², 10.00
 npx electron . --scenario=referenceTerminal --persons=10000
 ```
 
-In der Konsole beschleunigt `speed x3` das Spiel; Mausrad zoomt, Ziehen verschiebt, Bild auf/ab wechselt die Etage. In Containern ohne Grafikkarte zeichnet PixiJS auf der CPU (Anzeige „renderer canvas"); mit `--enable-unsafe-swiftshader` läuft WebGL2 über SwiftShader, die Bildraten sind dort ohne Aussage.
+In der Konsole beschleunigt `speed x3` das Spiel; Mausrad zoomt, Ziehen verschiebt, Bild auf/ab wechselt die Etage. `measure [Minuten]` startet die Messreihe (Standard 10 Minuten) und meldet am Ende den Pfad der Ergebnisdatei im Download-Ordner; ohne Ordner „Downloads" (z. B. im Container) landet sie im Home-Ordner. In Containern ohne Grafikkarte zeichnet PixiJS auf der CPU (Anzeige „renderer canvas"); mit `--enable-unsafe-swiftshader` läuft WebGL2 über SwiftShader, die Bildraten sind dort ohne Aussage.
 
 ### Schritt 5: Verifikation (alle Pflicht-Gates wie in der CI)
 

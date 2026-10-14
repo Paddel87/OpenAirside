@@ -29,6 +29,18 @@ export function fitCamera(width: number, height: number, screenW: number, screen
   };
 }
 
+/** Camera with `zoom` that shows the cell (`x`, `y`) in the middle of the screen. */
+export function centerCamera(
+  zoom: number,
+  x: number,
+  y: number,
+  screenW: number,
+  screenH: number,
+): Camera {
+  const z = clampZoom(zoom);
+  return { zoom: z, x: x - screenW / z / 2, y: y - screenH / z / 2 };
+}
+
 function clampZoom(zoom: number): number {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
 }

@@ -12,6 +12,7 @@ import type { Dictionary } from "../src/generated/Dictionary.js";
 import type { EventRecord } from "../src/generated/EventRecord.js";
 import type { FrameFilter } from "../src/generated/FrameFilter.js";
 import type { Query } from "../src/generated/Query.js";
+import type { TickStats } from "../src/generated/TickStats.js";
 import { type Frame, readFrame } from "./frame-reader.js";
 
 /** Protocol version of this renderer (core/src/port.rs `PROTOCOL`). */
@@ -36,6 +37,8 @@ export interface ClientHandlers {
   queryResult(id: number, answer: QueryAnswer): void;
   /** Query `id` failed with an S-7 error code. */
   queryError(id: number, code: string): void;
+  /** Figures of the tick at `tick`, about once per second (step 2.7). */
+  stats(tick: number, stats: TickStats): void;
   /** A message was malformed; counted, never thrown. */
   dropped(reason: string): void;
 }
@@ -63,6 +66,27 @@ function isEventRecord(value: unknown): value is EventRecord {
     isRecord(value.event) &&
     typeof value.event.kind === "string"
   );
+}
+
+const STATS_COUNTS = [
+  "ticksPerSecond",
+  "stepMeanUs",
+  "stepP99Us",
+  "stepMaxUs",
+  "behindTicks",
+  "threads",
+  "backgroundThreads",
+] as const;
+
+function isTickStats(value: unknown): value is TickStats {
+  if (!isRecord(value) || typeof value.recomputing !== "boolean") {
+    return false;
+  }
+  if (!STATS_COUNTS.every((key) => isCount(value[key]))) {
+    return false;
+  }
+  const last = value.lastRecompute;
+  return last === undefined || (isRecord(last) && isCount(last.revision) && isCount(last.millis));
 }
 
 function eventsOf(value: unknown): EventRecord[] | undefined {
@@ -220,6 +244,12 @@ export class CoreClient {
         if (isCount(data.id) && typeof data.code === "string" && data.session === this.#session) {
           this.#settle(data.id);
           this.handlers.queryError(data.id, data.code);
+          return;
+        }
+        break;
+      case "coreStats":
+        if (data.session === this.#session && isCount(data.tick) && isTickStats(data.stats)) {
+          this.handlers.stats(data.tick, data.stats);
           return;
         }
         break;
