@@ -109,5 +109,8 @@
       "syncDesktopName": true
     },
     "publish": []
+  },
+  "dependencies": {
+    "pixi.js": "8.20.1"
   }
 }
