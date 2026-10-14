@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-14 00:11 (UTC) – [BEOBACHTUNG]
+
+- **PR Paddel87/OpenAirside#19 gemergt** (`70d29e5`, Merge-Commit) auf Anweisung des Projektinhabers („merge wenn grün“); vorher alle 39 Prüfläufe auf `a10dc6f` grün, PR konfliktfrei. Beobachtung des PR beendet. Dieser Eintrag liegt nach `project-context.md` Abschnitt 10 nur auf dem Branch und geht mit dem PR des nächsten Schritts (2.7) nach `main`.
+
 ### 2026-10-14 00:05 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 50 Minuten seit `[SESSIONSTART]` 2026-10-13 23:16 UTC.
