@@ -14,12 +14,14 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
+use serde::Serialize;
+
 use crate::command::Command;
 use crate::event::{EventRecord, MAX_IN_FLIGHT};
 use crate::frame::Snapshot;
 use crate::pacer::{LagMonitor, Pacer};
 use crate::scenario::scenario_world;
-use crate::simulation::{CoreState, Simulation, SimulationConfig, SimulationError};
+use crate::simulation::{CoreState, RecomputeStats, Simulation, SimulationConfig, SimulationError};
 use crate::time::{Speed, Tick};
 use crate::world::World;
 
@@ -46,6 +48,35 @@ enum Input {
     Stop,
 }
 
+/// Figures of the tick for the performance display and the measurement
+/// tool (step 2.7); wall-clock values that never affect the simulated
+/// state. Step times cover the ticks of the last full real second.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS), ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct TickStats {
+    /// Ticks computed in the last full real second.
+    pub ticks_per_second: u32,
+    /// Mean time of one tick in microseconds.
+    pub step_mean_us: u32,
+    /// 99th percentile of the tick time in microseconds.
+    pub step_p99_us: u32,
+    /// Longest tick in microseconds.
+    pub step_max_us: u32,
+    /// Ticks due but not yet computed after the last work slice.
+    pub behind_ticks: u32,
+    /// A recomputation of the flow fields runs or waits for adoption.
+    pub recomputing: bool,
+    /// The last adopted recomputation of this session.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub last_recompute: Option<RecomputeStats>,
+    /// Worker threads of the tick.
+    pub threads: u32,
+    /// Background threads.
+    pub background_threads: u32,
+}
+
 /// What the driver publishes after every slice.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Status {
@@ -57,8 +88,45 @@ pub struct Status {
     pub tick: Tick,
     /// Current speed.
     pub speed: Speed,
-    /// Ticks computed in the last full real second.
-    pub ticks_per_second: u32,
+    /// Figures of the tick.
+    pub stats: TickStats,
+}
+
+/// Tick times of one real second; yields mean, 99th percentile and maximum.
+#[derive(Debug, Default)]
+struct StepWindow {
+    micros: Vec<u32>,
+}
+
+impl StepWindow {
+    fn record(&mut self, took: Duration) {
+        self.micros
+            .push(u32::try_from(took.as_micros()).unwrap_or(u32::MAX));
+    }
+
+    /// Mean, 99th percentile and maximum in microseconds, all 0 without
+    /// ticks; empties the window.
+    fn finish(&mut self) -> (u32, u32, u32) {
+        let mut micros = std::mem::take(&mut self.micros);
+        if micros.is_empty() {
+            return (0, 0, 0);
+        }
+        micros.sort_unstable();
+        let n = micros.len();
+        let sum: u64 = micros.iter().map(|&m| u64::from(m)).sum();
+        let mean = u32::try_from(sum / n as u64).unwrap_or(u32::MAX);
+        // Nearest rank: the smallest value with at least 99 % of the ticks at or below it.
+        let rank = (n * 99).div_ceil(100).max(1);
+        (mean, micros[rank - 1], micros[n - 1])
+    }
+}
+
+/// Tick figures of the last full second, kept between the windows.
+#[derive(Debug, Clone, Copy, Default)]
+struct Measured {
+    ticks_per_second: u32,
+    step: (u32, u32, u32),
+    behind_ticks: u32,
 }
 
 /// Events of one session, in stream order.
@@ -151,7 +219,7 @@ impl Runner {
         let mut middle = Snapshot::default();
         middle.capture(sim.session(), sim.tick(), sim.world());
         let shared = Arc::new(Mutex::new(Shared {
-            status: status_of(&sim, 0),
+            status: status_of(&sim, Measured::default()),
             events: Vec::new(),
             middle,
             fresh: true,
@@ -244,13 +312,25 @@ impl Drop for Runner {
     }
 }
 
-fn status_of(sim: &Simulation, ticks_per_second: u32) -> Status {
+fn status_of(sim: &Simulation, measured: Measured) -> Status {
+    let config = sim.config();
+    let (step_mean_us, step_p99_us, step_max_us) = measured.step;
     Status {
         state: sim.state(),
         session: sim.session(),
         tick: sim.tick(),
         speed: sim.speed(),
-        ticks_per_second,
+        stats: TickStats {
+            ticks_per_second: measured.ticks_per_second,
+            step_mean_us,
+            step_p99_us,
+            step_max_us,
+            behind_ticks: measured.behind_ticks,
+            recomputing: sim.is_recomputing(),
+            last_recompute: sim.last_recompute(),
+            threads: u32::try_from(config.threads).unwrap_or(u32::MAX),
+            background_threads: u32::try_from(config.background_threads).unwrap_or(u32::MAX),
+        },
     }
 }
 
@@ -282,7 +362,8 @@ fn drive(mut sim: Simulation, inbox: &Receiver<Input>, shared: &Arc<Mutex<Shared
     let mut lag = LagMonitor::new();
     let mut window_start = origin;
     let mut window_ticks = 0u32;
-    let mut measured_tps = 0u32;
+    let mut steps = StepWindow::default();
+    let mut measured = Measured::default();
     let mut back = Snapshot::default();
     loop {
         let wait = pacer.until_next().unwrap_or(IDLE_WAIT).min(IDLE_WAIT);
@@ -307,8 +388,10 @@ fn drive(mut sim: Simulation, inbox: &Receiver<Input>, shared: &Arc<Mutex<Shared
         if sim.speed().is_running() {
             while pacer.due() > 0 && sim.speed().is_running() {
                 let before = sim.tick();
+                let started = Instant::now();
                 sim.step();
                 if sim.tick() != before {
+                    steps.record(started.elapsed());
                     pacer.complete_one();
                     window_ticks += 1;
                 }
@@ -327,12 +410,18 @@ fn drive(mut sim: Simulation, inbox: &Receiver<Input>, shared: &Arc<Mutex<Shared
 
         let now = Instant::now();
         if now - window_start >= Duration::from_secs(1) {
-            measured_tps = window_ticks;
+            measured.ticks_per_second = window_ticks;
+            measured.step = steps.finish();
             window_ticks = 0;
             window_start = now;
         }
+        measured.behind_ticks = if sim.speed().is_running() {
+            pacer.due()
+        } else {
+            0
+        };
         let lag_event = if sim.speed().is_running() {
-            lag.observe(now - origin, pacer.due(), measured_tps)
+            lag.observe(now - origin, pacer.due(), measured.ticks_per_second)
         } else {
             lag.reset()
         };
@@ -340,7 +429,7 @@ fn drive(mut sim: Simulation, inbox: &Receiver<Input>, shared: &Arc<Mutex<Shared
             sim.report(event);
         }
 
-        publish(&mut sim, &mut back, shared, measured_tps);
+        publish(&mut sim, &mut back, shared, measured);
         if let Some((scenario, persons)) = sim.take_scenario() {
             load_scenario(&mut sim, scenario, persons, &mut back, shared);
         }
@@ -348,14 +437,14 @@ fn drive(mut sim: Simulation, inbox: &Receiver<Input>, shared: &Arc<Mutex<Shared
 }
 
 /// Publishes the events and a snapshot of the current state.
-fn publish(sim: &mut Simulation, back: &mut Snapshot, shared: &Mutex<Shared>, tps: u32) {
+fn publish(sim: &mut Simulation, back: &mut Snapshot, shared: &Mutex<Shared>, measured: Measured) {
     let records = sim.take_events(MAX_IN_FLIGHT as usize);
     back.capture(sim.session(), sim.tick(), sim.world());
     let mut out = lock(shared);
     out.push_events(sim.session(), records);
     std::mem::swap(&mut out.middle, back);
     out.fresh = true;
-    out.status = status_of(sim, tps);
+    out.status = status_of(sim, measured);
 }
 
 /// Starts a new session with a debug scenario after the answer to
@@ -374,7 +463,7 @@ fn load_scenario(
     if let Some(world) = scenario_world(scenario, config.map, persons, config.seed) {
         sim.restart_with_world(world);
     }
-    publish(sim, back, shared, 0);
+    publish(sim, back, shared, Measured::default());
 }
 
 #[cfg(test)]
@@ -568,6 +657,38 @@ mod tests {
     }
 
     #[test]
+    fn step_window_reports_mean_percentile_and_maximum() {
+        let mut window = StepWindow::default();
+        assert_eq!(window.finish(), (0, 0, 0));
+        for micros in 1..=200 {
+            window.record(Duration::from_micros(micros));
+        }
+        // 200 ticks: the 99th percentile is the 198th value.
+        assert_eq!(window.finish(), (100, 198, 200));
+        assert_eq!(window.finish(), (0, 0, 0), "finish empties the window");
+        window.record(Duration::from_micros(7));
+        assert_eq!(window.finish(), (7, 7, 7));
+    }
+
+    #[test]
+    fn running_driver_reports_tick_figures() {
+        let runner = runner();
+        let mut seen = Vec::new();
+        runner.command(1, 1, Command::SetSpeed { speed: Speed::X3 });
+        wait_for(&runner, &mut seen, |_, status| {
+            status.stats.ticks_per_second > 0
+        });
+        let stats = runner.status().stats;
+        assert!(stats.step_mean_us <= stats.step_p99_us);
+        assert!(stats.step_p99_us <= stats.step_max_us);
+        assert!(stats.step_max_us > 0);
+        assert_eq!((stats.threads, stats.background_threads), (1, 1));
+        assert!(!stats.recomputing);
+        assert_eq!(stats.last_recompute, None);
+        runner.stop().unwrap();
+    }
+
+    #[test]
     fn start_with_world_uses_the_given_world() {
         let config = SimulationConfig {
             map: MapSize::new(64, 64).unwrap(),
@@ -598,7 +719,7 @@ mod tests {
                 session: 1,
                 tick: 0,
                 speed: Speed::Paused,
-                ticks_per_second: 0,
+                stats: TickStats::default(),
             },
             events: Vec::new(),
             middle: Snapshot::default(),

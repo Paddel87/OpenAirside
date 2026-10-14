@@ -3,6 +3,7 @@ import type { CoreInfo } from "./CoreInfo.js";
 import type { Detail } from "./Detail.js";
 import type { Dictionary } from "./Dictionary.js";
 import type { EventRecord } from "./EventRecord.js";
+import type { TickStats } from "./TickStats.js";
 
 /**
  * Message from the core to the renderer without binary parts.
@@ -85,6 +86,21 @@ export type ServerMessage =
        * Answer of a detail query.
        */
       detail?: Detail;
+    }
+  | {
+      type: "coreStats";
+      /**
+       * Current session.
+       */
+      session: number;
+      /**
+       * Current tick.
+       */
+      tick: number;
+      /**
+       * The figures.
+       */
+      stats: TickStats;
     }
   | {
       type: "queryError";

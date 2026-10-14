@@ -13,6 +13,7 @@ use crate::command::{COMMAND_KINDS, Command};
 use crate::event::EventRecord;
 use crate::frame::FrameFilter;
 use crate::query::{Detail, Dictionary, Query};
+use crate::runner::TickStats;
 use crate::time::Tick;
 
 /// Protocol version of the port (S-1, S-2, S-3, S-7); raised by every
@@ -134,6 +135,16 @@ pub enum ServerMessage {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         detail: Option<Detail>,
+    },
+    /// Figures of the tick, about once per second while the port is open
+    /// (performance display and measurement tool, step 2.7; additive).
+    CoreStats {
+        /// Current session.
+        session: u32,
+        /// Current tick.
+        tick: Tick,
+        /// The figures.
+        stats: TickStats,
     },
     /// A query failed.
     QueryError {

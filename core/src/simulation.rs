@@ -5,6 +5,7 @@
 
 use std::collections::VecDeque;
 use std::fmt;
+use std::time::Instant;
 
 use rayon::ThreadPool;
 use serde::{Deserialize, Serialize};
@@ -74,6 +75,19 @@ pub fn default_threads(cores: usize) -> (usize, usize) {
     (threads, background)
 }
 
+/// Duration of the last adopted recomputation of the flow fields, from the
+/// request to the adoption at the start of a tick (measurement tool of step
+/// 2.7). Wall-clock time; it never affects the simulated state.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS), ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct RecomputeStats {
+    /// Revision of the adopted flow fields.
+    pub revision: u32,
+    /// Milliseconds from the request to the adoption.
+    pub millis: u32,
+}
+
 /// Errors when creating a simulation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SimulationError {
@@ -124,6 +138,9 @@ pub struct Simulation {
     events: EventQueue,
     world: World,
     fields: Adoption<FieldSet>,
+    /// Revision and time of the newest recompute request.
+    recompute_started: Option<(u32, Instant)>,
+    last_recompute: Option<RecomputeStats>,
 }
 
 impl Simulation {
@@ -174,6 +191,8 @@ impl Simulation {
             events: EventQueue::new(),
             world,
             fields: Adoption::new(config.adoption),
+            recompute_started: None,
+            last_recompute: None,
         })
     }
 
@@ -200,6 +219,8 @@ impl Simulation {
         self.events = EventQueue::new();
         self.world = world;
         self.fields = Adoption::new(self.config.adoption);
+        self.recompute_started = None;
+        self.last_recompute = None;
     }
 
     /// Current session number.
@@ -327,10 +348,26 @@ impl Simulation {
     /// triggers it after every change.
     pub fn request_recompute(&mut self) -> u32 {
         let input = self.world.field_input();
-        self.fields
+        let revision = self
+            .fields
             .request(&self.background, self.tick, move |revision| {
                 FieldSet::compute(&input, revision)
-            })
+            });
+        self.recompute_started = Some((revision, Instant::now()));
+        revision
+    }
+
+    /// `true` while a recomputation of the flow fields runs or waits for
+    /// adoption.
+    #[must_use]
+    pub fn is_recomputing(&self) -> bool {
+        self.fields.is_pending()
+    }
+
+    /// Duration of the last adopted recomputation in this session.
+    #[must_use]
+    pub fn last_recompute(&self) -> Option<RecomputeStats> {
+        self.last_recompute
     }
 
     /// World for building and for tests; changes take effect for the flow
@@ -382,6 +419,14 @@ impl Simulation {
             // background thread so that the tick is not delayed.
             let old = self.world.adopt_fields(fields);
             self.background.spawn(move || drop(old));
+            if let Some((started, at)) = self.recompute_started
+                && started == revision
+            {
+                self.last_recompute = Some(RecomputeStats {
+                    revision,
+                    millis: u32::try_from(at.elapsed().as_millis()).unwrap_or(u32::MAX),
+                });
+            }
             others.push(Event::WaypointsAdopted { revision });
         }
 
@@ -578,6 +623,26 @@ mod tests {
                 .to_string()
                 .contains("x")
         );
+    }
+
+    #[test]
+    fn adopted_recomputation_reports_its_duration() {
+        let mut sim = Simulation::new(config(0)).unwrap();
+        assert_eq!(sim.last_recompute(), None);
+        assert!(!sim.is_recomputing());
+        let revision = sim.request_recompute();
+        assert!(sim.is_recomputing());
+        sim.submit(1, 1, Command::SetSpeed { speed: Speed::X1 });
+        // Fixed adoption 3 ticks after the request (verification mode).
+        for _ in 0..4 {
+            sim.step();
+        }
+        assert!(!sim.is_recomputing());
+        let stats = sim.last_recompute().unwrap();
+        assert_eq!(stats.revision, revision);
+        // A new session forgets the measurement of the old one.
+        sim.restart();
+        assert_eq!(sim.last_recompute(), None);
     }
 
     #[test]

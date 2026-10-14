@@ -15,6 +15,8 @@ use crate::runner::{Poll, Runner};
 
 /// Longest time events wait while no frame is requested (S-3).
 pub const EVENT_INTERVAL: Duration = Duration::from_millis(250);
+/// Interval of the `coreStats` message.
+pub const STATS_INTERVAL: Duration = Duration::from_secs(1);
 
 /// A message for the renderer.
 #[derive(Debug, Clone, PartialEq)]
@@ -38,6 +40,7 @@ pub struct PortHost {
     /// Session last announced on this port.
     announced: u32,
     last_delivery: Instant,
+    last_stats: Instant,
 }
 
 impl PortHost {
@@ -49,6 +52,7 @@ impl PortHost {
             front: Snapshot::default(),
             announced: 0,
             last_delivery: now,
+            last_stats: now,
         }
     }
 
@@ -97,17 +101,33 @@ impl PortHost {
         self.port.drop_message(crate::port::Dropped::TooLarge);
     }
 
-    /// Regular call (about every 50 ms): announces a new session and
-    /// delivers events while no frame was requested for [`EVENT_INTERVAL`].
+    /// Regular call (about every 50 ms): announces a new session, delivers
+    /// events while no frame was requested for [`EVENT_INTERVAL`] and sends
+    /// the figures of the tick every [`STATS_INTERVAL`].
     pub fn pump(&mut self, runner: &Runner, now: Instant) -> Vec<Outgoing> {
-        if self.announced == 0 || now.duration_since(self.last_delivery) < EVENT_INTERVAL {
-            return Vec::new();
-        }
-        let poll = runner.poll(&mut self.front);
-        self.last_delivery = now;
         let mut out = Vec::new();
-        self.deliver(poll, None, &mut out);
-        self.announce(&mut out);
+        if self.announced == 0 {
+            return out;
+        }
+        if now.duration_since(self.last_delivery) >= EVENT_INTERVAL {
+            let poll = runner.poll(&mut self.front);
+            self.last_delivery = now;
+            self.deliver(poll, None, &mut out);
+            self.announce(&mut out);
+        }
+        if now.duration_since(self.last_stats) >= STATS_INTERVAL {
+            self.last_stats = now;
+            let status = runner.status();
+            // Only figures of the session this port knows; a newer one is
+            // announced first by the next frame or pump.
+            if status.session == self.announced {
+                out.push(Outgoing::Message(ServerMessage::CoreStats {
+                    session: status.session,
+                    tick: status.tick,
+                    stats: status.stats,
+                }));
+            }
+        }
         out
     }
 
@@ -374,6 +394,41 @@ mod tests {
             assert!(Instant::now() < deadline, "no answer");
             std::thread::sleep(Duration::from_millis(10));
         }
+        runner.stop().unwrap();
+    }
+
+    #[test]
+    fn tick_figures_arrive_every_second() {
+        let runner = runner();
+        let start = Instant::now();
+        let mut host = PortHost::new(start);
+        let stats_of = |out: &[Outgoing]| {
+            out.iter()
+                .filter_map(|o| match o {
+                    Outgoing::Message(ServerMessage::CoreStats { session, stats, .. }) => {
+                        Some((*session, *stats))
+                    }
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+        };
+        assert!(
+            host.pump(&runner, start + STATS_INTERVAL).is_empty(),
+            "silent before hello"
+        );
+        hello(&mut host, &runner, start);
+        let early = host.pump(&runner, start + STATS_INTERVAL / 2);
+        assert!(stats_of(&early).is_empty(), "interval not over");
+        let out = host.pump(&runner, start + STATS_INTERVAL);
+        let figures = stats_of(&out);
+        assert_eq!(figures.len(), 1);
+        assert_eq!(figures[0].0, 1);
+        assert_eq!(
+            (figures[0].1.threads, figures[0].1.background_threads),
+            (1, 1)
+        );
+        let again = host.pump(&runner, start + STATS_INTERVAL + EVENT_INTERVAL);
+        assert!(stats_of(&again).is_empty(), "at most one per interval");
         runner.stop().unwrap();
     }
 

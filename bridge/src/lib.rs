@@ -251,7 +251,7 @@ impl Core {
             state,
             session: status.session,
             tick: status.tick,
-            ticks_per_second: status.ticks_per_second,
+            ticks_per_second: status.stats.ticks_per_second,
             threads: u32::try_from(self.threads.0).unwrap_or(u32::MAX),
             background_threads: u32::try_from(self.threads.1).unwrap_or(u32::MAX),
         })
