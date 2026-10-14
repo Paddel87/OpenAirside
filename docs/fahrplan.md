@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-14 (Session ab 04:28 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (2.3 erledigt am 2026-10-14, ADR-023)
-- **Nächster Schritt:** 2.7 (Brücke und Plattformschicht), danach 2.4
+- **Aktiver Schritt:** 2.7 (Brücke und Plattformschicht), `[IN ARBEIT]` seit 2026-10-14; Abhängigkeit für JS ↔ Rust freigegeben (ADR-024)
+- **Nächster Schritt:** 2.4 nach Abschluss von 2.7
 - **Offene STOPP-Situationen:** keine (Stopp aus 2.3 aufgehoben nach Wechsel auf die Entscheidungs-Klasse am 2026-10-13 23:50 UTC); Reaktiv-Quote 4 / 10 nach ADR-022 weiter über dem Schwellenwert, aber sinkend (Reflexionen siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
@@ -211,7 +211,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.7: Brücke und Plattformschicht
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT seit 2026-10-14 (ADR-024: napi `serde-json` mit `serde_json =1.0.151`)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.9
 - **Freigabepflichtig:** ja, nur für die Abhängigkeit zur Umwandlung JS ↔ Rust (Kategorie 3, ADR-021); Härtung nach `project-context.md` Abschnitt 6, Verträge aus ADR-021

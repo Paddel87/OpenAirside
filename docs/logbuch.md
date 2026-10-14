@@ -24,6 +24,22 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-14 05:05 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-024 – Umwandlung JS ↔ Rust in der Brücke mit napi `serde-json`.
+- **Tag:** `[OPERATIV]` (in ADR-021 für 2.7 vorgesehen).
+- **Auslöser:** Freigabe des Projektinhabers („A, serde_json 1.0.151“) auf der Entscheidungs-Klasse (`claude-opus-5-5`, `get_session` 04:47 UTC). Reaktiv-Quote 4 / 10 (ADR-015 bis ADR-024).
+
+### 2026-10-14 05:00 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 2.7, Kategorie 3 (Externe Abhängigkeiten); Eskalations-Auslöser 1 – aktive Klasse bereits Entscheidung, kein Stopp nötig.
+- **Frage:** Umwandlung JS ↔ Rust: A napi `serde-json` (Empfehlung), B JSON-Text über die Grenze, C von Hand. Version: `serde_json` 1.0.151 statt der drei Tage alten 1.0.154 (crates.io, geprüft 2026-10-14).
+- **Stand:** 2.7 `[IN ARBEIT]`.
+
+### 2026-10-14 04:52 (UTC) – [BEOBACHTUNG]
+
+- **Pre-Commit-Hook fehlte im frischen Container:** `.git/hooks/pre-commit` war nicht installiert; der Commit `d0c41e2` (nur Doku) lief ohne Hook. Nachgeholt mit `pip install pre-commit && pre-commit install` und `pre-commit run --files docs/fahrplan.md docs/logbuch.md`: alle Prüfungen grün. Runbook Schritt „pre-commit install“ gilt auch für Cloud-Sessions.
+
 ### 2026-10-14 04:50 (UTC) – [BEOBACHTUNG]
 
 - **Personengruppen auf dem Vorfeld nicht geregelt:** ADR-020 („Personen betreten Vorfeld, Rollwege und Bahnen nicht; Ausnahme Vorfeld-Gehwege“) ist mit Blick auf Fluggäste formuliert. Der Kern kennt bisher nur eine Personenart mit den Zonenregeln der Fluggäste (`core/src/grid.rs`, `Zone`). Nicht betrachtet: Vorfeldagenten (TURN-03, GEP-06, GATE-06), Servicetechniker, übriges Personal mit Personalzonen (ZON-02), Franchise-Personal, Bauarbeiter (BAU-03); im Inventar fehlen Crew und Einweiser.

@@ -36,10 +36,11 @@
 | 021 | 2026-10-13 | Aktiv | ERKENNTNIS | SCHNITTSTELLE, SECURITY | API-Verträge, Architektur, Sicherheit | Schnittstellenverträge S-2 bis S-7 |
 | 022 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Kern-Benchmark als CI-Gate und Prüfung der erzeugten TypeScript-Typen |
 | 023 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Wegweiser-Benchmark als Schritt im CI-Job „Kern-Benchmark“ |
+| 024 | 2026-10-14 | Aktiv | OPERATIV | STACK, SCHNITTSTELLE | Externe Abhängigkeiten | Umwandlung JS ↔ Rust in der Brücke mit napi `serde-json` |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 4 / 10 über die letzten 10 ADRs (ADR-014 bis ADR-023: ADR-015, ADR-017, ADR-019, ADR-020), 40 % – **über dem Schwellenwert**; gesamt 6 / 23. Reflexionen vom 2026-10-13 in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-021)
+- **Aktueller Wert:** 4 / 10 über die letzten 10 ADRs (ADR-015 bis ADR-024: ADR-015, ADR-017, ADR-019, ADR-020), 40 % – **über dem Schwellenwert**; gesamt 6 / 24. Reflexionen vom 2026-10-13 in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-021)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -112,6 +113,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-021: Schnittstellenverträge S-2 bis S-7](decisions/ADR-021.md)
 - [ADR-022: Kern-Benchmark als CI-Gate und Prüfung der erzeugten TypeScript-Typen](decisions/ADR-022.md)
 - [ADR-023: Wegweiser-Benchmark als Schritt im CI-Job „Kern-Benchmark“](decisions/ADR-023.md)
+- [ADR-024: Umwandlung JS ↔ Rust in der Brücke mit napi `serde-json`](decisions/ADR-024.md)
 
 ---
 
