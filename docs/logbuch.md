@@ -17,12 +17,26 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); nächster Schritt 2.7. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 in Vorbereitung (Freigabe Kategorie 3 und Stufenplan vorgelegt 2026-10-14). Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-14 06:40 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Kategorie 3 (Externe Abhängigkeit) für 2.7:** Umwandlung JS ↔ Rust in der Brücken-Crate. Optionen: A napi-Funktion `serde-json` mit `serde_json` 1.0.154 (zieht neu `itoa` 1.0.18 und `zmij` 1.0.23, beide MIT bzw. MIT/Apache-2.0; `memchr`, `serde_core` schon im Lock), B handgeschriebene Spiegeltypen mit `#[napi(object)]` ohne neue Abhängigkeit, C JSON-Text über den Port mit `serde_json`. Empfehlung A. Belegt am 2026-10-14 über die crates.io-API (Versionen, Lizenzen, Abhängigkeiten von napi 3.12.7: Feature `serde-json = [serde, serde_json]`, `serde_json ^1`).
+- **Zusätzlich vorgelegt:** Aufteilung von 2.7 in drei Stufen (A Brücke, Port und Plattform; B Spielfeld, Debug-Panel, Leistungsanzeige und Test-Tabelle; C Messwerkzeug mit Langzeitlauf und Testpaket für Referenz-PC und Mac). Wartet auf Antwort.
+
+### 2026-10-14 06:29 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 2026-10-14 00:05 UTC plus Nachtrag 00:11 UTC (PR #19 gemergt, `70d29e5`). Der Nachtrag `fbf2507` lag nur auf `claude/gracious-galileo-2reksz`; nach `project-context.md` Abschnitt 10 per Cherry-Pick auf den neuen Arbeits-Branch `claude/messwerkzeug-2-7-rb2hq7` (Stand `main`) übernommen (`bef01f4`), kein Force-Push.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant für diese Session:** 2.7 – Brücke und Plattformschicht, Schwerpunkt Messwerkzeug (Auftrag des Projektinhabers: „2.7 weiter: Messwerkzeug"). Vertiefung: Modul-Einträge Brücke, Plattform, Spielfeld, Benchmark & Leistung; Verträge S-1 bis S-7 (Abschnitt 4); `spikes/1.5-leistung/README.md`.
+- **Vorabprüfung:** Eingangskriterien erfüllt (S-1, S-2, S-3, S-6, S-7 `[BELASTBAR]`). Freigabe Kategorie 3 (Umwandlung JS ↔ Rust) steht vor jedem Brücken-Code an → Pflicht-Eskalation Auslöser 1; die aktive Klasse deckt das ab.
+- **Modus/Werkzeug:** Claude Code, Cloud-Session (gestartet aus der iOS-App), Berechtigungsmodus `auto`.
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` (Quelle: `get_session` 06:30 UTC) → Entscheidungs-Klasse. 2.7 empfiehlt Routine; der Schritt läuft damit teilweise oberhalb seiner Empfehlung (Warnung hiermit gegeben); keine Abgabe an Unteragenten, weil der Probelauf offen ist. Kontingent: 5-Stunden-Fenster `allowed`.
 
 ### 2026-10-14 00:11 (UTC) – [BEOBACHTUNG]
 
