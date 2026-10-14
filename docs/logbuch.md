@@ -24,6 +24,15 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-14 06:55 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** 2.7 `[IN ARBEIT]`, umgesetzt bis auf Messwerkzeug und Messung (Sessionende 05:32 UTC); PR #20 als Entwurf offen auf diesem Branch.
+- **Geplant für diese Session:** fehlenden Logbuch-Vermerk zum Merge von PR #19 übernehmen (Commit `fbf2507` von `claude/gracious-galileo-2reksz`, Regel `project-context.md` Abschnitt 10); Messwerkzeug für 2.7 (Messreihe mit JSON-Ausgabe, Kennzahlen des Takts im Status); danach Messanleitung für den Projektinhaber.
+- **Erledigt vor diesem Eintrag:** Cherry-Pick von `fbf2507` als `a4d3521` (Konflikt im Logbuch gelöst, Eintrag chronologisch zwischen 00:05 und 04:47 eingeordnet).
+- **Modus/Werkzeug:** Claude Code, Cloud-Session (Start über iOS), Branch `claude/naechster-schritt-2-8-736kf4`. Container frisch: Node 26.11.1 über `/opt/nvm` installiert, `npm ci`, Electron-Binärdatei per `install.js`, `pre-commit install`.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` laut `get_session` 06:40 UTC – Entscheidungs-Klasse. 5-Stunden-Fenster `allowed`. Kontextgröße meldet `get_session` mit 0 (nicht aussagekräftig).
+- **Warnung:** 2.7 empfiehlt die Routine-Klasse; der Schritt läuft oberhalb der Empfehlung. Keine Abgabe an Unteragenten, weil der Probelauf offen ist.
+
 ### 2026-10-14 05:32 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 65 Minuten seit Sessionstart 04:28 UTC (Eintrag `[SESSIONSTART]` 04:47).
