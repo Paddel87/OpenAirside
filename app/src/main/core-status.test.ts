@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { exitedCoreStatus, nextCoreStatus, parseCoreHostMessage } from "./core-status.js";
+import {
+  exitedCoreStatus,
+  nextCoreStatus,
+  parseCoreHostMessage,
+  restartDecision,
+} from "./core-status.js";
 
 const info = { name: "openairside-core", version: "0.0.0" };
 
@@ -69,5 +74,22 @@ describe("exitedCoreStatus", () => {
   it("keeps an earlier failure reason", () => {
     const failed = { state: "failed", reason: "module not found" } as const;
     expect(exitedCoreStatus(failed, 1)).toBe(failed);
+  });
+});
+
+describe("restartDecision", () => {
+  it("allows three restarts within 60 seconds", () => {
+    let restarts: readonly number[] = [];
+    for (const now of [0, 1000, 2000]) {
+      const decision = restartDecision(restarts, now);
+      expect(decision.allowed).toBe(true);
+      restarts = decision.restarts;
+    }
+    expect(restartDecision(restarts, 3000).allowed).toBe(false);
+  });
+
+  it("forgets restarts older than 60 seconds", () => {
+    const decision = restartDecision([0, 1000, 2000], 62_001);
+    expect(decision).toEqual({ allowed: true, restarts: [62_001] });
   });
 });
