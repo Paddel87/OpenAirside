@@ -2,7 +2,48 @@ html,
 body {
   margin: 0;
   height: 100%;
+  overflow: hidden;
   background: #1b1f24;
   color: #e6e6e6;
   font-family: system-ui, sans-serif;
+}
+
+#root {
+  position: absolute;
+  inset: 0;
+}
+
+#debug {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 420px;
+  font:
+    12px/1.4 ui-monospace,
+    monospace;
+  background: rgb(17 19 23 / 80%);
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+#hud {
+  margin: 0 0 4px;
+  white-space: pre-wrap;
+}
+
+#log {
+  max-height: 160px;
+  overflow-y: auto;
+  color: #b8c0cc;
+}
+
+#console-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  background: #0d0f12;
+  color: inherit;
+  border: 1px solid #3a414b;
+  font: inherit;
+  padding: 2px 4px;
 }
