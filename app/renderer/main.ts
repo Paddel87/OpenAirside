@@ -5,10 +5,11 @@
  * follow from roadmap step 3.6 on.
  */
 import { type ClientHandlers, CoreClient } from "./core-client.js";
-import { parseConsoleLine } from "./console.js";
+import { parseConsoleLine, TABLE_COLUMNS } from "./console.js";
 import { PerfMeter } from "./perf.js";
 import { onCorePort } from "./platform.js";
 import { Playfield } from "./playfield.js";
+import { cell, readTable } from "./table-reader.js";
 
 const root = document.getElementById("root");
 const hud = document.getElementById("hud");
@@ -47,6 +48,8 @@ async function start(): Promise<void> {
   let personsTotal = 0;
   let lag = "";
   let client: CoreClient | undefined;
+  const queriesSent = new Map<number, number>();
+  let states: readonly string[] = [];
 
   const handlers: ClientHandlers = {
     welcome: (core, session) => {
@@ -90,6 +93,36 @@ async function start(): Promise<void> {
       playfield.show(frame);
       perf.frame(performance.now(), performance.now() - requestedAt);
     },
+    queryResult: (id, answer) => {
+      const ms = performance.now() - (queriesSent.get(id) ?? performance.now());
+      queriesSent.delete(id);
+      if (answer.dictionary !== undefined) {
+        states = answer.dictionary.entries;
+        return;
+      }
+      if (answer.buf === undefined) return;
+      const result = readTable(answer.buf, TABLE_COLUMNS);
+      if (!result.ok) {
+        write(`table rejected: ${result.error}`);
+        return;
+      }
+      const { header } = result.table;
+      write(
+        `table: ${String(header.rows)} of ${String(header.total)} rows at tick ${String(header.tick)} in ${ms.toFixed(1)} ms`,
+      );
+      // The console shows at most 10 rows; the measurement needs only the timing.
+      for (let row = 0; row < Math.min(header.rows, 10); row += 1) {
+        const value = (column: (typeof TABLE_COLUMNS)[number]): number =>
+          cell(result.table, column, row) ?? NaN;
+        write(
+          `  #${String(value("handle"))} (${value("x").toFixed(2)}, ${value("y").toFixed(2)}) floor ${String(value("floor"))} ${states[value("state")] ?? "?"}`,
+        );
+      }
+    },
+    queryError: (id, code) => {
+      queriesSent.delete(id);
+      write(`query #${String(id)} failed: ${code}`);
+    },
     dropped: (reason) => {
       write(`dropped message: ${reason}`);
     },
@@ -98,6 +131,7 @@ async function start(): Promise<void> {
   const connect = (port: MessagePort): void => {
     const current = new CoreClient(port, handlers);
     client = current;
+    states = [];
     port.onmessage = (event: MessageEvent) => {
       if (client === current) current.handle(event.data);
     };
@@ -118,6 +152,11 @@ async function start(): Promise<void> {
     if (result.kind === "command") {
       const id = client?.send(result.command) ?? 0;
       write(id === 0 ? "not connected" : `#${String(id)} ${line}`);
+    } else if (result.kind === "query") {
+      if (states.length === 0) client?.query({ kind: "dictionary", table: "debugPersons" });
+      const id = client?.query(result.query) ?? 0;
+      if (id === 0) write("not connected or query still running");
+      else queriesSent.set(id, performance.now());
     } else {
       write(result.text);
     }

@@ -12,6 +12,7 @@ use crate::CoreInfo;
 use crate::command::{COMMAND_KINDS, Command};
 use crate::event::EventRecord;
 use crate::frame::FrameFilter;
+use crate::query::{Detail, Dictionary, Query};
 use crate::time::Tick;
 
 /// Protocol version of the port (S-1, S-2, S-3, S-7); raised by every
@@ -58,6 +59,15 @@ pub enum ClientMessage {
         session: u32,
         /// Highest `seq` received.
         seq: u32,
+    },
+    /// Query S-7.
+    Query {
+        /// Session from the handshake.
+        session: u32,
+        /// Chosen by the renderer; returned with the answer.
+        id: u32,
+        /// The query.
+        query: Query,
     },
 }
 
@@ -108,6 +118,33 @@ pub enum ServerMessage {
         tick: Tick,
         /// Events up to and including `tick`.
         events: Vec<EventRecord>,
+    },
+    /// Answer of a query S-7. A table comes as field `buf` (`ArrayBuffer`,
+    /// layout in `query`), added by the bridge.
+    QueryResult {
+        /// Session of the query.
+        session: u32,
+        /// Id of the query.
+        id: u32,
+        /// Answer of a dictionary query.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        dictionary: Option<Dictionary>,
+        /// Answer of a detail query.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        detail: Option<Detail>,
+    },
+    /// A query failed.
+    QueryError {
+        /// Session of the query.
+        session: u32,
+        /// Id of the query.
+        id: u32,
+        /// Error code of S-7.
+        code: String,
+        /// Localisation key.
+        text_key: String,
     },
 }
 
@@ -189,6 +226,13 @@ pub enum Action {
     Ack {
         /// Highest received `seq`.
         seq: u32,
+    },
+    /// Answer a query from the newest frame's snapshot.
+    Query {
+        /// Id of the query.
+        id: u32,
+        /// The query.
+        query: Query,
     },
     /// Nothing to do; the message was counted.
     Drop(Dropped),
@@ -304,7 +348,8 @@ impl Port {
             ClientMessage::Hello { .. } => return self.drop_message(Dropped::OutOfOrder),
             ClientMessage::Command { session, .. }
             | ClientMessage::FrameRequest { session, .. }
-            | ClientMessage::EventsAck { session, .. } => *session,
+            | ClientMessage::EventsAck { session, .. }
+            | ClientMessage::Query { session, .. } => *session,
         };
         if carried != session {
             return self.drop_message(Dropped::ForeignSession);
@@ -323,6 +368,7 @@ impl Port {
             },
             ClientMessage::FrameRequest { filter, ack, .. } => Action::Frame { filter, ack },
             ClientMessage::EventsAck { seq, .. } => Action::Ack { seq },
+            ClientMessage::Query { id, query, .. } => Action::Query { id, query },
         }
     }
 }
@@ -423,6 +469,21 @@ mod tests {
                 core_info()
             ),
             Action::Ack { seq: 9 }
+        );
+        let query = crate::query::Query::Dictionary {
+            table: "debugPersons".into(),
+        };
+        assert_eq!(
+            port.receive(
+                ClientMessage::Query {
+                    session: 4,
+                    id: 2,
+                    query: query.clone()
+                },
+                4,
+                core_info()
+            ),
+            Action::Query { id: 2, query }
         );
         let c = port.counters();
         assert_eq!((c.out_of_order, c.foreign_session), (1, 1));

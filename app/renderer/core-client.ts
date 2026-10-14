@@ -7,8 +7,11 @@
 import type { ClientMessage } from "../src/generated/ClientMessage.js";
 import type { Command } from "../src/generated/Command.js";
 import type { CoreInfo } from "../src/generated/CoreInfo.js";
+import type { Detail } from "../src/generated/Detail.js";
+import type { Dictionary } from "../src/generated/Dictionary.js";
 import type { EventRecord } from "../src/generated/EventRecord.js";
 import type { FrameFilter } from "../src/generated/FrameFilter.js";
+import type { Query } from "../src/generated/Query.js";
 import { type Frame, readFrame } from "./frame-reader.js";
 
 /** Protocol version of this renderer (core/src/port.rs `PROTOCOL`). */
@@ -29,8 +32,19 @@ export interface ClientHandlers {
   /** Events in stream order; `session` may be an ended one (answers sent before a switch). */
   events(session: number, events: readonly EventRecord[]): void;
   frame(frame: Frame): void;
+  /** Answer of query `id`: a table buffer, a dictionary or a detail (S-7). */
+  queryResult(id: number, answer: QueryAnswer): void;
+  /** Query `id` failed with an S-7 error code. */
+  queryError(id: number, code: string): void;
   /** A message was malformed; counted, never thrown. */
   dropped(reason: string): void;
+}
+
+/** Answer of a query; exactly one field is set. */
+export interface QueryAnswer {
+  readonly buf?: ArrayBuffer;
+  readonly dictionary?: Dictionary;
+  readonly detail?: Detail;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -65,6 +79,10 @@ export class CoreClient {
   #lastSeq = 0;
   #frameSince: number | undefined;
   #gaps = 0;
+  #nextQuery = 1;
+  /** Table queries in flight by panel (S-7 "Drosselung"). */
+  readonly #panels = new Map<number, number>();
+  readonly #queryPanel = new Map<number, number>();
 
   constructor(
     private readonly port: PortLike,
@@ -95,6 +113,27 @@ export class CoreClient {
     const id = this.#nextId;
     this.#nextId += 1;
     this.port.postMessage({ type: "command", session: this.#session, id, command });
+    return id;
+  }
+
+  /**
+   * Sends a query and returns its id, or 0 before the handshake or while a
+   * table query of the same panel is on its way (one per panel, S-7).
+   */
+  query(query: Query): number {
+    if (this.#session === 0) {
+      return 0;
+    }
+    if (query.kind === "table" && this.#panels.has(query.panel)) {
+      return 0;
+    }
+    const id = this.#nextQuery;
+    this.#nextQuery += 1;
+    if (query.kind === "table") {
+      this.#panels.set(query.panel, id);
+      this.#queryPanel.set(id, query.panel);
+    }
+    this.port.postMessage({ type: "query", session: this.#session, id, query });
     return id;
   }
 
@@ -162,6 +201,28 @@ export class CoreClient {
         }
         break;
       }
+      case "queryResult":
+        if (isCount(data.id) && data.session === this.#session) {
+          this.#settle(data.id);
+          const answer: QueryAnswer =
+            data.buf instanceof ArrayBuffer
+              ? { buf: data.buf }
+              : isRecord(data.dictionary)
+                ? { dictionary: data.dictionary as unknown as Dictionary }
+                : isRecord(data.detail)
+                  ? { detail: data.detail as unknown as Detail }
+                  : {};
+          this.handlers.queryResult(data.id, answer);
+          return;
+        }
+        break;
+      case "queryError":
+        if (isCount(data.id) && typeof data.code === "string" && data.session === this.#session) {
+          this.#settle(data.id);
+          this.handlers.queryError(data.id, data.code);
+          return;
+        }
+        break;
       case "frame": {
         const events = eventsOf(data.events);
         if (isCount(data.session) && events !== undefined && data.buf instanceof ArrayBuffer) {
@@ -181,9 +242,20 @@ export class CoreClient {
     this.handlers.dropped(data.type);
   }
 
+  #settle(id: number): void {
+    const panel = this.#queryPanel.get(id);
+    if (panel !== undefined) {
+      this.#queryPanel.delete(id);
+      this.#panels.delete(panel);
+    }
+  }
+
   #begin(session: number): void {
     this.#session = session;
     this.#nextId = 1;
+    this.#nextQuery = 1;
+    this.#panels.clear();
+    this.#queryPanel.clear();
     this.#lastSeq = 0;
     this.#frameSince = undefined;
   }

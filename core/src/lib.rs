@@ -17,6 +17,7 @@ pub mod host;
 pub mod network;
 pub mod pacer;
 pub mod port;
+pub mod query;
 pub mod runner;
 pub mod scenario;
 pub mod simulation;

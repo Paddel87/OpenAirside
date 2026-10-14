@@ -3,13 +3,16 @@
  * a command of S-2. Parsing only; whether a command is allowed decides the
  * core (rule 002).
  */
+import type { ColumnId } from "../src/generated/ColumnId.js";
 import type { Command } from "../src/generated/Command.js";
+import type { Query } from "../src/generated/Query.js";
 import type { Scenario } from "../src/generated/Scenario.js";
 import type { Speed } from "../src/generated/Speed.js";
 
 /** Result of parsing one console line. */
 export type ConsoleResult =
   | { readonly kind: "command"; readonly command: Command }
+  | { readonly kind: "query"; readonly query: Query }
   | { readonly kind: "help"; readonly text: string }
   | { readonly kind: "error"; readonly text: string };
 
@@ -21,7 +24,13 @@ export const HELP = [
   "clear",
   "walls <floor> <x0> <y0> <x1> <y1> on|off",
   "scenario hall|reference [persons]",
+  "table [rows 1–1000] – persons of the newest frame, sorted by y and x (S-7)",
 ].join("\n");
+
+/** Panel id of the console's table query. */
+export const CONSOLE_PANEL = 1;
+/** Columns of the console's table query. */
+export const TABLE_COLUMNS: readonly ColumnId[] = ["handle", "x", "y", "floor", "state"];
 
 const SPEEDS: ReadonlySet<string> = new Set<Speed>(["paused", "x1", "x2", "x3"]);
 const SCENARIOS: Readonly<Record<string, Scenario>> = {
@@ -94,6 +103,27 @@ export function parseConsoleLine(line: string): ConsoleResult {
         return error("scenario hall|reference [persons]");
       }
       return command({ kind: "debug", action: { kind: "loadScenario", scenario, persons } });
+    }
+    case "table": {
+      const limit = args[0] === undefined ? 5 : integer(args[0]);
+      if (limit === undefined || limit < 1 || limit > 1000) {
+        return error("table [rows 1–1000]");
+      }
+      return {
+        kind: "query",
+        query: {
+          kind: "table",
+          panel: CONSOLE_PANEL,
+          table: "debugPersons",
+          columns: [...TABLE_COLUMNS],
+          filter: [],
+          sort: [
+            { column: "y", descending: false },
+            { column: "x", descending: false },
+          ],
+          window: { offset: 0, limit },
+        },
+      };
     }
     default:
       return error(`unknown command "${name}" – try help`);

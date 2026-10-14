@@ -63,6 +63,10 @@ test("window opens and core reports ready", async () => {
     await expect
       .poll(async () => Number(await root.getAttribute("data-tick")), { timeout: 10_000 })
       .toBeGreaterThan(30);
+    // Query service S-7 with the test table.
+    await input.fill("table 3");
+    await input.press("Enter");
+    await expect(window.locator("#log")).toContainText("table: 3 of 500 rows");
     await input.fill("speed x4");
     await input.press("Enter");
     await expect(window.locator("#log")).toContainText("speed paused|x1|x2|x3");

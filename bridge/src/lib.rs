@@ -57,12 +57,12 @@ pub struct CoreOptions {
 }
 
 /// A message for the renderer: `message` as structured object, `buf` the
-/// frame buffer of a `frame` message.
+/// binary part of a `frame` or table `queryResult` message.
 #[napi(object)]
 pub struct OutgoingMessage {
     /// Message without binary part.
     pub message: serde_json::Value,
-    /// Frame buffer (S-1), only for `frame`.
+    /// Frame (S-1) or table (S-7) buffer.
     pub buf: Option<Buffer>,
 }
 
@@ -94,7 +94,7 @@ fn to_js(out: Vec<Outgoing>) -> napi::Result<Vec<OutgoingMessage>> {
                 message: serde_json::to_value(message).map_err(napi_error)?,
                 buf: None,
             }),
-            Outgoing::Frame { message, buf } => Ok(OutgoingMessage {
+            Outgoing::Binary { message, buf } => Ok(OutgoingMessage {
                 message: serde_json::to_value(message).map_err(napi_error)?,
                 buf: Some(buf.into()),
             }),

@@ -104,6 +104,19 @@ struct Packed {
     heading: u8,
 }
 
+/// A person of a snapshot as seen by the query service (S-7).
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
+pub struct PersonPoint {
+    /// Position east in cells.
+    pub x: f32,
+    /// Position south in cells.
+    pub y: f32,
+    /// Floor.
+    pub floor: i8,
+    /// Direction of the current step.
+    pub heading: u8,
+}
+
 /// Visible state of one tick, captured by the simulation thread.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Snapshot {
@@ -168,6 +181,17 @@ impl Snapshot {
     #[must_use]
     pub fn persons(&self) -> usize {
         self.persons.len()
+    }
+
+    /// Person `index` with its position in cells (resolution 1/32 cell).
+    #[must_use]
+    pub fn person(&self, index: usize) -> Option<PersonPoint> {
+        self.persons.get(index).map(|p| PersonPoint {
+            x: f32::from(p.x) / SUBCELL,
+            y: f32::from(p.y) / SUBCELL,
+            floor: p.floor,
+            heading: p.heading,
+        })
     }
 
     /// Largest frame this snapshot can produce, in bytes.

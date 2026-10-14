@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ClientMessage } from "../src/generated/ClientMessage.js";
+import type { Query } from "../src/generated/Query.js";
 import { type ClientHandlers, CoreClient, FRAME_TIMEOUT_MS, PROTOCOL } from "./core-client.js";
 import { HEADER_BYTES } from "./frame-reader.js";
 
@@ -11,6 +12,8 @@ function setup() {
     sessionStarted: vi.fn(),
     events: vi.fn(),
     frame: vi.fn(),
+    queryResult: vi.fn(),
+    queryError: vi.fn(),
     dropped: vi.fn(),
   } satisfies ClientHandlers;
   let time = 0;
@@ -141,5 +144,49 @@ describe("CoreClient", () => {
     client.handle({ type: "frame", session: 1, tick: 1, events: [], buf: new ArrayBuffer(4) });
     expect(handlers.dropped).toHaveBeenCalledWith("frame: tooShort");
     expect(handlers.frame).not.toHaveBeenCalled();
+  });
+
+  it("keeps one table query per panel in flight", () => {
+    const { client, sent, handlers } = setup();
+    const table: Query = {
+      kind: "table",
+      panel: 3,
+      table: "debugPersons",
+      columns: ["x"],
+      filter: [],
+      sort: [],
+      window: { offset: 0, limit: 5 },
+    };
+    expect(client.query(table)).toBe(0);
+    client.handle({ type: "welcome", protocol: 1, core, session: 1 });
+    expect(client.query(table)).toBe(1);
+    expect(client.query(table)).toBe(0);
+    expect(client.query({ kind: "dictionary", table: "debugPersons" })).toBe(2);
+    expect(sent.at(-1)).toEqual({
+      type: "query",
+      session: 1,
+      id: 2,
+      query: { kind: "dictionary", table: "debugPersons" },
+    });
+    const buf = new ArrayBuffer(32);
+    client.handle({ type: "queryResult", session: 1, id: 1, buf });
+    expect(handlers.queryResult).toHaveBeenLastCalledWith(1, { buf });
+    expect(client.query(table)).toBe(3);
+    const dictionary = { version: 1, entries: ["walking"] };
+    client.handle({ type: "queryResult", session: 1, id: 2, dictionary });
+    expect(handlers.queryResult).toHaveBeenLastCalledWith(2, { dictionary });
+    const detail = { kind: "person", x: 1, y: 2, floor: 0, state: "walking" };
+    client.handle({ type: "queryResult", session: 1, id: 4, detail });
+    expect(handlers.queryResult).toHaveBeenLastCalledWith(4, { detail });
+    client.handle({ type: "queryResult", session: 1, id: 5 });
+    expect(handlers.queryResult).toHaveBeenLastCalledWith(5, {});
+    client.handle({ type: "queryError", session: 1, id: 3, code: "unknownTable", textKey: "x" });
+    expect(handlers.queryError).toHaveBeenCalledWith(3, "unknownTable");
+    expect(client.query(table)).toBe(4);
+    // Answers of an ended session are dropped.
+    client.handle({ type: "queryError", session: 0, id: 4, code: "x" });
+    expect(handlers.dropped).toHaveBeenLastCalledWith("queryError");
+    client.handle({ type: "sessionStarted", session: 2, tick: 0 });
+    expect(client.query(table)).toBe(1);
   });
 });

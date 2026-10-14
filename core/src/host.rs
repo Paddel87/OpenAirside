@@ -10,6 +10,7 @@ use std::time::{Duration, Instant};
 use crate::core_info;
 use crate::frame::{FrameFilter, Snapshot};
 use crate::port::{Action, ClientMessage, CommandEnvelope, Port, PortCounters, ServerMessage};
+use crate::query::{Answer, ERROR_TEXT_PREFIX, Query, answer};
 use crate::runner::{Poll, Runner};
 
 /// Longest time events wait while no frame is requested (S-3).
@@ -20,11 +21,12 @@ pub const EVENT_INTERVAL: Duration = Duration::from_millis(250);
 pub enum Outgoing {
     /// A message without binary part.
     Message(ServerMessage),
-    /// A frame: `ServerMessage::Frame` plus the encoded buffer.
-    Frame {
-        /// Header fields of the message.
+    /// A message with a binary part `buf`: a frame (layout in `frame`) or
+    /// a table (layout in `query`).
+    Binary {
+        /// Fields of the message.
         message: ServerMessage,
-        /// Frame in the layout of `frame`.
+        /// The binary part.
         buf: Vec<u8>,
     },
 }
@@ -135,9 +137,36 @@ impl PortHost {
                 self.deliver(poll, Some(filter), &mut out);
                 self.announce(&mut out);
             }
+            Action::Query { id, query } => out.push(self.query(id, &query)),
             Action::Drop(_) => {}
         }
         out
+    }
+
+    /// Answers a query from the snapshot of the newest frame handed out
+    /// (S-7 "Konsistenz"), outside the simulation step.
+    fn query(&self, id: u32, query: &Query) -> Outgoing {
+        let session = self.announced;
+        let result = |dictionary, detail| ServerMessage::QueryResult {
+            session,
+            id,
+            dictionary,
+            detail,
+        };
+        match answer(query, &self.front) {
+            Ok(Answer::Table(buf)) => Outgoing::Binary {
+                message: result(None, None),
+                buf,
+            },
+            Ok(Answer::Dictionary(dictionary)) => Outgoing::Message(result(Some(dictionary), None)),
+            Ok(Answer::Detail(detail)) => Outgoing::Message(result(None, Some(detail))),
+            Err(code) => Outgoing::Message(ServerMessage::QueryError {
+                session,
+                id,
+                code: code.to_owned(),
+                text_key: format!("{ERROR_TEXT_PREFIX}.{code}"),
+            }),
+        }
     }
 
     /// Sends the events of `poll`; with a filter, the events of the
@@ -158,7 +187,7 @@ impl PortHost {
         if let Some(filter) = filter {
             let mut buf = Vec::with_capacity(self.front.max_frame_bytes());
             self.front.encode(&filter, &mut buf);
-            out.push(Outgoing::Frame {
+            out.push(Outgoing::Binary {
                 message: ServerMessage::Frame {
                     session: frame_session,
                     tick: self.front.tick(),
@@ -230,7 +259,7 @@ mod tests {
         out.iter()
             .flat_map(|o| match o {
                 Outgoing::Message(ServerMessage::Events { events, .. })
-                | Outgoing::Frame {
+                | Outgoing::Binary {
                     message: ServerMessage::Frame { events, .. },
                     ..
                 } => events.iter().map(|r| r.event.clone()).collect(),
@@ -252,7 +281,7 @@ mod tests {
         loop {
             let out = frame(host, runner, ack, Instant::now());
             for o in &out {
-                if let Outgoing::Frame {
+                if let Outgoing::Binary {
                     message: ServerMessage::Frame { events, .. },
                     ..
                 }
@@ -283,7 +312,7 @@ mod tests {
         );
         hello(&mut host, &runner, now);
         let out = frame(&mut host, &runner, 0, now);
-        let Some(Outgoing::Frame { buf, .. }) = out.last() else {
+        let Some(Outgoing::Binary { buf, .. }) = out.last() else {
             panic!("no frame: {out:?}");
         };
         assert_eq!(
@@ -397,6 +426,106 @@ mod tests {
         );
         assert!(out.is_empty());
         assert_eq!(host.counters().foreign_session, 1);
+        runner.stop().unwrap();
+    }
+
+    #[test]
+    fn queries_are_answered_from_the_newest_frame() {
+        use crate::query::{Query, Window};
+        let runner = runner();
+        let now = Instant::now();
+        let mut host = PortHost::new(now);
+        hello(&mut host, &runner, now);
+        frame(&mut host, &runner, 0, now);
+        let ask = |host: &mut PortHost, id, query| {
+            host.receive(
+                &runner,
+                ClientMessage::Query {
+                    session: 1,
+                    id,
+                    query,
+                },
+                now,
+            )
+        };
+        let table = Query::Table {
+            panel: 1,
+            table: "debugPersons".into(),
+            columns: vec!["handle".into()],
+            filter: Vec::new(),
+            sort: Vec::new(),
+            window: Window {
+                offset: 0,
+                limit: 4,
+            },
+        };
+        let out = ask(&mut host, 7, table);
+        let [Outgoing::Binary { message, buf }] = out.as_slice() else {
+            panic!("no table: {out:?}");
+        };
+        assert!(matches!(
+            message,
+            ServerMessage::QueryResult {
+                id: 7,
+                session: 1,
+                ..
+            }
+        ));
+        assert_eq!(
+            crate::frame::header_u32(buf, 8),
+            Some(10),
+            "all 10 persons match"
+        );
+        assert_eq!(crate::frame::header_u32(buf, 16), Some(4));
+        let out = ask(
+            &mut host,
+            8,
+            Query::Dictionary {
+                table: "debugPersons".into(),
+            },
+        );
+        assert!(matches!(
+            out.as_slice(),
+            [Outgoing::Message(ServerMessage::QueryResult {
+                id: 8,
+                dictionary: Some(_),
+                ..
+            })]
+        ));
+        let out = ask(
+            &mut host,
+            9,
+            Query::Detail {
+                about: crate::geometry::Handle {
+                    index: 0,
+                    generation: 1,
+                },
+            },
+        );
+        assert!(matches!(
+            out.as_slice(),
+            [Outgoing::Message(ServerMessage::QueryResult {
+                id: 9,
+                detail: Some(_),
+                ..
+            })]
+        ));
+        let out = ask(
+            &mut host,
+            10,
+            Query::Dictionary {
+                table: "flights".into(),
+            },
+        );
+        assert_eq!(
+            out,
+            vec![Outgoing::Message(ServerMessage::QueryError {
+                session: 1,
+                id: 10,
+                code: "unknownTable".into(),
+                text_key: "query.error.unknownTable".into(),
+            })]
+        );
         runner.stop().unwrap();
     }
 }

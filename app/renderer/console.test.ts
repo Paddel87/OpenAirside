@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HELP, parseConsoleLine } from "./console.js";
+import { CONSOLE_PANEL, HELP, parseConsoleLine, TABLE_COLUMNS } from "./console.js";
 
 describe("parseConsoleLine", () => {
   it.each([
@@ -56,8 +56,33 @@ describe("parseConsoleLine", () => {
     "walls 0 1 2 3 4 maybe",
     "scenario castle",
     "scenario hall -5",
+    "table 0",
+    "table 1001",
     "fly",
   ])("rejects %j with a hint", (line) => {
     expect(parseConsoleLine(line).kind).toBe("error");
+  });
+
+  it("builds the table query of S-7", () => {
+    const result = parseConsoleLine("table 20");
+    expect(result).toEqual({
+      kind: "query",
+      query: {
+        kind: "table",
+        panel: CONSOLE_PANEL,
+        table: "debugPersons",
+        columns: [...TABLE_COLUMNS],
+        filter: [],
+        sort: [
+          { column: "y", descending: false },
+          { column: "x", descending: false },
+        ],
+        window: { offset: 0, limit: 20 },
+      },
+    });
+    const short = parseConsoleLine("table");
+    expect(short.kind === "query" && short.query.kind === "table" && short.query.window.limit).toBe(
+      5,
+    );
   });
 });
