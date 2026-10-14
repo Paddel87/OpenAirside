@@ -17,12 +17,46 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); nächster Schritt 2.3. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); nächster Schritt 2.7. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-14 00:05 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 50 Minuten seit `[SESSIONSTART]` 2026-10-13 23:16 UTC.
+- **Bearbeitet:** 2.3 – Weltzustand, Datenmodell und Wegweiser.
+- **Erreicht:** 2.3 `[ERLEDIGT]`; Freigabe Kategorie 7 (ADR-023, Option A); CI auf `01f9779` grün auf allen 17 Jobs; erzwungener Fehlerfall des neuen Benchmark-Schritts belegt (Lauf 38486734288); Modul Welt & Bau (Grundraster) `[BELASTBAR]`; FR-046 erledigt; Block-Speicherung aus ADR-020 bestätigt.
+- **Offen geblieben:** kein PR geöffnet (nicht angefragt); Branch `claude/gracious-galileo-2reksz` liegt mit 2.3 und dem Logbuch-Commit `998e941` vor `main`. Kein CHANGELOG: 2.3 ändert nichts für Spieler. Der Trend-Vergleich des Wegweiser-Benchmarks zeigt erst nach dem ersten Lauf auf `main` Werte.
+- **Nächster Schritt:** 2.7 – Brücke und Plattformschicht (Routine-Klasse empfohlen; Freigabe der Abhängigkeit für JS ↔ Rust ist Entscheidung). Dort festlegen: Standardaufteilung `threads`/`background_threads` nach Kernzahl (Summe höchstens Kernzahl), Prüfung der Schwelle der Rückstandsmeldung.
+- **Modell-Bilanz:** Routine-Klasse (`claude-sonnet-5-5`) von 23:16 bis 23:50 UTC für die Umsetzung (empfohlen: Routine, 0 Schritte oberhalb); Entscheidungs-Klasse (`claude-opus-5-5`, laut `get_session` 23:50 UTC eingestellt und bedient) ab 23:50 UTC für Freigabe und Beförderung (Pflicht-Eskalation, Auslöser 1 und 4). Oberhalb der Empfehlung lief dabei Routine-Arbeit auf der Entscheidungs-Klasse: Optimierung der Nachbarzugriffe, CI-Einbau und Dokumentation (1 Schritt teilweise oberhalb; keine Abgabe an Unteragenten, weil der Probelauf offen ist; Warnung zu Beginn entfiel, weil der Schritt auf der Routine-Klasse begann).
+- **Kontextgröße:** 529.449 Token laut `get_session` 23:50 UTC, über der Grenze von 400.000 – die nächste Arbeit in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed`.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf; Runner-Umstellung auf Ubuntu 26 ab 2026-10-19 weiter in Q.1 zu beobachten.
+- **Drift-Prüfung:** README synchron (Phase, Architektur-Reife, Nächste Schritte 2.7/2.4, Blocker 0); ADR-023 verweist auf den vorhandenen Schritt 2.3; Reifegrade passend (Welt & Bau durch Umsetzung, Regel-007); Reaktiv-Quote 4 / 10 stimmt mit den Tags von ADR-014 bis ADR-023; Modul-Liste unverändert (neue Dateien gehören zu bestehenden Modulen); keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Phase 2 weiter bei 10 Schritten; Größen: `project-context.md` 364 Zeilen, Logbuch unter 800.
+
+### 2026-10-14 00:04 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** Modul Welt & Bau (Grundraster).
+- **Wechsel:** `[VORLÄUFIG]` → `[BELASTBAR]`.
+- **Auslöser:** Umsetzung in 2.3 mit grüner CI (Regel-007), auf der Entscheidungs-Klasse vorgenommen (Auslöser 4); Bauen mit Wirkung folgt in 3.1, Verkehrslogik der Wegenetze in 3.4.
+- **Datum in `architecture.md` Abschnitt 9 nachgetragen:** ja.
+
+### 2026-10-14 00:02 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** erster CI-Lauf mit dem Wegweiser-Benchmark (Lauf 38486734288, erzwungener Fehlerfall).
+- **Symptom:** Neuberechnung auf dem GitHub-Runner 3.589 ms gegen 1.646 ms lokal; bis zur Grenze von 4 s nur 10 % Abstand – Gefahr eines unzuverlässigen Gates.
+- **Ursache:** langsamerer Runner; in der Berechnung wurden die Nachbarn einer Zelle für die Eckregel zweimal zusätzlich gesucht, jede Suche mit Division, und die Warteschlange forderte bei jedem Schritt neuen Speicher an.
+- **Lösung:** Nachbarn innerhalb eines Blocks ohne Division, acht Nachbarn einmal je Zelle, Puffer wiederverwendet (`af84dfb`); Ergebnis unverändert (Tests gegen die dichte Referenz und bitgleich über Threadzahlen grün). Runner 2.484 ms (38 % Abstand), lokal 1,13–1,23 s. Die Grenze aus ADR-023 blieb unverändert – eine Änderung binnen 14 Tagen wäre ein reaktiver ADR gewesen.
+- **Aufwand:** etwa 10 Minuten.
+
+### 2026-10-14 00:00 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-023 – Wegweiser-Benchmark als Schritt im CI-Job „Kern-Benchmark“.
+- **Tag:** `[OPERATIV]` (in ADR-020 und im Fahrplan vorgesehen).
+- **Auslöser:** Freigabe des Projektinhabers („Option A, Wechsel auf Opus gemacht“) nach dem Stopp 23:50 UTC; Wechsel auf die Entscheidungs-Klasse per `get_session` bestätigt (eingestellt und bedient `claude-opus-5-5`). Reaktiv-Quote 4 / 10 (ADR-014 bis ADR-023).
 
 ### 2026-10-13 23:50 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 

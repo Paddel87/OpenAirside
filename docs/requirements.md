@@ -142,7 +142,7 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | ID | Anforderung | Anwendungsfall | Priorität | Prüfbare Akzeptanz | Fahrplan-Schritt | Test (ab Klasse G) | Status |
 |---|---|---|---|---|---|---|---|
 | FR-016 | Passagiere mit Bedürfnissen, Zufriedenheit und Ablauf Abflug/Ankunft | UC-005 | Muss | Inventar Abschnitt 4 (PAX-*); Kernprozesse Abflug und Ankunft | 3.2 | `core/tests/pax_flow.rs` | OFFEN |
-| FR-017 | Wegfindung nach Wegweiser-Prinzip | UC-010 | Muss | ADR-004; 10.000 Personen mit ≤ 4 ms je Simulationstakt auf Referenz-Hardware | 1.2, 2.3, 3.3 | `core/benches/flowfield.rs` | OFFEN (Wegweiser im Kern und Benchmark seit 2.3: p99 0,9 ms mit 10.000 Personen; Passagierführung 3.3) |
+| FR-017 | Wegfindung nach Wegweiser-Prinzip | UC-010 | Muss | ADR-004; 10.000 Personen mit ≤ 4 ms je Simulationstakt auf Referenz-Hardware | 1.2, 2.3, 3.3 | `core/benches/flowfield.rs` | OFFEN (Wegweiser im Kern und Benchmark als CI-Gate seit 2.3: p99 0,38 ms mit 10.000 Personen auf dem GitHub-Runner; Passagierführung 3.3) |
 | FR-018 | Passagierführung über Schilder und Bodenmarkierungen; ohne Schilder Suchen | UC-005 | Muss | mit Beschilderung messbar kürzere Wegzeit als ohne | 3.3 | `core/tests/signage.rs` | OFFEN |
 | FR-019 | Check-in modern: Online-Anteil, Gepäckabgabe, Self Bag Drop, Common Use | UC-005 | Muss | Inventar Abschnitt 6 (CHK-*), MOD-01 bis MOD-03 | 3.2, 5.4 | `core/tests/checkin.rs` | OFFEN |
 | FR-020 | Sicherheitskontrolle mit Spuren, Technikstufen und Nachkontrolle | UC-005 | Muss | Inventar Abschnitt 7 (SEC-*), MOD-05 bis MOD-07 | 3.2, 5.4 | `core/tests/security.rs` | OFFEN |
@@ -196,7 +196,7 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | FR-043 | Erklärbare Wegfindungsprobleme | UC-011 | Muss | Bei fehlendem Weg wird Ursache angezeigt (Zone, Verbindung, Station) | 3.3 | `core/tests/path_diagnostics.rs` | OFFEN |
 | FR-044 | Inhalte als Datenpakete; Mods plattformneutral aktivierbar | UC-015 | Muss | Airline, Flugzeugtyp, Objekt aus Mod-Ordner im Spiel; Inventar MOD-01 sinngemäß ohne Workshop | 2.4, 6.1 | `core/tests/datapacks.rs` | OFFEN |
 | FR-045 | Lauffähig auf Windows, Linux, macOS; Download von GitHub | UC-017 | Muss | CI baut und startet auf allen drei Plattformen; Release-Artefakte je Plattform | 1.6, 2.1, 7.2 | `e2e/smoke.spec.ts` in `.github/workflows/ci.yml` und `release.yml` (seit 2.1, x64 bzw. macOS arm64) | OFFEN (arm64 für Windows/Linux und v1.0.0-Builds in 7.2) |
-| FR-046 | Datenmodell bereitet Fracht vor | UC-004 | Muss | Ladungsart „Fracht" im Schema vorhanden, ohne Spielmechanik | 2.3 | `core/tests/cargo_ready.rs` | OFFEN (Schema und Test seit 2.3 umgesetzt, Abschluss mit 2.3) |
+| FR-046 | Datenmodell bereitet Fracht vor | UC-004 | Muss | Ladungsart „Fracht" im Schema vorhanden, ohne Spielmechanik | 2.3 | `core/tests/cargo_ready.rs` | ERLEDIGT 2026-10-14 (2.3) |
 | FR-047 | Musik, Geräusche, Atmosphäre | UC-005 | Soll | AUDIO-01 sinngemäß, freie Bibliotheken | 6.2 | `app/audio.test.ts` | OFFEN |
 | FR-048 | Fracht spielbar | UC-004 | Kann | nach 1.0 | – | – | OFFEN |
 | FR-049 | Intro-/Menü-Video | UC-001 | Kann | – | 6.2 | – | OFFEN |

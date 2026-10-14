@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-13 (Sessionstart 23:16 UTC)
+- **Stand vom:** 2026-10-14 (Session ab 2026-10-13 23:16 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.3 `[IN ARBEIT]` – Umsetzung fertig und lokal verifiziert; offen: STOPP – MODELLWECHSEL ERFORDERLICH (siehe Schritt 2.3), CI-Lauf des Branches, Beförderung Welt & Bau
+- **Aktiver Schritt:** keiner (2.3 erledigt am 2026-10-14, ADR-023)
 - **Nächster Schritt:** 2.7 (Brücke und Plattformschicht), danach 2.4
-- **Offene STOPP-Situationen:** Schritt 2.3 wartet auf die Entscheidungs-Klasse (Beförderung Welt & Bau, Freigabe Kategorie 7 für den Wegweiser-Benchmark in der CI); Reaktiv-Quote 4 / 10 nach ADR-022 weiter über dem Schwellenwert, aber sinkend (Reflexionen siehe „Iterations-Reflexion")
+- **Offene STOPP-Situationen:** keine (Stopp aus 2.3 aufgehoben nach Wechsel auf die Entscheidungs-Klasse am 2026-10-13 23:50 UTC); Reaktiv-Quote 4 / 10 nach ADR-022 weiter über dem Schwellenwert, aber sinkend (Reflexionen siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -193,7 +193,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.3: Weltzustand, Datenmodell und Wegweiser
 
-- **Status:** IN ARBEIT seit 2026-10-13
+- **Status:** ERLEDIGT 2026-10-14 (ADR-023); CI-Lauf auf `01f9779` grün auf drei Plattformen
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.2, 2.8
 - **Freigabepflichtig:** nein (Datenmodell in 2.8 entschieden)
@@ -206,7 +206,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** Modul Welt & Bau (Grundraster) → `[BELASTBAR]`
 - **Artefakte:** Kern-Crates, Tests, Benchmarks
 - **Ergebnis (Stand 2026-10-13, Routine-Klasse):** Module `grid`, `network`, `target`, `flowfield`, `scenario` und der neue `world` in `core/src/` (Umsetzung in `architecture.md`, Module Welt & Bau, Wegfindung, Takt). Tests: Distanzen der Wegweiser gleich einer dichten Referenzberechnung (Zufallslayouts über Blockgrenzen und drei Etagen, vor und nach Bauaktionen), bitgleich für 1 bis 8 Threads; `core/tests/cargo_ready.rs`; `core/tests/determinism.rs` mit Neuberechnung nach Bauaktionen (3 Threadzahlen, Prüfmodus). Coverage Kern 99,0 % Lines (82 Tests), TypeScript und Skripte 87,0 %. `core/benches/flowfield.rs`: 64 Ziele, 1,5 Mio. Zellen, 101 MB, Neuberechnung 1,65 s (1,6–1,8 s) auf 4 Kernen; Schritt mit 10.000 Personen im Echtzeit-Takt während Neuberechnungen: Mittel 0,3 ms, p99 0,9 ms (≤ 4 ms); `tick.rs` unverändert grün (Mittel 0,13 ms). Mit mehr Threads als Kernen (4 + 3 auf 4 Kernen) schwankte p99 zwischen 2,8 und 4,6 ms – Befund zur Threadaufteilung (je Kern ein Thread, `background_threads` getrennt von `threads`). Block-Speicherung aus ADR-020 bestätigt (101 MB statt 98 MB geschätzt, 1,65 s statt 1,6 s). Gates lokal grün: rustfmt, clippy `-D warnings`, cargo-deny, ESLint, Prettier, tsc, Vitest. Landeplätze der Platzhalter: 3.2 (Personenverhalten und kalte Felder, `TODO` in `world.rs`), 3.4 (Verkehrsregeln der Wegenetze), 4.1 (Referenzszenario aus Daten).
-- **STOPP – MODELLWECHSEL ERFORDERLICH (2026-10-13 23:50 UTC):** Aktuelle Klasse Routine; benötigt Entscheidung. Auslöser 1 (`ENTSCHEIDUNG ERFORDERLICH`, siehe Logbuch `[ENTSCHEIDUNG-VORGELEGT]` 23:50): Kategorie 7 für den Wegweiser-Benchmark als Schritt im CI-Job „Kern-Benchmark“ mit Grenzen; Auslöser 4: Beförderung Welt & Bau `[VORLÄUFIG]` → `[BELASTBAR]`. Offen danach: CI-Schritt einbauen und durch erzwungenen Fehler belegen, ADR, Beförderung, Schritt abschließen.
+- **Abschluss auf der Entscheidungs-Klasse (2026-10-13 23:50 bis 2026-10-14 00:05 UTC):** Freigabe Option A (ADR-023), Schritt „Wegweiser im Referenz-Terminal“ im Job „Kern-Benchmark“; erzwungener Fehlerfall belegt (Lauf 38486734288: Grenze 1 ms → Schritt rot, Zusammenfassung und Artefakte trotzdem erzeugt, zurückgenommen in `01f9779`). Erster Runner-Wert 3,59 s lag zu nah an der Grenze von 4 s; Optimierung der Nachbarzugriffe (`af84dfb`, Ergebnis unverändert) → Runner 2,48 s, lokal 1,13–1,23 s; Schritt p99 auf dem Runner 0,38 ms. Modul Welt & Bau (Grundraster) `[BELASTBAR]`.
+- **Aufgehobener STOPP – MODELLWECHSEL ERFORDERLICH (2026-10-13 23:50 UTC):** Aktuelle Klasse Routine; benötigt Entscheidung. Auslöser 1 (`ENTSCHEIDUNG ERFORDERLICH`, siehe Logbuch `[ENTSCHEIDUNG-VORGELEGT]` 23:50): Kategorie 7 für den Wegweiser-Benchmark als Schritt im CI-Job „Kern-Benchmark“ mit Grenzen; Auslöser 4: Beförderung Welt & Bau `[VORLÄUFIG]` → `[BELASTBAR]`. Offen danach: CI-Schritt einbauen und durch erzwungenen Fehler belegen, ADR, Beförderung, Schritt abschließen.
 
 #### 2.7: Brücke und Plattformschicht
 
