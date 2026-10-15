@@ -24,6 +24,11 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-15 00:45 (UTC) – [BEOBACHTUNG]
+
+- **Zweiter PC-Lauf mit 2 + 4 Threads** (fertig 00:22 UTC, `--threads=2 --background-threads=4`, in `coreOptions` bestätigt): abgelegt unter `docs/research/2.7-ergebnisse/referenz-pc-windows-2-4-threads.json`, ausgewertet im Messprotokoll. Simulation ohne Rückstand, Einzelschritt höchstens 0,94 ms (Standardlauf 3,8 ms); Neuberechnung bis 1,59 s (Standard 0,37 s); Bauaktion weiter 1–2 Bilder; Speicher ohne Anstieg. Standardaufteilung bleibt; Vergleichslauf mit weniger Hintergrund-Threads auf dem Mac in 2.10 ergänzt.
+- **Mini-Reibung:** Die erste hochgeladene Datei war eine Kopie des ersten Laufs (gleiche Prüfsumme); erkannt am Zeitstempel im Namen und an `coreOptions`. Hinweis für künftige Messanleitungen: Zeitstempel im Dateinamen und `coreOptions` als Prüfmerkmal nennen.
+
 ### 2026-10-15 00:35 (UTC) – [REIFEGRAD-WECHSEL]
 
 - **Bestandteile:** Modul Brücke und Modul Plattform `[VORLÄUFIG]` → `[BELASTBAR]`; Kommunikations-Grundmodus (`architecture.md` Abschnitt 1) ebenso.
