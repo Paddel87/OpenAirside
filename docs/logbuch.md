@@ -24,6 +24,11 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-15 00:30 (UTC) – [BEOBACHTUNG]
+
+- **PR Paddel87/OpenAirside#20 nach `main` gemergt** (`f652370`) durch den Projektinhaber, nach grüner CI auf `1f98838` (alle 56 Prüfungen). Enthält 2.7, 3.7 (Doku) und die Auswertung aller drei Messläufe. Session-Branch `scp/friendly-einstein-rggagz` auf den neuen `main` gesetzt (Fast-Forward); dieser Vermerk geht nach `project-context.md` Abschnitt 10 mit dem PR des nächsten Schritts nach `main`.
+- Branch `claude/naechster-schritt-2-8-736kf4` ist gemergt; `claude/messwerkzeug-2-7-rb2hq7` (abgebrochene Parallel-Session) liegt weiter ungemergt vor, Löschen nur auf Anweisung des Projektinhabers.
+
 ### 2026-10-15 00:45 (UTC) – [BEOBACHTUNG]
 
 - **Zweiter PC-Lauf mit 2 + 4 Threads** (fertig 00:22 UTC, `--threads=2 --background-threads=4`, in `coreOptions` bestätigt): abgelegt unter `docs/research/2.7-ergebnisse/referenz-pc-windows-2-4-threads.json`, ausgewertet im Messprotokoll. Simulation ohne Rückstand, Einzelschritt höchstens 0,94 ms (Standardlauf 3,8 ms); Neuberechnung bis 1,59 s (Standard 0,37 s); Bauaktion weiter 1–2 Bilder; Speicher ohne Anstieg. Standardaufteilung bleibt; Vergleichslauf mit weniger Hintergrund-Threads auf dem Mac in 2.10 ergänzt.
