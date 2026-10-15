@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-15 00:30 (UTC) – [BEOBACHTUNG]
+
+- **PR Paddel87/OpenAirside#20 gemergt** (`f652370`, Merge-Commit) auf Anweisung des Projektinhabers („merge wenn grün“); vorher alle 56 Prüfläufe auf `1f98838` grün, PR konfliktfrei, Entwurfsstatus aufgehoben. Beobachtung des PR beendet. Dieser Eintrag liegt nach `project-context.md` Abschnitt 10 nur auf dem Branch und geht mit dem PR des nächsten Schritts (2.4) nach `main`.
+
 ### 2026-10-15 00:45 (UTC) – [BEOBACHTUNG]
 
 - **Zweiter PC-Lauf mit 2 + 4 Threads** (fertig 00:22 UTC, `--threads=2 --background-threads=4`, in `coreOptions` bestätigt): abgelegt unter `docs/research/2.7-ergebnisse/referenz-pc-windows-2-4-threads.json`, ausgewertet im Messprotokoll. Simulation ohne Rückstand, Einzelschritt höchstens 0,94 ms (Standardlauf 3,8 ms); Neuberechnung bis 1,59 s (Standard 0,37 s); Bauaktion weiter 1–2 Bilder; Speicher ohne Anstieg. Standardaufteilung bleibt; Vergleichslauf mit weniger Hintergrund-Threads auf dem Mac in 2.10 ergänzt.
