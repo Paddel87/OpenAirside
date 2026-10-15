@@ -17,12 +17,24 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 in Arbeit (ADR-024), offen sind Messwerkzeug und Messung auf Referenz-PC und Mac. Neuer Entwurfsschritt 3.7 vor 3.1. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 erledigt (ADR-024, Messung auf Mac und Referenz-PC 2026-10-15); nächster Schritt 2.4. Neuer Entwurfsschritt 3.7 vor 3.1. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-15 00:35 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Bestandteile:** Modul Brücke und Modul Plattform `[VORLÄUFIG]` → `[BELASTBAR]`; Kommunikations-Grundmodus (`architecture.md` Abschnitt 1) ebenso.
+- **Grundlage:** Umsetzung 2.7 nach Regel-007 (Tests, Rauchtest auf drei Plattformen, CI-Lauf 38526061047 grün) und Messung auf Mac M3 Pro und Referenz-PC (gepackte Programme aus Release-Lauf 38526063928). Eskalations-Auslöser 4; aktive Klasse Entscheidung (`claude-opus-5-5` laut `get_session` 23:38 UTC, seitdem keine Wechselmeldung).
+- **Schritt:** 2.7 `[ERLEDIGT]`, FR-009 erledigt.
+
+### 2026-10-15 00:33 (UTC) – [BEOBACHTUNG]
+
+- **Störung der PC-Messung geklärt:** Der Bildschirm war aus (Angabe des Projektinhabers); Monitor 60 Hz; am Mac wurde während der Messung nichts bedient. Fenster 9 bis 12 der PC-Messung gehen nicht in die Bewertung ein.
+- **Nebenbefund:** Auch bei ausgeschaltetem Bildschirm hielt der Kern 180 Ticks/s im Mittel, mit Schritten bis 75 ms und einer Rückstandsmeldung. Nach dem Wiedereinschalten lag das Bildabstand-p99 in den Kreisen-Fenstern bei 33 statt 17 ms (Bildrate weiter 60). Ursache beider Effekte nicht untersucht; ohne Bedeutung für das Abschlusskriterium.
+- **Aussetzer auf dem Mac** (zwei Schritte bis 110 ms) damit ohne Einwirkung von außen und weiter ungeklärt; Landeplatz Schritt 2.10 (Messung auf dem Mac dort ohnehin vorgesehen).
 
 ### 2026-10-15 00:25 (UTC) – [BEOBACHTUNG]
 

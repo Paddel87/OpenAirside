@@ -124,7 +124,7 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | FR-006 | Oberfläche Deutsch und Englisch, weitere über Sprachpakete | UC-016 | Muss | Sprachwechsel ohne Neustart; Sprachpaket aus Ordner wird erkannt | 2.6 | `app/i18n.test.ts` | OFFEN |
 | FR-007 | Tutorial als Aufgabenkette | UC-013 | Muss | META-13; Einsteiger-Szenario durchspielbar | 5.6 | `e2e/tutorial.spec.ts` | OFFEN |
 | FR-008 | Erfolge mit Sperre bei Sandbox und Konsole | UC-008 | Soll | ACH-01 sinngemäß, eigene Liste | 5.6 | `core/tests/achievements.rs` | OFFEN |
-| FR-009 | Konsole/Debug-Panel | UC-011 | Soll | META-15 | 2.7 | `app/console.test.ts` | OFFEN |
+| FR-009 | Konsole/Debug-Panel | UC-011 | Soll | META-15 | 2.7 | `app/renderer/console.test.ts` | ERLEDIGT 2026-10-15 (2.7) |
 
 ### Bauen, Zonen, Landseite
 
