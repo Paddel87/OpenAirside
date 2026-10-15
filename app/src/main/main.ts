@@ -1,13 +1,41 @@
 /**
  * Electron main process of OpenAirside (module "Plattform").
  *
- * Starts the simulation core in a utility process (ADR-009) and opens the
- * hardened game window. Roadmap step 2.1 provides the empty frame only.
+ * Starts the simulation core in a utility process (ADR-009), restarts it
+ * after a crash (at most 3 times in 60 s), hands a fresh `MessagePort` to
+ * every loaded page of the hardened game window and answers the platform
+ * API S-6 after checking the sender (ADR-021), including the result file
+ * of the measurement tool (step 2.7).
  */
-import { app, BrowserWindow, session, utilityProcess } from "electron";
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  type IpcMainInvokeEvent,
+  Menu,
+  MessageChannelMain,
+  session,
+  utilityProcess,
+  type UtilityProcess,
+} from "electron";
+import { mkdir, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { type CoreStatus, exitedCoreStatus, nextCoreStatus } from "./core-status.js";
-import { hardenedWebPreferences, isAllowedNavigation } from "./security.js";
+import { parseCoreArgs } from "./core-port.js";
+import {
+  type CoreStatus,
+  exitedCoreStatus,
+  nextCoreStatus,
+  restartDecision,
+} from "./core-status.js";
+import { MeasureRun, MEMORY_INTERVAL_MS, reportFileName } from "./measure.js";
+import {
+  hardenedWebPreferences,
+  isAllowedNavigation,
+  isTrustedSender,
+  menuTemplate,
+} from "./security.js";
 
 declare global {
   /** Current core status; read by the end-to-end smoke test (e2e/smoke.spec.ts). */
@@ -19,15 +47,130 @@ globalThis.openairsideCoreStatus = { state: "starting" };
 const rendererRoot = new URL("../renderer/", import.meta.url);
 const rendererEntry = new URL("index.html", rendererRoot);
 const coreHostPath = fileURLToPath(new URL("core-host.js", import.meta.url));
+const preloadPath = fileURLToPath(new URL("preload.cjs", import.meta.url));
+
+/** Service name of the core process; also names it in the memory samples. */
+const CORE_SERVICE = "OpenAirside Core";
+
+let core: UtilityProcess | undefined;
+let gameWindow: BrowserWindow | undefined;
+let pageLoaded = false;
+let restarts: readonly number[] = [];
+
+/** Connects the loaded page with the core by a fresh port (S-6 "Port-Übergabe"). */
+function connect(): void {
+  if (
+    core === undefined ||
+    gameWindow === undefined ||
+    !pageLoaded ||
+    globalThis.openairsideCoreStatus.state !== "ready"
+  ) {
+    return;
+  }
+  const { port1, port2 } = new MessageChannelMain();
+  core.postMessage({ type: "port" }, [port1]);
+  gameWindow.webContents.postMessage("core:port", null, [port2]);
+}
 
 function startCore(): void {
-  const core = utilityProcess.fork(coreHostPath, [], { serviceName: "OpenAirside Core" });
-  core.on("message", (message: unknown) => {
+  globalThis.openairsideCoreStatus = { state: "starting" };
+  // Flags such as --scenario= reach the core; it ignores everything else.
+  const process = utilityProcess.fork(coreHostPath, globalThis.process.argv.slice(1), {
+    serviceName: CORE_SERVICE,
+  });
+  core = process;
+  process.on("message", (message: unknown) => {
     globalThis.openairsideCoreStatus = nextCoreStatus(message);
+    connect();
   });
-  core.on("exit", (code: number) => {
+  process.on("exit", (code: number) => {
     globalThis.openairsideCoreStatus = exitedCoreStatus(globalThis.openairsideCoreStatus, code);
+    core = undefined;
+    gameWindow?.webContents.send("core:exit", code);
+    const decision = restartDecision(restarts, Date.now());
+    restarts = decision.restarts;
+    if (decision.allowed && !quitting) {
+      startCore();
+    }
   });
+}
+
+let quitting = false;
+
+function trusted(event: IpcMainInvokeEvent): boolean {
+  const frame = event.senderFrame;
+  return (
+    gameWindow !== undefined &&
+    isTrustedSender(
+      {
+        frameUrl: frame?.url ?? "",
+        isMainFrame: frame !== null && frame.parent === null,
+        webContentsId: event.sender.id,
+      },
+      gameWindow.webContents.id,
+      rendererEntry.href,
+    )
+  );
+}
+
+function handle(channel: string, answer: (arg: unknown) => unknown): void {
+  ipcMain.handle(channel, (event, arg: unknown) => {
+    if (!trusted(event)) {
+      console.warn(`rejected IPC call ${channel} from an untrusted sender`);
+      throw new Error("untrusted sender");
+    }
+    return answer(arg);
+  });
+}
+
+const measureRun = new MeasureRun();
+let measureTimer: NodeJS.Timeout | undefined;
+
+function sampleMemory(): void {
+  measureRun.sample(app.getAppMetrics(), CORE_SERVICE, Date.now());
+}
+
+/** S-6 `measure.start`: begins sampling the memory of all processes. */
+function startMeasure(): null {
+  if (!measureRun.start(Date.now())) {
+    throw new Error("measurement already running");
+  }
+  sampleMemory();
+  measureTimer = setInterval(sampleMemory, MEMORY_INTERVAL_MS);
+  return null;
+}
+
+/** S-6 `measure.report`: writes the result file into the downloads folder. */
+async function reportMeasure(result: unknown): Promise<string> {
+  sampleMemory();
+  const cpus = os.cpus();
+  const done = measureRun.finish(result, {
+    appVersion: app.getVersion(),
+    packaged: app.isPackaged,
+    platform: process.platform,
+    arch: process.arch,
+    osRelease: os.release(),
+    electron: process.versions.electron,
+    chrome: process.versions.chrome,
+    cpus: cpus.length,
+    cpuModel: cpus[0]?.model ?? "",
+    memGb: Math.round(os.totalmem() / 2 ** 30),
+    gpuFeatureStatus: app.getGPUFeatureStatus(),
+    coreOptions: parseCoreArgs(process.argv),
+    finishedAt: new Date().toISOString(),
+  });
+  if (!done.ok) {
+    throw new Error(`measurement report refused: ${done.error}`);
+  }
+  clearInterval(measureTimer);
+  measureTimer = undefined;
+  const folder = app.getPath("downloads");
+  await mkdir(folder, { recursive: true });
+  const file = path.join(folder, reportFileName(process.platform, new Date()));
+  // "wx": never overwrite an existing file.
+  await writeFile(file, done.json, { flag: "wx" });
+  console.log(`measurement written to ${file}`);
+  return file;
 }
 
 function createWindow(): void {
@@ -36,10 +179,18 @@ function createWindow(): void {
     height: 800,
     title: "OpenAirside",
     show: false,
-    webPreferences: hardenedWebPreferences(),
+    webPreferences: hardenedWebPreferences(preloadPath, !app.isPackaged),
   });
+  gameWindow = window;
   window.once("ready-to-show", () => {
     window.show();
+  });
+  window.webContents.on("did-start-loading", () => {
+    pageLoaded = false;
+  });
+  window.webContents.on("did-finish-load", () => {
+    pageLoaded = true;
+    connect();
   });
   window.webContents.on("will-navigate", (event, url) => {
     if (!isAllowedNavigation(url, rendererRoot.href)) {
@@ -47,6 +198,9 @@ function createWindow(): void {
     }
   });
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  window.on("closed", () => {
+    gameWindow = undefined;
+  });
   void window.loadURL(rendererEntry.href);
 }
 
@@ -61,8 +215,27 @@ void app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
     callback(false);
   });
+  const template = menuTemplate(process.platform, app.isPackaged);
+  if (template !== undefined) {
+    Menu.setApplicationMenu(template === null ? null : Menu.buildFromTemplate([...template]));
+  }
+  handle("app:info", () => ({
+    version: app.getVersion(),
+    platform: process.platform,
+    dataFolder: app.getPath("userData"),
+  }));
+  handle("app:quit", () => {
+    app.quit();
+    return null;
+  });
+  handle("measure:start", startMeasure);
+  handle("measure:report", reportMeasure);
   startCore();
   createWindow();
+});
+
+app.on("before-quit", () => {
+  quitting = true;
 });
 
 app.on("window-all-closed", () => {

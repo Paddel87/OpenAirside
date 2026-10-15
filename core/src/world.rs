@@ -11,7 +11,7 @@ use rayon::prelude::*;
 
 use crate::flowfield::{ARRIVED, DIRS, DOWN, FieldInput, FieldSet, UNREACHABLE, UP};
 use crate::geometry::{CellPos, CellRect, MapSize};
-use crate::grid::{Cell, FLOORS, Grid, Zone, floor_index};
+use crate::grid::{Cell, FLOORS, Grid, GridError, WALL, Zone, floor_index};
 use crate::hash::StateHasher;
 use crate::network::{Network, NetworkKind};
 use crate::target::{MAX_TARGETS, Target};
@@ -55,7 +55,40 @@ impl Person {
             floor: self.floor,
         }
     }
+
+    fn view(&self) -> PersonView {
+        let (dx, dy) = DIRS
+            .get(usize::from(self.heading))
+            .copied()
+            .unwrap_or((0, 0));
+        #[allow(clippy::cast_precision_loss)] // dx, dy are −1, 0 or 1
+        let (dx, dy) = (dx as f32, dy as f32);
+        PersonView {
+            x: f32::from(self.x) + 0.5 + dx * self.progress,
+            y: f32::from(self.y) + 0.5 + dy * self.progress,
+            floor: self.floor,
+            heading: self.heading,
+        }
+    }
 }
+
+/// Visible state of one person for the state buffer S-1: position in cells
+/// with the share of the current step already walked.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PersonView {
+    /// Position east of the map origin in cells (cell centre = x + 0.5).
+    pub x: f32,
+    /// Position south of the map origin in cells.
+    pub y: f32,
+    /// Floor −2 … +2.
+    pub floor: i8,
+    /// Direction 0 … 9, `ARRIVED` or `UNREACHABLE` (see `flowfield`).
+    pub heading: u8,
+}
+
+/// Most persons a world holds; the debug command `spawnPersons` stops
+/// there. The limits of save games follow in roadmap step 2.5.
+pub const MAX_PERSONS: usize = 200_000;
 
 /// Population, grid and derived data of one session.
 pub struct World {
@@ -247,6 +280,83 @@ impl World {
     #[must_use]
     pub fn persons(&self) -> usize {
         self.persons.len()
+    }
+
+    /// Calls `visit` with the visible state of every person, in storage
+    /// order.
+    pub fn visit_persons(&self, mut visit: impl FnMut(PersonView)) {
+        for p in &self.persons {
+            visit(p.view());
+        }
+    }
+
+    /// Adds up to `count` persons on random walkable cells of the ground
+    /// floor (debug command, META-15). Gives up on a person after 64
+    /// cells that are not walkable and never exceeds [`MAX_PERSONS`].
+    /// Returns the number of persons added.
+    pub fn spawn_random(&mut self, count: u32, seed: u64) -> u32 {
+        let room = MAX_PERSONS.saturating_sub(self.persons.len());
+        let wanted = usize::try_from(count).unwrap_or(usize::MAX).min(room);
+        let map = self.map();
+        let mut rng = SplitMix64(seed);
+        let mut cells = Vec::with_capacity(wanted);
+        for _ in 0..wanted {
+            for _ in 0..64 {
+                let pos = CellPos {
+                    x: u16::try_from(rng.next() % u64::from(map.width)).unwrap_or(0),
+                    y: u16::try_from(rng.next() % u64::from(map.height)).unwrap_or(0),
+                    floor: 0,
+                };
+                if self.grid.walkable(pos) {
+                    cells.push(pos);
+                    break;
+                }
+            }
+        }
+        let before = self.persons.len();
+        self.spawn_persons(&cells, seed);
+        u32::try_from(self.persons.len() - before).unwrap_or(u32::MAX)
+    }
+
+    /// Removes all persons (debug command).
+    pub fn clear_persons(&mut self) {
+        self.persons.clear();
+        self.next.clear();
+        self.per_floor = [0; FLOORS];
+    }
+
+    /// Sets (`wall`) or clears the wall flag of every cell in `rect`, keeping
+    /// zone and cost (debug command for building without data packs). The
+    /// flow fields follow with the next recomputation.
+    ///
+    /// # Errors
+    ///
+    /// Fails, without changing anything, if the rectangle is empty, not on
+    /// the map or on an invalid floor.
+    pub fn set_walls(&mut self, rect: CellRect, wall: bool) -> Result<(), GridError> {
+        if floor_index(rect.floor).is_none() {
+            return Err(GridError::InvalidFloor);
+        }
+        if !rect.is_non_empty() || !self.map().contains_rect(rect) {
+            return Err(GridError::OutOfMap);
+        }
+        for y in rect.y0..rect.y1 {
+            for x in rect.x0..rect.x1 {
+                let pos = CellPos {
+                    x,
+                    y,
+                    floor: rect.floor,
+                };
+                let mut cell = self.grid.cell(pos).unwrap_or(Cell::VOID);
+                if wall {
+                    cell.flags |= WALL;
+                } else {
+                    cell.flags &= !WALL;
+                }
+                self.grid.set(pos, cell)?;
+            }
+        }
+        Ok(())
     }
 
     /// Persons per floor, index 0 = floor −2.
@@ -556,5 +666,53 @@ mod tests {
         assert_ne!(hash(&world), before);
         assert_eq!(world.network(NetworkKind::Taxiway).edge_count(), 1);
         assert_eq!(world.network(NetworkKind::Road).edge_count(), 0);
+    }
+
+    #[test]
+    fn debug_helpers_spawn_clear_and_wall() {
+        let mut world = World::open_hall(MapSize::new(32, 32).unwrap(), 0, 1);
+        assert_eq!(world.spawn_random(20, 9), 20);
+        assert_eq!(world.persons(), 20);
+        let mut seen = 0;
+        world.visit_persons(|p| {
+            assert!(p.x > 0.0 && p.x < 32.0 && p.floor == 0);
+            seen += 1;
+        });
+        assert_eq!(seen, 20);
+        world.clear_persons();
+        assert_eq!((world.persons(), world.per_floor()), (0, [0; FLOORS]));
+        let rect = CellRect {
+            floor: 0,
+            x0: 0,
+            y0: 0,
+            x1: 32,
+            y1: 32,
+        };
+        world.set_walls(rect, true).unwrap();
+        assert_eq!(world.spawn_random(5, 1), 0, "no walkable cell left");
+        let bad = CellRect { floor: 4, ..rect };
+        assert_eq!(world.set_walls(bad, true), Err(GridError::InvalidFloor));
+        let outside = CellRect { x1: 40, ..rect };
+        assert_eq!(world.set_walls(outside, false), Err(GridError::OutOfMap));
+    }
+
+    #[test]
+    fn view_interpolates_the_current_step() {
+        let p = Person {
+            x: 3,
+            y: 4,
+            floor: 1,
+            heading: 2, // south
+            target: 0,
+            progress: 0.5,
+            rng: 1,
+        };
+        let v = p.view();
+        assert!((v.x - 3.5).abs() < 1e-6 && (v.y - 5.0).abs() < 1e-6);
+        let standing = Person {
+            heading: ARRIVED,
+            ..p
+        };
+        assert!((standing.view().y - 4.5).abs() < 1e-6);
     }
 }

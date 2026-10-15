@@ -19,11 +19,17 @@ export default tseslint.config(
   },
   js.configs.recommended,
   {
-    files: ["**/*.ts"],
+    files: ["**/*.ts", "**/*.cts"],
     extends: [tseslint.configs.strictTypeChecked, tseslint.configs.stylisticTypeChecked],
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
+  },
+  {
+    // Sandboxed preloads must be CommonJS; under verbatimModuleSyntax TypeScript then needs
+    // `import x = require(...)` (app/src/main/preload.cts, roadmap step 2.7).
+    files: ["**/*.cts"],
+    rules: { "@typescript-eslint/no-require-imports": ["error", { allowAsImport: true }] },
   },
   {
     files: ["**/*.js", "**/*.mjs"],

@@ -1,8 +1,6 @@
 //! Commands of the command channel S-2 (`docs/architecture.md` section 4,
-//! ADR-021) and their structural checks.
-//!
-//! The command `debug { action }` (FR-009) is added together with the debug
-//! panel in roadmap step 2.7, which defines its actions.
+//! ADR-021) and their structural checks, including the debug actions of
+//! FR-009 defined in roadmap step 2.7.
 
 use serde::{Deserialize, Serialize};
 
@@ -18,6 +16,19 @@ pub const MAX_COMMANDS_PER_STEP: usize = 4096;
 pub const MAX_AREA_EDGE: u16 = 512;
 /// Longest content id in characters (S-4 `paket:eintrag`).
 pub const MAX_CONTENT_ID_LEN: usize = 129;
+/// Most persons one `spawnPersons` debug action adds.
+pub const MAX_SPAWN_PER_COMMAND: u32 = 10_000;
+/// Values of `kind` of [`Command`]; a command with another `kind` is
+/// discarded and counted, one with a known `kind` but wrong fields is
+/// rejected with `invalidArgument` (S-2, "Prüfung").
+pub const COMMAND_KINDS: [&str; 6] = [
+    "setSpeed",
+    "skipNight",
+    "build",
+    "buildArea",
+    "demolish",
+    "debug",
+];
 
 /// A command of the player (S-2).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -56,6 +67,57 @@ pub enum Command {
         /// Covered area.
         area: CellRect,
     },
+    /// Debug action of the console (FR-009, META-15).
+    Debug {
+        /// What to do.
+        action: DebugAction,
+    },
+}
+
+/// Actions of the debug panel (FR-009, defined in roadmap step 2.7). They
+/// serve tests and measurements before building and data packs exist.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS), ts(export))]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
+pub enum DebugAction {
+    /// Adds test persons on random walkable cells of the ground floor.
+    SpawnPersons {
+        /// Number of persons, 1 … 10,000.
+        count: u32,
+    },
+    /// Removes all persons.
+    ClearPersons {},
+    /// Sets or removes walls in an area and recomputes the flow fields in
+    /// the background, like a building action (ADR-010).
+    SetWalls {
+        /// Covered area, at most 512 × 512 cells.
+        area: CellRect,
+        /// `true` sets walls, `false` removes them.
+        wall: bool,
+    },
+    /// Starts a new session with a test scenario.
+    LoadScenario {
+        /// Which scenario.
+        scenario: Scenario,
+        /// Persons at the start, at most 200,000.
+        persons: u32,
+    },
+}
+
+/// Test scenarios of the debug action `loadScenario`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS), ts(export))]
+#[serde(rename_all = "camelCase")]
+pub enum Scenario {
+    /// Walkable ground floor without walls and one target.
+    OpenHall,
+    /// Reference terminal 768² × 5 with 17 gates (36 targets) in the middle
+    /// of the map (spike 1.5, ADR-020).
+    ReferenceTerminal,
 }
 
 /// Stable rejection codes of S-2.
@@ -74,6 +136,8 @@ pub mod code {
     pub const NOT_NIGHT: &str = "notNight";
     /// Night skip while passengers or aircraft are active.
     pub const NIGHT_SKIP_BLOCKED: &str = "nightSkipBlocked";
+    /// A quantity above its limit.
+    pub const LIMIT_EXCEEDED: &str = "limitExceeded";
 }
 
 /// Builds the reason of a rejected command.
@@ -111,6 +175,31 @@ pub fn validate(command: &Command, map: MapSize) -> Result<(), Reason> {
             check_area(*area, map)
         }
         Command::Demolish { area } => check_area(*area, map),
+        Command::Debug { action } => validate_debug(action, map),
+    }
+}
+
+fn validate_debug(action: &DebugAction, map: MapSize) -> Result<(), Reason> {
+    match action {
+        DebugAction::SpawnPersons { count } => {
+            if *count == 0 {
+                Err(rejection(code::INVALID_ARGUMENT))
+            } else if *count > MAX_SPAWN_PER_COMMAND {
+                Err(rejection(code::LIMIT_EXCEEDED)
+                    .with_number("max", f64::from(MAX_SPAWN_PER_COMMAND)))
+            } else {
+                Ok(())
+            }
+        }
+        DebugAction::ClearPersons {} => Ok(()),
+        DebugAction::SetWalls { area, .. } => check_area(*area, map),
+        DebugAction::LoadScenario { persons, .. } => {
+            if usize::try_from(*persons).map_or(true, |p| p > crate::world::MAX_PERSONS) {
+                Err(rejection(code::LIMIT_EXCEEDED))
+            } else {
+                Ok(())
+            }
+        }
     }
 }
 
@@ -244,5 +333,41 @@ mod tests {
             area: area(0, 0, 1, 1),
         };
         assert_eq!(code_of(&build_area), None);
+    }
+
+    #[test]
+    fn debug_actions_are_checked() {
+        let spawn = |count| Command::Debug {
+            action: DebugAction::SpawnPersons { count },
+        };
+        assert_eq!(code_of(&spawn(0)).as_deref(), Some(code::INVALID_ARGUMENT));
+        assert_eq!(code_of(&spawn(10_000)), None);
+        assert_eq!(
+            code_of(&spawn(10_001)).as_deref(),
+            Some(code::LIMIT_EXCEEDED)
+        );
+        let walls = Command::Debug {
+            action: DebugAction::SetWalls {
+                area: area(0, 0, 2000, 2),
+                wall: true,
+            },
+        };
+        assert_eq!(code_of(&walls).as_deref(), Some(code::AREA_TOO_LARGE));
+        let clear = Command::Debug {
+            action: DebugAction::ClearPersons {},
+        };
+        assert_eq!(code_of(&clear), None);
+        let load = |persons| Command::Debug {
+            action: DebugAction::LoadScenario {
+                scenario: Scenario::OpenHall,
+                persons,
+            },
+        };
+        assert_eq!(code_of(&load(200_000)), None);
+        assert_eq!(
+            code_of(&load(200_001)).as_deref(),
+            Some(code::LIMIT_EXCEEDED)
+        );
+        assert!(COMMAND_KINDS.contains(&"debug"));
     }
 }

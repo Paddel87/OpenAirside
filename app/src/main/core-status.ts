@@ -78,3 +78,24 @@ export function exitedCoreStatus(previous: CoreStatus, code: number): CoreStatus
   }
   return { state: "failed", reason: `core process exited with code ${String(code)}` };
 }
+
+/** Most restarts of the core process within {@link RESTART_WINDOW_MS} (S-6). */
+export const MAX_RESTARTS = 3;
+/** Window of the restart limit in milliseconds. */
+export const RESTART_WINDOW_MS = 60_000;
+
+/**
+ * Decides whether the core process may be restarted after an exit at
+ * `now`, given the times of earlier restarts (S-6 "Absturz des Kerns").
+ * Returns the restart times to keep, including `now` if allowed.
+ */
+export function restartDecision(
+  restarts: readonly number[],
+  now: number,
+): { readonly allowed: boolean; readonly restarts: readonly number[] } {
+  const recent = restarts.filter((t) => now - t < RESTART_WINDOW_MS);
+  if (recent.length >= MAX_RESTARTS) {
+    return { allowed: false, restarts: recent };
+  }
+  return { allowed: true, restarts: [...recent, now] };
+}

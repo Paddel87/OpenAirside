@@ -56,6 +56,7 @@ Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachwei
   - napi-build 2.4.4 (Begleit-Crate, von napi 3.12.7 mit `^2.4.4` verlangt) — Verifiziert: 2026-10-13, Quelle: crates.io
   - zurückgestellt, nicht im Stack: wasm-bindgen 0.2.128 für WebAssembly mit Threads, Neubewertung in Fahrplan-Schritt Q.2
 - serde 1.0.229, rayon 1.12.0, ts-rs 12.0.1 — Verifiziert: 2026-10-13, Quelle: crates.io
+- serde_json 1.0.151 nur in der Brücken-Crate über napi `serde-json` (ADR-024; bringt itoa 1.0.18 und zmij 1.0.23 mit, beide MIT) — Verifiziert: 2026-10-14, Quelle: crates.io
 
 #### Persistenz und Paketverwaltung
 

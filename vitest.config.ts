@@ -15,7 +15,13 @@ export default defineConfig({
         // Electron entry points: only wiring, covered by the smoke test e2e/smoke.spec.ts (ADR-018).
         "app/src/main/main.ts",
         "app/src/main/core-host.ts",
+        "app/src/main/preload.cts",
         "app/renderer/main.ts",
+        // WebGL drawing: excluded like all playfield drawing (project-context.md section 7);
+        // covered by the smoke test and the measurement on real graphics.
+        "app/renderer/playfield.ts",
+        // Generated type declarations without code.
+        "app/src/generated/**",
       ],
       reporter: ["text", "lcov"],
       thresholds: { lines: 70 },

@@ -30,16 +30,16 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 2: Fundament (UMSETZUNG), Schritte 2.1 (Projektgerüst und CI), 2.8 (Weltmaßstab und Zeitmodell, ADR-020), 2.9 (Schnittstellenverträge, ADR-021), 2.2 (Takt, Zeitsteuerung, Befehle und Ereignisse im Kern, ADR-022) und 2.3 (Raster in Blöcken und Wegweiser im Kern, ADR-023) abgeschlossen, als Nächstes 2.7; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
+- **Projektphase:** Phase 2: Fundament (UMSETZUNG), Schritte 2.1 (Projektgerüst und CI), 2.8 (Weltmaßstab und Zeitmodell, ADR-020), 2.9 (Schnittstellenverträge, ADR-021), 2.2 (Takt, Zeitsteuerung, Befehle und Ereignisse im Kern, ADR-022) 2.3 (Raster in Blöcken und Wegweiser im Kern, ADR-023) und 2.7 (Brücke und Plattformschicht, ADR-024) abgeschlossen; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
 - **Version:** v0.0.0
 - **Status:** Konzeption
-- **Letzte Änderung:** 2026-10-13
-- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern, Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009), Datenmodell im Kern (ADR-010; Weltmaßstab 2 m je Zelle mit Luftseite im Raster und Speicherung in Blöcken nach ADR-020), Wegweiser-Prinzip und Leistung von Simulation und Zustandsübergabe BELASTBAR seit dem Leistungsnachweis (ADR-014; Linux-Messung in 7.2); Leistung der Darstellung mit echten Grafiken und mit Fahrzeugen und Flugzeugen VORLÄUFIG (ADR-017); Bauaktion im nächsten Bild VORLÄUFIG; Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Schnittstellenverträge für Befehle, Ereignisse, Abfragen, Datenpakete, Spielstände und Plattform BELASTBAR (ADR-021); Takt des Simulationskerns BELASTBAR (Umsetzung 2.2); Grundraster der Welt BELASTBAR (Umsetzung 2.3)
+- **Letzte Änderung:** 2026-10-14
+- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern, Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009), Datenmodell im Kern (ADR-010; Weltmaßstab 2 m je Zelle mit Luftseite im Raster und Speicherung in Blöcken nach ADR-020), Wegweiser-Prinzip und Leistung von Simulation und Zustandsübergabe BELASTBAR seit dem Leistungsnachweis (ADR-014; Linux-Messung in 7.2); Leistung der Darstellung mit echten Grafiken und mit Fahrzeugen und Flugzeugen VORLÄUFIG (ADR-017); Bauaktion im nächsten Bild VORLÄUFIG; Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Schnittstellenverträge für Befehle, Ereignisse, Abfragen, Datenpakete, Spielstände und Plattform BELASTBAR (ADR-021); Takt des Simulationskerns BELASTBAR (Umsetzung 2.2); Grundraster der Welt BELASTBAR (Umsetzung 2.3); Brücke zwischen Kern und Oberfläche sowie Plattformschicht BELASTBAR (Umsetzung und Messung 2.7)
 - **Aktive Blocker:** 0
 
 ## Quick Start
 
-Lauffähig ist bisher ein leeres Spielfenster mit geladenem Simulationskern (Schritt 2.1); spielbar ist noch nichts.
+Lauffähig ist bisher ein Spielfenster mit Simulationskern, Personen auf dem Spielfeld und einem Debug-Panel (Schritt 2.7); spielbar ist noch nichts.
 
 ### Voraussetzungen (für Entwicklung)
 
@@ -82,12 +82,12 @@ graph LR
 
 ## Verwendung
 
-Noch nicht spielbar. `npm start` öffnet ein leeres Fenster; der Simulationskern läuft in einem eigenen Prozess.
+Noch nicht spielbar. `npm start` öffnet das Spielfenster mit leerer Karte; der Simulationskern läuft in einem eigenen Prozess. Im Debug-Panel oben links zeigt `help` die Konsolenbefehle (z. B. `spawn 1000`, `speed x3`, `scenario reference 10000`). Das Referenz-Terminal aus dem Leistungsnachweis startet direkt mit `npx electron . --scenario=referenceTerminal --persons=10000`. `measure` startet eine zehnminütige Messreihe und speichert das Ergebnis als JSON-Datei im Download-Ordner.
 
 ## Nächste Schritte
 
-- 2.7: Brücke und Plattformschicht, Anbindung des Takts an die Oberfläche
 - 2.4: Datenpaket-Schema und Lader
+- 2.5: Spielstand mit Autosave
 - Phase 2 insgesamt: lauffähiger, leerer Spielrahmen mit grüner CI auf drei Plattformen
 
 → Vollständiger Fahrplan: [`docs/fahrplan.md`](docs/fahrplan.md)

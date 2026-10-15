@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-14 (Session ab 2026-10-13 23:16 UTC)
+- **Stand vom:** 2026-10-15 (Session ab 2026-10-14 23:40 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (2.3 erledigt am 2026-10-14, ADR-023)
-- **Nächster Schritt:** 2.7 (Brücke und Plattformschicht), danach 2.4
+- **Aktiver Schritt:** keiner (2.7 erledigt am 2026-10-15)
+- **Nächster Schritt:** 2.4 (Datenpaket-Schema und Lader), zuerst Freigabe der neuen Abhängigkeiten (Kategorie 3)
 - **Offene STOPP-Situationen:** keine (Stopp aus 2.3 aufgehoben nach Wechsel auf die Entscheidungs-Klasse am 2026-10-13 23:50 UTC); Reaktiv-Quote 4 / 10 nach ADR-022 weiter über dem Schwellenwert, aber sinkend (Reflexionen siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
@@ -211,7 +211,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.7: Brücke und Plattformschicht
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT 2026-10-15 (ADR-024: napi `serde-json` mit `serde_json =1.0.151`); CI-Lauf 38526061047 auf `bbdd5c8` grün auf drei Plattformen; Messung auf Mac und Referenz-PC am 2026-10-15
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.9
 - **Freigabepflichtig:** ja, nur für die Abhängigkeit zur Umwandlung JS ↔ Rust (Kategorie 3, ADR-021); Härtung nach `project-context.md` Abschnitt 6, Verträge aus ADR-021
@@ -223,6 +223,26 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Brücke, Plattform, Spielfeld
 - **Reifegrad-Wirkung:** Brücke und Plattform → `[BELASTBAR]`
 - **Artefakte:** Brücken-Crate, Electron-Hauptprozess, Preload, Renderer-Gerüst, Messprotokoll
+- **Zwischenstand (2026-10-14, Entscheidungs-Klasse):** umgesetzt und mit Tests belegt, CI-Lauf 38516083109 grün auf drei Plattformen (Stand `4edcdab`); Lauf für `86bb713` (S-7) stand bei Sessionende noch aus.
+  - Kern (`core/src/`): `frame` (Bildformat S-1, Layout-Version 1: 32 Byte Kopf, 6 Byte je Person, Filter auf Etage und Ausschnitt mit 4 Zellen Rand), Dreifachpuffer in `runner` (Bild und Ereignisse unter einer Sperre, Ereignisse nach Sitzung gruppiert), `port` (Nachrichten, Handshake, Sitzungsprüfung, Zähler), `host` (Port-Zustand mit Takt-Thread, Ereignisse ohne Bild spätestens alle 250 ms), `query` (S-7: Test-Tabelle `debugPersons` mit Filter, Sortierung, Fenster, Wörterbuch, Detail), Befehl `debug` mit `spawnPersons`, `clearPersons`, `setWalls`, `loadScenario` (FR-009), Antwort `invalidArgument` für unlesbare Befehle bekannter Art, `default_threads` (Tick ein Viertel der Kerne, 1–4; Hintergrund der Rest minus ein Kern).
+  - Brücke: Klasse `Core` mit napi `serde-json` (ADR-024); Nachrichten über 1 MB werden verworfen und gezählt.
+  - Plattform: frischer Port je geladener Seite, neue Sitzung nach Neuladen, Neustart des Kern-Prozesses höchstens 3-mal in 60 s, Absenderprüfung per `senderFrame` und URL-Parser, `app.info`/`app.quit`, Preload `window.openairside` (apiVersion 1), Navigation per URL-Parser, Release-Builds ohne Menüpunkte „Reload" und Entwicklerwerkzeuge.
+  - Renderer: PixiJS 8.20.1 mit Personen im `ParticleContainer` (CSP ohne `unsafe-eval`), Kamera, Etagenwechsel, Konsole (`speed`, `night`, `spawn`, `clear`, `walls`, `scenario`, `table`), Leistungsanzeige; Start mit `--scenario=referenceTerminal --persons=10000`.
+  - Tests: Kern 96 Unit-Tests grün; TypeScript 120 Tests, Coverage gesamt 94 % Lines (Renderer-Module 99 %, Hauptprozess-Module 100 %; ausgenommen Einstiegspunkte und WebGL-Zeichnen); Rauchtest mit Handshake, Bildern, Befehlen, S-6, S-7 und neuer Sitzung nach Neuladen.
+  - Messung im Container (4 vCPU, ohne Grafikkarte, nicht aussagekräftig für Bildraten): Bild kodieren 0,1 ms, Tabellenabfrage 10.000 Zeilen mit Fenster 1.000 im Kern 1,7–1,9 ms; mit SwiftShader WebGL2 läuft das Spielfeld unter der strengen CSP.
+- **Messwerkzeug (2026-10-14, Entscheidungs-Klasse):** umgesetzt und im Container Ende-zu-Ende gelaufen.
+  - Kern: `TickStats` im Status des Takts (`core/src/runner.rs`: Ticks/s, Schrittzeit Mittel/p99/Maximum je Sekunde, Rückstand, Neuberechnung mit Dauer von Anforderung bis Übernahme aus `core/src/simulation.rs`, Threads); Port-Nachricht `coreStats` etwa je Sekunde (`core/src/host.rs`, additiv). Kern 100 Unit-Tests.
+  - Renderer: Konsolenbefehl `measure [Minuten 1–60]` (Standard 10) mit der Messreihe in `app/renderer/measure.ts` (Ablauf siehe `architecture.md`, Modul Benchmark & Leistung); Leistungsanzeige mit Ticks/s, Schrittzeit und Dauer der Neuberechnung.
+  - Plattform: S-6 `measure.start`/`measure.report` (additiv): Speicher aller Prozesse alle 5 s, Datei `openairside-measure-<Plattform>-<Zeit>.json` im Download-Ordner (`app/src/main/measure.ts`).
+  - Tests: TypeScript 178 Tests, Coverage 96 % Lines (`measure.ts` im Renderer 98 %, im Hauptprozess 100 %); Rauchtest prüft `coreStats` in der Leistungsanzeige und die Ablehnung eines Berichts ohne gestartete Messung.
+  - Probelauf im Container (4 vCPU, SwiftShader, 1 Minute): 2 Fenster, 178–180 Ticks/s, je Fenster 3 Neuberechnungen mit 2,9–3,3 s, Bauaktion bis zum Bild 143–252 ms, Tabellenabfrage Median 51–62 ms, Speicher aller Prozesse 676 → 765 MB. Bildraten 12–16 und Schrittzeiten p99 bis 16 ms sind durch die Software-Grafik auf denselben 4 Kernen verfälscht, ohne Aussage.
+  - Abweichung von Spike 1.5: Die Kamera kreist über dem Erdgeschoss statt über der Etage darüber, weil nach 10 s Aufwärmen bei 3× noch alle Personen im Erdgeschoss stehen (Spike 1.5 spulte ungebremst vor; das gibt es im Produktionskern nicht). Höchste Tickrate ohne Bremse wird nicht gemessen; maßgeblich ist die Schrittzeit.
+- **Abschluss (2026-10-15, Entscheidungs-Klasse):** Akzeptanzkriterien erfüllt – Härtung durch Tests belegt, `app/renderer/console.test.ts` grün, Szenario aus Spike 1.5 auf Produktionscode gleichwertig oder besser auf Mac und Referenz-PC (Auswertung in [`docs/research/2.7-messung.md`](research/2.7-messung.md)). Störung in Fenster 9 bis 12 der PC-Messung geklärt: Bildschirm war aus (Angabe Projektinhaber), das Fenster zeichnete deshalb nicht; die Werte dieser Fenster gehen nicht in die Bewertung ein. Schwelle der Rückstandsmeldung (3 Ticks) auf beiden Rechnern bestätigt; Standardaufteilung der Threads (Mac 2 + 8, PC 4 + 19) beibehalten; zweiter PC-Lauf mit 2 + 4 Threads (nachgereicht 2026-10-15): Simulation ruhiger (Einzelschritt höchstens 0,94 ms), Neuberechnung bis 1,59 s, Zielwerte erfüllt. Brücke und Plattform `[BELASTBAR]`, FR-009 erledigt. Offener Befund mit Landeplatz 2.10: zwei Aussetzer bis 110 ms auf dem Mac ohne Einwirkung von außen (laut Projektinhaber am Mac nichts bedient).
+- **Stand vor dem Abschluss (2026-10-15):**
+  - **Referenz-PC gemessen am 2026-10-15** (Datei `docs/research/2.7-ergebnisse/referenz-pc-windows.json`, Auswertung in [`docs/research/2.7-messung.md`](research/2.7-messung.md)): in 16 ungestörten Fenstern 60 Bilder/s, 180 Ticks/s ohne Rückstand, Schritt Mittel 0,13–0,14 ms, Neuberechnung höchstens 366 ms, Bauaktion 1–2 Bilder, Kern-Prozess 123–155 MB ohne Anstieg. Offen: Ursache der Störung in Fenster 9 bis 12 (kein Bild in Fenster 10 und 11, Kern-Schritte bis 75 ms) – Rückfrage an den Projektinhaber; zweiter Lauf mit festen Threads liegt nicht vor (optional).
+  - **Mac M3 Pro gemessen am 2026-10-15** (Datei `docs/research/2.7-ergebnisse/mac-m3pro.json`): 120 Bilder/s, 180 Ticks/s im Mittel jedes Fensters, Schritt Mittel 0,26–0,56 ms, Neuberechnung höchstens 422 ms, Bauaktion 1–3 Bilder, Speicher ab 200 s ohne Anstieg (933–989 MB) – gleichwertig oder besser als Spike 1.5; Schwelle der Rückstandsmeldung (3 Ticks) bestätigt. Offen: zwei Aussetzer bis 110 ms (Fenster 8 und 9, Rückstand bis 19 Ticks, aufgeholt), Ursache nicht belegt.
+  - `app/console.test.ts` liegt als `app/renderer/console.test.ts` neben dem Modul (Ablage wie alle Renderer-Tests).
+- **Landeplätze der übrigen S-6-Funktionen:** `saves.*` und `logs.*` in 2.5, `packs.*` in 2.4, `settings.*` in 2.6. Darstellung des Rasters im Spielfeld (`TODO(fahrplan-ref: 3.1)` in `app/renderer/playfield.ts`) in 3.1.
 
 #### 2.4: Datenpaket-Schema und Lader
 
@@ -248,7 +268,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Freigabe neuer Abhängigkeiten; die Umsetzung des Vertrags S-5 ist Routine und abgebbar.
 - **Eingangskriterien:** S-5, S-6 `[BELASTBAR]`
 - **Anforderungen (ab Klasse M):** FR-004
-- **Zu tun:** Spielstand-Container nach S-5 (ADR-021) mit Grenzen, Prüfreihenfolge und Fehlerkatalog; Höchstzahlen für Objekte, Personen und Fahrzeuge als Konstanten; Speichern und Laden über S-6 (`saves.*`), Schnellspeichern, Autosave mit Rotation (1–20), Vorschaubild; fehlendes Paket: Laden verweigern mit Liste; Laden validiert und meldet Fehler verständlich.
+- **Zu tun:** Spielstand-Container nach S-5 (ADR-021) mit Grenzen, Prüfreihenfolge und Fehlerkatalog; Höchstzahlen für Objekte, Personen und Fahrzeuge als Konstanten; Speichern und Laden über S-6 (`saves.*`); `logs.write` und `logs.openFolder` mit Rotation (S-6, aus 2.7); Schnellspeichern, Autosave mit Rotation (1–20), Vorschaubild; fehlendes Paket: Laden verweigern mit Liste; Laden validiert und meldet Fehler verständlich.
 - **Akzeptanzkriterien:** `core/tests/savegame_roundtrip.rs` grün: identische Prüfsumme nach Laden, auch während einer laufenden Neuberechnung der Wegweiser; manipulierter Spielstand führt zu einer Meldung statt zum Absturz.
 - **Betroffene Module:** Takt & Weltzustand, Plattform
 - **Reifegrad-Wirkung:** S-5 durch Umsetzung bestätigt
@@ -263,7 +283,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – klar spezifizierte Umsetzung; Entscheidung nur für eine neue Abhängigkeit.
 - **Eingangskriterien:** Oberfläche startet (2.7)
 - **Anforderungen (ab Klasse M):** FR-006
-- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner.
+- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7).
 - **Akzeptanzkriterien:** `app/i18n.test.ts` grün; ein Sprachpaket aus dem Ordner wird erkannt.
 - **Betroffene Module:** Lokalisierung, Oberfläche
 - **Reifegrad-Wirkung:** Modul Lokalisierung → `[BELASTBAR]`
@@ -278,7 +298,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – neue Abhängigkeit und Bewertung einer Leistungsmessung (ADR-017).
 - **Eingangskriterien:** Spielfeld-Grundgerüst (2.7)
 - **Anforderungen (ab Klasse M):** FR-050
-- **Zu tun:** Stilleitfaden (Palette, Strichstärken, Maßstab 2 m je Zelle nach ADR-020, Detailgrad); SVG-Quellen im Repository, Rasterung in mehreren Auflösungen im Build (ADR-008), Atlanten; eigenes Programmsymbol für Fenster, Installer und Pakete (Befund 2.1-N2); Messung des Spielfelds mit Objekt-Sprites aus den Atlanten, Overlays und 10.000 Personen auf Referenz-PC und Mac.
+- **Zu tun:** Stilleitfaden (Palette, Strichstärken, Maßstab 2 m je Zelle nach ADR-020, Detailgrad); SVG-Quellen im Repository, Rasterung in mehreren Auflösungen im Build (ADR-008), Atlanten; eigenes Programmsymbol für Fenster, Installer und Pakete (Befund 2.1-N2); Messung des Spielfelds mit Objekt-Sprites aus den Atlanten, Overlays und 10.000 Personen auf Referenz-PC und Mac; dabei auf dem Mac prüfen, ob die Aussetzer der Simulation bis 110 ms aus 2.7 wiederkehren, und bei Wiederholung die Ursache klären (Vermutung: Verteilung von Tick- und Hintergrund-Threads auf Leistungs- und Effizienzkerne), dazu ein Vergleichslauf mit weniger Hintergrund-Threads (z. B. `--background-threads=4`; auf dem Referenz-PC liefen die Schritte damit ruhiger, 2.7).
 - **Akzeptanzkriterien:** `scripts/assets.test.ts` grün; Messprotokoll zeigt, ob 60 Bilder/s mit echten Grafiken halten; Ergebnis per ADR (NFR Darstellung `[VORLÄUFIG]` → `[BELASTBAR]` oder Maßnahme).
 - **Betroffene Module:** Spielfeld, Build/CI
 - **Reifegrad-Wirkung:** NFR Performance Darstellung mit echten Grafiken `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen
@@ -292,11 +312,12 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2) | FR-010, FR-011 |
+| 3.7 | **Vor 3.1:** Entwurfsschritt (Phasentyp-Kontext ERKUNDUNG) „Personengruppen, Begehbarkeit und Querungen“: Gruppen aus dem Inventar (PAX-*, PAX-09, STAFF-01, SHOP-03, BAU-03; offen: Crew, Einweiser) mit Begehbarkeit je Gruppe einschließlich Personalzonen (ZON-02); Personal auf dem Vorfeld (nur per Fahrzeug, Stellplatzfläche begehbar oder beides, jeweils mit Erklärung bei Unerreichbarkeit; TURN-03, GEP-06, GATE-06); Bauarbeiter und laufende Bahnen; Querungen und Sperrung von Betriebsstraßen beim Walk-out-Boarding (MOD-13); Messung, wie Personal neben den Wegweisern geführt wird; Ergebnis ADR in Ergänzung von ADR-020 (Kategorie 1 und 4) | FR-018 (vorbereitend) |
+| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7); Bewegung der Bauarbeiter nach 3.7 | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
 | 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
-| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020); Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
-| 3.5 | Abfertigung und Gepäck in Grundform | FR-025, FR-032 |
+| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
+| 3.5 | Abfertigung und Gepäck in Grundform; Wege des Vorfeldpersonals nach 3.7 | FR-025, FR-032 |
 | 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform | FR-030, FR-036, FR-039 |
 
 ### Phase 4: Härtung des vertikalen Schnitts – Typ: STABILISIERUNG
@@ -452,6 +473,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 <!-- ANCHOR:replanning-historie -->
 ## Replanning-Historie
 
+- 2026-10-14 – Phase 3 um Entwurfsschritt 3.7 „Personengruppen, Begehbarkeit und Querungen“ (vor 3.1) ergänzt; Anlass: ADR-020 regelt die Begehbarkeit des Vorfelds nur für Fluggäste, Personal und Bauarbeiter fehlen (Hinweis des Projektinhabers); 3.1, 3.4, 3.5 verweisen auf 3.7. Phase 3 hat noch keinen festgehaltenen ursprünglichen Schrittplan
 - 2026-10-13 – Schritt 2.8 abgeschlossen (ADR-020): 2.2, 2.3, 2.9, 2.10, 3.4, 5.8 und das Abschlusskriterium von Phase 2 um Weltmaßstab, Blöcke, Wegenetze, Vorfeld-Gehwege und Zeitmodell ergänzt; keine neuen Schritte
 - 2026-10-13 – Schritt 1.7 abgeschlossen (ADR-016, ADR-017): Phase 2 im vollen Format mit 10 Schritten (neu 2.8, 2.9, 2.10; 2.6 geteilt); FR-039 in 3.6 und 5.6; neuer Schritt 7.3; Phase 1 archiviert
 - 2026-10-13 – Schritt 1.2 abgeschlossen (ADR-010); 1.5 um Rastergröße und fünf Etagen ergänzt; 3.3 um vorgeschaltete Erkundung „Suchen ohne Schilder"/Feinwege ergänzt (Landeplatz aus 1.2)

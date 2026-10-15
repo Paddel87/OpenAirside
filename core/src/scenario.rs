@@ -8,6 +8,7 @@
 // areas, 2 runways, ~17 gates) replaces this procedural terminal; it is
 // built from data packs and a reference save game.
 
+use crate::command::Scenario;
 use crate::geometry::{CellPos, MapSize};
 use crate::grid::{
     COST_AVOID, COST_MARKED, COST_NORMAL, Cell, FLOORS, GROUND_INDEX, STAIRS, WALL, Zone,
@@ -264,6 +265,31 @@ fn cell_pos(origin: (usize, usize), (x, y, f): (usize, usize, usize)) -> CellPos
 #[must_use]
 pub fn target_count(gates: usize) -> usize {
     gates + AIRLINES + 3 + 1 + 4 + 2 + 1
+}
+
+/// Edge of the reference terminal of spike 1.5 (ADR-020).
+pub const REFERENCE_EDGE: u16 = 768;
+/// Gates of the reference terminal of spike 1.5 (36 targets).
+pub const REFERENCE_GATES: u8 = 17;
+
+/// `true` if the reference terminal of spike 1.5 fits on `map`.
+#[must_use]
+pub fn fits_reference_terminal(map: MapSize) -> bool {
+    map.width >= REFERENCE_EDGE && map.height >= REFERENCE_EDGE
+}
+
+/// World of a debug scenario (`loadScenario`, FR-009) with `persons`
+/// persons. The flow fields are computed when the session starts.
+///
+/// Returns `None` if the scenario does not fit on `map`.
+#[must_use]
+pub fn scenario_world(scenario: Scenario, map: MapSize, persons: u32, seed: u64) -> Option<World> {
+    match scenario {
+        Scenario::OpenHall => Some(World::open_hall(map, persons, seed)),
+        Scenario::ReferenceTerminal => {
+            reference_terminal(map, REFERENCE_EDGE, REFERENCE_GATES, persons, seed)
+        }
+    }
 }
 
 /// Builds a world with the reference terminal of `edge` × `edge` cells (at
