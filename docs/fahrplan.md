@@ -11,7 +11,7 @@
 - **Stand vom:** 2026-10-14 (Session ab 06:40 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.7 (Brücke und Plattformschicht), `[IN ARBEIT]` seit 2026-10-14; umgesetzt einschließlich Messwerkzeug, Mac gemessen am 2026-10-15, offen ist die Messung auf dem Referenz-PC (siehe Schritt 2.7, „Offen bis zum Abschluss")
+- **Aktiver Schritt:** 2.7 (Brücke und Plattformschicht), `[IN ARBEIT]` seit 2026-10-14; umgesetzt einschließlich Messwerkzeug, Mac und Referenz-PC gemessen am 2026-10-15, offen ist die Klärung einer Störung in der PC-Messung (siehe Schritt 2.7, „Offen bis zum Abschluss")
 - **Nächster Schritt:** 2.4 nach Abschluss von 2.7
 - **Offene STOPP-Situationen:** keine (Stopp aus 2.3 aufgehoben nach Wechsel auf die Entscheidungs-Klasse am 2026-10-13 23:50 UTC); Reaktiv-Quote 4 / 10 nach ADR-022 weiter über dem Schwellenwert, aber sinkend (Reflexionen siehe „Iterations-Reflexion")
 
@@ -238,7 +238,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
   - Probelauf im Container (4 vCPU, SwiftShader, 1 Minute): 2 Fenster, 178–180 Ticks/s, je Fenster 3 Neuberechnungen mit 2,9–3,3 s, Bauaktion bis zum Bild 143–252 ms, Tabellenabfrage Median 51–62 ms, Speicher aller Prozesse 676 → 765 MB. Bildraten 12–16 und Schrittzeiten p99 bis 16 ms sind durch die Software-Grafik auf denselben 4 Kernen verfälscht, ohne Aussage.
   - Abweichung von Spike 1.5: Die Kamera kreist über dem Erdgeschoss statt über der Etage darüber, weil nach 10 s Aufwärmen bei 3× noch alle Personen im Erdgeschoss stehen (Spike 1.5 spulte ungebremst vor; das gibt es im Produktionskern nicht). Höchste Tickrate ohne Bremse wird nicht gemessen; maßgeblich ist die Schrittzeit.
 - **Offen bis zum Abschluss:**
-  - Messung durch den Projektinhaber auf dem Referenz-PC nach der Anleitung in [`docs/research/2.7-messung.md`](research/2.7-messung.md) (Messprotokoll) (Abschlusskriterium von Phase 2), dabei Prüfung der Standardaufteilung der Threads (zweiter Lauf mit festen Threads).
+  - **Referenz-PC gemessen am 2026-10-15** (Datei `docs/research/2.7-ergebnisse/referenz-pc-windows.json`, Auswertung in [`docs/research/2.7-messung.md`](research/2.7-messung.md)): in 16 ungestörten Fenstern 60 Bilder/s, 180 Ticks/s ohne Rückstand, Schritt Mittel 0,13–0,14 ms, Neuberechnung höchstens 366 ms, Bauaktion 1–2 Bilder, Kern-Prozess 123–155 MB ohne Anstieg. Offen: Ursache der Störung in Fenster 9 bis 12 (kein Bild in Fenster 10 und 11, Kern-Schritte bis 75 ms) – Rückfrage an den Projektinhaber; zweiter Lauf mit festen Threads liegt nicht vor (optional).
   - **Mac M3 Pro gemessen am 2026-10-15** (Datei `docs/research/2.7-ergebnisse/mac-m3pro.json`): 120 Bilder/s, 180 Ticks/s im Mittel jedes Fensters, Schritt Mittel 0,26–0,56 ms, Neuberechnung höchstens 422 ms, Bauaktion 1–3 Bilder, Speicher ab 200 s ohne Anstieg (933–989 MB) – gleichwertig oder besser als Spike 1.5; Schwelle der Rückstandsmeldung (3 Ticks) bestätigt. Offen: zwei Aussetzer bis 110 ms (Fenster 8 und 9, Rückstand bis 19 Ticks, aufgeholt), Ursache nicht belegt.
   - `app/console.test.ts` liegt als `app/renderer/console.test.ts` neben dem Modul (Ablage wie alle Renderer-Tests).
 - **Landeplätze der übrigen S-6-Funktionen:** `saves.*` und `logs.*` in 2.5, `packs.*` in 2.4, `settings.*` in 2.6. Darstellung des Rasters im Spielfeld (`TODO(fahrplan-ref: 3.1)` in `app/renderer/playfield.ts`) in 3.1.

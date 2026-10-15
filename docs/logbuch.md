@@ -24,6 +24,12 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-15 00:25 (UTC) – [BEOBACHTUNG]
+
+- **Messung 2.7 auf dem Referenz-PC** (Windows, Datei des Projektinhabers, fertig 00:08 UTC, gleichzeitig mit dem Mac gestartet): ausgewertet in `docs/research/2.7-messung.md`, Datei unter `docs/research/2.7-ergebnisse/referenz-pc-windows.json`. In 16 ungestörten Fenstern gleichwertig oder besser als Spike 1.5: 60 Bilder/s, 180 Ticks/s ohne Rückstand, Schritt Mittel 0,13–0,14 ms (Spike 0,33–0,42), Neuberechnung höchstens 366 ms (Spike 388, Welt jetzt 2048²), Bauaktion 1–2 Bilder (Spike 2–3), Kern-Prozess ohne Anstieg.
+- **Störung in Fenster 9 bis 12** (302–441 s): kein gezeichnetes Bild in Fenster 10 und 11, lange Aufgabe 162 ms, GPU-Prozess +40–50 MB, Kern-Schritte bis 75 ms, eine Rückstandsmeldung (14 Ticks). Muster eines nicht gezeichneten Fensters bei Last von außen; Ursache offen, Rückfrage gestellt. Zeitlich fast gleichzeitig mit den Aussetzern auf dem Mac (00:01:50–00:02:50 UTC).
+- Zweiter Lauf mit festen Threads liegt nicht vor.
+
 ### 2026-10-15 00:10 (UTC) – [BEOBACHTUNG]
 
 - **Messung 2.7 auf dem Mac M3 Pro** (Datei des Projektinhabers, fertig 00:07 UTC, Paket aus Release-Lauf 38526063928 auf `bbdd5c8`): ausgewertet in `docs/research/2.7-messung.md`, Datei abgelegt unter `docs/research/2.7-ergebnisse/mac-m3pro.json`. Gleichwertig oder besser als Spike 1.5: 120 Bilder/s, Schritt Mittel 0,26–0,56 ms (Spike 0,52–0,84), Neuberechnung höchstens 422 ms (Spike 724), Bauaktion 1–3 Bilder (Spike 3–6), Speicher ab 200 s ohne Anstieg.
