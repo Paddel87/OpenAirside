@@ -24,6 +24,13 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-15 00:10 (UTC) – [BEOBACHTUNG]
+
+- **Messung 2.7 auf dem Mac M3 Pro** (Datei des Projektinhabers, fertig 00:07 UTC, Paket aus Release-Lauf 38526063928 auf `bbdd5c8`): ausgewertet in `docs/research/2.7-messung.md`, Datei abgelegt unter `docs/research/2.7-ergebnisse/mac-m3pro.json`. Gleichwertig oder besser als Spike 1.5: 120 Bilder/s, Schritt Mittel 0,26–0,56 ms (Spike 0,52–0,84), Neuberechnung höchstens 422 ms (Spike 724), Bauaktion 1–3 Bilder (Spike 3–6), Speicher ab 200 s ohne Anstieg.
+- **Auffällig:** zwei Aussetzer bis 110 ms in Fenster 8 und 9 (Rückstand bis 19 Ticks, 3 Rückstandsmeldungen, aufgeholt); Sekunden-p99 über 4 ms in 10 von 20 Fenstern. Ursache nicht belegt, Vermutung Thread-Verteilung auf Leistungs- und Effizienzkerne. Die Kennzahl „Sekunden-p99" des Messwerkzeugs ist strenger als das Fenster-p99 des Spikes und nicht direkt vergleichbar.
+- **Speicher höher als im Spike** (bis 989 statt 715 MB gesamt, Kern bis 393 statt 236 MB), Anstieg nur in den ersten 200 s; Ursache nicht untersucht.
+- Offen für 2.7: Messung auf dem Referenz-PC.
+
 ### 2026-10-14 23:40 (UTC) – [SESSIONSTART]
 
 - **Letzter Stand:** 2.7 `[IN ARBEIT]`, umgesetzt einschließlich Messwerkzeug; offen ist nur die Messung durch den Projektinhaber auf Referenz-PC und Mac nach `docs/research/2.7-messung.md`. PR Paddel87/OpenAirside#20 als Entwurf offen (Kopf `bbdd5c8`). Die Session ab 06:55 UTC endete ohne `[SESSIONENDE]`-Eintrag (letzter Eintrag 07:00 UTC); Fahrplan „Aktueller Stand" ist dort aber nachgezogen.
