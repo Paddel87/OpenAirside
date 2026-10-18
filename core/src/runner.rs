@@ -17,6 +17,7 @@ use std::time::{Duration, Instant};
 use serde::Serialize;
 
 use crate::command::Command;
+use crate::datapack::Catalog;
 use crate::event::{EventRecord, MAX_IN_FLIGHT};
 use crate::frame::Snapshot;
 use crate::pacer::{LagMonitor, Pacer};
@@ -45,6 +46,7 @@ enum Input {
         seq: u32,
     },
     Restart,
+    Content(Arc<Catalog>),
     Stop,
 }
 
@@ -215,6 +217,20 @@ impl Runner {
         Self::spawn(Simulation::with_world(config, world)?)
     }
 
+    /// Like [`Runner::start_with_world`], with the content of the loaded
+    /// data packs (S-4) from the first session on.
+    ///
+    /// # Errors
+    ///
+    /// Fails if the simulation cannot be created.
+    pub fn start_with_content(
+        config: SimulationConfig,
+        world: World,
+        content: Arc<Catalog>,
+    ) -> Result<Self, SimulationError> {
+        Self::spawn(Simulation::with_world(config, world)?.with_content(content))
+    }
+
     fn spawn(sim: Simulation) -> Result<Self, SimulationError> {
         let mut middle = Snapshot::default();
         middle.capture(sim.session(), sim.tick(), sim.world());
@@ -260,6 +276,11 @@ impl Runner {
     /// Starts a new session.
     pub fn restart(&self) {
         let _ = self.input.send(Input::Restart);
+    }
+
+    /// Uses `content` from the next session on (`packs.setActive`, S-6).
+    pub fn set_next_content(&self, content: Arc<Catalog>) {
+        let _ = self.input.send(Input::Content(content));
     }
 
     /// Takes the events published so far, of all sessions.
@@ -348,6 +369,7 @@ fn apply(sim: &mut Simulation, input: Input, shared: &Mutex<Shared>) -> bool {
             sim.restart();
             lock(shared).events.clear();
         }
+        Input::Content(content) => sim.set_next_content(content),
         Input::Stop => return false,
     }
     true
@@ -556,6 +578,46 @@ mod tests {
             seen.iter()
                 .any(|r| matches!(r.event, Event::CommandRejected { id: 3, .. }))
         });
+        runner.stop().unwrap();
+    }
+
+    #[test]
+    fn new_content_applies_from_the_next_session_on() {
+        let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../content/base");
+        let folders = crate::datapack::discover(Some(&base), None);
+        let loaded = crate::datapack::load(&folders, &[], &crate::datapack::game_version());
+        let config = SimulationConfig {
+            map: MapSize::new(64, 64).unwrap(),
+            threads: 1,
+            background_threads: 1,
+            adoption: AdoptionMode::WhenReady,
+            persons: 0,
+            seed: 3,
+            start_tick: 0,
+        };
+        let world = World::open_hall(config.map, 0, config.seed);
+        let runner = Runner::start_with_content(config, world, Arc::new(Catalog::empty())).unwrap();
+        let bench = || Command::Build {
+            object: "base:bench".into(),
+            at: crate::geometry::CellPos {
+                x: 1,
+                y: 1,
+                floor: 0,
+            },
+            rotation: crate::geometry::Rotation(0),
+        };
+        let mut seen = Vec::new();
+        runner.command(1, 1, bench());
+        wait_for(&runner, &mut seen, |seen, _| {
+            seen.iter()
+                .any(|r| matches!(r.event, Event::CommandRejected { id: 1, .. }))
+        });
+        runner.set_next_content(Arc::new(loaded.catalog));
+        runner.restart();
+        let mut fresh = Vec::new();
+        wait_for(&runner, &mut fresh, |_, status| status.session == 2);
+        runner.command(2, 1, bench());
+        wait_for(&runner, &mut fresh, answered(1));
         runner.stop().unwrap();
     }
 

@@ -1,8 +1,13 @@
 //! Command channel S-2 and event stream S-3 (ADR-021): exactly one answer
-//! per command, sessions, loading state and sequence numbers.
+//! per command, sessions, loading state and sequence numbers; content ids
+//! checked against the loaded data packs (S-4, step 2.4).
+
+use std::path::Path;
+use std::sync::Arc;
 
 use openairside_core::adoption::AdoptionMode;
 use openairside_core::command::{Command, MAX_COMMANDS_PER_STEP, code};
+use openairside_core::datapack::{self, Catalog, game_version};
 use openairside_core::event::Event;
 use openairside_core::geometry::{CellPos, CellRect, MapSize, Rotation};
 use openairside_core::simulation::{CoreState, Simulation, SimulationConfig};
@@ -165,4 +170,77 @@ fn acknowledging_unsent_events_is_counted() {
     let mut sim = simulation();
     sim.ack(1, 3);
     assert_eq!(sim.invalid_acks(), 1);
+}
+
+fn base_content() -> Arc<Catalog> {
+    let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../content/base");
+    let folders = datapack::discover(Some(&base), None);
+    let outcome = datapack::load(&folders, &[], &game_version());
+    assert!(!outcome.catalog.base_failed());
+    Arc::new(outcome.catalog)
+}
+
+fn build(object: &str) -> Command {
+    Command::Build {
+        object: object.into(),
+        at: CellPos {
+            x: 1,
+            y: 1,
+            floor: 0,
+        },
+        rotation: Rotation(0),
+    }
+}
+
+fn build_area(object: &str) -> Command {
+    Command::BuildArea {
+        object: object.into(),
+        area: CellRect {
+            floor: 0,
+            x0: 0,
+            y0: 0,
+            x1: 3,
+            y1: 3,
+        },
+    }
+}
+
+#[test]
+fn build_commands_accept_only_ids_of_loaded_packs() {
+    let mut sim = simulation().with_content(base_content());
+    sim.submit(1, 1, build("base:bench"));
+    sim.submit(1, 2, build_area("base:floor_concrete"));
+    sim.submit(1, 3, build("base:missing"));
+    sim.submit(1, 4, build_area("other:floor_concrete"));
+    sim.step();
+    assert_eq!(
+        answers(&mut sim),
+        vec![
+            (1, None),
+            (2, None),
+            (3, Some(code::UNKNOWN_CONTENT.to_owned())),
+            (4, Some(code::UNKNOWN_CONTENT.to_owned())),
+        ]
+    );
+}
+
+#[test]
+fn new_content_applies_from_the_next_session_on() {
+    let mut sim = simulation();
+    sim.set_next_content(base_content());
+    assert_eq!(sim.content().object_count(), 0);
+    sim.submit(1, 1, build("base:bench"));
+    sim.step();
+    assert_eq!(
+        answers(&mut sim),
+        vec![(1, Some(code::UNKNOWN_CONTENT.to_owned()))]
+    );
+    sim.restart();
+    assert_eq!(sim.content().object_count(), 3);
+    sim.submit(2, 1, build("base:bench"));
+    sim.step();
+    assert_eq!(answers(&mut sim), vec![(1, None)]);
+    // Without new content the next session keeps the current one.
+    sim.restart();
+    assert_eq!(sim.content().object_count(), 3);
 }
