@@ -75,7 +75,7 @@
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "description": "A content file in the folder `objects/`.",
+  "description": "A content file in the folder `objects/` (forced failure).",
   "properties": {
     "$schema": {
       "description": "Path or URL of the JSON Schema for editors; ignored by the game.",
