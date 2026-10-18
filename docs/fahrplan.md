@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-15 (Session ab 2026-10-14 23:40 UTC)
+- **Stand vom:** 2026-10-18 (Session ab 22:09 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (2.7 erledigt am 2026-10-15)
-- **Nächster Schritt:** 2.4 (Datenpaket-Schema und Lader), zuerst Freigabe der neuen Abhängigkeiten (Kategorie 3)
+- **Aktiver Schritt:** 2.4 `[WARTET-AUF-FREIGABE]` (Kategorie 3 und 7, vorgelegt 2026-10-18)
+- **Nächster Schritt:** nach der Freigabe ADR-025 anlegen, Reflexion zur Reaktiv-Quote ergänzen, dann 2.4 umsetzen
 - **Offene STOPP-Situationen:** keine (Stopp aus 2.3 aufgehoben nach Wechsel auf die Entscheidungs-Klasse am 2026-10-13 23:50 UTC); Reaktiv-Quote 4 / 10 nach ADR-022 weiter über dem Schwellenwert, aber sinkend (Reflexionen siehe „Iterations-Reflexion")
 
 <!-- ANCHOR:phasen-typen -->
@@ -246,7 +246,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.4: Datenpaket-Schema und Lader
 
-- **Status:** OFFEN
+- **Status:** WARTET-AUF-FREIGABE (vorgelegt 2026-10-18, Logbuch `[ENTSCHEIDUNG-VORGELEGT]` 22:15 UTC)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.9
 - **Freigabepflichtig:** ja, für den JSON-Lader und die Schema-Erzeugung als neue Abhängigkeiten (Kategorie 3, ADR-021)
@@ -258,6 +258,12 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Inhalte & Mods, Takt & Weltzustand
 - **Reifegrad-Wirkung:** Modul Inhalte & Mods (Lader) → `[BELASTBAR]`; Code-Mods bleiben `[OFFEN]` (6.1)
 - **Artefakte:** Lader, Schema, Basis-Datenpaket, Tests
+- **Vorlage zur Freigabe (2026-10-18, Entscheidungs-Klasse):**
+  - Kategorie 3, Versionen belegt auf crates.io am 2026-10-18 (Regel-001): A `serde_json =1.0.151` auch im Kern (bisher nur Brücke, ADR-024), `serde_path_to_error =0.1.20` (JSON-Pfad in Fehlern), `semver =1.0.28` (Versionsbereiche; schon im Lockfile über napi-derive-backend), `schemars =1.2.2` nur hinter Kern-Feature `schema` (Schema-Dateien für Modder; nicht 1.2.3, 6 Tage alt); B wie A ohne schemars, Schema-Dateien erst in 6.1 (ändert ADR-021); C wie A, JSON-Pfad und Versionsbereiche selbst programmiert. Empfehlung A.
+  - Kategorie 7: CI-Schritt „Erzeugte Schemas aktuell" im Job „Rust Lint & Format" (wie `check:types`, durch erzwungenen Fehler zu belegen); Basis-Datenpaket im Programmpaket (electron-builder `files`).
+  - Probeaufbau in einer Kopie des Workspace: neu im Lockfile `schemars`, `schemars_derive`, `serde_derive_internals`, `dyn-clone`, `ref-cast`, `ref-cast-impl` (nur mit Feature `schema`) und `serde_path_to_error`; alle MIT bzw. MIT OR Apache-2.0, syn 3 wie serde; `cargo deny check` grün.
+  - Umfang zur Kenntnis: Basispaket in 2.4 nur mit Objekttypen (ID, Textschlüssel, Bauart Fläche oder Einzelobjekt, Grundfläche in Metern); Schema der übrigen Arten mit dem Schritt, der sie zuerst nutzt (Fahrzeuge 3.4, Flugzeugtypen und Airlines 3.6, Forschung 5.6, Sprachen 2.6); bis dahin weist der Lader solche Ordner mit Meldung ab. Wirkung des Bauens bleibt 3.1.
+  - Klassifikation: ADR-025 hebt die Einschränkung „nur in der Brücken-Crate" aus ADR-024 (4 Tage alt) auf und ist damit `[REAKTIV]` (`CLAUDE.md` Abschnitt 6); Reaktiv-Quote bleibt 4 / 10, Reflexion nach der Freigabe.
 
 #### 2.5: Spielstand mit Autosave
 

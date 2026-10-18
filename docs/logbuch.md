@@ -24,6 +24,13 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-18 22:15 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 2.4, Kategorie 3 (Externe Abhängigkeiten) und 7 (CI-Schritt für Schema-Dateien, Basispaket im Programmpaket); Eskalations-Auslöser 1 – aktive Klasse bereits Entscheidung, kein Stopp nötig.
+- **Frage:** A `serde_json` auch im Kern, `serde_path_to_error`, `semver`, `schemars` hinter Feature `schema` (Empfehlung); B ohne `schemars`, Schema-Dateien erst in 6.1; C ohne `serde_path_to_error` und `semver`, eigener Code. Versionen auf crates.io belegt, Probeaufbau mit `cargo deny check` grün (Fahrplan 2.4, „Vorlage zur Freigabe“).
+- **Klassifikation:** ADR-025 wird `[REAKTIV]` (hebt „nur in der Brücken-Crate“ aus ADR-024 auf, 14-Tage-Regel).
+- **Stand:** 2.4 `[WARTET-AUF-FREIGABE]`.
+
 ### 2026-10-18 22:09 (UTC) – [BEOBACHTUNG]
 
 - **Zwei Merge-Vermerke zu PR Paddel87/OpenAirside#20:** Auf `scp/friendly-einstein-rggagz` (`45f544c`, Session ab 23:40) und auf `claude/naechster-schritt-2-8-736kf4` (`274e662`, Session ab 06:55, die den PR beobachtete) liegt je ein Eintrag „00:30 – [BEOBACHTUNG]“, nicht auf `main`. Sie widersprechen sich: `45f544c` nennt den Projektinhaber als Ausführenden, `274e662` den Merge durch die KI „auf Anweisung des Projektinhabers (‚merge wenn grün‘)“. Geprüft im Verlauf der Session `013Yz3…` (`list_events`): Anweisung „merge wenn grün“ vom Projektinhaber, Aufruf `merge_pull_request` um 00:29:11 UTC, Merge laut GitHub 00:29:18 UTC (`merged_by` zeigt das Konto des Projektinhabers, weil die KI über dessen Zugang arbeitet). Übernommen ist daher nur `274e662` (als `4e0b0f3`); `45f544c` bleibt unübernommen. Die übrigen Angaben aus `45f544c` stehen im `[SESSIONSTART]` unten.
