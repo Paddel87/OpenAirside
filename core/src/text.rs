@@ -52,6 +52,14 @@ impl Reason {
             .insert(name.to_owned(), ParamValue::Number(value));
         self
     }
+
+    /// Adds a text parameter.
+    #[must_use]
+    pub fn with_text(mut self, name: &str, value: &str) -> Self {
+        self.params
+            .insert(name.to_owned(), ParamValue::Text(value.to_owned()));
+        self
+    }
 }
 
 /// Severity of a notice (S-3 `notice`).
@@ -77,6 +85,11 @@ mod tests {
         assert_eq!(reason.code, "areaTooLarge");
         assert_eq!(reason.text_key, "command.rejected.areaTooLarge");
         assert_eq!(reason.params.get("max"), Some(&ParamValue::Number(512.0)));
+        let reason = reason.with_text("id", "base:bench");
+        assert_eq!(
+            reason.params.get("id"),
+            Some(&ParamValue::Text("base:bench".into()))
+        );
     }
 
     #[test]

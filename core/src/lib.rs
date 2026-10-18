@@ -3,10 +3,12 @@
 //! Holds the complete game logic and knows nothing about rendering or about
 //! JavaScript (rule 006 in `docs/decisions.md`). Step 2.2 provides the tick
 //! with time control, the command channel S-2, the event stream S-3 and the
-//! verification mode; the world grid and flow fields follow in step 2.3.
+//! verification mode; the world grid and flow fields follow in step 2.3,
+//! the data pack loader (S-4) in step 2.4.
 
 pub mod adoption;
 pub mod command;
+pub mod datapack;
 pub mod event;
 pub mod flowfield;
 pub mod frame;

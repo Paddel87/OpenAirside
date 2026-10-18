@@ -1,0 +1,10 @@
+{
+  "$schema": "../../schema/objects.schema.json",
+  "objects": [
+    {
+      "id": "bench",
+      "name": "object.bench",
+      "placement": { "kind": "single", "width": 4, "depth": 2 }
+    }
+  ]
+}
