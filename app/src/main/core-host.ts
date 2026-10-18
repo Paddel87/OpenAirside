@@ -57,10 +57,11 @@ try {
     const request = parsePackRequest(event.data);
     if (request !== undefined) {
       try {
-        post({ type: "packs", packs: core.setActivePacks(request.ids) });
+        post({ type: "packs", request: request.request, packs: core.setActivePacks(request.ids) });
       } catch (error) {
         post({
           type: "packsError",
+          request: request.request,
           message: error instanceof Error ? error.message : String(error),
         });
       }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCoreArgs, toPortMessage } from "./core-port.js";
+import { parseCoreArgs, toPortMessage, withoutPackOptions } from "./core-port.js";
 
 describe("parseCoreArgs", () => {
   it("reads valid flags", () => {
@@ -33,6 +33,17 @@ describe("parseCoreArgs", () => {
       activePacks: ["my-mod", "other_pack"],
     });
     expect(parseCoreArgs(["--active-packs="])).toEqual({ activePacks: [] });
+  });
+
+  it("drops pack folders and ids for files a player may pass on", () => {
+    expect(
+      withoutPackOptions({
+        threads: 2,
+        basePack: "/home/me/app/content/base",
+        userPacks: "/home/me/.config/openairside/packs",
+        activePacks: ["a-b"],
+      }),
+    ).toEqual({ threads: 2 });
   });
 
   it("lets later flags win", () => {

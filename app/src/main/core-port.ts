@@ -100,6 +100,18 @@ export function parseCoreArgs(args: readonly string[]): CoreOptions {
   return options;
 }
 
+/**
+ * The options without the pack folders and ids, for files a player may pass
+ * on (measurement report): folder paths can contain the user name.
+ */
+export function withoutPackOptions(options: CoreOptions): CoreOptions {
+  const out: CoreOptions = { ...options };
+  delete out.basePack;
+  delete out.userPacks;
+  delete out.activePacks;
+  return out;
+}
+
 /** Message as posted on the port, with the frame buffer as own `ArrayBuffer`. */
 export type PortMessage = Record<string, unknown>;
 

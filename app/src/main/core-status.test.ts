@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   exitedCoreStatus,
+  isPackAnswer,
   nextCoreStatus,
   parseCoreHostMessage,
   parsePackRequest,
@@ -39,12 +40,24 @@ describe("parseCoreHostMessage", () => {
     });
   });
 
-  it("accepts pack reports and pack errors", () => {
-    expect(parseCoreHostMessage({ type: "packs", packs })).toEqual({ type: "packs", packs });
-    expect(parseCoreHostMessage({ type: "packsError", message: "invalidId" })).toEqual({
+  it("accepts pack reports and pack errors with their request number", () => {
+    expect(parseCoreHostMessage({ type: "packs", request: 3, packs })).toEqual({
+      type: "packs",
+      request: 3,
+      packs,
+    });
+    expect(parseCoreHostMessage({ type: "packsError", request: 4, message: "invalidId" })).toEqual({
       type: "packsError",
+      request: 4,
       message: "invalidId",
     });
+  });
+
+  it("recognises pack answers also when they are malformed", () => {
+    expect(isPackAnswer({ type: "packs", packs: "x" })).toBe(true);
+    expect(isPackAnswer({ type: "packsError" })).toBe(true);
+    expect(isPackAnswer({ type: "ready" })).toBe(false);
+    expect(isPackAnswer(null)).toBe(false);
   });
 
   it("accepts an error message", () => {
@@ -64,7 +77,11 @@ describe("parseCoreHostMessage", () => {
     { type: "ready", info },
     { type: "ready", info: { name: "", version: "0.0.0" }, packs },
     { type: "ready", info: { name: "core", version: 1 }, packs },
-    { type: "packs", packs: [{ folder: "x" }] },
+    { type: "packs", request: 1, packs: [{ folder: "x" }] },
+    { type: "packs", packs },
+    { type: "packs", request: -1, packs },
+    { type: "packsError", request: 1.5, message: "x" },
+    { type: "packsError", request: 1 },
     { type: "error", message: 3 },
     { type: "other" },
   ])("rejects malformed message %j", (value) => {
@@ -92,13 +109,14 @@ describe("nextCoreStatus", () => {
   });
 
   it("does not take pack answers as a status", () => {
-    expect(nextCoreStatus({ type: "packs", packs }).state).toBe("failed");
+    expect(nextCoreStatus({ type: "packs", request: 1, packs }).state).toBe("failed");
   });
 });
 
 describe("parsePackRequest", () => {
   it("accepts a request with valid ids", () => {
-    expect(parsePackRequest({ type: "packs:setActive", ids: ["my-mod"] })).toEqual({
+    expect(parsePackRequest({ type: "packs:setActive", request: 2, ids: ["my-mod"] })).toEqual({
+      request: 2,
       ids: ["my-mod"],
     });
   });
@@ -106,7 +124,8 @@ describe("parsePackRequest", () => {
   it.each([
     { type: "port" },
     { type: "packs:setActive" },
-    { type: "packs:setActive", ids: ["X"] },
+    { type: "packs:setActive", ids: ["my-mod"] },
+    { type: "packs:setActive", request: 1, ids: ["X"] },
     null,
   ])("ignores %j", (value) => {
     expect(parsePackRequest(value)).toBeUndefined();

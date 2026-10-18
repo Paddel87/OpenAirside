@@ -26,11 +26,12 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { PackReport } from "../generated/PackReport.js";
-import { parseCoreArgs } from "./core-port.js";
+import { parseCoreArgs, withoutPackOptions } from "./core-port.js";
 import {
   type CoreStatus,
   exitedCoreStatus,
   nextCoreStatus,
+  isPackAnswer,
   type PackRequest,
   parseCoreHostMessage,
   restartDecision,
@@ -78,7 +79,21 @@ let packReports: PackReport[] = [];
 const PACKS_TIMEOUT_MS = 60_000;
 /** Open `packs.setActive` call; a second one is refused with `busy` (S-6). */
 let packsPending:
-  { resolve: (reports: PackReport[]) => void; reject: (error: Error) => void } | undefined;
+  | {
+      readonly request: number;
+      resolve: (reports: PackReport[]) => void;
+      reject: (error: Error) => void;
+    }
+  | undefined;
+/** Number of the last `packs.setActive` request to the core process. */
+let packsRequest = 0;
+
+/** Code of a Node.js error (`ENOENT` …) without its message, which names paths. */
+function errorCode(error: unknown): string {
+  const code =
+    typeof error === "object" && error !== null && "code" in error ? error.code : undefined;
+  return typeof code === "string" ? code : "unknown";
+}
 
 /** Base pack shipped with the game (`content/` in the app folder, step 2.4). */
 function basePackDir(): string {
@@ -98,16 +113,23 @@ function savedActivePacks(): string[] {
   }
 }
 
+/** Settles the open `packs.setActive` call if `answer` belongs to it. */
 function settlePacks(
-  answer: { type: "packs"; packs: PackReport[] } | { type: "packsError"; message: string },
+  answer:
+    | { type: "packs"; request: number; packs: PackReport[] }
+    | { type: "packsError"; request: number; message: string },
 ): void {
   const pending = packsPending;
+  if (pending?.request !== answer.request) {
+    // Late answer to an earlier request (after its time limit).
+    return;
+  }
   packsPending = undefined;
   if (answer.type === "packs") {
     packReports = answer.packs;
-    pending?.resolve(answer.packs);
+    pending.resolve(answer.packs);
   } else {
-    pending?.reject(new Error(answer.message));
+    pending.reject(new Error(answer.message));
   }
 }
 
@@ -133,7 +155,7 @@ function startCore(): void {
     // Created so that players find the folder for their packs.
     mkdirSync(userPacks, { recursive: true });
   } catch (error) {
-    console.warn(`cannot create the pack folder: ${String(error)}`);
+    console.warn(`cannot create the pack folder: ${errorCode(error)}`);
   }
   // Flags such as --scenario= reach the core; it ignores everything else.
   // The pack flags come last and win over flags of the command line.
@@ -151,6 +173,18 @@ function startCore(): void {
       settlePacks(message);
       return;
     }
+    if (isPackAnswer(raw)) {
+      // A malformed pack answer says nothing about the state of the core.
+      console.warn("malformed pack answer from the core process");
+      if (packsPending !== undefined) {
+        settlePacks({
+          type: "packsError",
+          request: packsPending.request,
+          message: "invalidAnswer",
+        });
+      }
+      return;
+    }
     if (message?.type === "ready") {
       packReports = message.packs;
     }
@@ -160,7 +194,9 @@ function startCore(): void {
   process.on("exit", (code: number) => {
     globalThis.openairsideCoreStatus = exitedCoreStatus(globalThis.openairsideCoreStatus, code);
     core = undefined;
-    settlePacks({ type: "packsError", message: "coreExited" });
+    if (packsPending !== undefined) {
+      settlePacks({ type: "packsError", request: packsPending.request, message: "coreExited" });
+    }
     gameWindow?.webContents.send("core:exit", code);
     const decision = restartDecision(restarts, Date.now());
     restarts = decision.restarts;
@@ -231,7 +267,7 @@ async function reportMeasure(result: unknown): Promise<string> {
     cpuModel: cpus[0]?.model ?? "",
     memGb: Math.round(os.totalmem() / 2 ** 30),
     gpuFeatureStatus: app.getGPUFeatureStatus(),
-    coreOptions: parseCoreArgs(process.argv),
+    coreOptions: withoutPackOptions(parseCoreArgs(process.argv)),
     finishedAt: new Date().toISOString(),
   });
   if (!done.ok) {
@@ -256,10 +292,12 @@ async function reportMeasure(result: unknown): Promise<string> {
 async function setActivePacks(arg: unknown): Promise<PackReport[]> {
   const ids = parseActiveIds(arg);
   if (ids === undefined) {
+    console.warn("rejected packs:setActive: invalidArgument");
     throw new Error("invalidArgument");
   }
   const choosable = choosableIds(packReports);
   if (!ids.every((id) => choosable.has(id))) {
+    console.warn("rejected packs:setActive: unknownPack");
     throw new Error("unknownPack");
   }
   const target = core;
@@ -269,11 +307,14 @@ async function setActivePacks(arg: unknown): Promise<PackReport[]> {
   if (target === undefined || globalThis.openairsideCoreStatus.state !== "ready") {
     throw new Error("notReady");
   }
+  packsRequest += 1;
+  const request = packsRequest;
   const answer = new Promise<PackReport[]>((resolve, reject) => {
     const timer = setTimeout(() => {
-      settlePacks({ type: "packsError", message: "timeout" });
+      settlePacks({ type: "packsError", request, message: "timeout" });
     }, PACKS_TIMEOUT_MS);
     packsPending = {
+      request,
       resolve: (reports) => {
         clearTimeout(timer);
         resolve(reports);
@@ -291,12 +332,12 @@ async function setActivePacks(arg: unknown): Promise<PackReport[]> {
     await writeFile(`${file}.tmp`, activeFileText(ids));
     await rename(`${file}.tmp`, file);
   } catch (error) {
-    settlePacks({ type: "packsError", message: "ioError" });
-    console.warn(`cannot save the chosen packs: ${String(error)}`);
+    settlePacks({ type: "packsError", request, message: "ioError" });
+    console.warn(`cannot save the chosen packs: ${errorCode(error)}`);
     return answer;
   }
-  const request: PackRequest = { type: "packs:setActive", ids };
-  target.postMessage(request);
+  const message: PackRequest = { type: "packs:setActive", request, ids };
+  target.postMessage(message);
   return answer;
 }
 
