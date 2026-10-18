@@ -870,18 +870,27 @@ fn junctions_are_refused_on_windows() {
         &[&area("y")],
     );
     user.write("p/manifest.json", &manifest("ppp", "1.0.0", &[]));
+    // Paths from single components: a `/` inside a path would reach
+    // mklink as a switch.
     let junction = |link: &Path, target: &Path| {
-        let status = std::process::Command::new("cmd")
+        let output = std::process::Command::new("cmd")
             .args(["/C", "mklink", "/J"])
             .arg(link)
             .arg(target)
-            .status()
+            .output()
             .expect("run mklink");
-        assert!(status.success(), "mklink /J failed");
+        assert!(
+            output.status.success(),
+            "mklink /J {} {} failed: {} {}",
+            link.display(),
+            target.display(),
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
     };
     // A kind folder that is a junction to a folder outside the pack.
     junction(
-        &user.path().join("p/objects"),
+        &user.path().join("p").join("objects"),
         &outside.path().join("objects"),
     );
     // A pack folder that is a junction to another pack.
