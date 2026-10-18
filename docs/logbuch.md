@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-18 23:38 (UTC) – [BEOBACHTUNG]
+
+- **PR Paddel87/OpenAirside#21 gemergt** (`eead91b`, Merge-Commit) auf Anweisung des Projektinhabers („merge wenn grün“); vorher alle 39 Prüfläufe auf `f52f469` grün (CI für Push und PR, CodeQL, wöchentliche Audits), PR konfliktfrei, keine Reviews oder Kommentare. Branch `scp/zealous-ride-mwvv5m` per Fast-Forward auf den neuen `main` gesetzt. Dieser Eintrag liegt nach `project-context.md` Abschnitt 10 nur auf dem Branch und geht mit dem PR des nächsten Schritts (2.5) nach `main`.
+
 ### 2026-10-18 23:30 (UTC) – [BEOBACHTUNG]
 
 - **Nachtrag nach dem Sessionende:** Projektinhaber: „PR öffnen und Reflexionen zur Kenntnis genommen". Kenntnisnahme der Reflexionen zu ADR-025 (Maßnahme 6) und ADR-026 (Maßnahme 7) im Fahrplan vermerkt; kein Umbau. PR für `scp/zealous-ride-mwvv5m` nach `main` wird geöffnet.
