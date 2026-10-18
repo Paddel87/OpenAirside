@@ -24,6 +24,22 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-18 22:09 (UTC) – [BEOBACHTUNG]
+
+- **Zwei Merge-Vermerke zu PR Paddel87/OpenAirside#20:** Auf `scp/friendly-einstein-rggagz` (`45f544c`, Session ab 23:40) und auf `claude/naechster-schritt-2-8-736kf4` (`274e662`, Session ab 06:55, die den PR beobachtete) liegt je ein Eintrag „00:30 – [BEOBACHTUNG]“, nicht auf `main`. Sie widersprechen sich: `45f544c` nennt den Projektinhaber als Ausführenden, `274e662` den Merge durch die KI „auf Anweisung des Projektinhabers (‚merge wenn grün‘)“. Geprüft im Verlauf der Session `013Yz3…` (`list_events`): Anweisung „merge wenn grün“ vom Projektinhaber, Aufruf `merge_pull_request` um 00:29:11 UTC, Merge laut GitHub 00:29:18 UTC (`merged_by` zeigt das Konto des Projektinhabers, weil die KI über dessen Zugang arbeitet). Übernommen ist daher nur `274e662` (als `4e0b0f3`); `45f544c` bleibt unübernommen. Die übrigen Angaben aus `45f544c` stehen im `[SESSIONSTART]` unten.
+- **Zeitstempel im Logbuch vorgegangen:** Die Einträge „00:25“, „00:33“, „00:35“ und „00:45“ vom 2026-10-15 stehen in Commits von 00:12, 00:15, 00:15 und 00:24 UTC, liegen also 13 bis 21 Minuten nach ihrer Entstehung. Die Reihenfolge stimmt, die Uhrzeiten nicht. Die Einträge bleiben unverändert; maßgeblich sind die Commit-Zeiten. Ab jetzt nimmt jeder Eintrag seine Uhrzeit aus `date -u`.
+- **Wieder kein `[SESSIONENDE]`:** Die Session ab 2026-10-14 23:40 UTC endete ohne Eintrag (letzter Commit `1f98838` 00:24 UTC, Merge 00:29), wie schon die Session ab 06:55. Fahrplan „Aktueller Stand“ und README waren nachgezogen (geprüft: Phase, Reife, Blocker, Nächste Schritte stimmen); Modell-Bilanz, Kontextgröße und Drift-Prüfung fehlen für beide Sessions.
+
+### 2026-10-18 22:09 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** 2.7 erledigt (2026-10-15), PR Paddel87/OpenAirside#20 gemergt (`f652370`); kein `[IN ARBEIT]`-Schritt; nächster Schritt 2.4 mit vorheriger Freigabe der neuen Abhängigkeiten (Kategorie 3). Letzter `[SESSIONENDE]`: 2026-10-14 05:32 UTC.
+- **Branches:** Session-Branch `scp/zealous-ride-mwvv5m` (vom Werkzeug vergeben) stand auf `main` `f652370`; Merge-Vermerk `274e662` als `4e0b0f3` übernommen (Abschnitt 10 `project-context.md`). `claude/naechster-schritt-2-8-736kf4` ist gemergt bis auf diesen Vermerk; `scp/friendly-einstein-rggagz` trägt nur `45f544c` (nicht übernommen, siehe Beobachtung oben); `claude/messwerkzeug-2-7-rb2hq7` (abgebrochene Parallel-Session) und `claude/gracious-galileo-2reksz` (nur `fbf2507`, als `a4d3521` übernommen) liegen ungemergt vor. Löschen nur auf Anweisung des Projektinhabers.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C/D, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant für diese Session:** kein ausdrücklicher Auftrag („Neue Session.“); nach Fahrplan 2.4 beginnen: Vertrag S-4 und Modul Inhalte & Mods vertiefen, Freigabe der Abhängigkeiten (JSON-Lader, Schema-Erzeugung) mit belegten Versionen vorlegen.
+- **Vorabprüfung:** keine aktiven Blocker; Eingangskriterium 2.4 (S-4 `[BELASTBAR]`) erfüllt; Reaktiv-Quote 4 / 10 über dem Schwellenwert, Reflexionen liegen vor, kein neuer reaktiver ADR seitdem; Phase 2 bei 10 Schritten (ursprünglicher Plan 10). Ablaufdaten: Runner-Umstellung `ubuntu-latest` → Ubuntu 26 ab morgen (2026-10-19), Q.1 beobachtet den ersten Lauf danach; sonst kein Vorlauf erreicht.
+- **Modus/Werkzeug:** Claude Code, Cloud-Session (Start über Desktop-App). Container frisch: Node 26.11.1 über `/opt/nvm`, `npm ci`, Electron-Binärdatei per `install.js`, `pre-commit install`, `cargo-deny` 0.20.2 aus dem GitHub-Release.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` laut `get_session` 22:06 UTC – Entscheidungs-Klasse. Kontextgröße meldet `get_session` mit 0 (nicht aussagekräftig); Kontingent-Angaben (`rate_limit_info`) fehlten in der Antwort.
+
 ### 2026-10-15 00:30 (UTC) – [BEOBACHTUNG]
 
 - **PR Paddel87/OpenAirside#20 gemergt** (`f652370`, Merge-Commit) auf Anweisung des Projektinhabers („merge wenn grün“); vorher alle 56 Prüfläufe auf `1f98838` grün, PR konfliktfrei, Entwurfsstatus aufgehoben. Beobachtung des PR beendet. Dieser Eintrag liegt nach `project-context.md` Abschnitt 10 nur auf dem Branch und geht mit dem PR des nächsten Schritts (2.4) nach `main`.
