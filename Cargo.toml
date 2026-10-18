@@ -24,8 +24,14 @@ napi-build = "=2.4.4"
 serde = { version = "=1.0.229", features = ["derive"] }
 rayon = "=1.12.0"
 ts-rs = "=12.0.1"
-# Only for the bridge: conversion JS ↔ Rust with napi `serde-json` (ADR-024, verified 2026-10-14).
+# Bridge: conversion JS ↔ Rust with napi `serde-json` (ADR-024, verified 2026-10-14);
+# core: data pack loader (ADR-025).
 serde_json = "=1.0.151"
+# Data pack loader (ADR-025, verified 2026-10-18): JSON path in errors, versions and ranges.
+serde_path_to_error = "=0.1.20"
+semver = "=1.0.28"
+# JSON Schema files of the data packs, only behind the core feature `schema` (ADR-025).
+schemars = { version = "=1.2.2", default-features = false, features = ["derive", "std"] }
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "deny"

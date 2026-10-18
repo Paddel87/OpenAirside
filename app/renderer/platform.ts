@@ -5,6 +5,8 @@
  * window message (app/src/main/preload.cts).
  */
 
+import type { PackReport } from "../src/generated/PackReport.js";
+
 /** Tag of the window message with the port (same as in preload.cts). */
 export const CORE_PORT_TAG = "openairside:core-port";
 
@@ -28,6 +30,13 @@ export interface OpenAirsideApi {
     start(): Promise<null>;
     /** Writes the result with system data and memory; returns the file path. */
     report(result: unknown): Promise<string>;
+  };
+  /** Data packs (step 2.4): found packs and the choice of the active ones. */
+  readonly packs: {
+    /** Found packs with state and errors; the choice for the next session. */
+    list(): Promise<PackReport[]>;
+    /** Chooses the active user packs in load order; applies from the next session on. */
+    setActive(ids: readonly string[]): Promise<PackReport[]>;
   };
   onCoreExit(callback: (code: number) => void): void;
 }

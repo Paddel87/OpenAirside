@@ -1,0 +1,9 @@
+{
+  "$schema": "../schema/manifest.schema.json",
+  "id": "base",
+  "name": "OpenAirside",
+  "version": "0.0.0",
+  "format": 1,
+  "game": ">=0.0.0",
+  "dependencies": []
+}

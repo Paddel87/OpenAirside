@@ -1,0 +1,15 @@
+{
+  "$schema": "../../schema/objects.schema.json",
+  "objects": [
+    {
+      "id": "floor_concrete",
+      "name": "object.floor_concrete",
+      "placement": { "kind": "area" }
+    },
+    {
+      "id": "wall_concrete",
+      "name": "object.wall_concrete",
+      "placement": { "kind": "area" }
+    }
+  ]
+}

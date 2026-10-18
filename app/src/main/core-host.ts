@@ -2,12 +2,14 @@
  * Entry point of the Electron utility process that hosts the simulation core
  * (ADR-009). Loads the native bridge, starts the simulation with the options
  * from the command line and connects each `MessagePort` handed over by the
- * main process to the core (S-1, S-2, S-3; ADR-021).
+ * main process to the core (S-1, S-2, S-3; ADR-021). Reports the data packs
+ * (S-4) and changes the active packs on request of the main process (S-6
+ * `packs.*`, step 2.4).
  */
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import type { MessagePortMain } from "electron";
-import type { CoreHostMessage, CoreInfo } from "./core-status.js";
+import { type CoreHostOutgoing, type CoreInfo, parsePackRequest } from "./core-status.js";
 import {
   type BridgeOutgoing,
   type CoreOptions,
@@ -19,6 +21,8 @@ interface NativeCore {
   openPort(): void;
   receive(message: unknown): BridgeOutgoing[];
   pump(): BridgeOutgoing[];
+  packs(): unknown;
+  setActivePacks(ids: string[]): unknown;
 }
 
 interface BridgeModule {
@@ -33,7 +37,7 @@ const nativeModulePath = fileURLToPath(
   new URL("../../native/openairside-bridge.node", import.meta.url),
 );
 
-function post(message: CoreHostMessage): void {
+function post(message: CoreHostOutgoing): void {
   process.parentPort.postMessage(message);
 }
 
@@ -50,6 +54,19 @@ try {
   let current: MessagePortMain | undefined;
 
   process.parentPort.on("message", (event) => {
+    const request = parsePackRequest(event.data);
+    if (request !== undefined) {
+      try {
+        post({ type: "packs", request: request.request, packs: core.setActivePacks(request.ids) });
+      } catch (error) {
+        post({
+          type: "packsError",
+          request: request.request,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
     const [port] = event.ports;
     if (port === undefined) {
       return;
@@ -68,7 +85,7 @@ try {
     }
   }, PUMP_MS);
 
-  post({ type: "ready", info: bridge.coreInfo() });
+  post({ type: "ready", info: bridge.coreInfo(), packs: core.packs() });
 } catch (error) {
   post({ type: "error", message: error instanceof Error ? error.message : String(error) });
   process.exitCode = 1;

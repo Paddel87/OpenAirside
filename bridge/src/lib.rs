@@ -4,6 +4,8 @@
 //! `openairside-core` (with napi `serde-json`, ADR-024); the port logic,
 //! frames and events live in `openairside_core::host`.
 
+use std::path::PathBuf;
+use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -11,6 +13,7 @@ use napi::bindgen_prelude::Buffer;
 use napi_derive::napi;
 use openairside_core::adoption::AdoptionMode;
 use openairside_core::command::Scenario;
+use openairside_core::datapack::{self, PackReport};
 use openairside_core::geometry::MapSize;
 use openairside_core::host::{Outgoing, PortHost};
 use openairside_core::port::{ClientMessage, CommandEnvelope, MAX_MESSAGE_BYTES};
@@ -54,6 +57,26 @@ pub struct CoreOptions {
     pub scenario: Option<String>,
     /// Persons at the start; default 0.
     pub persons: Option<u32>,
+    /// Folder of the base pack (S-4); without it no content is loaded.
+    pub base_pack: Option<String>,
+    /// Folder of the player's packs, one sub-folder per pack.
+    pub user_packs: Option<String>,
+    /// Ids of the player's active packs in the chosen order.
+    pub active_packs: Option<Vec<String>>,
+}
+
+/// Where the core looks for data packs.
+struct PackDirs {
+    base: Option<PathBuf>,
+    user: Option<PathBuf>,
+}
+
+impl PackDirs {
+    /// Loads the base pack and the active user packs (S-4).
+    fn load(&self, active: &[String]) -> datapack::LoadOutcome {
+        let folders = datapack::discover(self.base.as_deref(), self.user.as_deref());
+        datapack::load(&folders, active, &datapack::game_version())
+    }
 }
 
 /// A message for the renderer: `message` as structured object, `buf` the
@@ -108,6 +131,8 @@ pub struct Core {
     runner: Option<Runner>,
     host: Option<PortHost>,
     threads: (usize, usize),
+    pack_dirs: PackDirs,
+    packs: Vec<PackReport>,
 }
 
 #[napi]
@@ -125,6 +150,9 @@ impl Core {
             background_threads: None,
             scenario: None,
             persons: None,
+            base_pack: None,
+            user_packs: None,
+            active_packs: None,
         });
         let edge = options.map_size.unwrap_or(2048);
         if edge != 1536 && edge != 2048 {
@@ -155,11 +183,26 @@ impl Core {
         };
         let world = scenario_world(scenario, map, persons, config.seed)
             .ok_or_else(|| napi_error("scenario does not fit on the map"))?;
-        let runner = Runner::start_with_world(config, world).map_err(napi_error)?;
+        let pack_dirs = PackDirs {
+            base: options.base_pack.map(PathBuf::from),
+            user: options.user_packs.map(PathBuf::from),
+        };
+        let active = options.active_packs.unwrap_or_default();
+        // An invalid saved choice loads only the base pack.
+        let active = if datapack::check_active(&active).is_ok() {
+            active
+        } else {
+            Vec::new()
+        };
+        let loaded = pack_dirs.load(&active);
+        let runner = Runner::start_with_content(config, world, Arc::new(loaded.catalog))
+            .map_err(napi_error)?;
         Ok(Self {
             runner: Some(runner),
             host: None,
             threads: (threads, background_threads),
+            pack_dirs,
+            packs: loaded.reports,
         })
     }
 
@@ -233,6 +276,33 @@ impl Core {
             return Ok(Vec::new());
         };
         to_js(host.pump(runner, Instant::now()))
+    }
+
+    /// Found data packs with state and errors (S-6 `packs.list`): the
+    /// choice that applies from the next session on.
+    ///
+    /// # Errors
+    ///
+    /// Fails if a report cannot be converted.
+    #[napi]
+    pub fn packs(&self) -> napi::Result<serde_json::Value> {
+        serde_json::to_value(&self.packs).map_err(napi_error)
+    }
+
+    /// Chooses the active user packs in load order (S-6 `packs.setActive`),
+    /// reloads all packs and uses the result from the next session on.
+    /// Returns the new reports.
+    ///
+    /// # Errors
+    ///
+    /// Fails on invalid ids (code in the message) or if the core is stopped.
+    #[napi]
+    pub fn set_active_packs(&mut self, ids: Vec<String>) -> napi::Result<serde_json::Value> {
+        datapack::check_active(&ids).map_err(|reason| napi_error(reason.code))?;
+        let loaded = self.pack_dirs.load(&ids);
+        self.runner()?.set_next_content(Arc::new(loaded.catalog));
+        self.packs = loaded.reports;
+        self.packs()
     }
 
     /// Current status.

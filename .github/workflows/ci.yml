@@ -65,6 +65,9 @@ jobs:
       - run: npm ci
       - name: Erzeugte Typen (app/src/generated) aktuell
         run: npm run check:types
+      # Eingecheckte JSON-Schema-Dateien der Datenpakete müssen den Rust-Typen entsprechen (ADR-025).
+      - name: Erzeugte Schemas (content/schema) aktuell
+        run: npm run check:schema
 
   rust-bench:
     name: Kern-Benchmark

@@ -2,9 +2,12 @@
  * Status of the simulation core process as seen by the Electron main process.
  *
  * The utility process (core-host.ts) reports once after start-up whether the
- * native bridge module could be loaded. Messages cross a process boundary and
- * are therefore validated instead of trusted.
+ * native bridge module could be loaded, together with the found data packs,
+ * and answers requests to change the active packs (step 2.4). Messages cross
+ * a process boundary and are therefore validated instead of trusted.
  */
+import type { PackReport } from "../generated/PackReport.js";
+import { parseActiveIds, parsePackReports } from "./packs.js";
 
 /** Identification of the loaded core (mirrors `CoreInfo` in bridge/src/lib.rs). */
 export interface CoreInfo {
@@ -12,10 +15,30 @@ export interface CoreInfo {
   readonly version: string;
 }
 
-/** Message sent by the core host after loading the native module. */
+/** Message of the core host as validated by the main process. */
 export type CoreHostMessage =
-  | { readonly type: "ready"; readonly info: CoreInfo }
-  | { readonly type: "error"; readonly message: string };
+  | { readonly type: "ready"; readonly info: CoreInfo; readonly packs: PackReport[] }
+  | { readonly type: "error"; readonly message: string }
+  | { readonly type: "packs"; readonly request: number; readonly packs: PackReport[] }
+  | { readonly type: "packsError"; readonly request: number; readonly message: string };
+
+/** Message as posted by the core host (reports straight from the bridge). */
+export type CoreHostOutgoing =
+  | { readonly type: "ready"; readonly info: CoreInfo; readonly packs: unknown }
+  | { readonly type: "error"; readonly message: string }
+  | { readonly type: "packs"; readonly request: number; readonly packs: unknown }
+  | { readonly type: "packsError"; readonly request: number; readonly message: string };
+
+/**
+ * Request of the main process to the core host (S-6 `packs.setActive`).
+ * `request` numbers the requests, so that a late answer to an earlier one
+ * (after the time limit) is not taken for the current one.
+ */
+export interface PackRequest {
+  readonly type: "packs:setActive";
+  readonly request: number;
+  readonly ids: readonly string[];
+}
 
 /** Lifecycle state of the core process. */
 export type CoreStatus =
@@ -47,12 +70,45 @@ export function parseCoreHostMessage(value: unknown): CoreHostMessage | undefine
     return undefined;
   }
   if (value.type === "ready" && isCoreInfo(value.info)) {
-    return { type: "ready", info: { name: value.info.name, version: value.info.version } };
+    const packs = parsePackReports(value.packs);
+    if (packs === undefined) return undefined;
+    return { type: "ready", info: { name: value.info.name, version: value.info.version }, packs };
+  }
+  if (value.type === "packs" && isRequestNumber(value.request)) {
+    const packs = parsePackReports(value.packs);
+    return packs === undefined ? undefined : { type: "packs", request: value.request, packs };
+  }
+  if (
+    value.type === "packsError" &&
+    isRequestNumber(value.request) &&
+    typeof value.message === "string"
+  ) {
+    return { type: "packsError", request: value.request, message: value.message };
   }
   if (value.type === "error" && typeof value.message === "string") {
     return { type: "error", message: value.message };
   }
   return undefined;
+}
+
+function isRequestNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+
+/** Whether `value` claims to answer a pack request, valid or not. */
+export function isPackAnswer(value: unknown): boolean {
+  return isRecord(value) && (value.type === "packs" || value.type === "packsError");
+}
+
+/** Validates a request of the main process in the core host. */
+export function parsePackRequest(
+  value: unknown,
+): { readonly request: number; readonly ids: string[] } | undefined {
+  if (!isRecord(value) || value.type !== "packs:setActive" || !isRequestNumber(value.request)) {
+    return undefined;
+  }
+  const ids = parseActiveIds(value.ids);
+  return ids === undefined ? undefined : { request: value.request, ids };
 }
 
 /**
@@ -62,7 +118,7 @@ export function parseCoreHostMessage(value: unknown): CoreHostMessage | undefine
  */
 export function nextCoreStatus(raw: unknown): CoreStatus {
   const message = parseCoreHostMessage(raw);
-  if (message === undefined) {
+  if (message === undefined || message.type === "packs" || message.type === "packsError") {
     return { state: "failed", reason: "unexpected message from core host" };
   }
   if (message.type === "ready") {

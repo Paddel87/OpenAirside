@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-15 (Session ab 2026-10-14 23:40 UTC)
+- **Stand vom:** 2026-10-18 (Session ab 22:09 UTC, Ende 23:27 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (2.7 erledigt am 2026-10-15)
-- **Nächster Schritt:** 2.4 (Datenpaket-Schema und Lader), zuerst Freigabe der neuen Abhängigkeiten (Kategorie 3)
-- **Offene STOPP-Situationen:** keine (Stopp aus 2.3 aufgehoben nach Wechsel auf die Entscheidungs-Klasse am 2026-10-13 23:50 UTC); Reaktiv-Quote 4 / 10 nach ADR-022 weiter über dem Schwellenwert, aber sinkend (Reflexionen siehe „Iterations-Reflexion")
+- **Aktiver Schritt:** keiner (2.4 erledigt am 2026-10-18)
+- **Nächster Schritt:** 2.5 (Spielstand mit Autosave), zuerst Freigabe von Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3; Entscheidungs-Klasse), dabei Maßnahme (7): Vertragssätze S-5/S-6 vor dem Code gegen den Plan prüfen
+- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-026 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion" zu ADR-025 und ADR-026, beide vom Projektinhaber am 2026-10-18 zur Kenntnis genommen)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -246,7 +246,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.4: Datenpaket-Schema und Lader
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT 2026-10-18 (ADR-025, ADR-026); CI-Lauf 39176235417 auf `89fa783` grün auf drei Plattformen
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.9
 - **Freigabepflichtig:** ja, für den JSON-Lader und die Schema-Erzeugung als neue Abhängigkeiten (Kategorie 3, ADR-021)
@@ -255,9 +255,16 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Anforderungen (ab Klasse M):** FR-044
 - **Zu tun:** Lader für Datenpakete im Kern nach S-4 (ADR-021): Manifest, zweistufige Prüfung, Grenzen, Pfadprüfung, ganzes Paket aus bei Fehlern, verständliche Fehlermeldung; JSON-Schema-Dateien für Modder; S-6 `packs.list`/`packs.setActive`; Basis-Datenpaket des Spiels (Regel-003); Inhaltsprüfung von `build`/`buildArea` (S-2) auf die geladenen Pakete umstellen (`TODO(fahrplan-ref: 2.4)` in `core/src/simulation.rs`).
 - **Akzeptanzkriterien:** `core/tests/datapacks.rs` grün, inklusive fehlerhafter Pakete ohne Absturz; Coverage Kern ≥ 85 %.
-- **Betroffene Module:** Inhalte & Mods, Takt & Weltzustand
+- **Betroffene Module:** Inhalte & Mods, Takt & Weltzustand; für S-6 `packs.*` (im „Zu tun" vorgesehen) zusätzlich Brücke, Plattform und Spielfeld (Konsole) – bei der Planung nicht aufgeführt, nachgetragen am 2026-10-18
 - **Reifegrad-Wirkung:** Modul Inhalte & Mods (Lader) → `[BELASTBAR]`; Code-Mods bleiben `[OFFEN]` (6.1)
 - **Artefakte:** Lader, Schema, Basis-Datenpaket, Tests
+- **Ergebnis (2026-10-18, Entscheidungs-Klasse):** Lader `core/src/datapack/` (Vorprüfung der Grenzen, Aufzählen und Lesen ohne Links, zwei Prüfstufen mit Datei, Zeile, Spalte und JSON-Pfad, Abhängigkeiten mit Reihenfolge und Zyklen, `replaces`, ganzes Paket aus bei Fehlern); Basis-Datenpaket `content/base/` mit `base:floor_concrete`, `base:wall_concrete`, `base:bench`; Schema-Dateien `content/schema/` aus `npm run gen:schema`, CI-Schritt „Erzeugte Schemas (content/schema) aktuell" mit erzwungenem Fehlerfall (Lauf 39173571403, nur dieser Schritt rot; zurückgenommen in `f59fe24`); `build`/`buildArea` prüfen die ID gegen den Katalog der Sitzung (`TODO(fahrplan-ref: 2.4)` aufgelöst, Wirkung 3.1); neue Paketauswahl ab der nächsten Sitzung; S-6 `packs.list`/`packs.setActive` mit Speicherung in `packs-active.json`, `busy`, Anfrage-Nummern; Konsolenbefehle `packs`, `packs set`, `build`; Basispaket im Programmpaket. Tests: `core/tests/datapacks.rs` 26 Fälle (fehlerhafte Pakete ohne Absturz, Junctions unter Windows, Links und harte Links unter Unix), Kern 120 Unit-Tests; Coverage Kern 98,74 % Lines (`core/src/datapack/` 90,5–100 % je Datei), TypeScript 252 Tests mit 96,0 % Lines; Rauchtest lädt ein Mod-Paket aus einem frischen Datenordner und baut `kiosks:kiosk` (FR-044 für Objekte). Getrennte Prüfung (Sonnet 5.5): 14 Befunde, keiner hoch; Erledigung in [`docs/research/2.4-getrennte-pruefung.md`](research/2.4-getrennte-pruefung.md), Landeplätze 2.5 und 6.1, Befund 8 per ADR-026 entschieden. Präzisierungen von S-4 in `architecture.md` Abschnitt 4. Modul Inhalte & Mods (Lader) `[BELASTBAR]`. Abweichung: Zwischenstand `ac90598` war in der CI rot (erzeugte Typen einen Commit zu spät, Logbuch 22:37 UTC).
+- **Vorlage zur Freigabe (2026-10-18, Entscheidungs-Klasse; freigegeben: A, ADR-025):**
+  - Kategorie 3, Versionen belegt auf crates.io am 2026-10-18 (Regel-001): A `serde_json =1.0.151` auch im Kern (bisher nur Brücke, ADR-024), `serde_path_to_error =0.1.20` (JSON-Pfad in Fehlern), `semver =1.0.28` (Versionsbereiche; schon im Lockfile über napi-derive-backend), `schemars =1.2.2` nur hinter Kern-Feature `schema` (Schema-Dateien für Modder; nicht 1.2.3, 6 Tage alt); B wie A ohne schemars, Schema-Dateien erst in 6.1 (ändert ADR-021); C wie A, JSON-Pfad und Versionsbereiche selbst programmiert. Empfehlung A.
+  - Kategorie 7: CI-Schritt „Erzeugte Schemas aktuell" im Job „Rust Lint & Format" (wie `check:types`, durch erzwungenen Fehler zu belegen); Basis-Datenpaket im Programmpaket (electron-builder `files`).
+  - Probeaufbau in einer Kopie des Workspace: neu im Lockfile `schemars`, `schemars_derive`, `serde_derive_internals`, `dyn-clone`, `ref-cast`, `ref-cast-impl` (nur mit Feature `schema`) und `serde_path_to_error`; alle MIT bzw. MIT OR Apache-2.0, syn 3 wie serde; `cargo deny check` grün.
+  - Umfang zur Kenntnis: Basispaket in 2.4 nur mit Objekttypen (ID, Textschlüssel, Bauart Fläche oder Einzelobjekt, Grundfläche in Metern); Schema der übrigen Arten mit dem Schritt, der sie zuerst nutzt (Fahrzeuge 3.4, Flugzeugtypen und Airlines 3.6, Forschung 5.6, Sprachen 2.6); bis dahin weist der Lader solche Ordner mit Meldung ab. Wirkung des Bauens bleibt 3.1.
+  - Klassifikation: ADR-025 hebt die Einschränkung „nur in der Brücken-Crate" aus ADR-024 (4 Tage alt) auf und ist damit `[REAKTIV]` (`CLAUDE.md` Abschnitt 6); Reaktiv-Quote bleibt 4 / 10, Reflexion nach der Freigabe.
 
 #### 2.5: Spielstand mit Autosave
 
@@ -268,7 +275,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Freigabe neuer Abhängigkeiten; die Umsetzung des Vertrags S-5 ist Routine und abgebbar.
 - **Eingangskriterien:** S-5, S-6 `[BELASTBAR]`
 - **Anforderungen (ab Klasse M):** FR-004
-- **Zu tun:** Spielstand-Container nach S-5 (ADR-021) mit Grenzen, Prüfreihenfolge und Fehlerkatalog; Höchstzahlen für Objekte, Personen und Fahrzeuge als Konstanten; Speichern und Laden über S-6 (`saves.*`); `logs.write` und `logs.openFolder` mit Rotation (S-6, aus 2.7); Schnellspeichern, Autosave mit Rotation (1–20), Vorschaubild; fehlendes Paket: Laden verweigern mit Liste; Laden validiert und meldet Fehler verständlich.
+- **Zu tun:** Fehlerform aller S-6-Aufrufe nach Vertrag (`{ code, textKey, params }`; Electron überträgt bei abgewiesenen Aufrufen nur den Meldungstext), bestehende Aufrufe `measure.*` und `packs.*` nachziehen (Befund 9 der getrennten Prüfung 2.4); Spielstand-Container nach S-5 (ADR-021) mit Grenzen, Prüfreihenfolge und Fehlerkatalog; Höchstzahlen für Objekte, Personen und Fahrzeuge als Konstanten; Speichern und Laden über S-6 (`saves.*`); `logs.write` und `logs.openFolder` mit Rotation (S-6, aus 2.7); Schnellspeichern, Autosave mit Rotation (1–20), Vorschaubild; fehlendes Paket: Laden verweigern mit Liste; Laden validiert und meldet Fehler verständlich.
 - **Akzeptanzkriterien:** `core/tests/savegame_roundtrip.rs` grün: identische Prüfsumme nach Laden, auch während einer laufenden Neuberechnung der Wegweiser; manipulierter Spielstand führt zu einer Meldung statt zum Absturz.
 - **Betroffene Module:** Takt & Weltzustand, Plattform
 - **Reifegrad-Wirkung:** S-5 durch Umsetzung bestätigt
@@ -283,7 +290,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – klar spezifizierte Umsetzung; Entscheidung nur für eine neue Abhängigkeit.
 - **Eingangskriterien:** Oberfläche startet (2.7)
 - **Anforderungen (ab Klasse M):** FR-006
-- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7).
+- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7); Schema der Inhaltsart `lang/` in Datenpaketen nach S-4 (Landeplatz aus 2.4, ADR-025).
 - **Akzeptanzkriterien:** `app/i18n.test.ts` grün; ein Sprachpaket aus dem Ordner wird erkannt.
 - **Betroffene Module:** Lokalisierung, Oberfläche
 - **Reifegrad-Wirkung:** Modul Lokalisierung → `[BELASTBAR]`
@@ -316,9 +323,9 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7); Bewegung der Bauarbeiter nach 3.7 | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
 | 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
-| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
+| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); Schema der Inhaltsart `vehicles/` in Datenpaketen (aus 2.4, ADR-025); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
 | 3.5 | Abfertigung und Gepäck in Grundform; Wege des Vorfeldpersonals nach 3.7 | FR-025, FR-032 |
-| 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform | FR-030, FR-036, FR-039 |
+| 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform; Schema der Inhaltsarten `aircraft/` und `airlines/` in Datenpaketen (aus 2.4, ADR-025) | FR-030, FR-036, FR-039, FR-044 (Airline und Flugzeugtyp aus dem Mod-Ordner) |
 
 ### Phase 4: Härtung des vertikalen Schnitts – Typ: STABILISIERUNG
 
@@ -340,7 +347,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | 5.3 | Landseite: Parken, ÖPNV, Kreuzungen mit wählbarer Vorfahrt | FR-013, FR-015 |
 | 5.4 | Terminal vollständig: moderner Check-in, Kontrollspuren, Grenze, Läden, Info | FR-019 bis FR-024 |
 | 5.5 | Airside, Gepäck mit dreistufiger Kontrolle, Flüge, Abfertigung vollständig, Startfreigabe | FR-025, FR-026, FR-027, FR-029, FR-030, FR-032 |
-| 5.6 | Personal, Wirtschaft, Forschung, Serviceziele, Notfälle, Störungen, Tutorial, Erfolge; große Tabellen für Personal und Finanzen | FR-007, FR-008, FR-033 bis FR-039 |
+| 5.6 | Personal, Wirtschaft, Forschung, Serviceziele, Notfälle, Störungen, Tutorial, Erfolge; große Tabellen für Personal und Finanzen; Schema der Inhaltsart `research/` in Datenpaketen (aus 2.4, ADR-025) | FR-007, FR-008, FR-033 bis FR-039 |
 | 5.7 | Flugzeugtypen und Airlines inklusive Add-on-Klassen | FR-031 |
 | 5.8 | Benchmark mit Empfehlung, Leistungsbewusstsein (Empfehlung und Warnung nach bebauter, begehbarer Fläche und Zahl der Ziele, ADR-020); Messung auf schwacher integrierter Grafik (Auflage ADR-014) | FR-041, FR-042 |
 
@@ -350,7 +357,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11); Grafiken und Töne in Mods; Spielstände mit fehlenden Paketen laden unter Entfernen der betroffenen Objekte (ADR-021) | FR-044 |
+| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11); Grafiken und Töne in Mods; Spielstände mit fehlenden Paketen laden unter Entfernen der betroffenen Objekte (ADR-021); aus der getrennten Prüfung 2.4: Pakete im Hintergrund laden statt auf dem JavaScript-Thread des Kern-Prozesses, neu abgelegte Pakete ohne Neustart erkennen (`docs/research/2.4-getrennte-pruefung.md`, Befunde 7 und 14) | FR-044 |
 | 6.2 | Audio, Durchsagen, Musik, ggf. Intro-Video | FR-047, FR-049 |
 | 6.3 | Abgleich der Funktionsgleichheit gegen das gesamte Inventar | – |
 
@@ -461,6 +468,26 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 - **Befund:** ADR-021 ist `[ERKENNTNIS]` (geplanter Entwurfsschritt 2.9, ändert keinen ADR binnen 14 Tagen). Quote 5 / 10 über ADR-012 bis ADR-021 (ADR-012, ADR-015, ADR-017, ADR-019, ADR-020), 50 % – weiter über dem Schwellenwert, sinkend wie im Ausblick zu ADR-020 vorhergesagt.
 - **Architektur-Refactoring nötig?** Nein; keine neue Ursache. Maßnahme (5) wurde angewendet: alle Grenzen in ADR-021 nennen Einheit und Bezug.
+
+### Ergänzung Reaktiv-Quote (2026-10-18, Anlass ADR-025)
+
+- **Befund:** 4 / 10 `[REAKTIV]` über ADR-016 bis ADR-025 (ADR-017, ADR-019, ADR-020, ADR-025), 40 %. Der Ausblick zu ADR-020 („3 / 10 ab ADR-025“) ist damit nicht eingetreten.
+- **Ursache von ADR-025:** formal die 14-Tage-Regel (`CLAUDE.md` Abschnitt 6): ADR-025 hebt die Aussage „`serde_json` nur in der Brücken-Crate“ aus ADR-024 vier Tage nach dessen Anlage auf. Inhaltlich war die Einschränkung enger als nötig: Ihre Begründung (Regel-006, kein Anbindungscode im Kern) betrifft eine JSON-Bibliothek nicht, und der JSON-Lader im Kern stand schon in ADR-021 (Konsequenzen, 2.4) und im Fahrplan.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI). Keine Modulgrenze, kein Vertrag und kein Datenformat ändert sich, nur der Geltungsbereich einer Bibliothek.
+- **Muster:** Neben dem Werkzeug-Umfeld (Maßnahme 4) und fehlenden Einheiten (Maßnahme 5) eine dritte Quelle: Aussagen zum Geltungsbereich in Abhängigkeits-ADRs ohne Abgleich mit den folgenden Fahrplan-Schritten.
+- **Maßnahme (6):** Ein ADR, der eine Abhängigkeit auf einen Teil des Systems beschränkt, prüft vorher die Fahrplan-Schritte, die dieselbe Art Abhängigkeit vorsehen, und begründet die Beschränkung mit einer Regel. Ohne solche Begründung nennt er nur den derzeitigen Nutzer und legt keine Beschränkung fest.
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-026, 3 / 10 ab ADR-027, 2 / 10 (Schwellenwert eingehalten) ab ADR-029.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-18: „Reflexionen zur Kenntnis genommen"; kein Umbau, Maßnahme (6) gilt.
+
+### Ergänzung Reaktiv-Quote (2026-10-18, Anlass ADR-026)
+
+- **Befund:** 5 / 10 `[REAKTIV]` über ADR-017 bis ADR-026 (ADR-017, ADR-019, ADR-020, ADR-025, ADR-026), 50 %; steigend.
+- **Ursache von ADR-026:** formal die 14-Tage-Regel (ändert S-6 aus ADR-021 nach fünf Tagen). Inhaltlich zwei Ursachen: (a) Der Vertragstext aus 2.9 regelt Spielstände und Pakete in einem Satz, obwohl die Begründung (Dateinamen nie aus Eingaben des Renderers) nur für Spielstände trägt; Pakete brauchen eine stabile, vom Autor vergebene Kennung, damit die Auswahl einen Neustart übersteht. (b) Die bauende KI hat 2.4 umgesetzt, ohne den Satz aus S-6 gegen ihren Plan zu prüfen; erst die getrennte Prüfung fand die Abweichung. Ursache (b) ist ein Fehler im Vorgehen, kein Fehler der Architektur.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI). Keine Modulgrenze, kein Datenformat; der Schutzzweck der Regel bleibt erfüllt.
+- **Muster:** Wie bei ADR-025 eine Festlegung, die weiter reicht als ihre Begründung (Geltungsbereich einer Bibliothek dort, Geltungsbereich einer Vertragsregel hier).
+- **Maßnahme (7):** Vor der Umsetzung eines Schritts, der einen Vertrag umsetzt, listet die KI die Sätze des Vertrags zu den berührten Funktionen und prüft jeden gegen ihren Plan; eine Abweichung wird vor dem Code vorgelegt, nicht danach. Ergänzend zu Maßnahme (6): Eine Vertragsregel, die mehrere Arten von Objekten betrifft, nennt ihre Begründung je Art.
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-027 bis ADR-028, 3 / 10 ab ADR-029, 2 / 10 (Schwellenwert eingehalten) ab ADR-030.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-18: „Reflexionen zur Kenntnis genommen"; kein Umbau, Maßnahme (7) gilt.
 
 ---
 

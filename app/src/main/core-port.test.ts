@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCoreArgs, toPortMessage } from "./core-port.js";
+import { parseCoreArgs, toPortMessage, withoutPackOptions } from "./core-port.js";
 
 describe("parseCoreArgs", () => {
   it("reads valid flags", () => {
@@ -20,8 +20,46 @@ describe("parseCoreArgs", () => {
     });
   });
 
+  it("reads the pack folders and the active ids", () => {
+    expect(
+      parseCoreArgs([
+        "--base-pack=/opt/OpenAirside/content/base",
+        "--user-packs=C:\\Users\\Me Too\\packs",
+        "--active-packs=my-mod,other_pack",
+      ]),
+    ).toEqual({
+      basePack: "/opt/OpenAirside/content/base",
+      userPacks: "C:\\Users\\Me Too\\packs",
+      activePacks: ["my-mod", "other_pack"],
+    });
+    expect(parseCoreArgs(["--active-packs="])).toEqual({ activePacks: [] });
+  });
+
+  it("drops pack folders and ids for files a player may pass on", () => {
+    expect(
+      withoutPackOptions({
+        threads: 2,
+        basePack: "/home/me/app/content/base",
+        userPacks: "/home/me/.config/openairside/packs",
+        activePacks: ["a-b"],
+      }),
+    ).toEqual({ threads: 2 });
+  });
+
+  it("lets later flags win", () => {
+    expect(parseCoreArgs(["--base-pack=/a", "--base-pack=/b"])).toEqual({ basePack: "/b" });
+  });
+
   it.each([
     ["--scenario=castle"],
+    ["--base-pack="],
+    [`--user-packs=${"x".repeat(4097)}`],
+    ["--user-packs=a\0b"],
+    ["--active-packs=Bad"],
+    ["--active-packs=ok-id,,x"],
+    [
+      `--active-packs=${Array.from({ length: 257 }, (_, i) => `p${String(i).padStart(3, "0")}`).join(",")}`,
+    ],
     ["--persons=-1"],
     ["--persons=200001"],
     ["--threads=0"],

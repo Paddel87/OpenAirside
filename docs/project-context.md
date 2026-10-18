@@ -56,7 +56,9 @@ Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachwei
   - napi-build 2.4.4 (Begleit-Crate, von napi 3.12.7 mit `^2.4.4` verlangt) — Verifiziert: 2026-10-13, Quelle: crates.io
   - zurückgestellt, nicht im Stack: wasm-bindgen 0.2.128 für WebAssembly mit Threads, Neubewertung in Fahrplan-Schritt Q.2
 - serde 1.0.229, rayon 1.12.0, ts-rs 12.0.1 — Verifiziert: 2026-10-13, Quelle: crates.io
-- serde_json 1.0.151 nur in der Brücken-Crate über napi `serde-json` (ADR-024; bringt itoa 1.0.18 und zmij 1.0.23 mit, beide MIT) — Verifiziert: 2026-10-14, Quelle: crates.io
+- serde_json 1.0.151 in der Brücken-Crate über napi `serde-json` (ADR-024; bringt itoa 1.0.18 und zmij 1.0.23 mit, beide MIT) und seit ADR-025 im Kern für den Datenpaket-Lader — Verifiziert: 2026-10-14, Quelle: crates.io
+- serde_path_to_error 0.1.20 und semver 1.0.28 im Kern für den Datenpaket-Lader (ADR-025) — Verifiziert: 2026-10-18, Quelle: crates.io
+- schemars 1.2.2 nur hinter dem Kern-Feature `schema` für die JSON-Schema-Dateien der Datenpakete (ADR-025; bringt schemars_derive, serde_derive_internals, dyn-clone, ref-cast mit, alle MIT bzw. MIT OR Apache-2.0) — Verifiziert: 2026-10-18, Quelle: crates.io (1.2.3 bei der Prüfung 6 Tage alt)
 
 #### Persistenz und Paketverwaltung
 
@@ -249,6 +251,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
   - Tests inklusive Coverage-Mindestwert
   - Kern-Benchmark „Tick mit 10.000 Personen" (seit Schritt 2.2, ADR-022: rot bei Mittelwert > 1 ms oder p99 > 4 ms)
   - Prüfung der erzeugten TypeScript-Typen gegen die Rust-Typen (seit Schritt 2.2, ADR-022, im Job „Rust Lint & Format")
+  - Prüfung der erzeugten JSON-Schema-Dateien der Datenpakete gegen die Rust-Typen (seit Schritt 2.4, ADR-025, im Job „Rust Lint & Format")
   - Wegweiser-Benchmark im Referenz-Terminal (seit Schritt 2.3, ADR-023, im Job „Kern-Benchmark": rot bei Neuberechnung > 4 s oder Schritt p99 > 4 ms)
   - Leistungstest Referenzszenario (ab Phase 4, sobald das Referenzszenario baubar ist)
 - **Branch-Protection auf `main`:** alle Pflicht-Gates grün; Force-Push gesperrt (einzurichten in Schritt 2.1).

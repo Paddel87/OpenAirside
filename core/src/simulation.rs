@@ -5,6 +5,7 @@
 
 use std::collections::VecDeque;
 use std::fmt;
+use std::sync::Arc;
 use std::time::Instant;
 
 use rayon::ThreadPool;
@@ -14,6 +15,7 @@ use crate::adoption::{Adoption, AdoptionMode};
 use crate::command::{
     self, Command, DebugAction, MAX_COMMANDS_PER_STEP, Scenario, code, rejection,
 };
+use crate::datapack::Catalog;
 use crate::event::{Event, EventQueue, EventRecord, MAX_IN_FLIGHT, SpeedChangeReason};
 use crate::flowfield::FieldSet;
 use crate::geometry::MapSize;
@@ -141,6 +143,10 @@ pub struct Simulation {
     /// Revision and time of the newest recompute request.
     recompute_started: Option<(u32, Instant)>,
     last_recompute: Option<RecomputeStats>,
+    /// Content of the loaded data packs (S-4) for this session.
+    content: Arc<Catalog>,
+    /// Content chosen for the next session ([`Simulation::set_next_content`]).
+    next_content: Option<Arc<Catalog>>,
 }
 
 impl Simulation {
@@ -193,7 +199,30 @@ impl Simulation {
             fields: Adoption::new(config.adoption),
             recompute_started: None,
             last_recompute: None,
+            content: Arc::new(Catalog::empty()),
+            next_content: None,
         })
+    }
+
+    /// Uses `content` from now on, in the current session (start of the
+    /// core process, before the first command).
+    #[must_use]
+    pub fn with_content(mut self, content: Arc<Catalog>) -> Self {
+        self.content = content;
+        self
+    }
+
+    /// Uses `content` from the next session on (new game, loaded game,
+    /// reload): changing the packs of a running game would orphan objects
+    /// that refer to removed entries.
+    pub fn set_next_content(&mut self, content: Arc<Catalog>) {
+        self.next_content = Some(content);
+    }
+
+    /// Content of the current session.
+    #[must_use]
+    pub fn content(&self) -> &Catalog {
+        &self.content
     }
 
     /// Starts a new session with a fresh world: ids, `seq` and the tick
@@ -221,6 +250,9 @@ impl Simulation {
         self.fields = Adoption::new(self.config.adoption);
         self.recompute_started = None;
         self.last_recompute = None;
+        if let Some(content) = self.next_content.take() {
+            self.content = content;
+        }
     }
 
     /// Current session number.
@@ -496,11 +528,15 @@ impl Simulation {
                 Ok(())
             }
             Command::SkipNight {} => self.skip_night(others),
-            // Content ids come from data packs (S-4); no pack is loaded
-            // before the loader exists, so every id is unknown.
-            // TODO(fahrplan-ref: 2.4): look the id up in the loaded data packs.
-            Command::Build { .. } | Command::BuildArea { .. } => {
-                Err(rejection(code::UNKNOWN_CONTENT))
+            // Content ids are full ids of the loaded data packs (S-4).
+            // TODO(fahrplan-ref: 3.1): build the object; check that its
+            // placement fits the command (`single` for `build`, `area` for
+            // `buildArea`).
+            Command::Build { object, .. } | Command::BuildArea { object, .. } => {
+                if self.content.object(object).is_none() {
+                    return Err(rejection(code::UNKNOWN_CONTENT));
+                }
+                Ok(())
             }
             // The world holds no buildings yet, so there is nothing to remove.
             // TODO(fahrplan-ref: 3.1): remove the objects in the area.

@@ -5,7 +5,9 @@
  * after a crash (at most 3 times in 60 s), hands a fresh `MessagePort` to
  * every loaded page of the hardened game window and answers the platform
  * API S-6 after checking the sender (ADR-021), including the result file
- * of the measurement tool (step 2.7).
+ * of the measurement tool (step 2.7) and the data packs (step 2.4): the
+ * core process gets the pack folders and the player's saved choice, the
+ * main process keeps its reports for `packs.list()`.
  */
 import {
   app,
@@ -18,18 +20,32 @@ import {
   utilityProcess,
   type UtilityProcess,
 } from "electron";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdirSync, readFileSync } from "node:fs";
+import { mkdir, rename, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseCoreArgs } from "./core-port.js";
+import type { PackReport } from "../generated/PackReport.js";
+import { parseCoreArgs, withoutPackOptions } from "./core-port.js";
 import {
   type CoreStatus,
   exitedCoreStatus,
   nextCoreStatus,
+  isPackAnswer,
+  type PackRequest,
+  parseCoreHostMessage,
   restartDecision,
 } from "./core-status.js";
 import { MeasureRun, MEMORY_INTERVAL_MS, reportFileName } from "./measure.js";
+import {
+  ACTIVE_FILE,
+  activeFileText,
+  choosableIds,
+  packArgs,
+  parseActiveIds,
+  readActiveFile,
+  USER_PACKS_DIR,
+} from "./packs.js";
 import {
   hardenedWebPreferences,
   isAllowedNavigation,
@@ -57,6 +73,66 @@ let gameWindow: BrowserWindow | undefined;
 let pageLoaded = false;
 let restarts: readonly number[] = [];
 
+/** Latest pack reports of the core process (S-6 `packs.list`). */
+let packReports: PackReport[] = [];
+/** Longest wait for the core's answer to `packs.setActive`. */
+const PACKS_TIMEOUT_MS = 60_000;
+/** Open `packs.setActive` call; a second one is refused with `busy` (S-6). */
+let packsPending:
+  | {
+      readonly request: number;
+      resolve: (reports: PackReport[]) => void;
+      reject: (error: Error) => void;
+    }
+  | undefined;
+/** Number of the last `packs.setActive` request to the core process. */
+let packsRequest = 0;
+
+/** Code of a Node.js error (`ENOENT` …) without its message, which names paths. */
+function errorCode(error: unknown): string {
+  const code =
+    typeof error === "object" && error !== null && "code" in error ? error.code : undefined;
+  return typeof code === "string" ? code : "unknown";
+}
+
+/** Base pack shipped with the game (`content/` in the app folder, step 2.4). */
+function basePackDir(): string {
+  return path.join(app.getAppPath(), "content", "base");
+}
+
+function activeFilePath(): string {
+  return path.join(app.getPath("userData"), ACTIVE_FILE);
+}
+
+/** The player's saved choice of packs; missing or unreadable means none. */
+function savedActivePacks(): string[] {
+  try {
+    return readActiveFile(readFileSync(activeFilePath(), "utf8"));
+  } catch {
+    return [];
+  }
+}
+
+/** Settles the open `packs.setActive` call if `answer` belongs to it. */
+function settlePacks(
+  answer:
+    | { type: "packs"; request: number; packs: PackReport[] }
+    | { type: "packsError"; request: number; message: string },
+): void {
+  const pending = packsPending;
+  if (pending?.request !== answer.request) {
+    // Late answer to an earlier request (after its time limit).
+    return;
+  }
+  packsPending = undefined;
+  if (answer.type === "packs") {
+    packReports = answer.packs;
+    pending.resolve(answer.packs);
+  } else {
+    pending.reject(new Error(answer.message));
+  }
+}
+
 /** Connects the loaded page with the core by a fresh port (S-6 "Port-Übergabe"). */
 function connect(): void {
   if (
@@ -74,18 +150,53 @@ function connect(): void {
 
 function startCore(): void {
   globalThis.openairsideCoreStatus = { state: "starting" };
+  const userPacks = path.join(app.getPath("userData"), USER_PACKS_DIR);
+  try {
+    // Created so that players find the folder for their packs.
+    mkdirSync(userPacks, { recursive: true });
+  } catch (error) {
+    console.warn(`cannot create the pack folder: ${errorCode(error)}`);
+  }
   // Flags such as --scenario= reach the core; it ignores everything else.
-  const process = utilityProcess.fork(coreHostPath, globalThis.process.argv.slice(1), {
+  // The pack flags come last and win over flags of the command line.
+  const args = [
+    ...globalThis.process.argv.slice(1),
+    ...packArgs(basePackDir(), userPacks, savedActivePacks()),
+  ];
+  const process = utilityProcess.fork(coreHostPath, args, {
     serviceName: CORE_SERVICE,
   });
   core = process;
-  process.on("message", (message: unknown) => {
-    globalThis.openairsideCoreStatus = nextCoreStatus(message);
+  process.on("message", (raw: unknown) => {
+    const message = parseCoreHostMessage(raw);
+    if (message?.type === "packs" || message?.type === "packsError") {
+      settlePacks(message);
+      return;
+    }
+    if (isPackAnswer(raw)) {
+      // A malformed pack answer says nothing about the state of the core.
+      console.warn("malformed pack answer from the core process");
+      if (packsPending !== undefined) {
+        settlePacks({
+          type: "packsError",
+          request: packsPending.request,
+          message: "invalidAnswer",
+        });
+      }
+      return;
+    }
+    if (message?.type === "ready") {
+      packReports = message.packs;
+    }
+    globalThis.openairsideCoreStatus = nextCoreStatus(raw);
     connect();
   });
   process.on("exit", (code: number) => {
     globalThis.openairsideCoreStatus = exitedCoreStatus(globalThis.openairsideCoreStatus, code);
     core = undefined;
+    if (packsPending !== undefined) {
+      settlePacks({ type: "packsError", request: packsPending.request, message: "coreExited" });
+    }
     gameWindow?.webContents.send("core:exit", code);
     const decision = restartDecision(restarts, Date.now());
     restarts = decision.restarts;
@@ -156,7 +267,7 @@ async function reportMeasure(result: unknown): Promise<string> {
     cpuModel: cpus[0]?.model ?? "",
     memGb: Math.round(os.totalmem() / 2 ** 30),
     gpuFeatureStatus: app.getGPUFeatureStatus(),
-    coreOptions: parseCoreArgs(process.argv),
+    coreOptions: withoutPackOptions(parseCoreArgs(process.argv)),
     finishedAt: new Date().toISOString(),
   });
   if (!done.ok) {
@@ -171,6 +282,63 @@ async function reportMeasure(result: unknown): Promise<string> {
   await writeFile(file, done.json, { flag: "wx" });
   console.log(`measurement written to ${file}`);
   return file;
+}
+
+/**
+ * S-6 `packs.setActive`: checks the ids, saves the choice (a restarted
+ * core process starts with it) and lets the core reload the packs; the
+ * choice applies from the next session on. Rejects with a code as message.
+ */
+async function setActivePacks(arg: unknown): Promise<PackReport[]> {
+  const ids = parseActiveIds(arg);
+  if (ids === undefined) {
+    console.warn("rejected packs:setActive: invalidArgument");
+    throw new Error("invalidArgument");
+  }
+  const choosable = choosableIds(packReports);
+  if (!ids.every((id) => choosable.has(id))) {
+    console.warn("rejected packs:setActive: unknownPack");
+    throw new Error("unknownPack");
+  }
+  const target = core;
+  if (packsPending !== undefined) {
+    throw new Error("busy");
+  }
+  if (target === undefined || globalThis.openairsideCoreStatus.state !== "ready") {
+    throw new Error("notReady");
+  }
+  packsRequest += 1;
+  const request = packsRequest;
+  const answer = new Promise<PackReport[]>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      settlePacks({ type: "packsError", request, message: "timeout" });
+    }, PACKS_TIMEOUT_MS);
+    packsPending = {
+      request,
+      resolve: (reports) => {
+        clearTimeout(timer);
+        resolve(reports);
+      },
+      reject: (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    };
+  });
+  try {
+    // Write and rename: an interrupted write never leaves half a file.
+    const file = activeFilePath();
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(`${file}.tmp`, activeFileText(ids));
+    await rename(`${file}.tmp`, file);
+  } catch (error) {
+    settlePacks({ type: "packsError", request, message: "ioError" });
+    console.warn(`cannot save the chosen packs: ${errorCode(error)}`);
+    return answer;
+  }
+  const message: PackRequest = { type: "packs:setActive", request, ids };
+  target.postMessage(message);
+  return answer;
 }
 
 function createWindow(): void {
@@ -230,6 +398,8 @@ void app.whenReady().then(() => {
   });
   handle("measure:start", startMeasure);
   handle("measure:report", reportMeasure);
+  handle("packs:list", () => packReports);
+  handle("packs:setActive", setActivePacks);
   startCore();
   createWindow();
 });

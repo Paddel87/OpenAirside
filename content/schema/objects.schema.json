@@ -1,0 +1,95 @@
+{
+  "$defs": {
+    "ObjectEntry": {
+      "additionalProperties": false,
+      "description": "An object type: something the player builds (step 2.4 defines the\nminimal fields; later steps add fields additively).",
+      "properties": {
+        "id": {
+          "description": "Identifier within the pack: 1 to 64 characters `a-z`, `0-9`, `_`, `-`.",
+          "pattern": "^[a-z0-9_-]{1,64}$",
+          "type": "string"
+        },
+        "name": {
+          "description": "Localisation key of the name (e.g. `object.bench`).",
+          "maxLength": 4096,
+          "minLength": 1,
+          "type": "string"
+        },
+        "placement": {
+          "$ref": "#/$defs/Placement",
+          "description": "How the object is placed."
+        },
+        "replaces": {
+          "description": "Entry of another pack that this entry replaces (`<pack>:<entry>`);\nallowed only if this pack depends on that pack.",
+          "type": ["string", "null"]
+        }
+      },
+      "required": ["id", "name", "placement"],
+      "type": "object"
+    },
+    "Placement": {
+      "description": "How an object type is placed.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Drawn over an area of cells, such as floors, walls and zones\n(command `buildArea`).",
+          "properties": {
+            "kind": {
+              "const": "area",
+              "type": "string"
+            }
+          },
+          "required": ["kind"],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Placed as a single object with a fixed footprint (command `build`).",
+          "properties": {
+            "depth": {
+              "description": "Depth in metres along y at rotation 0, like `width`.",
+              "format": "uint16",
+              "maximum": 1024,
+              "minimum": 2,
+              "multipleOf": 2,
+              "type": "integer"
+            },
+            "kind": {
+              "const": "single",
+              "type": "string"
+            },
+            "width": {
+              "description": "Width in metres along x at rotation 0: an even number from 2 to\n1024 (2 m per cell, ADR-020; at most the command area of 512\ncells).",
+              "format": "uint16",
+              "maximum": 1024,
+              "minimum": 2,
+              "multipleOf": 2,
+              "type": "integer"
+            }
+          },
+          "required": ["kind", "width", "depth"],
+          "type": "object"
+        }
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A content file in the folder `objects/`.",
+  "properties": {
+    "$schema": {
+      "description": "Path or URL of the JSON Schema for editors; ignored by the game.",
+      "type": ["string", "null"]
+    },
+    "objects": {
+      "description": "Object types of this file.",
+      "items": {
+        "$ref": "#/$defs/ObjectEntry"
+      },
+      "type": "array"
+    }
+  },
+  "required": ["objects"],
+  "title": "ObjectsFile",
+  "type": "object"
+}

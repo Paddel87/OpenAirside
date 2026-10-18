@@ -1,23 +1,63 @@
 import { describe, expect, it } from "vitest";
 import {
   exitedCoreStatus,
+  isPackAnswer,
   nextCoreStatus,
   parseCoreHostMessage,
+  parsePackRequest,
   restartDecision,
 } from "./core-status.js";
 
 const info = { name: "openairside-core", version: "0.0.0" };
+const packs = [
+  {
+    folder: "base",
+    source: "base",
+    id: "base",
+    name: "OpenAirside",
+    version: "0.0.0",
+    state: "active",
+    entries: 3,
+    errors: [],
+    errorsOmitted: 0,
+  },
+];
 
 describe("parseCoreHostMessage", () => {
-  it("accepts a ready message with core info", () => {
-    expect(parseCoreHostMessage({ type: "ready", info })).toEqual({ type: "ready", info });
+  it("accepts a ready message with core info and packs", () => {
+    expect(parseCoreHostMessage({ type: "ready", info, packs })).toEqual({
+      type: "ready",
+      info,
+      packs,
+    });
   });
 
   it("drops unknown extra fields from core info", () => {
-    expect(parseCoreHostMessage({ type: "ready", info: { ...info, extra: 1 } })).toEqual({
+    expect(parseCoreHostMessage({ type: "ready", info: { ...info, extra: 1 }, packs })).toEqual({
       type: "ready",
       info,
+      packs,
     });
+  });
+
+  it("accepts pack reports and pack errors with their request number", () => {
+    expect(parseCoreHostMessage({ type: "packs", request: 3, packs })).toEqual({
+      type: "packs",
+      request: 3,
+      packs,
+    });
+    expect(parseCoreHostMessage({ type: "packsError", request: 4, message: "invalidId" })).toEqual({
+      type: "packsError",
+      request: 4,
+      message: "invalidId",
+    });
+  });
+
+  it("recognises pack answers also when they are malformed", () => {
+    expect(isPackAnswer({ type: "packs", packs: "x" })).toBe(true);
+    expect(isPackAnswer({ type: "packsError" })).toBe(true);
+    expect(isPackAnswer({ type: "ready" })).toBe(false);
+    expect(isPackAnswer(null)).toBe(false);
   });
 
   it("accepts an error message", () => {
@@ -34,8 +74,14 @@ describe("parseCoreHostMessage", () => {
     "ready",
     {},
     { type: "ready" },
-    { type: "ready", info: { name: "", version: "0.0.0" } },
-    { type: "ready", info: { name: "core", version: 1 } },
+    { type: "ready", info },
+    { type: "ready", info: { name: "", version: "0.0.0" }, packs },
+    { type: "ready", info: { name: "core", version: 1 }, packs },
+    { type: "packs", request: 1, packs: [{ folder: "x" }] },
+    { type: "packs", packs },
+    { type: "packs", request: -1, packs },
+    { type: "packsError", request: 1.5, message: "x" },
+    { type: "packsError", request: 1 },
     { type: "error", message: 3 },
     { type: "other" },
   ])("rejects malformed message %j", (value) => {
@@ -45,7 +91,7 @@ describe("parseCoreHostMessage", () => {
 
 describe("nextCoreStatus", () => {
   it("becomes ready on a ready message", () => {
-    expect(nextCoreStatus({ type: "ready", info })).toEqual({ state: "ready", info });
+    expect(nextCoreStatus({ type: "ready", info, packs })).toEqual({ state: "ready", info });
   });
 
   it("fails with the reported reason on an error message", () => {
@@ -60,6 +106,29 @@ describe("nextCoreStatus", () => {
       state: "failed",
       reason: "unexpected message from core host",
     });
+  });
+
+  it("does not take pack answers as a status", () => {
+    expect(nextCoreStatus({ type: "packs", request: 1, packs }).state).toBe("failed");
+  });
+});
+
+describe("parsePackRequest", () => {
+  it("accepts a request with valid ids", () => {
+    expect(parsePackRequest({ type: "packs:setActive", request: 2, ids: ["my-mod"] })).toEqual({
+      request: 2,
+      ids: ["my-mod"],
+    });
+  });
+
+  it.each([
+    { type: "port" },
+    { type: "packs:setActive" },
+    { type: "packs:setActive", ids: ["my-mod"] },
+    { type: "packs:setActive", request: 1, ids: ["X"] },
+    null,
+  ])("ignores %j", (value) => {
+    expect(parsePackRequest(value)).toBeUndefined();
   });
 });
 
