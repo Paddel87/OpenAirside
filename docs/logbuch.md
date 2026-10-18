@@ -24,12 +24,17 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
-### 2026-10-18 23:30 (UTC) – [SESSIONENDE]
+### 2026-10-18 23:30 (UTC) – [BEOBACHTUNG]
 
-- **Session-Dauer:** ca. 81 Minuten seit `[SESSIONSTART]` 22:09 UTC.
+- **Nachtrag nach dem Sessionende:** Projektinhaber: „PR öffnen und Reflexionen zur Kenntnis genommen". Kenntnisnahme der Reflexionen zu ADR-025 (Maßnahme 6) und ADR-026 (Maßnahme 7) im Fahrplan vermerkt; kein Umbau. PR für `scp/zealous-ride-mwvv5m` nach `main` wird geöffnet.
+- **Mini-Reibung:** Der `[SESSIONENDE]`-Eintrag trug 23:30 UTC, geschrieben wurde er um 23:27 UTC – trotz der Regel vom Sessionstart, die Uhrzeit aus `date -u` zu nehmen (geschätzt statt abgefragt). Auf 23:27 korrigiert, Dauer 78 statt 81 Minuten.
+
+### 2026-10-18 23:27 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 78 Minuten seit `[SESSIONSTART]` 22:09 UTC.
 - **Bearbeitet:** Sessionstart mit Übernahme des belegten Merge-Vermerks zu PR Paddel87/OpenAirside#20; Schritt 2.4 vollständig (Freigabe ADR-025, Umsetzung, erzwungener Fehlerfall der Schema-Prüfung, getrennte Prüfung mit Erledigung, Freigabe ADR-026, Abschluss).
 - **Erreicht:** 2.4 `[ERLEDIGT]`; Modul Inhalte & Mods (Lader) `[BELASTBAR]`; ADR-025 und ADR-026 (beide `[REAKTIV]`), Reflexionen mit Maßnahmen (6) und (7). CI-Lauf 39176235417 auf `89fa783` grün auf allen 17 Jobs. 22 Commits auf `scp/zealous-ride-mwvv5m` seit `main` `f652370` (einschließlich des übernommenen Merge-Vermerks und dieses Abschlusses), gepusht; kein PR (nicht angefragt).
-- **Offen geblieben:** Kenntnisnahme der Reflexionen zu ADR-025 und ADR-026 durch den Projektinhaber; Merge des Branches (PR nur auf Anweisung). Ungemergte fremde Branches (`claude/messwerkzeug-2-7-rb2hq7`, `claude/gracious-galileo-2reksz`, `scp/friendly-einstein-rggagz`, `claude/naechster-schritt-2-8-736kf4`) – Löschen nur auf Anweisung. Kein CHANGELOG im Repository (Einträge ab dem ersten Release).
+- **Offen geblieben:** Kenntnisnahme der Reflexionen zu ADR-025 und ADR-026 durch den Projektinhaber (nachgeholt 23:30, siehe Nachtrag); Merge des Branches (PR nur auf Anweisung). Ungemergte fremde Branches (`claude/messwerkzeug-2-7-rb2hq7`, `claude/gracious-galileo-2reksz`, `scp/friendly-einstein-rggagz`, `claude/naechster-schritt-2-8-736kf4`) – Löschen nur auf Anweisung. Kein CHANGELOG im Repository (Einträge ab dem ersten Release).
 - **Nächster Schritt:** 2.5 Spielstand mit Autosave – zuerst Freigabe von Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3, Entscheidungs-Klasse); Maßnahme (7) anwenden; dazu die Fehlerform von S-6 aus der getrennten Prüfung 2.4.
 - **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 22:06 und 23:26 UTC). 2.4 empfiehlt die Routine-Klasse: 1 Schritt oberhalb der Empfehlung (Warnung zu Beginn ausgesprochen); die Freigaben ADR-025 und ADR-026, die Reflexionen und die Beförderung lagen auf der Pflicht-Klasse Entscheidung. Abgegeben: getrennte Prüfung an einen Unteragenten Sonnet 5.5 (Prüfauftrag, keine Abgabe von Arbeit); keine Abgabe an Routine/Mechanik (Probelauf offen).
 - **Kontextgröße:** 569.408 Token laut `get_session` 23:26 UTC – **über der Grenze von 400.000**: die nächste Arbeit in einer neuen Session beginnen.

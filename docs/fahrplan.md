@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-18 (Session ab 22:09 UTC, Ende 23:30 UTC)
+- **Stand vom:** 2026-10-18 (Session ab 22:09 UTC, Ende 23:27 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
 - **Aktiver Schritt:** keiner (2.4 erledigt am 2026-10-18)
 - **Nächster Schritt:** 2.5 (Spielstand mit Autosave), zuerst Freigabe von Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3; Entscheidungs-Klasse), dabei Maßnahme (7): Vertragssätze S-5/S-6 vor dem Code gegen den Plan prüfen
-- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-026 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion" zu ADR-025 und ADR-026, Kenntnisnahme beider offen)
+- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-026 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion" zu ADR-025 und ADR-026, beide vom Projektinhaber am 2026-10-18 zur Kenntnis genommen)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -477,7 +477,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Muster:** Neben dem Werkzeug-Umfeld (Maßnahme 4) und fehlenden Einheiten (Maßnahme 5) eine dritte Quelle: Aussagen zum Geltungsbereich in Abhängigkeits-ADRs ohne Abgleich mit den folgenden Fahrplan-Schritten.
 - **Maßnahme (6):** Ein ADR, der eine Abhängigkeit auf einen Teil des Systems beschränkt, prüft vorher die Fahrplan-Schritte, die dieselbe Art Abhängigkeit vorsehen, und begründet die Beschränkung mit einer Regel. Ohne solche Begründung nennt er nur den derzeitigen Nutzer und legt keine Beschränkung fest.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-026, 3 / 10 ab ADR-027, 2 / 10 (Schwellenwert eingehalten) ab ADR-029.
-- **Kenntnisnahme:** offen.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-18: „Reflexionen zur Kenntnis genommen"; kein Umbau, Maßnahme (6) gilt.
 
 ### Ergänzung Reaktiv-Quote (2026-10-18, Anlass ADR-026)
 
@@ -487,7 +487,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Muster:** Wie bei ADR-025 eine Festlegung, die weiter reicht als ihre Begründung (Geltungsbereich einer Bibliothek dort, Geltungsbereich einer Vertragsregel hier).
 - **Maßnahme (7):** Vor der Umsetzung eines Schritts, der einen Vertrag umsetzt, listet die KI die Sätze des Vertrags zu den berührten Funktionen und prüft jeden gegen ihren Plan; eine Abweichung wird vor dem Code vorgelegt, nicht danach. Ergänzend zu Maßnahme (6): Eine Vertragsregel, die mehrere Arten von Objekten betrifft, nennt ihre Begründung je Art.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-027 bis ADR-028, 3 / 10 ab ADR-029, 2 / 10 (Schwellenwert eingehalten) ab ADR-030.
-- **Kenntnisnahme:** offen.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-18: „Reflexionen zur Kenntnis genommen"; kein Umbau, Maßnahme (7) gilt.
 
 ---
 
