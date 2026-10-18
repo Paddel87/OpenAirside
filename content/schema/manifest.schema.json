@@ -1,0 +1,66 @@
+{
+  "$defs": {
+    "Dependency": {
+      "additionalProperties": false,
+      "description": "A pack another pack needs.",
+      "properties": {
+        "id": {
+          "description": "Identifier of the needed pack.",
+          "pattern": "^[a-z0-9_-]{3,64}$",
+          "type": "string"
+        },
+        "version": {
+          "description": "Accepted versions of the needed pack as a range (e.g. `^1.0`).",
+          "type": "string"
+        }
+      },
+      "required": ["id", "version"],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "`manifest.json` of a data pack.",
+  "properties": {
+    "$schema": {
+      "description": "Path or URL of the JSON Schema for editors; ignored by the game.",
+      "type": ["string", "null"]
+    },
+    "dependencies": {
+      "default": [],
+      "description": "Packs this pack needs; they load before it.",
+      "items": {
+        "$ref": "#/$defs/Dependency"
+      },
+      "type": "array"
+    },
+    "format": {
+      "description": "Version of the pack format (schema version); the current one is 1.",
+      "format": "uint32",
+      "minimum": 1,
+      "type": "integer"
+    },
+    "game": {
+      "description": "Supported game versions as a range (e.g. `>=0.1.0, <2.0.0`).",
+      "type": "string"
+    },
+    "id": {
+      "description": "Identifier of the pack: 3 to 64 characters `a-z`, `0-9`, `_`, `-`.\nEntries are addressed as `<pack>:<entry>`.",
+      "pattern": "^[a-z0-9_-]{3,64}$",
+      "type": "string"
+    },
+    "name": {
+      "description": "Display name of the pack.",
+      "maxLength": 4096,
+      "minLength": 1,
+      "type": "string"
+    },
+    "version": {
+      "description": "Version of the pack (Semantic Versioning, e.g. `1.2.0`).",
+      "type": "string"
+    }
+  },
+  "required": ["id", "name", "version", "format", "game"],
+  "title": "Manifest",
+  "type": "object"
+}
