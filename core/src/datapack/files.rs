@@ -74,19 +74,22 @@ impl Folder {
         Ok(Self { root })
     }
 
-    /// Reads `manifest.json`; `None` after reporting an error.
+    /// Reads `manifest.json`; `None` after reporting an error. The name must
+    /// match exactly on every platform (`Manifest.json` is missing on all,
+    /// not only on case-sensitive file systems).
     pub fn manifest(&self, errors: &mut Vec<PackError>) -> Option<Vec<u8>> {
+        let Ok(found) = has_exact_entry(&self.root, MANIFEST) else {
+            errors.push(PackError::file(MANIFEST, error(code::IO_ERROR)));
+            return None;
+        };
+        if !found {
+            errors.push(PackError::file(MANIFEST, error(code::MANIFEST_MISSING)));
+            return None;
+        }
         let path = self.root.join(MANIFEST);
-        let meta = match fs::symlink_metadata(&path) {
-            Ok(meta) => meta,
-            Err(err) if err.kind() == io::ErrorKind::NotFound => {
-                errors.push(PackError::file(MANIFEST, error(code::MANIFEST_MISSING)));
-                return None;
-            }
-            Err(_) => {
-                errors.push(PackError::file(MANIFEST, error(code::IO_ERROR)));
-                return None;
-            }
+        let Ok(meta) = fs::symlink_metadata(&path) else {
+            errors.push(PackError::file(MANIFEST, error(code::IO_ERROR)));
+            return None;
         };
         let mut budget = Budget::default();
         match self.read(&path, &meta, &mut budget) {
@@ -141,6 +144,11 @@ impl Folder {
                     continue;
                 }
                 if !file_name.ends_with(".json") {
+                    // `.JSON` would be read on no platform: say so instead
+                    // of passing over it.
+                    if file_name.to_ascii_lowercase().ends_with(".json") {
+                        errors.push(PackError::file(&rel, error(code::UNEXPECTED_ENTRY)));
+                    }
                     continue;
                 }
                 if budget.files >= MAX_FILES {
@@ -182,7 +190,8 @@ impl Folder {
         }
         let file = open_no_follow(path).map_err(io_error)?;
         let meta = file.metadata().map_err(io_error)?;
-        if !meta.is_file() || is_link(&meta) || !same_file(&meta, listed) {
+        if !meta.is_file() || is_link(&meta) || !same_file(&meta, listed) || has_other_links(&meta)
+        {
             return Err(error(code::INVALID_PATH));
         }
         let remaining = MAX_PACK_BYTES.saturating_sub(budget.bytes);
@@ -214,10 +223,23 @@ fn as_u32<T: TryInto<u32>>(value: T) -> u32 {
     value.try_into().unwrap_or(u32::MAX)
 }
 
+/// Whether `dir` holds an entry named exactly `name` (looked up in the
+/// listing, so that case-insensitive file systems behave like the others).
+/// At most [`MAX_FILES`] entries are looked at.
+fn has_exact_entry(dir: &Path, name: &str) -> io::Result<bool> {
+    for entry in fs::read_dir(dir)?.take(MAX_FILES) {
+        if entry?.file_name() == name {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
 /// Entries of a folder sorted by name, with the metadata of the entry itself
 /// (links are not followed). Hidden entries (`.` at the start, e.g.
 /// `.DS_Store`) are skipped. Links and invalid names are reported; `None`
-/// if the folder cannot be read.
+/// if the folder cannot be read or holds more than [`MAX_FILES`] entries
+/// (counted before anything is kept, so that memory stays bounded).
 fn list(dir: &Path, rel: &str, errors: &mut Vec<PackError>) -> Option<Vec<(String, Metadata)>> {
     let place = |name: &str| {
         if rel.is_empty() {
@@ -231,7 +253,16 @@ fn list(dir: &Path, rel: &str, errors: &mut Vec<PackError>) -> Option<Vec<(Strin
         return None;
     };
     let mut out = Vec::new();
-    for entry in read {
+    for (count, entry) in read.enumerate() {
+        if count >= MAX_FILES {
+            let reason = limit_error("files", as_u32(MAX_FILES));
+            errors.push(if rel.is_empty() {
+                PackError::pack(reason)
+            } else {
+                PackError::file(&format!("{rel}/"), reason)
+            });
+            return None;
+        }
         let Ok(entry) = entry else {
             errors.push(PackError::file(&place(""), error(code::IO_ERROR)));
             continue;
@@ -260,7 +291,8 @@ fn list(dir: &Path, rel: &str, errors: &mut Vec<PackError>) -> Option<Vec<(Strin
 
 /// A name that is valid on Windows, macOS and Linux: no reserved device
 /// name, no characters `<>:"/\|?*` or control characters (`:` would open an
-/// alternate data stream on NTFS), no trailing dot or space.
+/// alternate data stream on NTFS), no trailing dot or space, no bidirectional
+/// controls (they would disguise the name in error messages).
 #[must_use]
 pub fn is_valid_name(name: &str) -> bool {
     !name.is_empty()
@@ -268,24 +300,55 @@ pub fn is_valid_name(name: &str) -> bool {
         && !name.ends_with('.')
         && !name.ends_with(' ')
         && !name.chars().any(|c| {
-            c.is_control() || matches!(c, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*')
+            c.is_control()
+                || matches!(c, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*')
+                || matches!(
+                    c,
+                    '\u{200e}' | '\u{200f}' | '\u{202a}'..='\u{202e}' | '\u{2066}'..='\u{2069}'
+                )
         })
         && !is_reserved(name)
 }
 
-/// Reserved device names of Windows, also with an extension (`nul.json`).
+/// Reserved device names of Windows, also with an extension (`nul.json`),
+/// including `COM¹`–`COM³`, `LPT¹`–`LPT³`, `CONIN$` and `CONOUT$`.
 fn is_reserved(name: &str) -> bool {
     let stem = name
         .split('.')
         .next()
         .unwrap_or("")
         .trim_end()
-        .to_ascii_uppercase();
-    match stem.as_bytes() {
-        b"CON" | b"PRN" | b"AUX" | b"NUL" => true,
-        [b'C', b'O', b'M', d] | [b'L', b'P', b'T', d] => d.is_ascii_digit(),
-        _ => false,
+        .to_uppercase();
+    if matches!(
+        stem.as_str(),
+        "CON" | "PRN" | "AUX" | "NUL" | "CONIN$" | "CONOUT$"
+    ) {
+        return true;
     }
+    let Some(rest) = stem
+        .strip_prefix("COM")
+        .or_else(|| stem.strip_prefix("LPT"))
+    else {
+        return false;
+    };
+    let mut chars = rest.chars();
+    matches!(
+        (chars.next(), chars.next()),
+        (Some('0'..='9' | '¹' | '²' | '³'), None)
+    )
+}
+
+/// A file with further hard links: it may be a file outside the pack under
+/// another name (Unix; `std` gives no link count on Windows).
+#[cfg(unix)]
+fn has_other_links(meta: &Metadata) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    meta.nlink() > 1
+}
+
+#[cfg(not(unix))]
+fn has_other_links(_meta: &Metadata) -> bool {
+    false
 }
 
 /// A symbolic link or, on Windows, any reparse point (junctions included).
@@ -357,6 +420,11 @@ mod tests {
             "trail.",
             "trail ",
             "tab\t",
+            "COM¹.json",
+            "lpt³",
+            "conin$",
+            "CONOUT$.json",
+            "evil\u{202e}nosj.json",
         ] {
             assert!(!is_valid_name(bad), "{bad:?} must be refused");
         }

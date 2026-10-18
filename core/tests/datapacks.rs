@@ -686,3 +686,209 @@ fn reserved_names_are_refused_on_every_platform() {
     let r = report(&outcome, "p");
     assert_eq!(codes(r), [code::INVALID_PATH, code::INVALID_PATH]);
 }
+
+// Findings of the separate review of step 2.4 (2026-10-18).
+
+#[test]
+fn a_newer_format_needs_a_newer_game_even_with_new_fields() {
+    let user = TempDir::new("newer");
+    user.write(
+        "p/manifest.json",
+        r#"{"id": "future", "name": "Future", "version": "2.0.0", "format": 2, "game": "*", "icon": "x.svg"}"#,
+    );
+    let outcome = load_user(&user, &["future"]);
+    let r = report(&outcome, "p");
+    assert_eq!(codes(r), [code::FORMAT_TOO_NEW]);
+    assert_eq!(r.errors[0].path.as_deref(), Some("format"));
+    assert_eq!((r.errors[0].line, r.errors[0].column), (Some(1), Some(66)));
+    assert_eq!(r.id.as_deref(), Some("future"));
+    assert_eq!(r.version.as_deref(), Some("2.0.0"));
+}
+
+#[test]
+fn stage_two_errors_carry_line_and_column() {
+    let user = TempDir::new("positions");
+    user.write("p/manifest.json", "{\n  \"id\": \"ppp\", \"name\": \" \",\n  \"version\": \"1.0.0\", \"format\": 1, \"game\": \"*\"\n}");
+    user.write("q/manifest.json", &manifest("qqq", "1.0.0", &[]));
+    user.write(
+        "q/objects/main.json",
+        "{\"objects\": [\n  {\"id\": \"Bad\", \"name\": \"n\", \"placement\": {\"kind\": \"area\"}}\n]}",
+    );
+    let outcome = load_user(&user, &["ppp", "qqq"]);
+    let name = &report(&outcome, "p").errors[0];
+    assert_eq!(name.path.as_deref(), Some("name"));
+    assert_eq!((name.line, name.column), (Some(2), Some(24)));
+    let id = &report(&outcome, "q").errors[0];
+    assert_eq!(id.path.as_deref(), Some("objects[0].id"));
+    assert_eq!((id.line, id.column), (Some(2), Some(10)));
+}
+
+#[test]
+fn placement_errors_name_the_exact_field() {
+    let user = TempDir::new("placement");
+    pack(
+        &user,
+        "p",
+        &manifest("ppp", "1.0.0", &[]),
+        &[
+            r#"{"id": "a", "name": "n", "placement": {"kind": "single", "width": 70000, "depth": 2}}"#,
+        ],
+    );
+    pack(
+        &user,
+        "q",
+        &manifest("qqq", "1.0.0", &[]),
+        &[
+            r#"{"id": "a", "name": "n", "placement": {"kind": "single", "width": 2}}"#,
+            r#"{"id": "b", "name": "n", "placement": {"kind": "area", "depth": 2}}"#,
+            r#"{"id": "c", "name": "n", "placement": {"kind": "single", "width": 2, "depth": 2, "height": 4}}"#,
+        ],
+    );
+    let outcome = load_user(&user, &["ppp", "qqq"]);
+    let overflow = &report(&outcome, "p").errors[0];
+    assert_eq!(overflow.reason.code, code::INVALID_STRUCTURE);
+    assert_eq!(overflow.path.as_deref(), Some("objects[0].placement.width"));
+    let q = report(&outcome, "q");
+    let found: Vec<(&str, Option<&str>)> = q
+        .errors
+        .iter()
+        .map(|e| (e.reason.code.as_str(), e.path.as_deref()))
+        .collect();
+    assert_eq!(
+        found,
+        [(code::INVALID_STRUCTURE, Some("objects[2].placement.height"))],
+        "an unknown field stops stage 1 for the file"
+    );
+    // Without the unknown field, stage 2 names the missing and the surplus field.
+    pack(
+        &user,
+        "q",
+        &manifest("qqq", "1.0.0", &[]),
+        &[
+            r#"{"id": "a", "name": "n", "placement": {"kind": "single", "width": 2}}"#,
+            r#"{"id": "b", "name": "n", "placement": {"kind": "area", "depth": 2}}"#,
+        ],
+    );
+    let outcome = load_user(&user, &["qqq"]);
+    let found: Vec<(&str, Option<&str>)> = report(&outcome, "q")
+        .errors
+        .iter()
+        .map(|e| (e.reason.code.as_str(), e.path.as_deref()))
+        .collect();
+    assert_eq!(
+        found,
+        [
+            (code::INVALID_STRUCTURE, Some("objects[0].placement")),
+            (code::INVALID_STRUCTURE, Some("objects[1].placement.depth")),
+        ]
+    );
+}
+
+#[test]
+fn a_pre_release_game_loads_packs_for_any_version() {
+    let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../content/base");
+    let folders = datapack::discover(Some(&base), None);
+    let pre = semver::Version::parse("0.1.0-alpha.1").expect("version");
+    let outcome = datapack::load(&folders, &[], &pre);
+    assert_eq!(outcome.reports[0].state, PackState::Active);
+}
+
+#[test]
+fn the_base_id_is_reserved_even_if_the_base_pack_failed() {
+    let base = TempDir::new("broken-base");
+    base.write("manifest.json", "{");
+    let user = TempDir::new("fake-base");
+    pack(
+        &user,
+        "fake",
+        &manifest("base", "1.0.0", &[]),
+        &[&area("bench")],
+    );
+    let folders = datapack::discover(Some(base.path()), Some(user.path()));
+    let outcome = datapack::load(&folders, &["base".to_owned()], &game_version());
+    assert!(outcome.catalog.base_failed());
+    assert_eq!(codes(report(&outcome, "fake")), [code::DUPLICATE_PACK]);
+    assert!(outcome.catalog.object("base:bench").is_none());
+}
+
+#[test]
+fn names_must_match_exactly_on_every_platform() {
+    let user = TempDir::new("case");
+    user.write("p/Manifest.json", &manifest("case", "1.0.0", &[]));
+    pack(&user, "q", &manifest("qqq", "1.0.0", &[]), &[&area("x")]);
+    user.write("q/objects/LOUD.JSON", &objects(&[&area("y")]));
+    let outcome = load_user(&user, &["qqq"]);
+    assert_eq!(codes(report(&outcome, "p")), [code::MANIFEST_MISSING]);
+    let q = report(&outcome, "q");
+    assert_eq!(codes(q), [code::UNEXPECTED_ENTRY]);
+    assert_eq!(q.errors[0].file.as_deref(), Some("objects/LOUD.JSON"));
+}
+
+#[test]
+fn a_folder_with_too_many_entries_is_not_listed() {
+    let user = TempDir::new("entries-dir");
+    pack(&user, "p", &manifest("ppp", "1.0.0", &[]), &[&area("x")]);
+    for i in 0..10_000 {
+        user.write(&format!("p/objects/note{i}.txt"), "");
+    }
+    let outcome = load_user(&user, &["ppp"]);
+    let r = report(&outcome, "p");
+    assert_eq!(codes(r), [code::LIMIT_EXCEEDED]);
+    assert_eq!(r.errors[0].file.as_deref(), Some("objects/"));
+}
+
+#[cfg(unix)]
+#[test]
+fn hard_links_are_refused() {
+    let user = TempDir::new("hardlink");
+    let outside = TempDir::new("hardlink-outside");
+    outside.write("secret.json", &objects(&[&area("x")]));
+    pack(&user, "p", &manifest("ppp", "1.0.0", &[]), &[&area("y")]);
+    fs::hard_link(
+        outside.path().join("secret.json"),
+        user.path().join("p/objects/link.json"),
+    )
+    .expect("hard link");
+    let outcome = load_user(&user, &["ppp"]);
+    let r = report(&outcome, "p");
+    assert_eq!(codes(r), [code::INVALID_PATH]);
+    assert_eq!(r.errors[0].file.as_deref(), Some("objects/link.json"));
+}
+
+/// Junctions need no special rights on Windows (`mklink /J`); this proves the
+/// reparse-point check on the platform where it applies.
+#[cfg(windows)]
+#[test]
+fn junctions_are_refused_on_windows() {
+    let user = TempDir::new("junction");
+    let outside = TempDir::new("junction-outside");
+    outside.write("objects/secret.json", &objects(&[&area("x")]));
+    pack(
+        &user,
+        "real",
+        &manifest("real", "1.0.0", &[]),
+        &[&area("y")],
+    );
+    user.write("p/manifest.json", &manifest("ppp", "1.0.0", &[]));
+    let junction = |link: &Path, target: &Path| {
+        let status = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(link)
+            .arg(target)
+            .status()
+            .expect("run mklink");
+        assert!(status.success(), "mklink /J failed");
+    };
+    // A kind folder that is a junction to a folder outside the pack.
+    junction(
+        &user.path().join("p/objects"),
+        &outside.path().join("objects"),
+    );
+    // A pack folder that is a junction to another pack.
+    junction(&user.path().join("zz-linked"), &user.path().join("real"));
+    let outcome = load_user(&user, &["ppp", "real"]);
+    let p = report(&outcome, "p");
+    assert_eq!(codes(p), [code::INVALID_PATH], "{:?}", p.errors);
+    assert_eq!(codes(report(&outcome, "zz-linked")), [code::INVALID_PATH]);
+    assert_eq!(report(&outcome, "real").state, PackState::Active);
+}

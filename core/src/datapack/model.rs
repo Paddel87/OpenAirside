@@ -72,11 +72,39 @@ pub struct ObjectEntry {
     #[cfg_attr(feature = "schema", schemars(length(min = 1, max = 4096)))]
     pub name: String,
     /// How the object is placed.
-    pub placement: Placement,
+    #[cfg_attr(feature = "schema", schemars(with = "Placement"))]
+    pub placement: PlacementSpec,
     /// Entry of another pack that this entry replaces (`<pack>:<entry>`);
     /// allowed only if this pack depends on that pack.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub replaces: Option<String>,
+}
+
+/// `placement` as read from the file: a plain struct, so that errors name
+/// the exact field with its position (serde buffers an internally tagged
+/// enum and loses the JSON path). Stage 2 turns it into [`Placement`]; the
+/// schema for modders shows [`Placement`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PlacementSpec {
+    /// `area` or `single`.
+    pub kind: PlacementKind,
+    /// Width in metres, only for `single`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub width: Option<u16>,
+    /// Depth in metres, only for `single`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub depth: Option<u16>,
+}
+
+/// Kind of a [`PlacementSpec`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PlacementKind {
+    /// See [`Placement::Area`].
+    Area,
+    /// See [`Placement::Single`].
+    Single,
 }
 
 /// How an object type is placed.

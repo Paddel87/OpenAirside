@@ -17,15 +17,17 @@ use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use semver::{Version, VersionReq};
+use serde::Deserialize;
 use serde::de::DeserializeOwned;
 
 use super::catalog::{Catalog, ObjectType};
 use super::files::{ContentFile, Folder, Kind, MANIFEST};
-use super::model::{Manifest, ObjectEntry, ObjectsFile, Placement};
-use super::scan::{self, Limit, Limits};
+use super::model::{Manifest, ObjectEntry, ObjectsFile, Placement, PlacementKind};
+use super::scan::{self, Limit, Limits, MAX_PATH_CHARS, truncate};
 use super::{
-    FORMAT, MAX_DEPTH, MAX_ENTRIES, MAX_LIST_LEN, MAX_PACKS, MAX_STRING_CHARS, PackError,
-    PackReport, PackSource, PackState, code, error, is_entry_id, is_pack_id, limit_error,
+    BASE_PACK_ID, FORMAT, MAX_DEPTH, MAX_ENTRIES, MAX_FILES, MAX_LIST_LEN, MAX_PACKS,
+    MAX_STRING_CHARS, PackError, PackReport, PackSource, PackState, code, error, is_entry_id,
+    is_pack_id, limit_error,
 };
 use crate::text::Reason;
 
@@ -80,7 +82,10 @@ pub fn discover(base: Option<&Path>, user_dir: Option<&Path>) -> Vec<PackFolder>
     let Ok(read) = std::fs::read_dir(dir) else {
         return out;
     };
+    // Bounded like a pack folder: beyond `MAX_FILES` entries nothing more is
+    // looked at (at most `MAX_PACKS` folders are read anyway).
     let mut user: Vec<PathBuf> = read
+        .take(MAX_FILES)
         .filter_map(Result::ok)
         .filter(|entry| !entry.file_name().to_string_lossy().starts_with('.'))
         .filter(|entry| {
@@ -153,6 +158,81 @@ pub fn game_version() -> Version {
     Version::parse(crate::VERSION).unwrap_or(Version::new(0, 0, 0))
 }
 
+/// The game version compared with `game` of a manifest: without pre-release
+/// and build parts, because a range such as `>=0.0.0` or `*` never matches
+/// a pre-release in Semantic Versioning (`0.1.0-alpha.1` counts as `0.1.0`).
+fn release_of(game: &Version) -> Version {
+    Version::new(game.major, game.minor, game.patch)
+}
+
+/// The fields of a manifest that are read before the strict check, so that
+/// a pack of a newer format gets "newer game needed" even if it adds
+/// fields (S-4 "Versionierung").
+#[derive(Deserialize)]
+struct FormatProbe {
+    #[serde(default)]
+    format: Option<serde_json::Value>,
+    #[serde(default)]
+    id: Option<serde_json::Value>,
+    #[serde(default)]
+    name: Option<serde_json::Value>,
+    #[serde(default)]
+    version: Option<serde_json::Value>,
+}
+
+/// `formatTooNew` if the manifest declares a newer format; fills id, name
+/// and version of the report from the manifest where they are plain texts.
+fn newer_format(bytes: &[u8], report: &mut PackReport) -> Option<PackError> {
+    let bytes = strip_bom(bytes);
+    scan::scan(bytes, LIMITS).ok()?;
+    let probe: FormatProbe = serde_json::from_slice(bytes).ok()?;
+    let format = probe.format?.as_u64()?;
+    if format <= u64::from(FORMAT) {
+        return None;
+    }
+    let text = |value: Option<serde_json::Value>| value.and_then(|v| v.as_str().map(str::to_owned));
+    report.id = text(probe.id).filter(|id| is_pack_id(id));
+    report.name = text(probe.name);
+    report.version = text(probe.version).filter(|v| Version::parse(v).is_ok());
+    let shown = u32::try_from(format).map_or(f64::from(u32::MAX), f64::from);
+    Some(PackError {
+        path: Some("format".to_owned()),
+        ..PackError::file(
+            MANIFEST,
+            error(code::FORMAT_TOO_NEW)
+                .with_number("format", shown)
+                .with_number("supported", f64::from(FORMAT)),
+        )
+    })
+}
+
+fn strip_bom(bytes: &[u8]) -> &[u8] {
+    // A byte order mark is allowed in UTF-8 (RFC 8259 permits ignoring it);
+    // lines and columns count from the character after it.
+    bytes.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(bytes)
+}
+
+/// Adds line and column to the errors of `file` from index `from` on that
+/// name a JSON path but no position (stage 2), with one scan of the file.
+fn add_positions(errors: &mut [PackError], from: usize, file: &str, bytes: &[u8]) {
+    let open = |e: &PackError| e.file.as_deref() == Some(file) && e.line.is_none();
+    let wanted: BTreeSet<String> = errors[from..]
+        .iter()
+        .filter(|e| open(e))
+        .filter_map(|e| e.path.clone())
+        .collect();
+    if wanted.is_empty() {
+        return;
+    }
+    let found = scan::locate(strip_bom(bytes), LIMITS, &wanted);
+    for err in errors[from..].iter_mut().filter(|e| open(e)) {
+        if let Some(&(line, column)) = err.path.as_ref().and_then(|p| found.get(p)) {
+            err.line = Some(line);
+            err.column = Some(column);
+        }
+    }
+}
+
 fn open(folder: &PackFolder, index: usize, game: &Version) -> Pack {
     let name = folder
         .path
@@ -180,10 +260,19 @@ fn open(folder: &PackFolder, index: usize, game: &Version) -> Pack {
         }
     };
     let mut errors = Vec::new();
-    let valid = dir
-        .manifest(&mut errors)
-        .and_then(|bytes| parse::<Manifest>(MANIFEST, &bytes, &mut errors))
-        .and_then(|manifest| check_manifest(manifest, game, &mut report, &mut errors));
+    let bytes = dir.manifest(&mut errors);
+    let valid = match bytes.as_deref().map(|b| (b, newer_format(b, &mut report))) {
+        None => None,
+        Some((_, Some(newer))) => {
+            errors.push(newer);
+            None
+        }
+        Some((b, None)) => parse::<Manifest>(MANIFEST, b, &mut errors)
+            .and_then(|manifest| check_manifest(manifest, game, &mut report, &mut errors)),
+    };
+    if let Some(b) = &bytes {
+        add_positions(&mut errors, 0, MANIFEST, b);
+    }
     for err in errors {
         report.fail(err);
     }
@@ -200,8 +289,7 @@ fn open(folder: &PackFolder, index: usize, game: &Version) -> Pack {
 
 /// Stage 1 of one file: limits, then structure with JSON path.
 fn parse<T: DeserializeOwned>(file: &str, bytes: &[u8], errors: &mut Vec<PackError>) -> Option<T> {
-    // A byte order mark is allowed in UTF-8 (RFC 8259 permits ignoring it).
-    let bytes = bytes.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(bytes);
+    let bytes = strip_bom(bytes);
     if let Err(violation) = scan::scan(bytes, LIMITS) {
         let (limit, max) = match violation.limit {
             Limit::Depth => ("depth", MAX_DEPTH),
@@ -220,7 +308,7 @@ fn parse<T: DeserializeOwned>(file: &str, bytes: &[u8], errors: &mut Vec<PackErr
     let mut de = serde_json::Deserializer::from_slice(bytes);
     let result = serde_path_to_error::deserialize::<_, T>(&mut de)
         .map_err(|err| {
-            let path = err.path().to_string();
+            let path = truncate(&err.path().to_string(), MAX_PATH_CHARS);
             (Some(path), err.into_inner())
         })
         .and_then(|value| de.end().map(|()| value).map_err(|err| (None, err)));
@@ -298,10 +386,10 @@ fn check_manifest(
         ));
     }
     match VersionReq::parse(&manifest.game) {
-        Ok(range) if !range.matches(game) => errors.push(at(
+        Ok(range) if !range.matches(&release_of(game)) => errors.push(at(
             "game",
             error(code::GAME_VERSION)
-                .with_text("range", &manifest.game)
+                .with_text("range", &truncate(&manifest.game, MAX_PATH_CHARS))
                 .with_text("game", &game.to_string()),
         )),
         Ok(_) => {}
@@ -338,11 +426,14 @@ fn check_manifest(
     })
 }
 
+/// A second folder with an id already seen fails; the id of the base pack
+/// is reserved for the game, even if the base pack itself failed.
 fn reject_duplicates(packs: &mut [Pack]) {
     let mut seen = BTreeSet::new();
     for pack in packs.iter_mut() {
         if let Some(valid) = &pack.valid
-            && !seen.insert(valid.id.clone())
+            && (!seen.insert(valid.id.clone())
+                || (pack.report.source == PackSource::User && valid.id == BASE_PACK_ID))
         {
             let reason = error(code::DUPLICATE_PACK).with_text("id", &valid.id);
             pack.report.fail(PackError::pack(reason));
@@ -372,7 +463,25 @@ fn wanted(packs: &[Pack], active: &[String]) -> Vec<usize> {
     out
 }
 
+/// Index of every pack with a valid manifest, by id (unique after
+/// [`reject_duplicates`]).
+fn valid_index(packs: &[Pack]) -> HashMap<String, usize> {
+    packs
+        .iter()
+        .enumerate()
+        .filter_map(|(i, p)| p.valid.as_ref().map(|v| (v.id.clone(), i)))
+        .collect()
+}
+
 fn check_dependencies(packs: &mut [Pack], wanted: &[usize]) {
+    let index_of = valid_index(packs);
+    let wanted_set: BTreeSet<usize> = wanted.iter().copied().collect();
+    // Ids of packs that failed with a readable id (missing from `index_of`).
+    let failed_ids: BTreeSet<String> = packs
+        .iter()
+        .filter(|p| p.failed())
+        .filter_map(|p| p.report.id.clone())
+        .collect();
     // Repeat until no further pack fails: a failure spreads to dependents.
     loop {
         let mut changed = false;
@@ -384,15 +493,10 @@ fn check_dependencies(packs: &mut [Pack], wanted: &[usize]) {
                 continue;
             };
             let problem = valid.dependencies.iter().find_map(|(id, range)| {
-                let failed_with_id = packs
-                    .iter()
-                    .any(|p| p.failed() && p.report.id.as_deref() == Some(id.as_str()));
-                match packs
-                    .iter()
-                    .position(|p| p.valid.as_ref().is_some_and(|v| &v.id == id))
-                {
+                let failed_with_id = failed_ids.contains(id);
+                match index_of.get(id).copied() {
                     Some(dep) if packs[dep].failed() => Some(failed_dependency(id)),
-                    Some(dep) if !wanted.contains(&dep) => {
+                    Some(dep) if !wanted_set.contains(&dep) => {
                         Some(error(code::DEPENDENCY_INACTIVE).with_text("id", id))
                     }
                     Some(dep) => {
@@ -400,8 +504,11 @@ fn check_dependencies(packs: &mut [Pack], wanted: &[usize]) {
                         (!range.matches(version)).then(|| {
                             error(code::DEPENDENCY_VERSION)
                                 .with_text("id", id)
-                                .with_text("version", &version.to_string())
-                                .with_text("range", &range.to_string())
+                                .with_text(
+                                    "version",
+                                    &truncate(&version.to_string(), MAX_PATH_CHARS),
+                                )
+                                .with_text("range", &truncate(&range.to_string(), MAX_PATH_CHARS))
                         })
                     }
                     None if failed_with_id => Some(failed_dependency(id)),
@@ -426,31 +533,34 @@ fn failed_dependency(id: &str) -> Reason {
 /// Wanted packs in load order: a pack comes after its dependencies, else in
 /// the order of `wanted`. Packs in or behind a cycle fail.
 fn load_order(packs: &mut [Pack], wanted: &[usize]) -> Vec<usize> {
-    let deps_of = |packs: &[Pack], index: usize| -> Vec<usize> {
-        packs[index].valid.as_ref().map_or_else(Vec::new, |v| {
-            v.dependencies
-                .iter()
-                .filter_map(|(id, _)| {
-                    packs
-                        .iter()
-                        .position(|p| p.valid.as_ref().is_some_and(|w| &w.id == id))
-                })
-                .collect()
+    let index_of = valid_index(packs);
+    let edges: HashMap<usize, Vec<usize>> = wanted
+        .iter()
+        .map(|&i| {
+            let deps = packs[i].valid.as_ref().map_or_else(Vec::new, |v| {
+                v.dependencies
+                    .iter()
+                    .filter_map(|(id, _)| index_of.get(id).copied())
+                    .collect()
+            });
+            (i, deps)
         })
-    };
+        .collect();
     let mut left: Vec<usize> = wanted
         .iter()
         .copied()
         .filter(|&i| !packs[i].failed())
         .collect();
     let mut order = Vec::new();
+    let mut placed = vec![false; packs.len()];
     while let Some(pos) = left
         .iter()
-        .position(|&i| deps_of(packs, i).iter().all(|d| order.contains(d)))
+        .position(|i| edges[i].iter().all(|&d| placed[d]))
     {
-        order.push(left.remove(pos));
+        let index = left.remove(pos);
+        placed[index] = true;
+        order.push(index);
     }
-    let edges: HashMap<usize, Vec<usize>> = left.iter().map(|&i| (i, deps_of(packs, i))).collect();
     for &index in &left {
         let reason = if reaches(&edges, index, index) {
             error(code::DEPENDENCY_CYCLE)
@@ -565,6 +675,7 @@ impl Stage<'_> {
                     else {
                         continue;
                     };
+                    let from = self.errors.len();
                     for (i, entry) in parsed.objects.into_iter().enumerate() {
                         self.entries += 1;
                         if self.entries > MAX_ENTRIES {
@@ -574,6 +685,7 @@ impl Stage<'_> {
                         }
                         self.check_object(&file.file, &format!("objects[{i}]"), entry);
                     }
+                    add_positions(&mut self.errors, from, &file.file, &file.bytes);
                 }
             }
         }
@@ -599,26 +711,67 @@ impl Stage<'_> {
         if entry.name.trim().is_empty() {
             self.at(file, &format!("{path}.name"), error(code::INVALID_VALUE));
         }
-        if let Placement::Single { width, depth } = entry.placement {
-            for (field, metres) in [("width", width), ("depth", depth)] {
-                let (min, max) = FOOTPRINT_METRES;
-                if metres < min || metres > max || metres % 2 != 0 {
-                    let reason = error(code::INVALID_VALUE)
-                        .with_number("min", f64::from(min))
-                        .with_number("max", f64::from(max));
-                    self.at(file, &format!("{path}.placement.{field}"), reason);
-                }
-            }
-        }
+        let placement = self.check_placement(file, &format!("{path}.placement"), entry.placement);
         if let Some(target) = &entry.replaces {
             self.check_replace(file, &format!("{path}.replaces"), target, &full);
         }
-        if self.errors.len() == before {
+        if let Some(placement) = placement
+            && self.errors.len() == before
+        {
             self.objects.push(ObjectType {
                 id: full,
                 name: entry.name,
-                placement: entry.placement,
+                placement,
             });
+        }
+    }
+
+    /// Stage 2 of `placement`: `width` and `depth` exactly for `single`,
+    /// each an even number of metres in range.
+    fn check_placement(
+        &mut self,
+        file: &str,
+        path: &str,
+        spec: super::model::PlacementSpec,
+    ) -> Option<Placement> {
+        let fields = [("width", spec.width), ("depth", spec.depth)];
+        match spec.kind {
+            PlacementKind::Area => {
+                let mut ok = true;
+                for (field, value) in fields {
+                    if value.is_some() {
+                        let reason = error(code::INVALID_STRUCTURE).with_text(
+                            "detail",
+                            &format!("`{field}` is only allowed for kind `single`"),
+                        );
+                        self.at(file, &format!("{path}.{field}"), reason);
+                        ok = false;
+                    }
+                }
+                ok.then_some(Placement::Area {})
+            }
+            PlacementKind::Single => {
+                let mut metres = [0u16; 2];
+                for (slot, (field, value)) in metres.iter_mut().zip(fields) {
+                    let Some(value) = value else {
+                        let reason = error(code::INVALID_STRUCTURE)
+                            .with_text("detail", &format!("missing field `{field}`"));
+                        self.at(file, path, reason);
+                        continue;
+                    };
+                    let (min, max) = FOOTPRINT_METRES;
+                    if value < min || value > max || value % 2 != 0 {
+                        let reason = error(code::INVALID_VALUE)
+                            .with_number("min", f64::from(min))
+                            .with_number("max", f64::from(max));
+                        self.at(file, &format!("{path}.{field}"), reason);
+                    }
+                    *slot = value;
+                }
+                let [width, depth] = metres;
+                (spec.width.is_some() && spec.depth.is_some())
+                    .then_some(Placement::Single { width, depth })
+            }
         }
     }
 

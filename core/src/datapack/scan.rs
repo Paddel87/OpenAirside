@@ -5,6 +5,16 @@
 //! 128), so this linear scan runs first and reports the first violation with
 //! line, column and JSON path. It does not check the syntax: on malformed
 //! input it stops silently and leaves the error message to `serde_json`.
+//! The same scan finds line and column of the values named by errors of
+//! stage 2 ([`locate`]).
+
+use std::collections::{BTreeMap, BTreeSet};
+
+/// Longest JSON path in an error, in characters; longer paths are cut.
+pub const MAX_PATH_CHARS: usize = 512;
+
+/// Line and column per JSON path ([`locate`]).
+pub type Positions = BTreeMap<String, (u32, u32)>;
 
 /// Limits of one JSON document.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -59,6 +69,8 @@ struct Scanner<'a> {
     line_start: usize,
     stack: Vec<Frame>,
     limits: Limits,
+    /// Paths to locate and the positions found so far ([`locate`]).
+    locate: Option<(&'a BTreeSet<String>, Positions)>,
 }
 
 /// Checks `bytes` against `limits`.
@@ -74,8 +86,42 @@ pub fn scan(bytes: &[u8], limits: Limits) -> Result<(), Violation> {
         line_start: 0,
         stack: Vec::new(),
         limits,
+        locate: None,
     }
     .run()
+}
+
+/// Line and column of the first value at each of `paths` (notation as in
+/// [`Violation::path`]); paths not found are missing in the result. For a
+/// document that passed [`scan`] with the same `limits`.
+#[must_use]
+pub fn locate(
+    bytes: &[u8],
+    limits: Limits,
+    paths: &BTreeSet<String>,
+) -> BTreeMap<String, (u32, u32)> {
+    let mut scanner = Scanner {
+        bytes,
+        pos: 0,
+        line: 1,
+        line_start: 0,
+        stack: Vec::new(),
+        limits,
+        locate: Some((paths, Positions::new())),
+    };
+    let _ = scanner.run();
+    scanner.locate.map(|(_, found)| found).unwrap_or_default()
+}
+
+/// `text` cut to `max` characters, with `…` as last character if cut.
+#[must_use]
+pub fn truncate(text: &str, max: usize) -> String {
+    if text.chars().count() <= max {
+        return text.to_owned();
+    }
+    let mut out: String = text.chars().take(max.saturating_sub(1)).collect();
+    out.push('…');
+    out
 }
 
 impl Scanner<'_> {
@@ -164,7 +210,8 @@ impl Scanner<'_> {
         Ok(())
     }
 
-    /// Counts a value that starts at `self.pos` in the enclosing array.
+    /// Counts a value that starts at `self.pos` in the enclosing array and
+    /// records its position if it is to be located.
     fn value_starts(&mut self) -> Result<(), Violation> {
         let limit = self.limits.list_len;
         if let Some(Frame::Array { count }) = self.stack.last_mut() {
@@ -173,7 +220,20 @@ impl Scanner<'_> {
                 return Err(self.violation(Limit::ListLen, self.pos));
             }
         }
+        if self.locate.is_some() {
+            let path = self.path();
+            let at = (self.line, self.column(self.pos));
+            if let Some((wanted, found)) = &mut self.locate
+                && wanted.contains(&path)
+            {
+                found.entry(path).or_insert(at);
+            }
+        }
         Ok(())
+    }
+
+    fn column(&self, at: usize) -> u32 {
+        u32::try_from(at - self.line_start + 1).unwrap_or(u32::MAX)
     }
 
     /// Characters of the string starting with the quote at `start` and the
@@ -186,9 +246,16 @@ impl Scanner<'_> {
             match byte {
                 b'"' => return Some((chars, i + 1)),
                 b'\\' => {
-                    // \uXXXX is one character, every other escape too.
+                    // \uXXXX is one character, a surrogate pair
+                    // \uD83D\uDE00 too, every other escape as well.
                     i += if self.bytes.get(i + 1) == Some(&b'u') {
-                        6
+                        if is_high_surrogate(self.bytes.get(i + 2..i + 6))
+                            && self.bytes.get(i + 6..i + 8) == Some(b"\\u")
+                        {
+                            12
+                        } else {
+                            6
+                        }
                     } else {
                         2
                     };
@@ -209,12 +276,13 @@ impl Scanner<'_> {
         Violation {
             limit,
             line: self.line,
-            column: u32::try_from(at - self.line_start + 1).unwrap_or(u32::MAX),
-            path: self.path(),
+            column: self.column(at),
+            path: truncate(&self.path(), MAX_PATH_CHARS),
         }
     }
 
-    /// Path of the value at the current position.
+    /// Path of the value at the current position (keys as written, escapes
+    /// included).
     fn path(&self) -> String {
         let mut out = String::new();
         for frame in &self.stack {
@@ -238,6 +306,11 @@ impl Scanner<'_> {
         }
         out
     }
+}
+
+/// Four hex digits of a high surrogate (`D800` … `DBFF`).
+fn is_high_surrogate(hex: Option<&[u8]>) -> bool {
+    matches!(hex, Some([d, b'8' | b'9' | b'a' | b'b' | b'A' | b'B', _, _]) if d.eq_ignore_ascii_case(&b'd'))
 }
 
 #[cfg(test)]
@@ -312,6 +385,56 @@ mod tests {
         )
         .unwrap_err();
         assert_eq!(err.path, ".");
+    }
+
+    #[test]
+    fn a_surrogate_pair_is_one_character() {
+        // Eight emoji as escaped surrogate pairs: 8 characters.
+        let eight = "\\uD83D\\uDE00".repeat(8);
+        assert_eq!(check(&format!(r#"["{eight}"]"#)), Ok(()));
+        let nine = "\\ud83d\\ude00".repeat(9);
+        assert!(check(&format!(r#"["{nine}"]"#)).is_err());
+        // A lone high surrogate counts as one character.
+        assert_eq!(check(r#"["\uD83Dabcdefg"]"#), Ok(()));
+    }
+
+    #[test]
+    fn long_paths_are_cut() {
+        let key = "k".repeat(600);
+        let limits = Limits {
+            depth: 1,
+            string_chars: 1_000,
+            list_len: 10,
+        };
+        let err = scan(format!(r#"{{"{key}": [1]}}"#).as_bytes(), limits).unwrap_err();
+        assert_eq!(err.path.chars().count(), MAX_PATH_CHARS);
+        assert!(err.path.ends_with('…'));
+        assert_eq!(truncate("abc", 3), "abc");
+        assert_eq!(truncate("abcd", 3), "ab…");
+    }
+
+    #[test]
+    fn locate_finds_values_by_path() {
+        let json = "{\n  \"objects\": [\n    {\"id\": \"a\"},\n    {\"id\": \"b\", \"placement\": {\"width\": 3}}\n  ]\n}";
+        let wanted: BTreeSet<String> = [
+            "objects[1].id",
+            "objects[1].placement.width",
+            "objects[0]",
+            "missing",
+        ]
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
+        let limits = Limits {
+            depth: 8,
+            string_chars: 64,
+            list_len: 8,
+        };
+        let found = locate(json.as_bytes(), limits, &wanted);
+        assert_eq!(found.get("objects[0]"), Some(&(3, 5)));
+        assert_eq!(found.get("objects[1].id"), Some(&(4, 12)));
+        assert_eq!(found.get("objects[1].placement.width"), Some(&(4, 40)));
+        assert!(!found.contains_key("missing"));
     }
 
     #[test]
