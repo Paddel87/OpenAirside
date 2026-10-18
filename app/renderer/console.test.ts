@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { CONSOLE_PANEL, HELP, parseConsoleLine, TABLE_COLUMNS } from "./console.js";
+import type { PackReport } from "../src/generated/PackReport.js";
+import {
+  basePackLoaded,
+  CONSOLE_PANEL,
+  formatPacks,
+  HELP,
+  parseConsoleLine,
+  TABLE_COLUMNS,
+} from "./console.js";
 
 describe("parseConsoleLine", () => {
   it.each([
@@ -8,6 +16,14 @@ describe("parseConsoleLine", () => {
     ["night", { kind: "skipNight" }],
     ["spawn 10000", { kind: "debug", action: { kind: "spawnPersons", count: 10_000 } }],
     ["clear", { kind: "debug", action: { kind: "clearPersons" } }],
+    [
+      "build base:bench 10 20",
+      { kind: "build", object: "base:bench", at: { x: 10, y: 20, floor: 0 }, rotation: 0 },
+    ],
+    [
+      "build my-mod:kiosk 1 2 -1",
+      { kind: "build", object: "my-mod:kiosk", at: { x: 1, y: 2, floor: -1 }, rotation: 0 },
+    ],
     [
       "walls 0 10 20 30 40 on",
       {
@@ -61,6 +77,13 @@ describe("parseConsoleLine", () => {
     "measure 0",
     "measure 61",
     "measure soon",
+    "packs list",
+    "build bench 1 2",
+    "build base:bench 1",
+    "build base:bench 1 2 0 9",
+    "build base:bench x 2",
+    "build base:bench 1 2 up",
+    "packs set ab",
     "fly",
   ])("rejects %j with a hint", (line) => {
     expect(parseConsoleLine(line).kind).toBe("error");
@@ -93,5 +116,89 @@ describe("parseConsoleLine", () => {
     expect(parseConsoleLine("measure")).toEqual({ kind: "measure", minutes: 10 });
     expect(parseConsoleLine("MEASURE 3")).toEqual({ kind: "measure", minutes: 3 });
     expect(parseConsoleLine("measure 60")).toEqual({ kind: "measure", minutes: 60 });
+  });
+});
+
+describe("packs", () => {
+  const base: PackReport = {
+    folder: "base",
+    source: "base",
+    id: "base",
+    name: "OpenAirside",
+    version: "0.0.0",
+    state: "active",
+    entries: 3,
+    errors: [],
+    errorsOmitted: 0,
+  };
+  const broken: PackReport = {
+    folder: "My Mod",
+    source: "user",
+    id: null,
+    name: null,
+    version: null,
+    state: "failed",
+    entries: 0,
+    errors: [
+      {
+        file: "objects/a.json",
+        line: 3,
+        column: 12,
+        path: null,
+        reason: {
+          code: "syntaxError",
+          textKey: "datapack.error.syntaxError",
+          params: { detail: "expected value" },
+        },
+      },
+      {
+        file: null,
+        line: null,
+        column: null,
+        path: null,
+        reason: { code: "ioError", textKey: "datapack.error.ioError", params: {} },
+      },
+    ],
+    errorsOmitted: 2,
+  };
+
+  it("parses the pack commands", () => {
+    expect(parseConsoleLine("packs")).toEqual({ kind: "packs" });
+    expect(parseConsoleLine("packs set my-mod other")).toEqual({
+      kind: "setPacks",
+      ids: ["my-mod", "other"],
+    });
+    expect(parseConsoleLine("packs set")).toEqual({ kind: "setPacks", ids: [] });
+  });
+
+  it("formats reports with errors and their places", () => {
+    expect(formatPacks([base, broken])).toEqual([
+      "active base base 0.0.0 – 3 entries",
+      "failed user My Mod",
+      "  syntaxError objects/a.json:3:12 – expected value",
+      "  ioError",
+      "  … 2 more errors",
+    ]);
+    const withPath: PackReport = {
+      ...broken,
+      errors: [
+        {
+          file: "manifest.json",
+          line: 2,
+          column: null,
+          path: "id",
+          reason: { code: "invalidId", textKey: "datapack.error.invalidId", params: {} },
+        },
+      ],
+      errorsOmitted: 0,
+    };
+    expect(formatPacks([withPath])[1]).toBe("  invalidId manifest.json:2 id");
+  });
+
+  it("tells whether the base pack loaded", () => {
+    expect(basePackLoaded([base, broken])).toBe(true);
+    expect(basePackLoaded([{ ...base, state: "failed" }])).toBe(false);
+    expect(basePackLoaded([broken])).toBe(false);
+    expect(basePackLoaded([])).toBe(false);
   });
 });

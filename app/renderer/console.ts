@@ -5,6 +5,7 @@
  */
 import type { ColumnId } from "../src/generated/ColumnId.js";
 import type { Command } from "../src/generated/Command.js";
+import type { PackReport } from "../src/generated/PackReport.js";
 import type { Query } from "../src/generated/Query.js";
 import type { Scenario } from "../src/generated/Scenario.js";
 import type { Speed } from "../src/generated/Speed.js";
@@ -15,6 +16,8 @@ export type ConsoleResult =
   | { readonly kind: "command"; readonly command: Command }
   | { readonly kind: "query"; readonly query: Query }
   | { readonly kind: "measure"; readonly minutes: number }
+  | { readonly kind: "packs" }
+  | { readonly kind: "setPacks"; readonly ids: readonly string[] }
   | { readonly kind: "help"; readonly text: string }
   | { readonly kind: "error"; readonly text: string };
 
@@ -24,10 +27,13 @@ export const HELP = [
   "night",
   "spawn <1–10000>",
   "clear",
+  "build <pack:entry> <x> <y> [floor] – build command with a content id (S-2, S-4)",
   "walls <floor> <x0> <y0> <x1> <y1> on|off",
   "scenario hall|reference [persons]",
   "table [rows 1–1000] – persons of the newest frame, sorted by y and x (S-7)",
   `measure [minutes 1–${String(MAX_MINUTES)}] – measurement series, result as JSON file (default 10)`,
+  "packs – data packs with state and errors",
+  "packs set [ids…] – choose the active user packs in load order (next session)",
 ].join("\n");
 
 /** Panel id of the console's table query. */
@@ -81,6 +87,21 @@ export function parseConsoleLine(line: string): ConsoleResult {
     }
     case "clear":
       return command({ kind: "debug", action: { kind: "clearPersons" } });
+    case "build": {
+      const [object = "", ...rest] = args;
+      const [x, y] = rest.slice(0, 2).map(integer);
+      const floor = rest[2] === undefined ? 0 : integer(rest[2]);
+      if (
+        !/^[a-z0-9_-]{3,64}:[a-z0-9_-]{1,64}$/.test(object) ||
+        x === undefined ||
+        y === undefined ||
+        floor === undefined ||
+        rest.length > 3
+      ) {
+        return error("build <pack:entry> <x> <y> [floor]");
+      }
+      return command({ kind: "build", object, at: { x, y, floor }, rotation: 0 });
+    }
     case "walls": {
       const [floor, x0, y0, x1, y1] = args.slice(0, 5).map(integer);
       const mode = args[5];
@@ -128,6 +149,14 @@ export function parseConsoleLine(line: string): ConsoleResult {
         },
       };
     }
+    case "packs": {
+      if (args.length === 0) return { kind: "packs" };
+      const [verb, ...ids] = args;
+      if (verb !== "set" || !ids.every((id) => /^[a-z0-9_-]{3,64}$/.test(id))) {
+        return error("packs | packs set [ids…]");
+      }
+      return { kind: "setPacks", ids };
+    }
     case "measure": {
       const minutes = args[0] === undefined ? 10 : integer(args[0]);
       if (minutes === undefined || minutes < 1 || minutes > MAX_MINUTES) {
@@ -138,4 +167,41 @@ export function parseConsoleLine(line: string): ConsoleResult {
     default:
       return error(`unknown command "${name}" – try help`);
   }
+}
+
+/** Place of a pack error: file, line and column, JSON path. */
+function place(error: PackReport["errors"][number]): string {
+  const at =
+    error.line === null
+      ? ""
+      : `:${String(error.line)}${error.column === null ? "" : `:${String(error.column)}`}`;
+  const file = error.file === null ? "" : ` ${error.file}${at}`;
+  return `${file}${error.path === null ? "" : ` ${error.path}`}`;
+}
+
+/** Console lines for the pack reports of `packs.list()` (step 2.4). */
+export function formatPacks(reports: readonly PackReport[]): string[] {
+  const lines: string[] = [];
+  for (const r of reports) {
+    const name = r.id ?? r.folder;
+    const version = r.version === null ? "" : ` ${r.version}`;
+    const entries = r.state === "active" ? ` – ${String(r.entries)} entries` : "";
+    lines.push(`${r.state} ${r.source} ${name}${version}${entries}`);
+    for (const error of r.errors) {
+      const detail = error.reason.params.detail;
+      lines.push(
+        `  ${error.reason.code}${place(error)}${typeof detail === "string" ? ` – ${detail}` : ""}`,
+      );
+    }
+    if (r.errorsOmitted > 0) lines.push(`  … ${String(r.errorsOmitted)} more errors`);
+  }
+  return lines;
+}
+
+/** Whether every base pack loaded (S-4: a faulty base pack is reported at start). */
+export function basePackLoaded(reports: readonly PackReport[]): boolean {
+  return (
+    reports.some((r) => r.source === "base") &&
+    reports.every((r) => r.source !== "base" || r.state === "active")
+  );
 }

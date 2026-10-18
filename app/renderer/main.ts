@@ -4,9 +4,10 @@
  * console, performance display and measurement series (FR-009, step 2.7).
  * The interface panels (React) follow from roadmap step 3.6 on.
  */
+import type { PackReport } from "../src/generated/PackReport.js";
 import type { TickStats } from "../src/generated/TickStats.js";
 import { type ClientHandlers, CoreClient } from "./core-client.js";
-import { parseConsoleLine, TABLE_COLUMNS } from "./console.js";
+import { basePackLoaded, formatPacks, parseConsoleLine, TABLE_COLUMNS } from "./console.js";
 import { defaultConfig, MeasureSeries, type SeriesHost } from "./measure.js";
 import { PerfMeter } from "./perf.js";
 import { onCorePort } from "./platform.js";
@@ -55,10 +56,32 @@ async function start(): Promise<void> {
   let stats: TickStats | undefined;
   let series: MeasureSeries | undefined;
 
+  const showPacks = (reports: readonly PackReport[]): void => {
+    for (const line of formatPacks(reports)) write(line);
+  };
+  // S-4: a faulty base pack leads to a message at start instead of a crash.
+  // Checked once the core answers, i.e. after it has loaded the packs.
+  const checkBasePack = (): void => {
+    window.openairside?.packs
+      .list()
+      .then((reports) => {
+        const loaded = basePackLoaded(reports);
+        root.dataset.basePack = loaded ? "loaded" : "failed";
+        if (!loaded) {
+          write("base pack failed to load – the game has no content:");
+          showPacks(reports.filter((r) => r.source === "base"));
+        }
+      })
+      .catch((error: unknown) => {
+        write(`packs: ${error instanceof Error ? error.message : String(error)}`);
+      });
+  };
+
   const handlers: ClientHandlers = {
     welcome: (core, session) => {
       root.dataset.session = String(session);
       write(`core ${core.name} ${core.version}, session ${String(session)}`);
+      checkBasePack();
     },
     incompatible: (protocol) => {
       write(`incompatible core (protocol ${String(protocol)}) – please reinstall the game`);
@@ -233,6 +256,22 @@ async function start(): Promise<void> {
         write(`measure failed: ${error instanceof Error ? error.message : String(error)}`);
         root.dataset.measure = "failed";
       });
+    } else if (result.kind === "packs" || result.kind === "setPacks") {
+      const api = window.openairside;
+      if (api === undefined) {
+        write("packs: not connected");
+        return;
+      }
+      const call = result.kind === "packs" ? api.packs.list() : api.packs.setActive(result.ids);
+      call
+        .then((reports) => {
+          showPacks(reports);
+          if (result.kind === "setPacks")
+            write("packs: chosen packs apply from the next session (e.g. scenario hall)");
+        })
+        .catch((error: unknown) => {
+          write(`packs failed: ${error instanceof Error ? error.message : String(error)}`);
+        });
     } else if (result.kind === "command") {
       const id = client?.send(result.command) ?? 0;
       write(id === 0 ? "not connected" : `#${String(id)} ${line}`);
