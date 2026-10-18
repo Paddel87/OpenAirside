@@ -24,6 +24,19 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-18 22:52 (UTC) – [BEOBACHTUNG]
+
+- **Erzwungener Fehlerfall der Schema-Prüfung (Kategorie 7, ADR-025):** `49d45bd` ändert eine eingecheckte Schema-Datei; CI-Lauf 39173571403: nur der Schritt „Erzeugte Schemas (content/schema) aktuell" im Job „Rust Lint & Format" rot, alle übrigen 16 Jobs grün (darunter Rauchtest mit Mod-Paket auf Windows, macOS und Linux, Coverage, Kern-Benchmark). Zurückgenommen in `f59fe24`. Lokal nachvollzogen: `npm run check:schema` meldet mit dem committeten Stand die Datei.
+- **Datenordner im Entwicklungs-Build** geprüft: `app.getName()` = `openairside`, `userData` = `~/.config/openairside`; der Hauptprozess legt dort `packs/` an. Der Rauchtest nutzt `--user-data-dir` mit einem frischen Ordner, damit gespeicherte Paketwahl eines Entwicklers nicht stört; Electron übernimmt den Schalter (Test wäre sonst bei `packs set kiosks` gescheitert).
+
+### 2026-10-18 22:37 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** CI-Lauf 39172857755 auf `ac90598` (Zwischenstand der Kern-Commits von 2.4).
+- **Symptom:** Job „Rust Lint & Format" rot: `gen-types` meldet `PackError.ts`, `PackReport.ts`, `PackSource.ts`, `PackState.ts` als abweichend.
+- **Ursache:** Die Rust-Typen mit ts-rs-Export kamen in `b36844f`, die erzeugten TypeScript-Dateien erst mit der Brücke in `79a6d00`. Zwischen beiden Commits war `check:types` rot; gepusht wurde dieser Zwischenstand.
+- **Lösung:** Mit `79a6d00` behoben; CI-Lauf 39173547010 auf `b2b7d7d` grün auf allen Jobs. Für künftige Schritte: erzeugte Typen im selben Commit wie die exportierten Rust-Typen.
+- **Aufwand:** etwa 2 Minuten.
+
 ### 2026-10-18 22:18 (UTC) – [ADR-ANGELEGT]
 
 - **ADR:** ADR-025 – Bibliotheken für den Datenpaket-Lader und die Schema-Erzeugung (Kategorie 3 und 7).

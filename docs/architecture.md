@@ -240,9 +240,10 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 
 ### Modul: Inhalte & Mods [VORLÄUFIG]
 
-- **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13; Code-Mods `[OFFEN]`
+- **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13; Lader umgesetzt in 2.4 (ADR-025), Beförderung wartet auf die getrennte Prüfung; Mod-Verwaltung 6.1; Code-Mods `[OFFEN]`
 - **Verantwortung:** Laden und Validieren von Datenpaketen (Flugzeugtypen, Airlines, Lackierungen, Objekte, Fahrzeuge, Forschungsbaum, Sprachpakete); Mod-Verwaltung; Grafik-Pipeline (SVG → Atlanten in mehreren Auflösungen im Build).
-- **Abhängigkeiten (extern):** Schema-Validierung (Werkzeug beim Setup wählen)
+- **Abhängigkeiten (extern):** `serde_json`, `serde_path_to_error`, `semver`; `schemars` nur für die Schema-Dateien (Feature `schema`); ADR-025
+- **Umsetzung (Schritt 2.4):** `core/src/datapack/` im Kern-Crate (kein Anbindungscode, Regel-006): `scan.rs` (Grenzen-Vorprüfung vor dem Parsen), `files.rs` (Aufzählen und Lesen), `model.rs` (Dateiformat als Rust-Typen), `load.rs` (Manifeste, Abhängigkeiten, Ladereihenfolge, Inhalt in zwei Stufen), `catalog.rs` (Katalog der Sitzung), `schema.rs` (Schema-Dateien). Basis-Datenpaket `content/base/` (Objekttypen `base:floor_concrete`, `base:wall_concrete`, `base:bench`), Schema-Dateien `content/schema/` aus `npm run gen:schema`, beides im Programmpaket. Die Simulation hält den Katalog der Sitzung (`Simulation::content`); `build` und `buildArea` lehnen IDs ab, die nicht geladen sind (`unknownContent`). Brücke: Start-Optionen `basePack`, `userPacks`, `activePacks`, Methoden `packs()` und `setActivePacks()`. Tests `core/tests/datapacks.rs` (18 Fälle, darunter fehlerhafte Pakete), Coverage `core/src/datapack/` 89–100 % Lines je Datei.
 - **Offene Fragen:** Code-Mods (z. B. JavaScript-Plugins mit Sandbox) – eigene Erkundung
 
 ### Modul: Lokalisierung [VORLÄUFIG]
@@ -383,7 +384,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 
 ### Schnittstelle: S-4 Datenpaket-Schema (Inhalte → Kern) [BELASTBAR]
 
-- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021; Bestätigung durch Umsetzung in 2.4
+- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021; bestätigt durch die Umsetzung in 2.4 (2026-10-18, ADR-025)
 
 - **Anbieter:** Inhalte & Mods. **Konsument:** Takt & Weltzustand.
 - **Aufbau eines Pakets:** ein Ordner mit `manifest.json` und Inhaltsdateien je Art in Unterordnern (`aircraft/`, `airlines/`, `objects/`, `vehicles/`, `research/`, `lang/`); Format JSON (UTF-8, ohne Kommentare). Grafiken des Basispakets entstehen in der Build-Pipeline (ADR-008, 2.10); Grafiken und Töne in Mods regelt 6.1.
@@ -397,6 +398,16 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 - **Fehlerverhalten:** Jeder Fehler nennt Paket, Datei, Stelle (Zeile, Spalte, JSON-Pfad), Code und Textschlüssel. Ein fehlerhaftes Paket wird **als Ganzes** nicht geladen (ADR-021), das Spiel startet mit den übrigen; ein fehlerhaftes Basispaket führt zu einer Fehlermeldung beim Start statt zum Absturz.
 - **Versionierung:** `format` wird bei jeder nicht additiven Schemaänderung erhöht; der Kern lädt das aktuelle Format und migriert ältere schrittweise; ein Paket mit neuerem Format wird mit Hinweis „neuere Spielversion nötig" abgewiesen.
 - **Schema für Modder:** JSON-Schema-Dateien werden aus den Rust-Typen erzeugt, damit Editoren Fehler schon beim Schreiben zeigen; Werkzeug und ggf. neue Abhängigkeit in 2.4 (Kategorie 3).
+- **Umsetzung und Präzisierungen (Schritt 2.4, ADR-025):**
+  - **Dateien:** Manifest wie oben. Eine Inhaltsdatei unter `objects/` ist ein Objekt `{ "$schema"?, "objects": [Einträge] }`; `$schema` (beliebiger Text) erlaubt Editoren die Zuordnung des Schemas und wird vom Spiel ignoriert. Ein Byte-Order-Mark am Dateianfang ist erlaubt.
+  - **Objekttyp (Mindestfelder, spätere Schritte ergänzen additiv):** `id` (`[a-z0-9_-]{1,64}`, ohne `:`), `name` (Textschlüssel, nicht leer), `placement` als `{ "kind": "area" }` (Böden, Wände, Zonen; `buildArea`) oder `{ "kind": "single", "width", "depth" }` (ganze, gerade Meter von 2 bis 1024, also höchstens die Befehlsfläche von 512 Zellen), optional `replaces`.
+  - **Inhaltsarten:** Nur `objects/` hat in 2.4 ein Format. Die Ordner `aircraft/`, `airlines/` (3.6), `vehicles/` (3.4), `research/` (5.6) und `lang/` (2.6) bekommen ihr Format mit diesen Schritten; bis dahin ist ein solcher Ordner ein Fehler `kindNotSupported` mit dem Schritt als Parameter. Andere Ordner sind `unexpectedEntry`, ebenso Unterordner in einem Inhaltsordner. Gelesen werden nur `manifest.json` und `*.json` direkt in den Inhaltsordnern; andere Dateien (Readme, Lizenz) und versteckte Einträge (`.` am Anfang, z. B. `.DS_Store`) werden übergangen. Die Reihenfolge ist nach Namen sortiert, nicht nach dem Dateisystem.
+  - **Pfade:** Links, Windows-Reparse-Points (Junctions), Geräte und FIFOs, reservierte Namen (`CON`, `NUL`, `COM0`–`COM9`, `LPT0`–`LPT9`, auch mit Endung) und Namen mit `<>:"/\|?*`, Steuerzeichen oder Punkt bzw. Leerzeichen am Ende sind `invalidPath`, auf allen Plattformen gleich. Gelesen wird über das geöffnete Handle nach Abgleich mit dem aufgezählten Eintrag (Unix: Gerät und Inode; Windows: Öffnen ohne Folgen eines Reparse-Points). Harte Links werden nicht erkannt; sie verweisen auf Daten, die der Spieler selbst ins Paket gelegt hat.
+  - **Grenzen:** Tiefe, Zeichenketten und Listen prüft eine eigene Vorprüfung vor `serde_json`; ab dem 257. Paketordner gibt es genau einen Bericht `limitExceeded`, weitere Ordner werden nicht gelesen. Je Paket werden höchstens 100 Fehler aufgeführt, weitere nur gezählt (`errorsOmitted`).
+  - **Abhängigkeiten:** `version` und `game` sind Versionsbereiche in Cargo-Schreibweise (`1.2` bedeutet `^1.2`). Eine Abhängigkeit muss installiert, aktiv, ladbar und im Bereich sein, sonst schlägt das Paket fehl (`dependencyMissing`, `dependencyInactive`, `dependencyFailed`, `dependencyVersion`); der Fehler setzt sich auf alle Pakete fort, die davon abhängen. Ein zweiter Ordner mit derselben Paket-ID schlägt fehl (`duplicatePack`), auch gegenüber dem Basispaket `base`.
+  - **`replaces`:** Ziel muss in einer direkten Abhängigkeit liegen und geladen sein (`replaceTarget`). Ersetzt ein zweites Paket dasselbe Ziel, schlägt das später geladene Paket fehl (`replaceConflict`); eine Kette über mehrere Pakete (A ersetzt `base:x`, B ersetzt den Eintrag von A) ist erlaubt. Abfragen nach der ersetzten ID liefern den ersetzenden Eintrag.
+  - **Fehlercodes:** `limitExceeded`, `dependencyCycle`, `invalidPath`, `unexpectedEntry`, `kindNotSupported`, `manifestMissing`, `ioError`, `syntaxError`, `invalidStructure`, `invalidId`, `invalidVersion`, `formatTooNew`, `formatUnsupported`, `gameVersion`, `dependencyMissing`, `dependencyInactive`, `dependencyVersion`, `dependencyFailed`, `duplicatePack`, `duplicateId`, `replaceTarget`, `replaceConflict`, `invalidValue`; Textschlüssel `datapack.error.<code>`. Bei `syntaxError` und `invalidStructure` steht die Meldung des Parsers als Parameter `detail` (englisch, höchstens 512 Zeichen).
+  - **Wann eine Auswahl gilt:** Der Kern lädt die Pakete beim Start des Kern-Prozesses. `packs.setActive` lädt neu; der neue Katalog gilt ab der nächsten Sitzung (neues Spiel, geladener Spielstand, Neuladen, Debug-Szenario), damit ein laufendes Spiel keine Objekte zu entfernten Einträgen behält.
 
 ### Schnittstelle: S-5 Spielstand-Format [BELASTBAR]
 
@@ -429,7 +440,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 - **Funktionen in Phase 2:**
   - `app.info()` → Version, Plattform, Datenordner-Anzeige; `app.quit()`.
   - `saves.list()` → Metadaten aller Spielstände (aus Abschnitt 2 der Datei, ohne Weltzustand); `saves.save({ name, kind })`; `saves.load(id)`; `saves.delete(id)`. **Dateinamen erzeugt der Hauptprozess aus einer eigenen ID, nie aus `name`**; `name` ist nur Metadatum (höchstens 64 Zeichen, keine Steuerzeichen).
-  - `packs.list()` → gefundene Datenpakete mit Status und Fehlern (S-4); `packs.setActive(ids in Reihenfolge)`.
+  - `packs.list()` → gefundene Datenpakete mit Status und Fehlern (S-4); `packs.setActive(ids in Reihenfolge)`. Umsetzung 2.4: `list` liefert die Berichte (`PackReport`, erzeugter Typ) der Auswahl, die ab der nächsten Sitzung gilt; `setActive` nimmt höchstens 256 gültige, verschiedene IDs von gefundenen Paketen des Spielers (das Basispaket ist immer aktiv und zuerst), speichert die Auswahl in `packs-active.json` im Datenordner (Schreiben und Umbenennen) und weist ab mit `invalidArgument`, `unknownPack`, `busy`, `notReady`, `ioError`, `timeout` (60 s) oder `coreExited`. Die Pakete des Spielers liegen im Ordner `packs` des Datenordners; der Hauptprozess legt ihn beim Start an.
   - `settings.get()`, `settings.set(teilweise)` – Einstellungen als erzeugter Typ.
   - `logs.write(level, message)` (gedrosselt, höchstens 100 Einträge je Sekunde; Nachricht höchstens 2.000 Zeichen, Zeilenumbrüche und Steuerzeichen werden maskiert), `logs.openFolder()`. Logdatei mit Rotation (5 Dateien zu je 10 MB).
   - Ereignisse: `onCorePort(callback)` (Übergabe des `MessagePort`, Abschnitt 0.1), `onCoreExit(callback)` (Kern-Prozess beendet, mit Code).
@@ -568,7 +579,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 - **Kern als WebAssembly mit mehreren Threads:** derzeit nur mit Nightly-Rust baubar, 1,37–1,50 × langsamer als nativ; nicht endgültig verworfen, sondern zurückgestellt: Neubewertung in Fahrplan-Schritt Q.2 – siehe ADR-009
 
 <!-- ANCHOR:reifegrad-uebersicht -->
-## 9. Reifegrad-Übersicht (Stand vom 2026-10-15, nach Schritt 2.7)
+## 9. Reifegrad-Übersicht (Stand vom 2026-10-18, nach Schritt 2.4)
 
 | Bestandteil | Reifegrad | Seit | Validiert durch / wartet auf |
 |---|---|---|---|
@@ -585,9 +596,10 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Modul Brücke | BELASTBAR | 2026-10-15 | Umsetzung 2.7 (Regel-007, ADR-024), Bildformat S-1 mit Dreifachpuffer, Port-Protokoll; Messung 2.7 auf Mac M3 Pro und Referenz-PC am 2026-10-15, `docs/research/2.7-messung.md`: 180 Ticks/s mit 10.000 Personen, Bild an der Grenze des Bildschirms |
 | Modul Plattform | BELASTBAR | 2026-10-15 | Umsetzung 2.7 (Regel-007), Härtung durch Tests belegt, Rauchtest auf drei Plattformen, gepackte Programme auf Mac und Windows gemessen; Linux auf echter Hardware 7.2 (ADR-011) |
 | Modul Takt & Weltzustand | BELASTBAR | 2026-10-13 | Umsetzung 2.2 (Regel-007), Prüfmodus bitgleich über Threadzahlen, Kern-Benchmark als CI-Gate (ADR-022) |
-| S-4 Datenpaket-Schema | BELASTBAR | 2026-10-13 | ADR-021; Bestätigung durch Umsetzung in 2.4 |
+| S-4 Datenpaket-Schema | BELASTBAR | 2026-10-13 | ADR-021; bestätigt durch die Umsetzung in 2.4 (ADR-025, `core/tests/datapacks.rs`, Präzisierungen in Abschnitt 4) |
+| Modul Inhalte & Mods (Lader) | VORLÄUFIG | 2026-10-13 | umgesetzt in 2.4 (ADR-025): Lader mit Grenzen, Pfadprüfung und zweistufiger Prüfung, 18 Integrationstests mit fehlerhaften Paketen, Rauchtest mit Mod-Paket auf drei Plattformen; wartet auf die getrennte Prüfung; Mod-Verwaltung 6.1 |
 | S-5 Spielstand-Format | BELASTBAR | 2026-10-13 | ADR-021; Bestätigung durch Umsetzung in 2.5 |
-| S-6 Plattform-API | BELASTBAR | 2026-10-13 | ADR-021; Grundgerüst umgesetzt in 2.7 (`app.*`, `measure.*`); weitere Bestätigung durch Umsetzung in 2.4, 2.5, 2.6 |
+| S-6 Plattform-API | BELASTBAR | 2026-10-13 | ADR-021; Grundgerüst umgesetzt in 2.7 (`app.*`, `measure.*`), `packs.*` in 2.4; weitere Bestätigung durch Umsetzung in 2.5, 2.6 |
 | Oberfläche mit großen Tabellen | BELASTBAR | 2026-10-13 | Spike 1.4 auf Referenz-PC (Windows) und Mac M3 Pro: virtualisiert bis 5.000 sortierte Zeilen ohne Einfluss auf die Bildrate, bis 20.000 bei wenigen Aktualisierungen/s; Bedingungen: Virtualisierung Pflicht; Abfrage-Schnittstelle S-7 mit Sortierung im Kern (ADR-021), fachliche Tabellen ab 3.6 (ADR-016); Linux in 7.2 (ADR-011) |
 | Verpackung für drei Plattformen | VORLÄUFIG | 2026-10-13 | Schritt 1.6 erledigt (Bau und Start auf allen drei Plattformen); bleibt vorläufig: unsigniert (Entscheidung 7.1), Linux-Sandbox (7.2) |
 | Verkehr, Blockadevermeidung | VORLÄUFIG | 2026-10-13 | Erkundung vor Umsetzung des Verkehrs |
@@ -605,4 +617,5 @@ Reifegrad-Skala `[ROH]` → `[GEHÄRTET]` → `[KRITISCH]` und Beförderungsrege
 |---|---|---|---|---|---|
 | `scripts/check-licenses.mjs` | prüft die Lizenzen aller npm-Pakete aus `package-lock.json` gegen die erlaubte Liste (`project-context.md` Abschnitt 6, ADR-019); CI-Job `ts-security` | ROH (seit 2026-10-13, Schritt 2.1; Unit-Tests `scripts/check-licenses.test.mjs`, erzwungener Fehlerfall in Tests belegt) | Linux, macOS, Windows | Node 26.11.1, `package-lock.json` v3 | ja, nur lesend |
 | `scripts/gen-types.mjs` | erzeugt die TypeScript-Typen der Verträge aus den Rust-Typen (ts-rs, Feature `ts`) nach `app/src/generated/`, wendet die automatisch behebbaren ESLint-Stilregeln an und formatiert mit Prettier; mit `--check` Vergleich mit dem eingecheckten Stand (CI-Job `rust-lint`, ADR-022) | ROH (seit 2026-10-13, Schritt 2.2; Unit-Tests `scripts/gen-types.test.mjs`, Abweichung in Tests belegt) | Linux, macOS, Windows | Node 26.11.1, Rust 1.98.1 mit cargo, git, npm-Abhängigkeiten | ja, erzeugt den Ordner vollständig neu |
+| `scripts/gen-schema.mjs` | erzeugt die JSON-Schema-Dateien der Datenpakete aus den Rust-Typen (schemars, Feature `schema`) nach `content/schema/` und formatiert mit Prettier; mit `--check` Vergleich mit dem eingecheckten Stand (CI-Job `rust-lint`, ADR-025) | ROH (seit 2026-10-18, Schritt 2.4; Unit-Tests `scripts/gen-schema.test.mjs`, Abweichung in Tests und durch erzwungenen Fehler in der CI belegt) | Linux, macOS, Windows | Node 26.11.1, Rust 1.98.1 mit cargo, git, npm-Abhängigkeiten | ja, erzeugt den Ordner vollständig neu |
 | `scripts/bench-report.mjs` | schreibt das Ergebnis des Kern-Benchmarks als Tabelle mit Vergleich zum letzten Lauf auf `main` in die Job-Zusammenfassung (CI-Job `rust-bench`, ADR-022) | ROH (seit 2026-10-13, Schritt 2.2; Unit-Tests `scripts/bench-report.test.mjs`) | Linux, macOS, Windows | Node 26.11.1 | ja, nur lesend |
