@@ -31,6 +31,10 @@ contextBridge.exposeInMainWorld("openairside", {
     start: (): Promise<unknown> => ipcRenderer.invoke("measure:start"),
     report: (result: unknown): Promise<unknown> => ipcRenderer.invoke("measure:report", result),
   },
+  packs: {
+    list: (): Promise<unknown> => ipcRenderer.invoke("packs:list"),
+    setActive: (ids: unknown): Promise<unknown> => ipcRenderer.invoke("packs:setActive", ids),
+  },
   onCoreExit: (callback: (code: number) => void): void => {
     ipcRenderer.on("core:exit", (_event, code: unknown) => {
       callback(typeof code === "number" ? code : -1);

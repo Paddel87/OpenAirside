@@ -13,7 +13,18 @@ export interface CoreOptions {
   backgroundThreads?: number;
   scenario?: Scenario;
   persons?: number;
+  /** Folder of the base pack (S-4). */
+  basePack?: string;
+  /** Folder of the player's packs. */
+  userPacks?: string;
+  /** Ids of the player's active packs in load order. */
+  activePacks?: string[];
 }
+
+/** Longest folder path accepted from a flag. */
+const MAX_PATH_CHARS = 4096;
+/** Most active packs (as `MAX_PACKS` in the core). */
+const MAX_ACTIVE = 256;
 
 /** Answer of the bridge (mirrors `OutgoingMessage` in bridge/src/lib.rs). */
 export interface BridgeOutgoing {
@@ -39,7 +50,10 @@ function count(value: string, min: number, max: number): number | undefined {
 export function parseCoreArgs(args: readonly string[]): CoreOptions {
   const options: CoreOptions = {};
   for (const arg of args) {
-    const match = /^--(map-size|threads|background-threads|scenario|persons)=(.*)$/.exec(arg);
+    const match =
+      /^--(map-size|threads|background-threads|scenario|persons|base-pack|user-packs|active-packs)=(.*)$/s.exec(
+        arg,
+      );
     if (match === null) {
       continue;
     }
@@ -68,6 +82,19 @@ export function parseCoreArgs(args: readonly string[]): CoreOptions {
       case "scenario":
         if (SCENARIOS.has(value)) options.scenario = value as Scenario;
         break;
+      case "base-pack":
+      case "user-packs":
+        if (value.length > 0 && value.length <= MAX_PATH_CHARS && !value.includes("\0")) {
+          options[name === "base-pack" ? "basePack" : "userPacks"] = value;
+        }
+        break;
+      case "active-packs": {
+        const ids = value === "" ? [] : value.split(",");
+        if (ids.length <= MAX_ACTIVE && ids.every((id) => /^[a-z0-9_-]{3,64}$/.test(id))) {
+          options.activePacks = ids;
+        }
+        break;
+      }
     }
   }
   return options;

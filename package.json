@@ -62,7 +62,8 @@
       "package.json",
       "app/dist/**/*",
       "!app/dist/**/*.map",
-      "app/native/*.node"
+      "app/native/*.node",
+      "content/**/*"
     ],
     "mac": {
       "target": [
