@@ -17,12 +17,44 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 erledigt (ADR-024, Messung auf Mac und Referenz-PC 2026-10-15); nächster Schritt 2.4. Neuer Entwurfsschritt 3.7 vor 3.1. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 erledigt (ADR-024, Messung auf Mac und Referenz-PC 2026-10-15); 2.4 erledigt (ADR-025, ADR-026, 2026-10-18); nächster Schritt 2.5. Neuer Entwurfsschritt 3.7 vor 3.1. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-18 23:30 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 81 Minuten seit `[SESSIONSTART]` 22:09 UTC.
+- **Bearbeitet:** Sessionstart mit Übernahme des belegten Merge-Vermerks zu PR Paddel87/OpenAirside#20; Schritt 2.4 vollständig (Freigabe ADR-025, Umsetzung, erzwungener Fehlerfall der Schema-Prüfung, getrennte Prüfung mit Erledigung, Freigabe ADR-026, Abschluss).
+- **Erreicht:** 2.4 `[ERLEDIGT]`; Modul Inhalte & Mods (Lader) `[BELASTBAR]`; ADR-025 und ADR-026 (beide `[REAKTIV]`), Reflexionen mit Maßnahmen (6) und (7). CI-Lauf 39176235417 auf `89fa783` grün auf allen 17 Jobs. 22 Commits auf `scp/zealous-ride-mwvv5m` seit `main` `f652370` (einschließlich des übernommenen Merge-Vermerks und dieses Abschlusses), gepusht; kein PR (nicht angefragt).
+- **Offen geblieben:** Kenntnisnahme der Reflexionen zu ADR-025 und ADR-026 durch den Projektinhaber; Merge des Branches (PR nur auf Anweisung). Ungemergte fremde Branches (`claude/messwerkzeug-2-7-rb2hq7`, `claude/gracious-galileo-2reksz`, `scp/friendly-einstein-rggagz`, `claude/naechster-schritt-2-8-736kf4`) – Löschen nur auf Anweisung. Kein CHANGELOG im Repository (Einträge ab dem ersten Release).
+- **Nächster Schritt:** 2.5 Spielstand mit Autosave – zuerst Freigabe von Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3, Entscheidungs-Klasse); Maßnahme (7) anwenden; dazu die Fehlerform von S-6 aus der getrennten Prüfung 2.4.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 22:06 und 23:26 UTC). 2.4 empfiehlt die Routine-Klasse: 1 Schritt oberhalb der Empfehlung (Warnung zu Beginn ausgesprochen); die Freigaben ADR-025 und ADR-026, die Reflexionen und die Beförderung lagen auf der Pflicht-Klasse Entscheidung. Abgegeben: getrennte Prüfung an einen Unteragenten Sonnet 5.5 (Prüfauftrag, keine Abgabe von Arbeit); keine Abgabe an Routine/Mechanik (Probelauf offen).
+- **Kontextgröße:** 569.408 Token laut `get_session` 23:26 UTC – **über der Grenze von 400.000**: die nächste Arbeit in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed`, Zurücksetzen 2026-10-19 02:10 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf (Electron 44: Vorlauf ab 2027-01-02). Runner-Umstellung `ubuntu-latest` → Ubuntu 26 ab morgen (2026-10-19): ersten Lauf danach in Q.1 beobachten. Neue Crates fallen unter die Sammelzeile „Übrige npm-Werkzeuge und Crates" (Nachprüfung 2027-04-13); `schemars` 1.2.3 dort nachziehen.
+- **Drift-Prüfung:** README nachgezogen (Phase, Reife, Verwendung, Nächste Schritte, Letzte Änderung); ADR-025 und ADR-026 verweisen auf vorhandene Schritte (2.4, 2.5, 2.6, 3.4, 3.6, 5.6, 6.1); Reifegrad Inhalte & Mods passt zu ADR-025/026; Modul-Liste: „Betroffene Module" von 2.4 um Brücke, Plattform und Spielfeld ergänzt (bei der Planung fehlten sie, obwohl `packs.*` im „Zu tun" stand); FR-044 nennt 2.4, 3.6, 6.1 und steht in 3.6; keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker; Reaktiv-Quote 5 / 10 (ADR-017 bis ADR-026) stimmt mit den Tags; Phase 2 weiter 10 Schritte (Plan 10). Größen: `project-context.md` 368 Zeilen, Logbuch unter 800.
+
+### 2026-10-18 23:28 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** Modul Inhalte & Mods (Lader) `[VORLÄUFIG]` → `[BELASTBAR]`; S-4 durch die Umsetzung bestätigt.
+- **Grundlage:** Umsetzung 2.4 nach Regel-007 (ADR-025, ADR-026), 26 Integrationstests mit fehlerhaften Paketen, Rauchtest mit Mod-Paket auf drei Plattformen, getrennte Prüfung mit Erledigung aller Befunde; Schutzmechanismus Schema-Prüfung durch erzwungenen Fehler belegt (Lauf 39173571403), Junction-Abwehr unter Windows durch Test in der CI belegt (Lauf 39176235417). Eskalations-Auslöser 4; aktive Klasse Entscheidung (`get_session` 23:26 UTC).
+
+### 2026-10-18 23:24 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** CI-Läufe 39175650047 und 39175755891, Job „Rust Tests (windows-latest)".
+- **Symptom:** Neuer Test `junctions_are_refused_on_windows` scheiterte mit „mklink /J failed".
+- **Ursache:** `user.path().join("p/objects")` ergab unter Windows einen Pfad mit `/`; `mklink` las `/objects` als Schalter.
+- **Lösung:** Pfade aus einzelnen Teilen (`join("p").join("objects")`), Ausgabe von `mklink` im Fehlertext (`2f5c65a`); vorher lokal für `x86_64-pc-windows-gnu` mit Clippy geprüft. Lauf 39176235417 grün.
+- **Aufwand:** etwa 5 Minuten.
+
+### 2026-10-18 23:20 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-026 – Pakete in S-6 über ihre Manifest-ID (Kategorie 5).
+- **Tag:** `[REAKTIV]` (ändert S-6 aus ADR-021 nach fünf Tagen).
+- **Auslöser:** Freigabe des Projektinhabers „A (Empfohlen)" auf der Entscheidungs-Klasse. Reaktiv-Quote 5 / 10, Reflexion mit Maßnahme (7) in `fahrplan.md` (Eskalations-Auslöser 5, aktive Klasse Entscheidung); Kenntnisnahme offen.
 
 ### 2026-10-18 23:15 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 

@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-18 (Session ab 22:09 UTC)
+- **Stand vom:** 2026-10-18 (Session ab 22:09 UTC, Ende 23:30 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.4 `[IN ARBEIT]` (Freigabe A am 2026-10-18, ADR-025)
-- **Nächster Schritt:** 2.4 umsetzen (Lader, Schema-Erzeugung, Basis-Datenpaket, S-6 `packs.*`)
-- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 4 / 10 nach ADR-025 weiter über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion", letzte Anlass ADR-025, Kenntnisnahme offen)
+- **Aktiver Schritt:** keiner (2.4 erledigt am 2026-10-18)
+- **Nächster Schritt:** 2.5 (Spielstand mit Autosave), zuerst Freigabe von Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3; Entscheidungs-Klasse), dabei Maßnahme (7): Vertragssätze S-5/S-6 vor dem Code gegen den Plan prüfen
+- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-026 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion" zu ADR-025 und ADR-026, Kenntnisnahme beider offen)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -246,7 +246,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.4: Datenpaket-Schema und Lader
 
-- **Status:** IN ARBEIT (seit 2026-10-18; Freigabe A am 2026-10-18, ADR-025)
+- **Status:** ERLEDIGT 2026-10-18 (ADR-025, ADR-026); CI-Lauf 39176235417 auf `89fa783` grün auf drei Plattformen
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.9
 - **Freigabepflichtig:** ja, für den JSON-Lader und die Schema-Erzeugung als neue Abhängigkeiten (Kategorie 3, ADR-021)
@@ -255,9 +255,10 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Anforderungen (ab Klasse M):** FR-044
 - **Zu tun:** Lader für Datenpakete im Kern nach S-4 (ADR-021): Manifest, zweistufige Prüfung, Grenzen, Pfadprüfung, ganzes Paket aus bei Fehlern, verständliche Fehlermeldung; JSON-Schema-Dateien für Modder; S-6 `packs.list`/`packs.setActive`; Basis-Datenpaket des Spiels (Regel-003); Inhaltsprüfung von `build`/`buildArea` (S-2) auf die geladenen Pakete umstellen (`TODO(fahrplan-ref: 2.4)` in `core/src/simulation.rs`).
 - **Akzeptanzkriterien:** `core/tests/datapacks.rs` grün, inklusive fehlerhafter Pakete ohne Absturz; Coverage Kern ≥ 85 %.
-- **Betroffene Module:** Inhalte & Mods, Takt & Weltzustand
+- **Betroffene Module:** Inhalte & Mods, Takt & Weltzustand; für S-6 `packs.*` (im „Zu tun" vorgesehen) zusätzlich Brücke, Plattform und Spielfeld (Konsole) – bei der Planung nicht aufgeführt, nachgetragen am 2026-10-18
 - **Reifegrad-Wirkung:** Modul Inhalte & Mods (Lader) → `[BELASTBAR]`; Code-Mods bleiben `[OFFEN]` (6.1)
 - **Artefakte:** Lader, Schema, Basis-Datenpaket, Tests
+- **Ergebnis (2026-10-18, Entscheidungs-Klasse):** Lader `core/src/datapack/` (Vorprüfung der Grenzen, Aufzählen und Lesen ohne Links, zwei Prüfstufen mit Datei, Zeile, Spalte und JSON-Pfad, Abhängigkeiten mit Reihenfolge und Zyklen, `replaces`, ganzes Paket aus bei Fehlern); Basis-Datenpaket `content/base/` mit `base:floor_concrete`, `base:wall_concrete`, `base:bench`; Schema-Dateien `content/schema/` aus `npm run gen:schema`, CI-Schritt „Erzeugte Schemas (content/schema) aktuell" mit erzwungenem Fehlerfall (Lauf 39173571403, nur dieser Schritt rot; zurückgenommen in `f59fe24`); `build`/`buildArea` prüfen die ID gegen den Katalog der Sitzung (`TODO(fahrplan-ref: 2.4)` aufgelöst, Wirkung 3.1); neue Paketauswahl ab der nächsten Sitzung; S-6 `packs.list`/`packs.setActive` mit Speicherung in `packs-active.json`, `busy`, Anfrage-Nummern; Konsolenbefehle `packs`, `packs set`, `build`; Basispaket im Programmpaket. Tests: `core/tests/datapacks.rs` 26 Fälle (fehlerhafte Pakete ohne Absturz, Junctions unter Windows, Links und harte Links unter Unix), Kern 120 Unit-Tests; Coverage Kern 98,74 % Lines (`core/src/datapack/` 90,5–100 % je Datei), TypeScript 252 Tests mit 96,0 % Lines; Rauchtest lädt ein Mod-Paket aus einem frischen Datenordner und baut `kiosks:kiosk` (FR-044 für Objekte). Getrennte Prüfung (Sonnet 5.5): 14 Befunde, keiner hoch; Erledigung in [`docs/research/2.4-getrennte-pruefung.md`](research/2.4-getrennte-pruefung.md), Landeplätze 2.5 und 6.1, Befund 8 per ADR-026 entschieden. Präzisierungen von S-4 in `architecture.md` Abschnitt 4. Modul Inhalte & Mods (Lader) `[BELASTBAR]`. Abweichung: Zwischenstand `ac90598` war in der CI rot (erzeugte Typen einen Commit zu spät, Logbuch 22:37 UTC).
 - **Vorlage zur Freigabe (2026-10-18, Entscheidungs-Klasse; freigegeben: A, ADR-025):**
   - Kategorie 3, Versionen belegt auf crates.io am 2026-10-18 (Regel-001): A `serde_json =1.0.151` auch im Kern (bisher nur Brücke, ADR-024), `serde_path_to_error =0.1.20` (JSON-Pfad in Fehlern), `semver =1.0.28` (Versionsbereiche; schon im Lockfile über napi-derive-backend), `schemars =1.2.2` nur hinter Kern-Feature `schema` (Schema-Dateien für Modder; nicht 1.2.3, 6 Tage alt); B wie A ohne schemars, Schema-Dateien erst in 6.1 (ändert ADR-021); C wie A, JSON-Pfad und Versionsbereiche selbst programmiert. Empfehlung A.
   - Kategorie 7: CI-Schritt „Erzeugte Schemas aktuell" im Job „Rust Lint & Format" (wie `check:types`, durch erzwungenen Fehler zu belegen); Basis-Datenpaket im Programmpaket (electron-builder `files`).
@@ -324,7 +325,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
 | 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); Schema der Inhaltsart `vehicles/` in Datenpaketen (aus 2.4, ADR-025); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
 | 3.5 | Abfertigung und Gepäck in Grundform; Wege des Vorfeldpersonals nach 3.7 | FR-025, FR-032 |
-| 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform; Schema der Inhaltsarten `aircraft/` und `airlines/` in Datenpaketen (aus 2.4, ADR-025) | FR-030, FR-036, FR-039 |
+| 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform; Schema der Inhaltsarten `aircraft/` und `airlines/` in Datenpaketen (aus 2.4, ADR-025) | FR-030, FR-036, FR-039, FR-044 (Airline und Flugzeugtyp aus dem Mod-Ordner) |
 
 ### Phase 4: Härtung des vertikalen Schnitts – Typ: STABILISIERUNG
 
