@@ -24,6 +24,13 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-18 22:18 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-025 – Bibliotheken für den Datenpaket-Lader und die Schema-Erzeugung (Kategorie 3 und 7).
+- **Tag:** `[REAKTIV]` (hebt „`serde_json` nur in der Brücken-Crate“ aus ADR-024 auf, 14-Tage-Regel).
+- **Auslöser:** Freigabe des Projektinhabers „A (Empfohlen)“ per Auswahl auf der Entscheidungs-Klasse (`claude-opus-5-5`, `get_session` 22:06 UTC, seitdem keine Wechselmeldung). Reaktiv-Quote 4 / 10 (ADR-016 bis ADR-025), Reflexion mit Maßnahme (6) in `fahrplan.md`, Kenntnisnahme offen (Eskalations-Auslöser 5 – aktive Klasse bereits Entscheidung).
+- **Folgen:** 2.4 `[IN ARBEIT]`; Landeplätze für die Schemas der übrigen Inhaltsarten in 2.6, 3.4, 3.6 und 5.6 eingetragen; `project-context.md` Abschnitt 3 nachgezogen.
+
 ### 2026-10-18 22:15 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt:** 2.4, Kategorie 3 (Externe Abhängigkeiten) und 7 (CI-Schritt für Schema-Dateien, Basispaket im Programmpaket); Eskalations-Auslöser 1 – aktive Klasse bereits Entscheidung, kein Stopp nötig.

@@ -56,7 +56,9 @@ Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachwei
   - napi-build 2.4.4 (Begleit-Crate, von napi 3.12.7 mit `^2.4.4` verlangt) — Verifiziert: 2026-10-13, Quelle: crates.io
   - zurückgestellt, nicht im Stack: wasm-bindgen 0.2.128 für WebAssembly mit Threads, Neubewertung in Fahrplan-Schritt Q.2
 - serde 1.0.229, rayon 1.12.0, ts-rs 12.0.1 — Verifiziert: 2026-10-13, Quelle: crates.io
-- serde_json 1.0.151 nur in der Brücken-Crate über napi `serde-json` (ADR-024; bringt itoa 1.0.18 und zmij 1.0.23 mit, beide MIT) — Verifiziert: 2026-10-14, Quelle: crates.io
+- serde_json 1.0.151 in der Brücken-Crate über napi `serde-json` (ADR-024; bringt itoa 1.0.18 und zmij 1.0.23 mit, beide MIT) und seit ADR-025 im Kern für den Datenpaket-Lader — Verifiziert: 2026-10-14, Quelle: crates.io
+- serde_path_to_error 0.1.20 und semver 1.0.28 im Kern für den Datenpaket-Lader (ADR-025) — Verifiziert: 2026-10-18, Quelle: crates.io
+- schemars 1.2.2 nur hinter dem Kern-Feature `schema` für die JSON-Schema-Dateien der Datenpakete (ADR-025; bringt schemars_derive, serde_derive_internals, dyn-clone, ref-cast mit, alle MIT bzw. MIT OR Apache-2.0) — Verifiziert: 2026-10-18, Quelle: crates.io (1.2.3 bei der Prüfung 6 Tage alt)
 
 #### Persistenz und Paketverwaltung
 

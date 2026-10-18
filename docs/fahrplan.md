@@ -11,9 +11,9 @@
 - **Stand vom:** 2026-10-18 (Session ab 22:09 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.4 `[WARTET-AUF-FREIGABE]` (Kategorie 3 und 7, vorgelegt 2026-10-18)
-- **Nächster Schritt:** nach der Freigabe ADR-025 anlegen, Reflexion zur Reaktiv-Quote ergänzen, dann 2.4 umsetzen
-- **Offene STOPP-Situationen:** keine (Stopp aus 2.3 aufgehoben nach Wechsel auf die Entscheidungs-Klasse am 2026-10-13 23:50 UTC); Reaktiv-Quote 4 / 10 nach ADR-022 weiter über dem Schwellenwert, aber sinkend (Reflexionen siehe „Iterations-Reflexion")
+- **Aktiver Schritt:** 2.4 `[IN ARBEIT]` (Freigabe A am 2026-10-18, ADR-025)
+- **Nächster Schritt:** 2.4 umsetzen (Lader, Schema-Erzeugung, Basis-Datenpaket, S-6 `packs.*`)
+- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 4 / 10 nach ADR-025 weiter über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion", letzte Anlass ADR-025, Kenntnisnahme offen)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -246,7 +246,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.4: Datenpaket-Schema und Lader
 
-- **Status:** WARTET-AUF-FREIGABE (vorgelegt 2026-10-18, Logbuch `[ENTSCHEIDUNG-VORGELEGT]` 22:15 UTC)
+- **Status:** IN ARBEIT (seit 2026-10-18; Freigabe A am 2026-10-18, ADR-025)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.9
 - **Freigabepflichtig:** ja, für den JSON-Lader und die Schema-Erzeugung als neue Abhängigkeiten (Kategorie 3, ADR-021)
@@ -258,7 +258,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Inhalte & Mods, Takt & Weltzustand
 - **Reifegrad-Wirkung:** Modul Inhalte & Mods (Lader) → `[BELASTBAR]`; Code-Mods bleiben `[OFFEN]` (6.1)
 - **Artefakte:** Lader, Schema, Basis-Datenpaket, Tests
-- **Vorlage zur Freigabe (2026-10-18, Entscheidungs-Klasse):**
+- **Vorlage zur Freigabe (2026-10-18, Entscheidungs-Klasse; freigegeben: A, ADR-025):**
   - Kategorie 3, Versionen belegt auf crates.io am 2026-10-18 (Regel-001): A `serde_json =1.0.151` auch im Kern (bisher nur Brücke, ADR-024), `serde_path_to_error =0.1.20` (JSON-Pfad in Fehlern), `semver =1.0.28` (Versionsbereiche; schon im Lockfile über napi-derive-backend), `schemars =1.2.2` nur hinter Kern-Feature `schema` (Schema-Dateien für Modder; nicht 1.2.3, 6 Tage alt); B wie A ohne schemars, Schema-Dateien erst in 6.1 (ändert ADR-021); C wie A, JSON-Pfad und Versionsbereiche selbst programmiert. Empfehlung A.
   - Kategorie 7: CI-Schritt „Erzeugte Schemas aktuell" im Job „Rust Lint & Format" (wie `check:types`, durch erzwungenen Fehler zu belegen); Basis-Datenpaket im Programmpaket (electron-builder `files`).
   - Probeaufbau in einer Kopie des Workspace: neu im Lockfile `schemars`, `schemars_derive`, `serde_derive_internals`, `dyn-clone`, `ref-cast`, `ref-cast-impl` (nur mit Feature `schema`) und `serde_path_to_error`; alle MIT bzw. MIT OR Apache-2.0, syn 3 wie serde; `cargo deny check` grün.
@@ -289,7 +289,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – klar spezifizierte Umsetzung; Entscheidung nur für eine neue Abhängigkeit.
 - **Eingangskriterien:** Oberfläche startet (2.7)
 - **Anforderungen (ab Klasse M):** FR-006
-- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7).
+- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7); Schema der Inhaltsart `lang/` in Datenpaketen nach S-4 (Landeplatz aus 2.4, ADR-025).
 - **Akzeptanzkriterien:** `app/i18n.test.ts` grün; ein Sprachpaket aus dem Ordner wird erkannt.
 - **Betroffene Module:** Lokalisierung, Oberfläche
 - **Reifegrad-Wirkung:** Modul Lokalisierung → `[BELASTBAR]`
@@ -322,9 +322,9 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7); Bewegung der Bauarbeiter nach 3.7 | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
 | 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
-| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
+| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); Schema der Inhaltsart `vehicles/` in Datenpaketen (aus 2.4, ADR-025); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
 | 3.5 | Abfertigung und Gepäck in Grundform; Wege des Vorfeldpersonals nach 3.7 | FR-025, FR-032 |
-| 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform | FR-030, FR-036, FR-039 |
+| 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform; Schema der Inhaltsarten `aircraft/` und `airlines/` in Datenpaketen (aus 2.4, ADR-025) | FR-030, FR-036, FR-039 |
 
 ### Phase 4: Härtung des vertikalen Schnitts – Typ: STABILISIERUNG
 
@@ -346,7 +346,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | 5.3 | Landseite: Parken, ÖPNV, Kreuzungen mit wählbarer Vorfahrt | FR-013, FR-015 |
 | 5.4 | Terminal vollständig: moderner Check-in, Kontrollspuren, Grenze, Läden, Info | FR-019 bis FR-024 |
 | 5.5 | Airside, Gepäck mit dreistufiger Kontrolle, Flüge, Abfertigung vollständig, Startfreigabe | FR-025, FR-026, FR-027, FR-029, FR-030, FR-032 |
-| 5.6 | Personal, Wirtschaft, Forschung, Serviceziele, Notfälle, Störungen, Tutorial, Erfolge; große Tabellen für Personal und Finanzen | FR-007, FR-008, FR-033 bis FR-039 |
+| 5.6 | Personal, Wirtschaft, Forschung, Serviceziele, Notfälle, Störungen, Tutorial, Erfolge; große Tabellen für Personal und Finanzen; Schema der Inhaltsart `research/` in Datenpaketen (aus 2.4, ADR-025) | FR-007, FR-008, FR-033 bis FR-039 |
 | 5.7 | Flugzeugtypen und Airlines inklusive Add-on-Klassen | FR-031 |
 | 5.8 | Benchmark mit Empfehlung, Leistungsbewusstsein (Empfehlung und Warnung nach bebauter, begehbarer Fläche und Zahl der Ziele, ADR-020); Messung auf schwacher integrierter Grafik (Auflage ADR-014) | FR-041, FR-042 |
 
@@ -467,6 +467,16 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 - **Befund:** ADR-021 ist `[ERKENNTNIS]` (geplanter Entwurfsschritt 2.9, ändert keinen ADR binnen 14 Tagen). Quote 5 / 10 über ADR-012 bis ADR-021 (ADR-012, ADR-015, ADR-017, ADR-019, ADR-020), 50 % – weiter über dem Schwellenwert, sinkend wie im Ausblick zu ADR-020 vorhergesagt.
 - **Architektur-Refactoring nötig?** Nein; keine neue Ursache. Maßnahme (5) wurde angewendet: alle Grenzen in ADR-021 nennen Einheit und Bezug.
+
+### Ergänzung Reaktiv-Quote (2026-10-18, Anlass ADR-025)
+
+- **Befund:** 4 / 10 `[REAKTIV]` über ADR-016 bis ADR-025 (ADR-017, ADR-019, ADR-020, ADR-025), 40 %. Der Ausblick zu ADR-020 („3 / 10 ab ADR-025“) ist damit nicht eingetreten.
+- **Ursache von ADR-025:** formal die 14-Tage-Regel (`CLAUDE.md` Abschnitt 6): ADR-025 hebt die Aussage „`serde_json` nur in der Brücken-Crate“ aus ADR-024 vier Tage nach dessen Anlage auf. Inhaltlich war die Einschränkung enger als nötig: Ihre Begründung (Regel-006, kein Anbindungscode im Kern) betrifft eine JSON-Bibliothek nicht, und der JSON-Lader im Kern stand schon in ADR-021 (Konsequenzen, 2.4) und im Fahrplan.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI). Keine Modulgrenze, kein Vertrag und kein Datenformat ändert sich, nur der Geltungsbereich einer Bibliothek.
+- **Muster:** Neben dem Werkzeug-Umfeld (Maßnahme 4) und fehlenden Einheiten (Maßnahme 5) eine dritte Quelle: Aussagen zum Geltungsbereich in Abhängigkeits-ADRs ohne Abgleich mit den folgenden Fahrplan-Schritten.
+- **Maßnahme (6):** Ein ADR, der eine Abhängigkeit auf einen Teil des Systems beschränkt, prüft vorher die Fahrplan-Schritte, die dieselbe Art Abhängigkeit vorsehen, und begründet die Beschränkung mit einer Regel. Ohne solche Begründung nennt er nur den derzeitigen Nutzer und legt keine Beschränkung fest.
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-026, 3 / 10 ab ADR-027, 2 / 10 (Schwellenwert eingehalten) ab ADR-029.
+- **Kenntnisnahme:** offen.
 
 ---
 
