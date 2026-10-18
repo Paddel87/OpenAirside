@@ -478,6 +478,16 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-026, 3 / 10 ab ADR-027, 2 / 10 (Schwellenwert eingehalten) ab ADR-029.
 - **Kenntnisnahme:** offen.
 
+### Ergänzung Reaktiv-Quote (2026-10-18, Anlass ADR-026)
+
+- **Befund:** 5 / 10 `[REAKTIV]` über ADR-017 bis ADR-026 (ADR-017, ADR-019, ADR-020, ADR-025, ADR-026), 50 %; steigend.
+- **Ursache von ADR-026:** formal die 14-Tage-Regel (ändert S-6 aus ADR-021 nach fünf Tagen). Inhaltlich zwei Ursachen: (a) Der Vertragstext aus 2.9 regelt Spielstände und Pakete in einem Satz, obwohl die Begründung (Dateinamen nie aus Eingaben des Renderers) nur für Spielstände trägt; Pakete brauchen eine stabile, vom Autor vergebene Kennung, damit die Auswahl einen Neustart übersteht. (b) Die bauende KI hat 2.4 umgesetzt, ohne den Satz aus S-6 gegen ihren Plan zu prüfen; erst die getrennte Prüfung fand die Abweichung. Ursache (b) ist ein Fehler im Vorgehen, kein Fehler der Architektur.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI). Keine Modulgrenze, kein Datenformat; der Schutzzweck der Regel bleibt erfüllt.
+- **Muster:** Wie bei ADR-025 eine Festlegung, die weiter reicht als ihre Begründung (Geltungsbereich einer Bibliothek dort, Geltungsbereich einer Vertragsregel hier).
+- **Maßnahme (7):** Vor der Umsetzung eines Schritts, der einen Vertrag umsetzt, listet die KI die Sätze des Vertrags zu den berührten Funktionen und prüft jeden gegen ihren Plan; eine Abweichung wird vor dem Code vorgelegt, nicht danach. Ergänzend zu Maßnahme (6): Eine Vertragsregel, die mehrere Arten von Objekten betrifft, nennt ihre Begründung je Art.
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-027 bis ADR-028, 3 / 10 ab ADR-029, 2 / 10 (Schwellenwert eingehalten) ab ADR-030.
+- **Kenntnisnahme:** offen.
+
 ---
 
 <!-- ANCHOR:parallelisierbarkeit -->

@@ -438,7 +438,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 - **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021; Bestätigung durch Umsetzung in 2.7, 2.4, 2.5
 
 - **Anbieter:** Plattform (Hauptprozess, Preload). **Konsument:** Oberfläche.
-- **Form:** Der Preload stellt genau ein Objekt `window.openairside` bereit, nur mit benannten, asynchronen Funktionen (Promise). Kein generischer Dateizugriff, keine Pfade vom Renderer: Spielstände und Pakete werden über undurchsichtige IDs angesprochen, die der Hauptprozess vergibt.
+- **Form:** Der Preload stellt genau ein Objekt `window.openairside` bereit, nur mit benannten, asynchronen Funktionen (Promise). Kein generischer Dateizugriff, keine Pfade vom Renderer: Spielstände werden über undurchsichtige IDs angesprochen, die der Hauptprozess vergibt; Pakete über ihre Manifest-ID, die kein Pfad ist und gegen die Namensregel und die gefundenen Pakete geprüft wird (ADR-026).
 - **Funktionen in Phase 2:**
   - `app.info()` → Version, Plattform, Datenordner-Anzeige; `app.quit()`.
   - `saves.list()` → Metadaten aller Spielstände (aus Abschnitt 2 der Datei, ohne Weltzustand); `saves.save({ name, kind })`; `saves.load(id)`; `saves.delete(id)`. **Dateinamen erzeugt der Hauptprozess aus einer eigenen ID, nie aus `name`**; `name` ist nur Metadatum (höchstens 64 Zeichen, keine Steuerzeichen).
