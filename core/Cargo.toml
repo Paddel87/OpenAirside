@@ -11,11 +11,17 @@ publish.workspace = true
 [features]
 # Export of TypeScript types with ts-rs (ADR-021, ADR-022). Not binding code (rule 006).
 ts = ["dep:ts-rs"]
+# Export of the JSON Schema files of the data packs with schemars (ADR-025).
+schema = ["dep:schemars"]
 
 [dependencies]
 serde.workspace = true
 rayon.workspace = true
+serde_json.workspace = true
+serde_path_to_error.workspace = true
+semver.workspace = true
 ts-rs = { workspace = true, optional = true }
+schemars = { workspace = true, optional = true }
 
 [[bench]]
 name = "tick"
