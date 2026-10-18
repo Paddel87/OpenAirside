@@ -274,7 +274,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Freigabe neuer Abhängigkeiten; die Umsetzung des Vertrags S-5 ist Routine und abgebbar.
 - **Eingangskriterien:** S-5, S-6 `[BELASTBAR]`
 - **Anforderungen (ab Klasse M):** FR-004
-- **Zu tun:** Spielstand-Container nach S-5 (ADR-021) mit Grenzen, Prüfreihenfolge und Fehlerkatalog; Höchstzahlen für Objekte, Personen und Fahrzeuge als Konstanten; Speichern und Laden über S-6 (`saves.*`); `logs.write` und `logs.openFolder` mit Rotation (S-6, aus 2.7); Schnellspeichern, Autosave mit Rotation (1–20), Vorschaubild; fehlendes Paket: Laden verweigern mit Liste; Laden validiert und meldet Fehler verständlich.
+- **Zu tun:** Fehlerform aller S-6-Aufrufe nach Vertrag (`{ code, textKey, params }`; Electron überträgt bei abgewiesenen Aufrufen nur den Meldungstext), bestehende Aufrufe `measure.*` und `packs.*` nachziehen (Befund 9 der getrennten Prüfung 2.4); Spielstand-Container nach S-5 (ADR-021) mit Grenzen, Prüfreihenfolge und Fehlerkatalog; Höchstzahlen für Objekte, Personen und Fahrzeuge als Konstanten; Speichern und Laden über S-6 (`saves.*`); `logs.write` und `logs.openFolder` mit Rotation (S-6, aus 2.7); Schnellspeichern, Autosave mit Rotation (1–20), Vorschaubild; fehlendes Paket: Laden verweigern mit Liste; Laden validiert und meldet Fehler verständlich.
 - **Akzeptanzkriterien:** `core/tests/savegame_roundtrip.rs` grün: identische Prüfsumme nach Laden, auch während einer laufenden Neuberechnung der Wegweiser; manipulierter Spielstand führt zu einer Meldung statt zum Absturz.
 - **Betroffene Module:** Takt & Weltzustand, Plattform
 - **Reifegrad-Wirkung:** S-5 durch Umsetzung bestätigt
@@ -356,7 +356,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11); Grafiken und Töne in Mods; Spielstände mit fehlenden Paketen laden unter Entfernen der betroffenen Objekte (ADR-021) | FR-044 |
+| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11); Grafiken und Töne in Mods; Spielstände mit fehlenden Paketen laden unter Entfernen der betroffenen Objekte (ADR-021); aus der getrennten Prüfung 2.4: Pakete im Hintergrund laden statt auf dem JavaScript-Thread des Kern-Prozesses, neu abgelegte Pakete ohne Neustart erkennen (`docs/research/2.4-getrennte-pruefung.md`, Befunde 7 und 14) | FR-044 |
 | 6.2 | Audio, Durchsagen, Musik, ggf. Intro-Video | FR-047, FR-049 |
 | 6.3 | Abgleich der Funktionsgleichheit gegen das gesamte Inventar | – |
 

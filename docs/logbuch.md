@@ -24,6 +24,18 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-18 23:15 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 2.4, Kategorie 5 (API-Vertrag S-6); Eskalations-Auslöser 1 – aktive Klasse bereits Entscheidung.
+- **Frage:** S-6 verlangt für Pakete vom Hauptprozess vergebene undurchsichtige IDs; umgesetzt sind die Manifest-IDs (Befund 8 der getrennten Prüfung). A: Vertrag auf Manifest-IDs anpassen (Empfehlung); B: Hauptprozess vergibt eigene IDs nur für den Renderer, intern weiter Manifest-IDs. Bei A wird der ADR nach der 14-Tage-Regel `[REAKTIV]` (ändert ADR-021), Reaktiv-Quote dann 5 / 10.
+- **Stand:** 2.4 bleibt `[IN ARBEIT]`, bis Vertragstext und Umsetzung übereinstimmen.
+
+### 2026-10-18 23:14 (UTC) – [BEOBACHTUNG]
+
+- **Getrennte Prüfung 2.4 abgeschlossen** (Unteragent Sonnet 5.5, nur Diff, Verträge S-4/S-6, Sicherheitsregeln und ADR-025; Dauer rund 18 Minuten): 14 Befunde, keiner „hoch", 2 „mittel" (Dateizahl erst nach dem Aufzählen; neueres Format mit neuen Feldern meldet `invalidStructure`). Kein Absturz, keine Pfadumgehung durch ein Paket allein; 300.000 Zufallsdokumente gegen `serde_json::Value`, 500.000 Zufallsfolgen, 4.000 Mutationsläufe ohne Panic.
+- **Erledigung** in `docs/research/2.4-getrennte-pruefung.md`: behoben in `bae5bcd` und `191142f` (Befunde 1–6, 10, 11, große Teile von 7, 9, 13, 14; 8 neue Integrationstests, darunter Junctions unter Windows); Landeplätze 2.5 (Fehlerform von S-6) und 6.1 (Laden im Hintergrund, Neu-Einlesen zur Laufzeit); Restrisiken harte Links unter Windows, FIFO-Race unter Unix, Cloud-Platzhalter; Befund 8 zur Entscheidung.
+- **Mini-Reibung:** Zwei erwartete Spalten in neuen Tests waren von Hand falsch gezählt (81 statt 66, 26 statt 24); mit einem Python-Einzeiler nachgerechnet, die Umsetzung stimmte. Erwartete Positionen künftig gleich ausrechnen statt zählen.
+
 ### 2026-10-18 22:52 (UTC) – [BEOBACHTUNG]
 
 - **Erzwungener Fehlerfall der Schema-Prüfung (Kategorie 7, ADR-025):** `49d45bd` ändert eine eingecheckte Schema-Datei; CI-Lauf 39173571403: nur der Schritt „Erzeugte Schemas (content/schema) aktuell" im Job „Rust Lint & Format" rot, alle übrigen 16 Jobs grün (darunter Rauchtest mit Mod-Paket auf Windows, macOS und Linux, Coverage, Kern-Benchmark). Zurückgenommen in `f59fe24`. Lokal nachvollzogen: `npm run check:schema` meldet mit dem committeten Stand die Datei.
