@@ -571,7 +571,7 @@ fn entry_and_file_limits_of_a_pack() {
 #[test]
 fn at_most_256_packs_are_read() {
     let user = TempDir::new("count");
-    for i in 0..257 {
+    for i in 0..300 {
         user.write(
             &format!("p{i:03}/manifest.json"),
             &manifest(&format!("p{i:03}"), "1.0.0", &[]),

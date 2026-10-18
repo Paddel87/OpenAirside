@@ -118,10 +118,14 @@ impl Pack {
 
 /// Loads the packs in `folders`: the base packs always, user packs if their
 /// id is in `active` (in that order). `game` is the running game version.
+/// At most [`MAX_PACKS`] folders are read; one more report marks the limit,
+/// further folders get none.
 #[must_use]
 pub fn load(folders: &[PackFolder], active: &[String], game: &Version) -> LoadOutcome {
+    // One report beyond the limit says that further folders were not read.
     let mut packs: Vec<Pack> = folders
         .iter()
+        .take(MAX_PACKS + 1)
         .enumerate()
         .map(|(index, folder)| open(folder, index, game))
         .collect();

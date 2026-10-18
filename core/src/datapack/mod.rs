@@ -245,6 +245,28 @@ pub fn is_entry_id(id: &str) -> bool {
     (1..=MAX_ID_CHARS).contains(&id.len()) && id.bytes().all(is_id_byte)
 }
 
+/// Checks the active ids of `packs.setActive` (S-6): at most
+/// [`MAX_PACKS`], each a valid pack id, none twice.
+///
+/// # Errors
+///
+/// Returns `invalidId` or `limitExceeded` with the parameter `id` or `max`.
+pub fn check_active(ids: &[String]) -> Result<(), Reason> {
+    if ids.len() > MAX_PACKS {
+        return Err(limit_error(
+            "packs",
+            u32::try_from(MAX_PACKS).unwrap_or(u32::MAX),
+        ));
+    }
+    let mut seen = std::collections::BTreeSet::new();
+    for id in ids {
+        if !is_pack_id(id) || !seen.insert(id.as_str()) {
+            return Err(error(code::INVALID_ID).with_text("id", id));
+        }
+    }
+    Ok(())
+}
+
 fn is_id_byte(b: u8) -> bool {
     b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_' || b == b'-'
 }
@@ -264,6 +286,23 @@ mod tests {
         assert!(is_entry_id("x"));
         assert!(!is_entry_id(""));
         assert!(!is_entry_id("ä"));
+    }
+
+    #[test]
+    fn active_ids_are_checked() {
+        let ids = |list: &[&str]| list.iter().map(|s| (*s).to_owned()).collect::<Vec<_>>();
+        assert!(check_active(&ids(&["base", "my-mod"])).is_ok());
+        assert!(check_active(&[]).is_ok());
+        assert_eq!(
+            check_active(&ids(&["ok-id", "ok-id"])).unwrap_err().code,
+            code::INVALID_ID
+        );
+        assert_eq!(
+            check_active(&ids(&["no"])).unwrap_err().code,
+            code::INVALID_ID
+        );
+        let many: Vec<String> = (0..=MAX_PACKS).map(|i| format!("p{i:04}")).collect();
+        assert_eq!(check_active(&many).unwrap_err().code, code::LIMIT_EXCEEDED);
     }
 
     #[test]
