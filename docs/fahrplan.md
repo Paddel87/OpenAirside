@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-19 (Session ab 13:28 UTC)
+- **Stand vom:** 2026-10-19 (Session ab 15:14 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner; 2.6 (Lokalisierung) ERLEDIGT am 2026-10-19 (CI-Lauf 39270974482 grün), Branch `feat/2-6-lokalisierung` gepusht, kein PR (PR nur auf Anweisung)
-- **Nächster Schritt:** PR für 2.6 nach `main` (auf Anweisung), danach 2.11 (Sammelprüfung der Vertragssätze), dann 2.10
-- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 6 / 10 nach ADR-031 über dem Schwellenwert (Reflexion zu ADR-031 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, Maßnahme (10) als Schritt 2.11)
+- **Aktiver Schritt:** keiner; 2.11 (Sammelprüfung der Vertragssätze) ERLEDIGT am 2026-10-19 (ADR-032), Branch `erkundung/2-11-sammelpruefung-vertragssaetze` gepusht, kein PR (PR nur auf Anweisung)
+- **Nächster Schritt:** PR für 2.11 nach `main` (Anweisung: Merge bei grün), danach 2.10 (Stilleitfaden, SVG-Pipeline, Messung) in einer neuen Session
+- **Offene STOPP-Situationen:** Reaktiv-Quote 7 / 10 nach ADR-032 über dem Schwellenwert – Reflexion zu ADR-032 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, kein Umbau
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -329,7 +329,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.11: Sammelprüfung der Vertragssätze S-1 bis S-7 (Maßnahme 10)
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT (2026-10-19)
 - **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt in Phase 2, wie 2.9)
 - **Schritt-Art (nur ERKUNDUNG):** sonstiges (Prüfung von Verträgen)
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session
@@ -343,17 +343,19 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Brücke, Plattform, Oberfläche, Inhalte & Mods, Takt & Weltzustand (nur Verträge, kein Code)
 - **Reifegrad-Wirkung:** keine (S-1 bis S-7 bleiben `[BELASTBAR]`, ggf. per ADR fortgeschrieben)
 - **Artefakte:** Prüfliste in `docs/research/`, ggf. ADR
+- **Stand 2026-10-19 15:19 UTC:** Prüfliste `docs/research/2.11-sammelpruefung.md`: 81 Sätze geprüft, 41 ohne Fund; 10 Lücken (L-1 … L-10), 5 Kartenfunde (K-1 … K-5), 8 redaktionelle Funde (R-1 … R-8). Vorlage als `ENTSCHEIDUNG ERFORDERLICH` (Kategorie 5 und 1) mit Empfehlungen: L-1 Entwurfsschritt 3.8 vor 3.1 (Weltdarstellung), L-2 Katalog über S-7 (3.1), L-3 `game.new` in S-6 (Grundform 3.1, voll 5.1), L-4 Grafik über die volle Objekt-ID (2.10), L-5 Parameter `{ key }` (3.1), L-6 Wörterbuch aus Textschlüsseln und Tick im Detail (3.6), L-7 Debug-Vermerk in 5.6, L-8 Kanal als S-8 beschreiben, L-9 `sessionEnded` streichen, L-10 Texte der laufenden Sitzung (6.1); Modul-Karte nach K-1 … K-5; R-1 … R-8 mit dem ADR. Ein gemeinsamer ADR-032 wäre `[REAKTIV]` (ändert ADR-021 binnen 14 Tagen), Quote danach 7 / 10. Wartet auf Freigabe.
+- **Ergebnis (2026-10-19):** freigegeben vom Projektinhaber per Auswahl „Alle Empfehlungen“; ADR-032 `[REAKTIV]`. `architecture.md` fortgeschrieben (Modul-Karte K-1 … K-5, Grundlagen, S-1 bis S-7, neu S-8 Kern-Prozess-Steuerung `[BELASTBAR]`, Weltdarstellung `[OFFEN]`); Landeplätze in 2.10, 3.1, 3.6, 3.8 (neu), 5.1, 5.6, 6.1. Akzeptanzkriterien: Liste aller geprüften Sätze mit Ergebnis in der Prüfliste; jede Lücke per ADR-032 entschieden und mit Schritt versehen. DoD für einen Entwurfsschritt ohne Code: markdownlint über die Hooks grün, CI des Pushs grün (siehe Logbuch); Linter, Typprüfung, Tests und Coverage nicht anwendbar.
 
 #### 2.10: Stilleitfaden, SVG-Pipeline und Messung der Darstellung
 
 - **Status:** OFFEN
 - **Phasentyp-Kontext:** UMSETZUNG
-- **Abhängigkeiten:** 2.7
+- **Abhängigkeiten:** 2.7, 2.11 (Zuordnung Objekt → Bild, ADR-032)
 - **Freigabepflichtig:** ja (Kategorie 3: SVG-Rasterer als neue Abhängigkeit)
 - **Empfohlene Klasse:** Entscheidung – neue Abhängigkeit und Bewertung einer Leistungsmessung (ADR-017).
 - **Eingangskriterien:** Spielfeld-Grundgerüst (2.7)
 - **Anforderungen (ab Klasse M):** FR-050
-- **Zu tun:** Stilleitfaden (Palette, Strichstärken, Maßstab 2 m je Zelle nach ADR-020, Detailgrad); SVG-Quellen im Repository, Rasterung in mehreren Auflösungen im Build (ADR-008), Atlanten; eigenes Programmsymbol für Fenster, Installer und Pakete (Befund 2.1-N2); Messung des Spielfelds mit Objekt-Sprites aus den Atlanten, Overlays und 10.000 Personen auf Referenz-PC und Mac; dabei auf dem Mac prüfen, ob die Aussetzer der Simulation bis 110 ms aus 2.7 wiederkehren, und bei Wiederholung die Ursache klären (Vermutung: Verteilung von Tick- und Hintergrund-Threads auf Leistungs- und Effizienzkerne), dazu ein Vergleichslauf mit weniger Hintergrund-Threads (z. B. `--background-threads=4`; auf dem Referenz-PC liefen die Schritte damit ruhiger, 2.7).
+- **Zu tun:** Stilleitfaden (Palette, Strichstärken, Maßstab 2 m je Zelle nach ADR-020, Detailgrad); SVG-Quellen im Repository, Rasterung in mehreren Auflösungen im Build (ADR-008), Atlanten; Bildname im Atlas = volle Objekt-ID (`base:bench`), neutrale Ersatzgrafik für Objekte ohne Bild (ADR-032, L-4); für die Messung platziert das Messwerkzeug die Objekt-Sprites selbst, solange der Weg der Weltdarstellung offen ist (3.8); eigenes Programmsymbol für Fenster, Installer und Pakete (Befund 2.1-N2); Messung des Spielfelds mit Objekt-Sprites aus den Atlanten, Overlays und 10.000 Personen auf Referenz-PC und Mac; dabei auf dem Mac prüfen, ob die Aussetzer der Simulation bis 110 ms aus 2.7 wiederkehren, und bei Wiederholung die Ursache klären (Vermutung: Verteilung von Tick- und Hintergrund-Threads auf Leistungs- und Effizienzkerne), dazu ein Vergleichslauf mit weniger Hintergrund-Threads (z. B. `--background-threads=4`; auf dem Referenz-PC liefen die Schritte damit ruhiger, 2.7).
 - **Akzeptanzkriterien:** `scripts/assets.test.ts` grün; Messprotokoll zeigt, ob 60 Bilder/s mit echten Grafiken halten; Ergebnis per ADR (NFR Darstellung `[VORLÄUFIG]` → `[BELASTBAR]` oder Maßnahme).
 - **Betroffene Module:** Spielfeld, Build/CI
 - **Reifegrad-Wirkung:** NFR Performance Darstellung mit echten Grafiken `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen
@@ -368,12 +370,13 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
 | 3.7 | **Vor 3.1:** Entwurfsschritt (Phasentyp-Kontext ERKUNDUNG) „Personengruppen, Begehbarkeit und Querungen“: Gruppen aus dem Inventar (PAX-*, PAX-09, STAFF-01, SHOP-03, BAU-03; offen: Crew, Einweiser) mit Begehbarkeit je Gruppe einschließlich Personalzonen (ZON-02); Personal auf dem Vorfeld (nur per Fahrzeug, Stellplatzfläche begehbar oder beides, jeweils mit Erklärung bei Unerreichbarkeit; TURN-03, GEP-06, GATE-06); Bauarbeiter und laufende Bahnen; Querungen und Sperrung von Betriebsstraßen beim Walk-out-Boarding (MOD-13); Messung, wie Personal neben den Wegweisern geführt wird; Ergebnis ADR in Ergänzung von ADR-020 (Kategorie 1 und 4) | FR-018 (vorbereitend) |
-| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7); Bewegung der Bauarbeiter nach 3.7; Objekte im Weltzustand und Spielstand mit der Höchstzahl `MAX_OBJECTS` (aus 2.5) | FR-010, FR-011 |
+| 3.8 | **Nach 3.7, vor 3.1:** Entwurfsschritt (Phasentyp-Kontext ERKUNDUNG) „Weltdarstellung im Spielfeld“ (ADR-032, L-1): wie Raster, Böden, Wände, Objekte und Zonen das Spielfeld erreichen – Ausgangshypothese geänderte Blöcke seit dem quittierten Stand im Bild (S-1), Gegenmodell Abruf über S-7; Messung von Erstübertragung (ganze Karte), Bauaktion bis zum Bild und Speicher im Renderer im Referenz-Terminal; Ergebnis ADR (Kategorie 5, ggf. 1) mit Fortschreibung von S-1 bzw. S-7 | FR-010 (vorbereitend) |
+| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7) auf dem Weg aus 3.8; Katalog der Sitzung über S-7 `catalog` für Bau-Werkzeug und Vorschau, `game.new({ map })` in S-6 und S-8 (Grundform), Parameter `{ key }` in `ParamValue` (ADR-032, L-2, L-3, L-5); Bewegung der Bauarbeiter nach 3.7; Objekte im Weltzustand und Spielstand mit der Höchstzahl `MAX_OBJECTS` (aus 2.5) | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
 | 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
 | 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); Fahrzeuge im Spielstand mit der Höchstzahl `MAX_VEHICLES` (aus 2.5); Schema der Inhaltsart `vehicles/` in Datenpaketen (aus 2.4, ADR-025); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
 | 3.5 | Abfertigung und Gepäck in Grundform; Wege des Vorfeldpersonals nach 3.7 | FR-025, FR-032 |
-| 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform; Schema der Inhaltsarten `aircraft/` und `airlines/` in Datenpaketen (aus 2.4, ADR-025) | FR-030, FR-036, FR-039, FR-044 (Airline und Flugzeugtyp aus dem Mod-Ordner) |
+| 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform; Wörterbuch- und Detail-Texte als `{ key }`/`{ text }`, `tick` im Detail (ADR-032, L-6); Schema der Inhaltsarten `aircraft/` und `airlines/` in Datenpaketen (aus 2.4, ADR-025) | FR-030, FR-036, FR-039, FR-044 (Airline und Flugzeugtyp aus dem Mod-Ordner) |
 
 ### Phase 4: Härtung des vertikalen Schnitts – Typ: STABILISIERUNG
 
@@ -390,12 +393,12 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 5.1 | Spielstart vollständig: Standort, Kartengröße, Sandbox, Einstellungen; Flughafenname im Weltzustand und in den Spielstand-Metadaten (META-02, Feld leer seit 2.5); Spielmenü mit Speichern, Laden und Spielstand-Liste (ersetzt die einfache Liste aus 2.5); Einstellungs-Menü (ersetzt das minimale Panel aus 2.6), dabei Obergrenze des Autosave-Intervalls (60 Minuten, Schätzung aus 2.6, ADR-031) überprüfen | FR-001, FR-002, FR-005 |
+| 5.1 | Spielstart vollständig: Standort, Kartengröße, Sandbox, Einstellungen (`game.new` vollständig, ADR-032, L-3); lokalisierte Meldung bei `incompatible` statt Konsolenzeile (ADR-032, R-8); Flughafenname im Weltzustand und in den Spielstand-Metadaten (META-02, Feld leer seit 2.5); Spielmenü mit Speichern, Laden und Spielstand-Liste (ersetzt die einfache Liste aus 2.5); Einstellungs-Menü (ersetzt das minimale Panel aus 2.6), dabei Obergrenze des Autosave-Intervalls (60 Minuten, Schätzung aus 2.6, ADR-031) überprüfen | FR-001, FR-002, FR-005 |
 | 5.2 | Etagen, Zonen (international), Bauen vollständig | FR-010, FR-012 |
 | 5.3 | Landseite: Parken, ÖPNV, Kreuzungen mit wählbarer Vorfahrt | FR-013, FR-015 |
 | 5.4 | Terminal vollständig: moderner Check-in, Kontrollspuren, Grenze, Läden, Info | FR-019 bis FR-024 |
 | 5.5 | Airside, Gepäck mit dreistufiger Kontrolle, Flüge, Abfertigung vollständig, Startfreigabe | FR-025, FR-026, FR-027, FR-029, FR-030, FR-032 |
-| 5.6 | Personal, Wirtschaft, Forschung, Serviceziele, Notfälle, Störungen, Tutorial, Erfolge; große Tabellen für Personal und Finanzen; Schema der Inhaltsart `research/` in Datenpaketen (aus 2.4, ADR-025) | FR-007, FR-008, FR-033 bis FR-039 |
+| 5.6 | Personal, Wirtschaft, Forschung, Serviceziele, Notfälle, Störungen, Tutorial, Erfolge mit Vermerk der Debug-Nutzung im Spielstand (META-15, ADR-032, L-7); große Tabellen für Personal und Finanzen; Schema der Inhaltsart `research/` in Datenpaketen (aus 2.4, ADR-025) | FR-007, FR-008, FR-033 bis FR-039 |
 | 5.7 | Flugzeugtypen und Airlines inklusive Add-on-Klassen | FR-031 |
 | 5.8 | Benchmark mit Empfehlung, Leistungsbewusstsein (Empfehlung und Warnung nach bebauter, begehbarer Fläche und Zahl der Ziele, ADR-020); Messung auf schwacher integrierter Grafik (Auflage ADR-014) | FR-041, FR-042 |
 
@@ -405,7 +408,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11); Grafiken und Töne in Mods; Spielstände mit fehlenden Paketen laden unter Entfernen der betroffenen Objekte (ADR-021); aus der getrennten Prüfung 2.4: Pakete im Hintergrund laden statt auf dem JavaScript-Thread des Kern-Prozesses, neu abgelegte Pakete ohne Neustart erkennen (`docs/research/2.4-getrennte-pruefung.md`, Befunde 7 und 14); Überschreiben von Texten anderer Pakete in `lang/` (wie `replaces`, ADR-031); prüfen, ob eine Gesamtgrenze für Einträge und Texte über alle Pakete nötig ist (Befund 2 der getrennten Prüfung von 2.6, `docs/research/2.6-getrennte-pruefung.md`) | FR-044 |
+| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11); Grafiken und Töne in Mods; Spielstände mit fehlenden Paketen laden unter Entfernen der betroffenen Objekte (ADR-021); aus der getrennten Prüfung 2.4: Pakete im Hintergrund laden statt auf dem JavaScript-Thread des Kern-Prozesses, neu abgelegte Pakete ohne Neustart erkennen (`docs/research/2.4-getrennte-pruefung.md`, Befunde 7 und 14); Überschreiben von Texten anderer Pakete in `lang/` (wie `replaces`, ADR-031); `lang.*` folgt der laufenden Sitzung statt der Auswahl für die nächste (ADR-032, L-10); prüfen, ob eine Gesamtgrenze für Einträge und Texte über alle Pakete nötig ist (Befund 2 der getrennten Prüfung von 2.6, `docs/research/2.6-getrennte-pruefung.md`) | FR-044 |
 | 6.2 | Audio, Durchsagen, Musik, ggf. Intro-Video | FR-047, FR-049 |
 | 6.3 | Abgleich der Funktionsgleichheit gegen das gesamte Inventar | – |
 
@@ -583,6 +586,18 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Maßnahme (10), Vorschlag:** Vor 2.10 einmal alle Sätze in S-1 bis S-7, die Daten einer anderen Schnittstelle oder eines anderen Moduls voraussetzen, gegen die Funktionslisten und die Modul-Karte lesen und die Funde gesammelt in einem ADR vorlegen (statt einzeln je Schritt).
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 6 / 10 bis ADR-034; 5 / 10 ab ADR-035, 2 / 10 (Schwellenwert eingehalten) ab ADR-039.
 - **Kenntnisnahme:** Projektinhaber am 2026-10-19 per Auswahl: „Kenntnis + Maßnahme (10)“; kein Umbau; Maßnahme (10) als Schritt 2.11 vor 2.10 angelegt.
+
+---
+
+### Ergänzung Reaktiv-Quote (2026-10-19, Anlass ADR-032)
+
+- **Befund:** 7 / 10 `[REAKTIV]` über ADR-023 bis ADR-032 (ADR-025, ADR-026, ADR-028, ADR-029, ADR-030, ADR-031, ADR-032), 70 %; steigend (ADR-022 `[OPERATIV]` fällt heraus, ADR-032 kommt hinzu).
+- **Ursache von ADR-032:** Maßnahme (10) selbst – die Sammelprüfung 2.11 hat die Lücken zwischen den Verträgen aus 2.9 auf einmal gesucht und in einem ADR entschieden; reaktiv nach der 14-Tage-Regel, weil er ADR-021 (6 Tage alt) fortschreibt. Ohne Sammelprüfung wären dieselben 10 Lücken voraussichtlich einzeln in 2.10, 3.1, 3.6, 5.1, 5.6 und 6.1 als je eigener reaktiver ADR aufgetaucht.
+- **Muster:** bestätigt die Diagnose zu ADR-031 – die Verträge aus 2.9 beschreiben je Schnittstelle, was sie liefert, aber nicht durchgängig, welche Daten zwischen Schnittstellen und Modulen fließen; dazu kamen ein Darstellungsfehler der Modul-Karte (doppelte Kennung `ABF`) und ein ungenannter Kanal (jetzt S-8).
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): keine Modulgrenze verschoben, alle Ergänzungen additiv oder beschreibend; die einzige offene Grundsatzfrage (Weltdarstellung, L-1) hat mit 3.8 einen Entwurfsschritt vor ihrer ersten Umsetzung.
+- **Maßnahme:** keine neue; (7) bis (9) gelten weiter. Erwartung: Funde nach (7)/(8) in 2.10 und Phase 3 sollten jetzt selten werden – tritt dennoch eine Vertragslücke der Art „setzt voraus, was nirgends angeboten wird“ auf, ist das ein Hinweis, dass die Prüfliste 2.11 unvollständig war (dann Ergänzung der Prüfliste, nicht nur ADR).
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs 7 / 10 bis ADR-034; 6 / 10 ab ADR-035, 5 / 10 ab ADR-036, 2 / 10 (Schwellenwert eingehalten) ab ADR-040.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-19 per Auswahl „Kenntnis + PR bei grün“; kein Umbau, Maßnahmen (7)–(9) gelten.
 
 ---
 

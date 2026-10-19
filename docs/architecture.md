@@ -29,7 +29,7 @@ OpenAirside ist ein lokal laufendes Desktop-Spiel. Es ist aufgebaut wie eine Web
 
 **Architektur-Pattern:** Simulationskern mit austauschbarer Präsentationsschicht (Kern/Hülle-Trennung, datengetriebene Inhalte) `[BELASTBAR]` seit 2026-10-13 – siehe ADR-003; validiert durch Spikes 1.1–1.5 (ADR-014).
 
-**Kommunikations-Grundmodus:** Präsentation → Kern: Befehlsnachrichten. Kern → Präsentation: Zustandspuffer im Kern-Prozess, je Bild als Kopie per `MessagePort` an den Renderer übertragen (ADR-009), plus Ereignisstrom. Präsentation ↔ Plattform: typisierte Electron-Preload-Schnittstelle. `[BELASTBAR]` seit 2026-10-15 – umgesetzt in 2.7, gemessen auf Mac und Referenz-PC.
+**Kommunikations-Grundmodus:** Präsentation → Kern: Befehlsnachrichten. Kern → Präsentation: Zustandspuffer im Kern-Prozess, je Bild als Kopie per `MessagePort` an den Renderer übertragen (ADR-009), plus Ereignisstrom. Präsentation ↔ Plattform: typisierte Electron-Preload-Schnittstelle (S-6). Plattform ↔ Kern-Prozess: Nachrichten des Utility-Prozesses (S-8, ADR-032). `[BELASTBAR]` seit 2026-10-15 – umgesetzt in 2.7, gemessen auf Mac und Referenz-PC.
 
 **Plattformen:** Windows, Linux, macOS (nur Apple-Chips, ADR-012) `[BELASTBAR]` – harte Randbedingung aus der Vision.
 
@@ -50,12 +50,13 @@ graph TB
     FELD[Spielfeld<br/>PixiJS, Kamera, Overlays]
     AUD[Audio]
     LOC[Lokalisierung]
+    BENCHTS[Benchmark & Leistung<br/>Leistungsanzeige, Messwerkzeug]
   end
   subgraph Brücke
-    BEF[Befehlskanal]
-    ZUS[Zustandspuffer]
-    EVT[Ereignisstrom]
-    ABF[Abfrage]
+    BEF[Befehlskanal S-2]
+    ZUS[Zustandspuffer S-1]
+    EVT[Ereignisstrom S-3]
+    QRY[Abfrage S-7]
   end
   subgraph Simulationskern – Rust, napi-rs im Electron-Utility-Prozess
     TAKT[Takt & Weltzustand]
@@ -63,35 +64,44 @@ graph TB
     WEG[Wegfindung & Passagierführung]
     VERK[Verkehr & Verkehrssteuerung]
     FLUG[Flugbetrieb]
-    ABF[Abfertigung & Gepäck]
+    ABFG[Abfertigung & Gepäck]
     PERS[Personen]
     WIRT[Wirtschaft & Management]
     EREIG[Ereignisse]
     BENCH[Benchmark & Leistung]
   end
-  INH[Inhalte & Mods<br/>Datenpakete]
+  INH[Inhalte & Mods<br/>Datenpakete, Lader im Kern-Prozess]
 
   UI -->|Befehle| BEF
   FELD -->|Befehle| BEF
+  BENCHTS -->|Debug-Befehle| BEF
   BEF --> TAKT
   TAKT --> ZUS
   TAKT --> EVT
   ZUS --> FELD
   ZUS --> UI
+  ZUS --> BENCHTS
   EVT --> UI
+  EVT --> FELD
   EVT --> AUD
-  UI -->|Tabellen, Details| ABF
-  ABF --> TAKT
+  EVT -->|Ereignisse, coreStats| BENCHTS
+  UI -->|Tabellen, Details, Katalog| QRY
+  BENCHTS -->|Test-Tabelle| QRY
+  QRY --> TAKT
   LOC --> UI
   INH -->|Sprachpakete lang/, geprüft im Kern-Prozess, über Plattform lang.*, ADR-031| LOC
-  UI -->|Preload-API| PLAT
-  PLAT -->|Spielstand laden/speichern| TAKT
+  INH -->|Atlanten aus dem Build, Bildname = Objekt-ID, ADR-032| FELD
+  UI -->|Preload-API S-6| PLAT
+  LOC -->|lang.*, settings.* S-6| PLAT
+  BENCHTS -->|measure.* S-6| PLAT
+  PLAT <-->|S-8: Start, Port, Spielstände, Pakete, Sprachen, Autosave| TAKT
+  PLAT -->|S-8: Pakete wählen, Texte holen| INH
   INH --> TAKT
-  TAKT --- WELT & WEG & VERK & FLUG & ABF & PERS & WIRT & EREIG & BENCH
+  TAKT --- WELT & WEG & VERK & FLUG & ABFG & PERS & WIRT & EREIG & BENCH
   INH -.->|Code-Mods OFFEN| UI
 ```
 
-Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsamen Weltzustand und interne Ereignisse des Takts, nicht durch direkten Zugriff auf interne Strukturen anderer Module. Die Datenhaltung ist entschieden (ADR-010): eigene Felder je Objektart, kein ECS-Paket.
+Kennungen der Knoten sind eindeutig (ADR-032, K-1: zuvor standen Abfrage und Abfertigung & Gepäck unter derselben Kennung). Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsamen Weltzustand und interne Ereignisse des Takts, nicht durch direkten Zugriff auf interne Strukturen anderer Module. Die Datenhaltung ist entschieden (ADR-010): eigene Felder je Objektart, kein ECS-Paket.
 
 <!-- ANCHOR:module -->
 ## 3. Module (detailliert)
@@ -190,6 +200,7 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 
 - **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13
 - **Verantwortung:** Integrierter Benchmark (wachsender Flughafen im Zeitraffer, Empfehlung zur Kartengröße), laufende Leistungsüberwachung und Warnungen, Leistungstest in der CI.
+- **Teile:** Rust (Benchmarks unter `core/benches/`, Kennzahlen des Takts) und TypeScript im Renderer (Leistungsanzeige, Messwerkzeug `app/renderer/measure.ts`); der TypeScript-Teil nutzt S-1, S-2 (`debug`), S-3 mit `coreStats`, S-7 (Test-Tabelle) und S-6 `measure.*` (Modul-Karte seit ADR-032).
 - **Abhängigkeiten:** Takt, Spielfeld (Bildrate), Inhalte (Benchmark-Szenario)
 - **Leistungstest in der CI (seit Schritt 2.2, ADR-022; erweitert in 2.3, ADR-023):** `core/benches/flowfield.rs` misst die Neuberechnung der Wegweiser im Referenz-Terminal (rot über 4 s) und den Schritt während der Neuberechnung (rot bei p99 über 4 ms). `core/benches/tick.rs` misst 2.000 Simulationsschritte mit 10.000 Personen im Referenz-Terminal (4 Threads, Karte 2048²); Pflicht-Check „Kern-Benchmark" rot bei Mittelwert > 1 ms oder p99 > 4 ms; Trend nur als Anzeige in der Job-Zusammenfassung (`scripts/bench-report.mjs`).
 - **Messwerkzeug (Schritt 2.7):** Konsolenbefehl `measure [Minuten]` (`app/renderer/measure.ts`): Langzeitlauf wie Spike 1.5 auf Produktionscode – Referenz-Terminal mit 10.000 Personen bei 3×, 10 s Aufwärmen, je 30-s-Fenster Bildrate und Bildzeiten, Rundlauf der Bildanforderung, lange Aufgaben des Renderers, Ticks/s, Schrittzeit und Rückstand (`coreStats`), Rückstandsmeldungen, Neuberechnung nach einer Bauaktion alle 10 s (`setWalls` im Erdgeschoss), Bauaktion bis zum Bild, Tabellenabfrage mit 1.000 Zeilen 4-mal je Sekunde; die Kamera wechselt je Fenster zwischen Übersicht und Kreisen über der dichtesten Stelle des Erdgeschosses. Ergebnis als JSON-Datei über S-6 `measure.report`, mit Speicher aller Prozesse.
@@ -211,7 +222,8 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 - **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13
 - **Verantwortung:** Draufsicht-Darstellung mit PixiJS über WebGL2: Raster, Gebäude, Personen, Fahrzeuge, Flugzeuge, Etagenwechsel, Overlays (Zonen, Wege, Wartegründe, Heatmaps), Bauvorschau, Kamera mit Zoom und Verschieben, Detailstufen.
 - **Nicht-Verantwortung:** keine Spielregeln; wertet nur den Zustand aus und schickt Befehle.
-- **Abhängigkeiten:** Zustandspuffer, Grafik-Atlanten aus der SVG-Pipeline
+- **Abhängigkeiten:** Zustandspuffer (S-1), Ereignisstrom (S-3, Befehlsantworten für das vorläufige Zeichnen), Katalog der Sitzung (S-7, ab 3.1), Grafik-Atlanten aus der SVG-Pipeline (Bildname = volle Objekt-ID, ADR-032)
+- **Weltdarstellung** (Raster, Böden, Wände, Objekte, Zonen): Weg in das Spielfeld `[OFFEN]` bis Entwurfsschritt 3.8 (ADR-032, L-1)
 - **NFRs:** 60 Bilder pro Sekunde im Referenzszenario auf der Zielhardware
 - **Umsetzung (Schritt 2.7, Stand 2026-10-14):** `app/renderer/playfield.ts` mit PixiJS 8.20.1, Personen als Partikel eines `ParticleContainer` (Mindestgröße 2 Pixel), Kamera mit Zoom und Verschieben (`camera.ts`), Etagenwechsel; `pixi.js/unsafe-eval` ersetzt den eval-basierten Partikel-Upload, die CSP bleibt ohne `unsafe-eval`. Ohne WebGL fällt PixiJS auf das Canvas-Zeichnen zurück; die Leistungsanzeige nennt dann „renderer canvas". Das Raster selbst wird noch nicht gezeichnet (3.1).
 
@@ -234,6 +246,7 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 
 - **Reifegrad:** `[BELASTBAR]`, seit 2026-10-15, Begründung: Umsetzung 2.7 (Regel-007) mit Härtungstests (Sandbox, `contextIsolation`, Absenderprüfung, Navigation) und Rauchtest auf drei Plattformen; Messung 2.7 auf Mac M3 Pro und Referenz-PC am 2026-10-15, `docs/research/2.7-messung.md`; zuvor `[VORLÄUFIG]` seit 2026-10-13
 - **Verantwortung:** Electron-Hauptprozess: Fenster, Dateisystem (Spielstände, Mods, Logs, Einstellungen), Start und Überwachung des Kern-Prozesses (Electron-Utility-Prozess, ADR-009) einschließlich Neustart nach Absturz, Vermittlung des `MessagePort` zwischen Kern-Prozess und Renderer, typisierte Preload-Schnittstelle.
+- **Öffentliche Schnittstellen:** S-6 (zum Renderer), S-8 (zum Kern-Prozess, ADR-032); Datei-Teil von S-5
 - **Offene Fragen:** ob der Kern-Prozess Spielstände selbst schreibt oder über die Plattform – geklärt in ADR-021: der Kern liefert die Bytes, die Plattform schreibt die Datei (S-5, S-6)
 - **Nicht-Verantwortung:** keine Spiellogik, keine Oberfläche.
 - **NFRs:** Electron-Härtung laut `project-context.md` Abschnitt 6
@@ -274,8 +287,8 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 
 #### Zustände des Kerns und Sitzungen
 
-- **Zustände:** `starting` → `ready` ⇄ `loading`; `failed` bei nicht behebbarem Fehler (Meldung an die Plattform, Kern-Prozess endet).
-- **Sitzung:** Eine Sitzung ist ein geladener Weltzustand auf einem Port. Eine neue Sitzung beginnt bei neuem Spiel, beim Laden eines Spielstands, bei Neustart des Kern-Prozesses und beim Neuladen des Fensters. Der Kern meldet sie mit `welcome` (Port neu) bzw. `sessionStarted { session, tick }` (Port bleibt). `session` ist eine fortlaufende Zahl je Kern-Prozess.
+- **Zustände:** `starting` → `ready` ⇄ `loading`; `failed` bei nicht behebbarem Fehler (Meldung an die Plattform über S-8 `error`, Kern-Prozess endet; die Oberfläche erfährt es über S-6 `onCoreExit`).
+- **Sitzung:** Eine Sitzung ist ein geladener Weltzustand auf einem Port. Eine neue Sitzung beginnt bei neuem Spiel (S-6 `game.new`, ab 3.1; ADR-032), beim Laden eines Spielstands, bei Neustart des Kern-Prozesses und beim Neuladen des Fensters. Der Kern meldet sie mit `welcome` (Port neu) bzw. `sessionStarted { session, tick }` (Port bleibt). `session` ist eine fortlaufende Zahl je Kern-Prozess.
 - **Jede Nachricht trägt `session`** (Befehle, Abfragen, Bildanforderungen, Bilder, Ereignisse, Antworten). Nachrichten mit fremder `session` werden verworfen und gezählt. Befehls-`id`, Abfrage-`id` und `seq` beginnen je Sitzung neu bei 1; der Tick kann beim Sitzungswechsel zurückspringen. Bei Sitzungswechsel verwirft der Kern noch nicht verarbeitete Befehle der alten Sitzung; die Präsentation verwirft alle Vorschauen und offenen Abfragen.
 - **Laden ist atomar:** Der Kern prüft und baut den neuen Weltzustand vollständig neben dem alten auf und tauscht erst dann; scheitert das Laden, bleibt die alte Sitzung unverändert bestehen. Während `loading` werden Befehle mit `notReady` abgelehnt.
 - **Port-Zustände:** `waitingForHello` → `open`. Nachrichten vor `welcome` und ein zweites `hello` werden verworfen und gezählt. Bei `incompatible` zeigt die Oberfläche eine Fehlermeldung; der Kern bleibt am Leben, nimmt auf diesem Port aber nichts weiter an.
@@ -288,8 +301,9 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 | `apiVersion` | S-6 | Preload-Konstante |
 | `format` je Paket | S-4 | `manifest.json` |
 | Container- und Weltzustand-Version | S-5 | Kopf des Spielstands; die Metadaten nennen zusätzlich Version und `format` jedes aktiven Pakets |
+| – | S-8 | keine eigene Version: Hauptprozess und Kern-Prozess stammen immer aus demselben Build |
 
-- **Umwandlung JS ↔ Rust** nur in der Brücken-Crate (Regel-006) über die serde-Darstellung der Kern-Typen. Die dafür nötige Abhängigkeit (Kandidat: napi-Funktion `serde-json`, die `serde_json` mitbringt) wird in 2.7 nach Regel-001 zur Freigabe vorgelegt (Kategorie 3).
+- **Umwandlung JS ↔ Rust** nur in der Brücken-Crate (Regel-006) über die serde-Darstellung der Kern-Typen, mit napi `serde-json` (ADR-024).
 
 #### Typen und Codeerzeugung
 
@@ -306,7 +320,7 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 | `Rotation` | `0 \| 1 \| 2 \| 3` | Vielfache von 90° im Uhrzeigersinn, 0 = Norden |
 | `Handle` | `index: u32`, `generation: u32` | Verweis auf ein Objekt im Weltzustand; veraltete Handles werden erkannt (Generation) |
 
-Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen nur in S-1 (Gleitkomma, Layout dort). Befehle und Abfragen adressieren Zellen, Rechtecke oder Handles.
+Befehle und Abfragen adressieren Zellen, Rechtecke oder Handles. Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen in S-1 (Layout dort) und als gelesene Werte in Antworten von S-7 (z. B. `debugPersons`, `Detail`); nie in Befehlen.
 
 #### Zeit (ADR-020)
 
@@ -317,6 +331,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 #### Fehler und Texte
 
 - Fehler und Meldungen tragen einen **Code** (stabiler Bezeichner) und einen **Textschlüssel** mit Parametern für die Lokalisierung (FR-006). Fertige Texte erzeugt nur die Präsentation.
+- **Parameter** (`ParamValue`) sind Zahl, Text oder – ab ihrer ersten Verwendung, spätestens 3.1 – `{ key }`, ein Textschlüssel, den die Präsentation vor dem Einsetzen übersetzt (eine Ebene tief; z. B. der Name eines Objekts aus S-4). Zahlen formatiert die Präsentation für die gewählte Sprache (ADR-032, L-5).
 - Kein Vertrag lässt einen Absturz als Fehlerreaktion zu: ungültige Eingaben führen zu Ablehnung oder Meldung.
 
 ### Schnittstelle: S-1 Zustandspuffer (Kern → Präsentation) [BELASTBAR]
@@ -332,25 +347,25 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
   - **Idempotenz:** Lesen ist seiteneffektfrei
 - **Versionierung:** Layout wird aus Rust-Typen erzeugt, eine Layout-Version im Kopf des Puffers
 - **Layout-Version 1 (Schritt 2.7, `core/src/frame.rs`):** Kopf 32 Byte (Layout-Version, Kopfgröße, Sitzung, Tick, Kartenbreite und -höhe, Personen gesamt, Personen im Bild, Etage des Filters oder 127 für alle, Bytes je Person, Revision der Wegweiser), danach je Person 6 Byte: x und y als u16 in 1/32 Zelle, Etage i8, Richtung u8. Die Anforderung `frameRequest { session, filter: { floor?, view? }, ack }` quittiert zugleich die Ereignisse bis `ack`. Der Leser im Renderer (`app/renderer/frame-reader.ts`) prüft alle Längen gegen `byteLength`.
-- **Offene Fragen:** Umfang je Bild – geklärt in Spike 1.3 (kompaktes Vollbild mit Filter auf Etage und Ausschnitt); Ereignisse kommen mit dem Bild (S-3, ADR-021)
+- **Offene Fragen:** Umfang je Bild – geklärt in Spike 1.3 (kompaktes Vollbild mit Filter auf Etage und Ausschnitt); Ereignisse kommen mit dem Bild (S-3, ADR-021). **Ruhender Zustand der Welt** (Raster, Böden, Wände, Objekte, Zonen) `[OFFEN]`: S-1 trägt bis jetzt nur bewegte Objekte; der Weg wird im Entwurfsschritt 3.8 vor 3.1 mit Messung entschieden, Ausgangshypothese „geänderte Blöcke seit dem quittierten Stand im Bild", Gegenmodell Abruf über S-7 (ADR-032, L-1). Bis dahin gilt die Zusage von S-2 „Wirkung im Bild von `tick`" nur für bewegte Objekte.
 
 ### Schnittstelle: S-2 Befehlskanal (Präsentation → Kern) [BELASTBAR]
 
-- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021; Bestätigung durch Umsetzung in 2.2, 2.7, 3.1
+- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021; bestätigt durch Umsetzung in 2.2 und 2.7; Wirkung der Bau-Befehle folgt in 3.1
 
 - **Anbieter:** Takt & Weltzustand. **Konsument:** Oberfläche, Spielfeld.
 - **Nachricht:** `{ type: "command", id: u32, command: Command }`.
   - `id` vergibt der Renderer, beginnend bei 1, streng steigend je Sitzung (`session` aus dem Handshake).
-  - `Command` ist eine Aufzählung (`kind`). Phase 2 legt fest: `setSpeed { speed: "paused" | "x1" | "x2" | "x3" }`, `skipNight {}`, `build { object: string, at: CellPos, rotation: Rotation }`, `buildArea { object: string, area: CellRect }` (Ziehen von Böden, Wänden, Zonen als ein Befehl), `demolish { area: CellRect }`, `debug { action: DebugAction }` (FR-009). Inhaltsbezüge (`object`) sind Datenpaket-IDs aus S-4.
+  - `Command` ist eine Aufzählung (`kind`). Phase 2 legt fest: `setSpeed { speed: "paused" | "x1" | "x2" | "x3" }`, `skipNight {}`, `build { object: string, at: CellPos, rotation: Rotation }`, `buildArea { object: string, area: CellRect }` (Ziehen von Böden, Wänden, Zonen als ein Befehl), `demolish { area: CellRect }`, `debug { action: DebugAction }` (FR-009). Inhaltsbezüge (`object`) sind Datenpaket-IDs aus S-4; die Präsentation kennt sie aus dem Katalog der Sitzung (S-7 `catalog`, ab 3.1).
 - **Verarbeitung:** Der Kern übernimmt alle eingegangenen Befehle zu Beginn des nächsten Simulationsschritts in Eingangsreihenfolge. **In der Pause** werden Befehle ebenfalls verarbeitet (spätestens im nächsten Takt-Durchlauf, ohne dass der Tick weiterzählt) – Bauen und Planen in der Pause bleibt möglich.
 - **Antwort:** Zu **jedem** Befehl genau ein Ereignis auf S-3: `commandAccepted { id, tick }` oder `commandRejected { id, tick, reason: { code, textKey, params } }`. Die Wirkung eines angenommenen Befehls steht spätestens im Bild von `tick` (S-1).
 - **Idempotenz:** Eine `id`, die nicht größer ist als die zuletzt verarbeitete, wird ohne zweite Antwort verworfen und im Debug-Zähler gezählt. Das ist die einzige Ausnahme von „genau eine Antwort": Für diese `id` ging die Antwort schon heraus.
 - **Prüfung und Ablehnungscodes:** `invalidArgument` (Feld fehlt, falscher Typ, `x1 ≤ x0`, `floor` außerhalb −2 … +2, `rotation` außerhalb 0 … 3), `outOfMap` (Zelle oder Rechteck außerhalb der Karte), `unknownContent` (`object` keine geladene Datenpaket-ID; höchstens 129 Zeichen), `areaTooLarge`, `notReady` (Kern in `loading`), sowie fachliche Codes der Module (z. B. `notEnoughMoney`, `zoneNotAllowed`). Kosten und Flächen rechnet der Kern mit Überlaufprüfung.
 - **Fachliche Codes des Takts (seit 2.2, additiv):** `notNight` (Nachtsprung außerhalb 18:00–06:00), `nightSkipBlocked` (Personen anwesend; Flugzeuge in Bewegung ab 3.4), `tickLimit`. Textschlüssel: `command.rejected.<code>` für Ablehnungen, `notice.<code>` für Meldungen.
-- **Stand der Umsetzung (2.2):** `setSpeed`, `skipNight` und `demolish` (ohne Wirkung, solange die Welt keine Bauten hat; Bauen in 3.1) sind umgesetzt; `build` und `buildArea` werden nach der Strukturprüfung mit `unknownContent` abgelehnt, bis der Lader aus 2.4 Datenpakete bereitstellt. `debug` folgt mit dem Debug-Panel in 2.7.
+- **Stand der Umsetzung (nach 2.4 und 2.7):** `setSpeed`, `skipNight`, `debug` und `demolish` sind umgesetzt; `build` und `buildArea` prüfen die ID gegen den Katalog der Sitzung (`unknownContent`) und werden angenommen, haben aber wie `demolish` bis 3.1 keine Wirkung auf die Welt.
 - **Debug-Aktionen (Schritt 2.7, additiv):** `debug { action }` mit `spawnPersons { count }` (1 … 10.000, sonst `invalidArgument` bzw. `limitExceeded`), `clearPersons {}`, `setWalls { area, wall }` (Wände setzen oder entfernen und Neuberechnung im Hintergrund wie eine Bauaktion) und `loadScenario { scenario: "openHall" | "referenceTerminal", persons }` (neue Sitzung nach der Antwort; höchstens 200.000 Personen). Ein Befehl bekannter Art mit unlesbaren Feldern wird mit `invalidArgument` beantwortet, ein Befehl unbekannter Art verworfen und gezählt.
-- **Debug-Befehle** (FR-009) sind auch in Releases verfügbar wie im Original (META-15: Nutzung deaktiviert Erfolge); ihre Nutzung wird im Spielstand vermerkt.
-- **Vorläufiges Zeichnen (NFR „Bauaktion im nächsten Bild", ADR-014 Auflage 1):** Das Spielfeld zeichnet eine Bauaktion sofort als Vorschau, gekennzeichnet mit der Befehls-`id`. Die Vorschau entfällt, sobald (a) `commandRejected` mit dieser `id` eintrifft (dann Hinweis mit Grund) oder (b) ein Bild mit Tick ≥ `tick` aus `commandAccepted` gezeichnet wird. Die Vorschau prüft nichts (Regel-002); ob gebaut werden darf, entscheidet allein der Kern.
+- **Debug-Befehle** (FR-009) sind auch in Releases verfügbar wie im Original (META-15: Nutzung deaktiviert Erfolge); ihre Nutzung wird ab 5.6 (mit den Erfolgen) im Spielstand vermerkt (ADR-032, L-7); bis dahin enthält S-5 kein solches Feld.
+- **Vorläufiges Zeichnen (NFR „Bauaktion im nächsten Bild", ADR-014 Auflage 1):** Das Spielfeld zeichnet eine Bauaktion sofort als Vorschau, gekennzeichnet mit der Befehls-`id`; Maße und Art der Platzierung liest es aus dem Katalog der Sitzung (S-7), die Befehlsantworten aus S-3. Die Vorschau entfällt, sobald (a) `commandRejected` mit dieser `id` eintrifft (dann Hinweis mit Grund) oder (b) ein Bild mit Tick ≥ `tick` aus `commandAccepted` gezeichnet wird. Die Vorschau prüft nichts (Regel-002); ob gebaut werden darf, entscheidet allein der Kern.
 - **Grenzen:** höchstens 4.096 Befehle je Simulationsschritt; darüber hinausgehende bleiben in der Warteschlange für den nächsten Schritt (keine Ablehnung, keine Verluste). `buildArea` und `demolish` höchstens 512 × 512 Zellen je Befehl (sonst Ablehnung `areaTooLarge`).
 - **Versionierung:** neue Befehlsarten und neue optionale Felder sind additiv (nicht freigabepflichtig); Änderung oder Entfernung bestehender ist eine Vertragsänderung (Kategorie 5) und erhöht `protocol`.
 
@@ -371,18 +386,19 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 
 ### Schnittstelle: S-7 Abfrage (Präsentation → Kern → Präsentation) [BELASTBAR]
 
-- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021; Bestätigung durch Umsetzung in 2.7, 3.6
+- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021; bestätigt durch Umsetzung in 2.7; fachliche Tabellen folgen in 3.6
 
-- **Anbieter:** Takt & Weltzustand (Abfragedienst je Modul). **Konsument:** Oberfläche (Tabellen-Panels, Detailansichten).
+- **Anbieter:** Takt & Weltzustand (Abfragedienst je Modul). **Konsument:** Oberfläche (Tabellen-Panels, Detailansichten, Katalog), Spielfeld (Katalog für die Vorschau), Benchmark & Leistung (Test-Tabelle).
 - **Tabellenabfrage:** `{ type: "query", id: u32, query: { kind: "table", panel: u16, table: TableId, columns: ColumnId[], filter: Filter[], sort: { column, descending }[], window: { offset: u32, limit: u16 } } }`.
   - Filtern, Sortieren und Ausschneiden des Fensters macht der Kern (Folgerung aus Spike 1.4: Sortieren im Renderer kostet bei 20.000 Zeilen 17–30 ms je Aktualisierung). Der Renderer erhält nur die sichtbaren Zeilen (Fenster höchstens 1.000 Zeilen).
   - **Antwort:** `{ type: "queryResult", id, buf: ArrayBuffer }` im Spaltenformat aus Spike 1.4: Kopf 32 Byte (Layout-Version, Tick, Gesamtzahl passender Zeilen, Fensterbeginn, Zeilen im Fenster, Spaltenzahl, Wörterbuch-Version), danach je Spalte ein Block passender Breite ab einer 4-Byte-Grenze. Die erste Spalte ist immer das `Handle` der Zeile (Auswahl, Sprung zum Objekt).
-  - **Texte** (Airline-Namen, Orte, Status) als Nummern in ein Wörterbuch; das Wörterbuch holt der Renderer mit `{ kind: "dictionary", table }`, sobald die Wörterbuch-Version im Kopf wechselt.
-- **Detailabfrage:** `{ kind: "detail", about: Handle }` → `queryResult { id, detail: Detail | null }` als strukturiertes Objekt (erzeugte Typen); `null` bei veraltetem Handle.
+  - **Texte** (Airline-Namen, Orte, Status) als Nummern in ein Wörterbuch; das Wörterbuch holt der Renderer mit `{ kind: "dictionary", table }`, sobald die Wörterbuch-Version im Kopf wechselt. Ein Eintrag ist `{ key }` (Textschlüssel, die Präsentation übersetzt) oder `{ text }` (freier Text nur für Namen, die der Spieler vergibt); umgesetzt mit den fachlichen Tabellen in 3.6, bis dahin liefert die Test-Tabelle Bezeichner als Text (ADR-032, L-6).
+- **Detailabfrage:** `{ kind: "detail", about: Handle }` → `queryResult { id, tick, detail: Detail | null }` als strukturiertes Objekt (erzeugte Typen); `null` bei veraltetem Handle. Textfelder wie im Wörterbuch (`{ key }` oder `{ text }`); `tick` und Textfelder ab 3.6 (ADR-032, L-6).
+- **Katalog der Sitzung (ab 3.1, ADR-032, L-2):** `{ kind: "catalog" }` → `queryResult { id, catalog }` mit allen geladenen Einträgen der laufenden Sitzung: volle ID, Inhaltsart, Namensschlüssel und die Felder des Eintrags, die die Präsentation braucht (für Objekttypen `placement`). Der Katalog ändert sich nur mit der Sitzung; die Präsentation holt ihn nach `welcome` und nach `sessionStarted`. Neue Inhaltsarten ergänzen ihn additiv.
 - **Konsistenz:** Der Kern beantwortet eine Abfrage mit dem Zustand des jüngsten an den Renderer übergebenen Bildes (Tick im Kopf), damit Tabelle und Spielfeld zusammenpassen.
 - **Drosselung:** Je Panel höchstens eine Abfrage unterwegs; Voreinstellung 4 Aktualisierungen je Sekunde (`project-context.md` Abschnitt 6, „wenige Male pro Sekunde"). Der Kern beantwortet Abfragen außerhalb des Simulationsschritts und verzögert ihn nicht.
 - **Grenzen, vom Kern durchgesetzt:** `limit` ≤ 1.000, höchstens 64 Spalten, 16 Filter, 4 Sortierkriterien; `offset` hinter der Gesamtzahl ergibt ein leeres Fenster. Höchstens 16 offene Abfragen je Sitzung; eine neue Abfrage desselben Panels (gleiche `panel`-Kennung) ersetzt eine noch nicht begonnene ältere.
-- **Fehler:** `queryError { id, code, textKey }` mit Codes `unknownTable`, `unknownColumn`, `invalidFilter`, `limitExceeded` (Programmfehler, werden geloggt), `staleHandle` bei Detailabfragen und `sessionEnded` für Abfragen einer beendeten Sitzung.
+- **Fehler:** `queryError { id, code, textKey }` mit Codes `unknownTable`, `unknownColumn`, `invalidFilter`, `limitExceeded` (Programmfehler, werden geloggt) und `staleHandle` bei Detailabfragen. Abfragen einer beendeten Sitzung fallen unter die Regel für fremde Sitzungen (verworfen und gezählt); der frühere Code `sessionEnded` ist gestrichen (ADR-032, L-9; nie umgesetzt).
 - **Leser im Renderer:** prüft alle Längenangaben des Kopfs gegen `byteLength` des Puffers, bevor er Sichten anlegt.
 - **Tabellen in Phase 2:** keine fachlichen (Flüge, Personal und Finanzen folgen ab 3.6 und 5.6); 2.7 liefert eine Test-Tabelle für Debug-Panel und Leistungstest. Neue Tabellen und Spalten sind additiv.
 - **Umsetzung (Schritt 2.7, `core/src/query.rs`):** Test-Tabelle `debugPersons` aus dem Schnappschuss des zuletzt übergebenen Bildes mit den Spalten `handle` (8 Byte), `x`, `y` (f32), `floor` (i8), `heading` (u8), `state` (u16, Wörterbuch: walking, stairs, arrived, unreachable); Filter `eq|ne|lt|le|gt|ge` mit endlichem Zahlwert; Tabellen- und Spalten-IDs als Text, damit unbekannte mit `unknownTable`/`unknownColumn` beantwortet werden. Antworten `queryResult { session, id, buf | dictionary | detail }` und `queryError { session, id, code, textKey }`. Kernseitig 1,7–1,9 ms für 10.000 Zeilen mit Fenster 1.000 (Container). Der Renderer hält je Panel höchstens eine Tabellenabfrage unterwegs.
@@ -391,8 +407,8 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 
 - **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021; bestätigt durch die Umsetzung in 2.4 (2026-10-18, ADR-025)
 
-- **Anbieter:** Inhalte & Mods. **Konsument:** Takt & Weltzustand.
-- **Aufbau eines Pakets:** ein Ordner mit `manifest.json` und Inhaltsdateien je Art in Unterordnern (`aircraft/`, `airlines/`, `objects/`, `vehicles/`, `research/`, `lang/`); Format JSON (UTF-8, ohne Kommentare). Grafiken des Basispakets entstehen in der Build-Pipeline (ADR-008, 2.10); Grafiken und Töne in Mods regelt 6.1.
+- **Anbieter:** Inhalte & Mods. **Konsument:** Takt & Weltzustand; über S-8 und S-6 die Oberfläche (`packs.list`) und die Lokalisierung (`lang.*`); über S-7 Oberfläche und Spielfeld (Katalog, ab 3.1).
+- **Aufbau eines Pakets:** ein Ordner mit `manifest.json` und Inhaltsdateien je Art in Unterordnern (`aircraft/`, `airlines/`, `objects/`, `vehicles/`, `research/`, `lang/`); Format JSON (UTF-8, ohne Kommentare). Grafiken des Basispakets entstehen in der Build-Pipeline (ADR-008, 2.10); ein Bild im Atlas trägt als Namen die volle ID des Objekts (`base:bench`), ein Objekt ohne Bild zeigt eine neutrale Ersatzgrafik (ADR-032, L-4). Grafiken und Töne in Mods regelt 6.1.
 - **Manifest:** `id` (`[a-z0-9_-]{3,64}`), `name`, `version` (SemVer), `format` (ganze Zahl, Schema-Version), `game` (unterstützte Spielversionen als SemVer-Bereich), `dependencies` (`[{ id, version }]`).
 - **Einträge:** jede Inhaltsdatei enthält eine Liste von Einträgen mit `id`; die volle ID lautet `paket:eintrag`. Maße in Metern, Zeiten in Spielsekunden, Geschwindigkeiten in Zellen je Spielsekunde (ADR-020). Unbekannte Felder sind ein Fehler.
 - **Konflikte:** Doppelte volle ID ist ein Fehler. Ein Paket ändert Einträge eines anderen nur ausdrücklich über `replaces: "paket:eintrag"` und nur, wenn es von diesem Paket abhängt. Ladereihenfolge: Abhängigkeiten zuerst, sonst die vom Spieler gewählte Reihenfolge.
@@ -415,16 +431,16 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
   - **Fehlerstellen:** Fehler der Stufe 1 und 2 nennen Datei, Zeile, Spalte und JSON-Pfad (Stufe 2 über einen zusätzlichen Lauf der Vorprüfung, nur für Dateien mit Fehlern); die Spalte zählt nach einem Byte-Order-Mark ab dem Zeichen danach. Fehler auf Paketebene (`duplicatePack`, `dependency*`, `limitExceeded` für Pakete) nennen nur Paket und ggf. `manifest.json`. Pfade und Versionsbereiche in Fehlern sind auf 512 Zeichen gekürzt.
   - **Harte Links und Schreibweise:** Unter Unix wird eine Datei mit weiteren harten Links abgewiesen (`invalidPath`); unter Windows bietet `std` keine Linkzahl (Restrisiko, `docs/research/2.4-getrennte-pruefung.md`). `manifest.json` und die Endung `.json` gelten nur in genau dieser Schreibweise, auf allen Plattformen; `.JSON` ist `unexpectedEntry`. Ordner mit mehr als 10.000 Einträgen werden nicht aufgezählt (`limitExceeded`). Die ID `base` ist dem Basispaket vorbehalten. Der Vergleich mit `game` nutzt die Spielversion ohne Vorabkennung.
   - **Inhaltsart `lang/` (Schritt 2.6, ADR-031):** Datei `{ "$schema"?, "languages": [Einträge] }`; Eintrag `{ "id", "name"?, "texts": { Schlüssel: Text } }`. `id` ist der Sprachcode (`[a-z]{2,3}`, optional `-[a-z0-9]{2,8}`, z. B. `de`, `pt-br`); mehrere Pakete tragen zur selben Sprache bei, `name` muss die Sprache in mindestens einem Paket benennen. Schlüssel `[A-Za-z0-9_.-]{1,128}` (Großbuchstaben wie in `save.error.checksumMismatch`), Text höchstens 4.096 Zeichen; jeder Sprach-Eintrag und jeder Text zählt als Eintrag (Grenze 100.000 je Paket; Sprach-Einträge seit Befund 1 der getrennten Prüfung von 2.6). Derselbe Schlüssel zweimal in einer Sprache ist `duplicateId` für das später geladene Paket; Überschreiben fremder Texte folgt in 6.1. Schema-Datei `content/schema/lang.schema.json`. Umsetzung 2.6a: `core/src/datapack/languages.rs` (`Languages`, `LanguageInfo` als erzeugter Typ), Ergebnis `LoadOutcome.languages` getrennt vom Katalog der Simulation; ein Paket mit Fehlern trägt keine Texte bei; Brücke `Core.languages()`/`Core.texts(code)` (Texte als Paare `[Schlüssel, Text]`, der Hauptprozess baut ein Objekt ohne Prototyp; `lang.texts` liefert ein Objekt). Die Basis-Sprachdateien enthalten jeden Schlüssel, den der Kern erzeugt (`text::core_text_keys()`, Test `core/tests/lang.rs`).
-  - **Wann eine Auswahl gilt:** Der Kern lädt die Pakete beim Start des Kern-Prozesses. `packs.setActive` lädt neu; der neue Katalog gilt ab der nächsten Sitzung (neues Spiel, geladener Spielstand, Neuladen, Debug-Szenario), damit ein laufendes Spiel keine Objekte zu entfernten Einträgen behält.
+  - **Wann eine Auswahl gilt:** Der Kern lädt die Pakete beim Start des Kern-Prozesses. `packs.setActive` lädt neu; der neue Katalog gilt ab der nächsten Sitzung (neues Spiel, geladener Spielstand, Neuladen, Debug-Szenario), damit ein laufendes Spiel keine Objekte zu entfernten Einträgen behält. Die Texte (`lang.*`) folgen ab 6.1 ebenfalls der laufenden Sitzung; bis dahin dem zuletzt geladenen Katalog (ADR-032, L-10).
 
 ### Schnittstelle: S-5 Spielstand-Format [BELASTBAR]
 
 - **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021 (Grenzen geändert durch ADR-030); Bestätigung durch Umsetzung in 2.5
 
-- **Anbieter:** Takt & Weltzustand (Inhalt), Plattform (Datei). **Konsument:** dieselben beim Laden.
+- **Anbieter:** Takt & Weltzustand (Inhalt), Plattform (Datei); zwischen beiden S-8. **Konsument:** dieselben beim Laden.
 - **Datei:** Binärcontainer `.oasave` mit Abschnitten:
   1. Kopf: Kennung `OASAVE`, Container-Version, Spielversion, Format-Version des Weltzustands.
-  2. Metadaten (strukturiert, ohne den Weltzustand lesbar – für die Spielstand-Liste): Name, Art (`manual` | `quick` | `auto`), Speicherzeit, Spielzeit (Tick, Tag, Jahr), Flughafenname, Kartengröße, aktive Datenpakete mit Version.
+  2. Metadaten (strukturiert, ohne den Weltzustand lesbar – für die Spielstand-Liste): Name, Art (`manual` | `quick` | `auto`), Speicherzeit, Spielzeit (Tick, Tag, Jahr), Flughafenname, Kartengröße (beides beim neuen Spiel über S-6 `game.new` festgelegt; Kartengröße ab 3.1, Name ab 5.1), aktive Datenpakete mit Version.
   3. Vorschaubild (PNG, vom Hauptprozess per Bildschirmfoto des Fensters erzeugt).
   4. Weltzustand: serde-Serialisierung der Kern-Typen.
   5. Prüfsumme über die Datei (erkennt Beschädigung, kein Manipulationsschutz – Einzelspieler).
@@ -445,16 +461,17 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 
 - **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021 (ergänzt durch ADR-026, ADR-028, ADR-029, ADR-031); Bestätigung durch Umsetzung in 2.7, 2.4, 2.5
 
-- **Anbieter:** Plattform (Hauptprozess, Preload). **Konsument:** Oberfläche.
+- **Anbieter:** Plattform (Hauptprozess, Preload). **Konsument:** Oberfläche; Lokalisierung (`lang.*`, `settings.*`); Benchmark & Leistung (`measure.*`); der Port-Client des Renderers (`onCorePort`).
 - **Form:** Der Preload stellt genau ein Objekt `window.openairside` bereit, nur mit benannten, asynchronen Funktionen (Promise). Kein generischer Dateizugriff, keine Pfade vom Renderer: Spielstände werden über undurchsichtige IDs angesprochen, die der Hauptprozess vergibt; Pakete über ihre Manifest-ID, die kein Pfad ist und gegen die Namensregel und die gefundenen Pakete geprüft wird (ADR-026).
 - **Funktionen in Phase 2:**
   - `app.info()` → Version, Plattform, Datenordner-Anzeige; `app.quit()`.
+  - `game.new(options)` (ab 3.1, ADR-032, L-3) → startet ein neues Spiel im Kern-Prozess über S-8, neue Sitzung (`sessionStarted` auf dem Port); Grundform `{ map: 1536 | 2048 }`, ab 5.1 zusätzlich Flughafenname, Standort und Sandbox; nacheinander mit Spielstand- und Paket-Operationen (`busy`); Fehler wie `saves.load`. Additiv, `apiVersion` bleibt 1.
   - `saves.list()` → Metadaten aller Spielstände (aus Abschnitt 2 der Datei, ohne Weltzustand); `saves.save({ name, kind })`; `saves.load(id)`; `saves.delete(id)`; `saves.preview(id)` → PNG-Bytes des Vorschaubilds (`ArrayBuffer`, höchstens 2 MB) für die `blob:`-URL der Liste (additiv, ADR-028). **Dateinamen erzeugt der Hauptprozess aus einer eigenen ID, nie aus `name`**; `name` ist nur Metadatum (höchstens 64 Zeichen, keine Steuerzeichen).
   - `packs.list()` → gefundene Datenpakete mit Status und Fehlern (S-4); `packs.setActive(ids in Reihenfolge)`. Umsetzung 2.4: `list` liefert die Berichte (`PackReport`, erzeugter Typ) der Auswahl, die ab der nächsten Sitzung gilt; `setActive` nimmt höchstens 256 gültige, verschiedene IDs von gefundenen Paketen des Spielers (das Basispaket ist immer aktiv und zuerst), speichert die Auswahl in `packs-active.json` im Datenordner (Schreiben und Umbenennen) und weist ab mit `invalidArgument`, `unknownPack`, `busy`, `notReady`, `ioError`, `timeout` (60 s) oder `coreExited`. Die Pakete des Spielers liegen im Ordner `packs` des Datenordners; der Hauptprozess legt ihn beim Start an.
   - `settings.get()`, `settings.set(teilweise)` – Einstellungen als erzeugter Typ. Umsetzung 2.6 (ADR-031): `Settings` mit `language` (Sprachcode aus `lang.list`), `autosaveMinutes` (1–60, Standard 10; 60 geschätzt, Überprüfung 5.1), `autosaveCount` (1–20, Standard 5); erster Start mit der Systemsprache (Deutsch → `de`, sonst `en`); Datei `settings.json` im Datenordner (Schreiben und Umbenennen), unlesbar oder ungültig → Standardwerte mit Warnung im Log; `set` prüft jedes Feld, liefert die vollständigen Einstellungen, weist ab mit `invalidArgument` oder `ioError`, ohne `busy`. Ein neues Intervall gilt sofort; bei kleinerer Zahl bleiben vorhandene Autosaves erhalten, die Rotation läuft über `auto-1` … `auto-N`.
-  - `lang.list()` → verfügbare Sprachen `{ code, name, keys }` nach Code sortiert; `lang.texts(code)` → Texte der Sprache, zusammengeführt über alle geladenen Pakete; unbekannter Code → `invalidArgument` (additiv, ADR-031). Beide folgen dem zuletzt geladenen Katalog wie `packs.list`.
+  - `lang.list()` → verfügbare Sprachen `{ code, name, keys }` nach Code sortiert; `lang.texts(code)` → Texte der Sprache, zusammengeführt über alle geladenen Pakete; unbekannter Code → `invalidArgument` (additiv, ADR-031). Beide folgen dem zuletzt geladenen Katalog wie `packs.list`; ab 6.1 der laufenden Sitzung (ADR-032, L-10).
   - `logs.write(level, message)` (gedrosselt, höchstens 100 Einträge je Sekunde; Nachricht höchstens 2.000 Zeichen, Zeilenumbrüche und Steuerzeichen werden maskiert), `logs.openFolder()`. Logdatei mit Rotation (5 Dateien zu je 10 MB).
-  - Ereignisse: `onCorePort(callback)` (Übergabe des `MessagePort`, Abschnitt 0.1), `onCoreExit(callback)` (Kern-Prozess beendet, mit Code und `restarting`: `true`, wenn die Plattform einen neuen Kern-Prozess startet; additiv, ADR-029).
+  - Ereignisse: `onCorePort(callback)` (Übergabe des `MessagePort`, „Gemeinsame Grundlagen", Transportweg), `onCoreExit(callback)` (Kern-Prozess beendet, mit Code und `restarting`: `true`, wenn die Plattform einen neuen Kern-Prozess startet; additiv, ADR-029).
 - **Datenweg Spielstand:** Der Renderer löst nur aus. Der Hauptprozess holt die Bytes vom Kern-Prozess, erzeugt das Vorschaubild und schreibt die Datei; der Weltzustand läuft nie durch den Renderer. Laden umgekehrt.
 - **Prüfung im Hauptprozess:** Jeder IPC-Aufruf prüft den Absender – `event.senderFrame` ist der Hauptframe (keine Unterframes), gehört zum Spielfenster (`webContents.id`) und zeigt genau die gebündelte Startseite (Vergleich mit einem URL-Parser, nicht per Zeichenkettenvergleich; Electron-Sicherheits-Checkliste Punkt 13 und 17) – und die Argumente (Typ, Länge, erlaubte Werte); ungültige Aufrufe werden abgewiesen und geloggt. Navigation, `window.open` und `webview` bleiben gesperrt (`project-context.md` Abschnitt 6).
 - **Port-Übergabe:** `onCorePort` liefert je Laden der Seite genau einmal einen frischen Port; der Port verbindet nur dieses Fenster mit dem Kern.
@@ -464,8 +481,31 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 - **Fehler:** Promise wird abgewiesen mit `{ code, textKey, params }`.
 - **Absturz des Kerns:** Der Hauptprozess meldet `onCoreExit`; die Oberfläche bietet an, den letzten Autosave zu laden (Neustart des Kern-Prozesses durch die Plattform, neue Sitzung). Höchstens 3 Neustarts in 60 Sekunden, danach eine Fehlermeldung mit Verweis auf die Logdatei. Ein Speichervorgang, den der Absturz unterbricht, hinterlässt nur eine temporäre Datei (Aufräumen beim Start).
 - **Versionierung:** `apiVersion` als Konstante im Preload; Preload und Renderer stammen aus demselben Build. Neue Funktionen sind additiv.
-- **Umsetzung Stufe 2.5b (2026-10-19, Festlegungen (a)–(l) im Fahrplan bei 2.5):** Jeder Handler antwortet mit einer Hülle `{ ok, value }` bzw. `{ ok: false, error }` (`app/src/main/platform-error.ts`); der Preload löst sie auf und weist mit dem einfachen Objekt `{ code, textKey, params }` ab. Fehler des Hauptprozesses tragen `platform.error.<code>` (u. a. `busy`, `notReady`, `timeout`, `coreExited`, `ioError`, `diskFull`, `invalidArgument`, `unknownSave`, `untrustedSender`, `invalidAnswer`, `internal`; `measure.*`: `alreadyRunning`, `notStarted`, `notAnObject`, `tooLarge`), Gründe des Kerns gehen unverändert durch (`save.error.<code>`). Unerwartete Ausnahmen werden zu `internal`, ihr Text (er kann Pfade nennen) bleibt im Hauptprozess. Spielstände: Ordner `saves` im Datenordner, Dateien `<ID>.oasave` mit `quick`, `auto-1` … `auto-5`, `m-<16 Hex-Zeichen>` (`app/src/main/saves.ts`); `saves.save` liefert `{ id }`, `saves.load` die Metadaten, `saves.list` Einträge `{ id, state: "ok", gameVersion, meta }` oder `{ id, state: "damaged", error }`, neueste zuerst; `saves.preview` braucht eine vorherige Liste und prüft das Bild im Kern wie beim Laden. Der Hauptprozess spricht mit dem Kern-Prozess über `saves:save`/`saves:load`/`saves:info`/`saves:checkPreview` und `savesAnswer` (`app/src/main/core-status.ts`); Kodieren und Prüfen laufen in der Brücke als napi `AsyncTask` außerhalb des JavaScript-Threads, Schnappschuss und Austausch der Sitzung im Takt-Thread (`SaveLink` in `core/src/runner.rs`). Autosave: der Kern-Prozess zählt laufende Echtzeit (`AutosaveClock`) und meldet `autosave`; der Hauptprozess speichert, sobald keine andere Operation läuft. Logdatei `logs/openairside.log` (`app/src/main/logs.ts`): Zeile mit Zeit, Stufe, Quelle (`main`, `renderer`), maskierte Nachricht; verworfene Einträge des Renderers werden gezählt und gemeldet; `logs.openFolder` öffnet nur den vom Hauptprozess bestimmten Ordner (`shell.openPath`).
+- **Umsetzung Stufe 2.5b (2026-10-19, Festlegungen (a)–(l) im Fahrplan bei 2.5):** Jeder Handler antwortet mit einer Hülle `{ ok, value }` bzw. `{ ok: false, error }` (`app/src/main/platform-error.ts`); der Preload löst sie auf und weist mit dem einfachen Objekt `{ code, textKey, params }` ab. Fehler des Hauptprozesses tragen `platform.error.<code>` (u. a. `busy`, `notReady`, `timeout`, `coreExited`, `ioError`, `diskFull`, `invalidArgument`, `unknownSave`, `untrustedSender`, `invalidAnswer`, `internal`; `measure.*`: `alreadyRunning`, `notStarted`, `notAnObject`, `tooLarge`), Gründe des Kerns gehen unverändert durch (`save.error.<code>`). Unerwartete Ausnahmen werden zu `internal`, ihr Text (er kann Pfade nennen) bleibt im Hauptprozess. Spielstände: Ordner `saves` im Datenordner, Dateien `<ID>.oasave` mit `quick`, `auto-1` … `auto-N` (N = `settings.autosaveCount`, seit 2.6), `m-<16 Hex-Zeichen>` (`app/src/main/saves.ts`); `saves.save` liefert `{ id }`, `saves.load` die Metadaten, `saves.list` Einträge `{ id, state: "ok", gameVersion, meta }` oder `{ id, state: "damaged", error }`, neueste zuerst; `saves.preview` braucht eine vorherige Liste und prüft das Bild im Kern wie beim Laden. Der Hauptprozess spricht mit dem Kern-Prozess über S-8 (`saves:save`/`saves:load`/`saves:info`/`saves:checkPreview` und `savesAnswer`); Kodieren und Prüfen laufen in der Brücke als napi `AsyncTask` außerhalb des JavaScript-Threads, Schnappschuss und Austausch der Sitzung im Takt-Thread (`SaveLink` in `core/src/runner.rs`). Autosave: der Kern-Prozess zählt laufende Echtzeit (`AutosaveClock`) und meldet `autosave`; der Hauptprozess speichert, sobald keine andere Operation läuft. Logdatei `logs/openairside.log` (`app/src/main/logs.ts`): Zeile mit Zeit, Stufe, Quelle (`main`, `renderer`), maskierte Nachricht; verworfene Einträge des Renderers werden gezählt und gemeldet; `logs.openFolder` öffnet nur den vom Hauptprozess bestimmten Ordner (`shell.openPath`).
 - **Sicherheit:** Electron-Härtung nach `project-context.md` Abschnitt 6 unverändert; der Preload ist die einzige Brücke zum Hauptprozess.
+
+### Schnittstelle: S-8 Kern-Prozess-Steuerung (Plattform ↔ Kern-Prozess) [BELASTBAR]
+
+- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-19, ADR-032; beschreibt den in 2.4, 2.5 und 2.6 umgesetzten Stand (`app/src/main/core-status.ts`, `app/src/main/core-host.ts`, Tests `app/src/main/core-status.test.ts`, Rauchtest auf drei Plattformen mit Spielstand, Paket, Sprachwechsel und erzwungenem Absturz des Kern-Prozesses)
+
+- **Anbieter:** Kern-Prozess (Electron-Utility-Prozess mit Brücke, Takt & Weltzustand, Inhalte & Mods). **Konsument:** Plattform (Hauptprozess).
+- **Transport:** `process.parentPort` des Utility-Prozesses bzw. `UtilityProcess.postMessage` im Hauptprozess, Structured Clone; Binärdaten als `Uint8Array`. Keine eigene Version: beide Seiten stammen aus demselben Build (Abschnitt „Versionen im Überblick").
+- **Prüfung:** Der Hauptprozess prüft jede Nachricht des Kern-Prozesses (Typ, Felder, Grenzen; `parseCoreHostMessage`), der Kern-Prozess jede Anfrage (`parseSavesRequest`, `parsePackRequest`, `parseAutosaveInterval`); unbekannte oder ungültige Nachrichten werden verworfen, eine Spielstand-Anfrage mit lesbarer `request`, aber ungültigen Feldern wird mit `invalidArgument` beantwortet, eine unpassende Antwort des Kern-Prozesses mit `invalidAnswer` an den Aufrufer gemeldet. Berichte des Kerns (`PackReport`, `LanguageInfo`, Spielstand-Antworten) prüft der Hauptprozess wie Eingaben, bevor er sie an den Renderer gibt.
+- **Start:** Der Hauptprozess startet den Kern-Prozess mit den Schaltern der Befehlszeile (Modul Plattform) und zuletzt `--base-pack=`, `--user-packs=`, `--active-packs=` (Auswahl aus `packs-active.json`); die Paket-Schalter gewinnen.
+- **Kern-Prozess → Hauptprozess:**
+  - `ready { info: CoreInfo, packs: PackReport[], languages: LanguageInfo[] }` – einmal nach dem Start; `error { message }` – nicht behebbarer Fehler beim Start (Zustand `failed`); der Text bleibt im Hauptprozess (Status des Kern-Prozesses) und geht nicht an den Renderer. Nach `ready` schickt der Hauptprozess das Autosave-Intervall.
+  - `packs { request, packs, languages }` bzw. `packsError { request, message }` – Antwort auf `packs:setActive`.
+  - `savesAnswer { request, ok: true, value }` bzw. `{ request, ok: false, error: Reason }` – Antwort auf `saves:*` und `lang:texts`.
+  - `autosave {}` – ein Autosave ist fällig (Uhr `AutosaveClock` im Kern-Prozess); der Hauptprozess speichert, sobald keine andere Operation läuft.
+- **Hauptprozess → Kern-Prozess:**
+  - `port` mit einem `MessagePort` je geladener Seite (Transport von S-1, S-2, S-3, S-7); ein neuer Port schließt den vorigen.
+  - `packs:setActive { request, ids }` (S-6 `packs.setActive`).
+  - `saves:save { request, name, kind, savedAt, preview }`, `saves:load { request, bytes }`, `saves:info { request, files: { prefix, size }[] }`, `saves:checkPreview { request, png }` (S-5, S-6 `saves.*`); `lang:texts { request, code }` (S-6 `lang.texts`).
+  - `autosave:interval { minutes }` (S-6 `settings.autosaveMinutes`, gilt sofort).
+  - ab 3.1: Start eines neuen Spiels für S-6 `game.new` (Form mit 3.1, additiv; ADR-032, L-3).
+- **Zuordnung:** `request` ist eine fortlaufende Zahl des Hauptprozesses; eine späte Antwort auf eine frühere Anfrage (nach Zeitablauf) wird nicht für die aktuelle gehalten. Zeitgrenzen im Hauptprozess: Pakete 60 s, Spielstände und Texte 120 s, danach `timeout`; endet der Kern-Prozess, werden offene Anfragen mit `coreExited` beendet (S-6).
+- **Grenzen:** Die Grenzen von S-5 (Spielstand), S-4 (Pakete) und S-6 (Argumente) gelten unverändert; S-8 fügt keine eigenen hinzu und reicht nur geprüfte Werte weiter.
+- **Versionierung:** neue Nachrichtenarten sind additiv; Änderung oder Entfernung einer bestehenden ist eine Vertragsänderung (Kategorie 5).
 
 <!-- ANCHOR:datenfluss -->
 ## 5. Datenfluss
@@ -591,7 +631,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 - **Kern als WebAssembly mit mehreren Threads:** derzeit nur mit Nightly-Rust baubar, 1,37–1,50 × langsamer als nativ; nicht endgültig verworfen, sondern zurückgestellt: Neubewertung in Fahrplan-Schritt Q.2 – siehe ADR-009
 
 <!-- ANCHOR:reifegrad-uebersicht -->
-## 9. Reifegrad-Übersicht (Stand vom 2026-10-19, nach Schritt 2.6)
+## 9. Reifegrad-Übersicht (Stand vom 2026-10-19, nach Schritt 2.11)
 
 | Bestandteil | Reifegrad | Seit | Validiert durch / wartet auf |
 |---|---|---|---|
@@ -603,7 +643,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Datenmodell und Parallelisierung im Kern | BELASTBAR | 2026-10-13 | ADR-010; Leistungsnachweis 1.5 (Schritt 0,4–0,8 ms bei 10.000 Personen), ADR-014; Weltmaßstab, Blöcke und Wegenetze nach ADR-020 (Messung 2.8); Block-Speicherung bestätigt durch Umsetzung und Benchmark in 2.3 (101 MB, 1,1–1,2 s für 64 Ziele auf 4 vCPU) |
 | Wegfindung per Wegweiser-Prinzip (ADR-004, ADR-010, ADR-013) | BELASTBAR | 2026-10-13 | Spike 1.2; Leistungsnachweis 1.5 mit 768² × 5 auf Referenz-PC und Mac, ADR-014; Luftseite im Raster, Speicherung in Blöcken (ADR-020); offen: Feinwege (vor 3.3) |
 | S-1 Zustandspuffer | BELASTBAR | 2026-10-13 | Spike 1.3 auf Referenz-PC (Windows, 60 Bilder/s) und Mac M3 Pro (120 Bilder/s); Linux in 7.2 (ADR-011) |
-| S-2 Befehlskanal, S-3 Ereignisstrom, S-7 Abfrage | BELASTBAR | 2026-10-13 | ADR-021 (Entwurf 2.9, getrennte Prüfung); S-2 und S-3 im Kern umgesetzt in 2.2 (Tests `core/tests/commands.rs`, `time.rs`); Anbindung an den Port und S-7 umgesetzt in 2.7 (Tabellenabfrage 1.000 Zeilen im Median 1,6–3,8 ms gemessen) |
+| S-2 Befehlskanal, S-3 Ereignisstrom, S-7 Abfrage | BELASTBAR | 2026-10-13 | ADR-021 (Entwurf 2.9, getrennte Prüfung), fortgeschrieben durch ADR-032 (Sammelprüfung 2.11: Katalog, Parameter `{ key }`, Wörterbuch, `sessionEnded` gestrichen); S-2 und S-3 im Kern umgesetzt in 2.2 (Tests `core/tests/commands.rs`, `time.rs`); Anbindung an den Port und S-7 umgesetzt in 2.7 (Tabellenabfrage 1.000 Zeilen im Median 1,6–3,8 ms gemessen) |
 | Modul Welt & Bau (Grundraster) | BELASTBAR | 2026-10-14 | Umsetzung 2.3 (Regel-007), Wegweiser gleich dichter Referenz, Benchmark im CI-Job „Kern-Benchmark“ (ADR-023); Bauen mit Wirkung 3.1 |
 | Modul Brücke | BELASTBAR | 2026-10-15 | Umsetzung 2.7 (Regel-007, ADR-024), Bildformat S-1 mit Dreifachpuffer, Port-Protokoll; Messung 2.7 auf Mac M3 Pro und Referenz-PC am 2026-10-15, `docs/research/2.7-messung.md`: 180 Ticks/s mit 10.000 Personen, Bild an der Grenze des Bildschirms |
 | Modul Plattform | BELASTBAR | 2026-10-15 | Umsetzung 2.7 (Regel-007), Härtung durch Tests belegt, Rauchtest auf drei Plattformen, gepackte Programme auf Mac und Windows gemessen; Linux auf echter Hardware 7.2 (ADR-011) |
@@ -612,7 +652,9 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Modul Inhalte & Mods (Lader) | BELASTBAR | 2026-10-18 | Umsetzung 2.4 (Regel-007, ADR-025, ADR-026): Lader mit Grenzen, Pfadprüfung und zweistufiger Prüfung, 26 Integrationstests mit fehlerhaften Paketen (Junctions unter Windows in der CI), Rauchtest mit Mod-Paket auf drei Plattformen, getrennte Prüfung mit Erledigung aller Befunde (`docs/research/2.4-getrennte-pruefung.md`); Restrisiken dort; Mod-Verwaltung 6.1 |
 | S-5 Spielstand-Format | BELASTBAR | 2026-10-13 | ADR-021, ADR-027, ADR-030; bestätigt durch die Umsetzung in 2.5 (`core/tests/savegame_roundtrip.rs`: gleiche Zustands-Prüfsumme nach Laden, auch während einer Neuberechnung; beschädigte und manipulierte Dateien ohne Absturz; Rauchtest auf drei Plattformen; getrennte Prüfung `docs/research/2.5-getrennte-pruefung.md`); Grenzen nachmessen in 4.1 |
 | Modul Lokalisierung | BELASTBAR | 2026-10-19 | Umsetzung 2.6 (Regel-007, ADR-031): Sprachpakete `lang/` im Lader mit Grenzen und Tests (`core/tests/lang.rs`), Deutsch und Englisch mit Abdeckung aller Schlüssel, Sprachwechsel ohne Neustart und Sprachpaket aus dem Ordner `packs` im Rauchtest auf drei Plattformen, getrennte Prüfung (`docs/research/2.6-getrennte-pruefung.md`); Gesamtgrenze über alle Pakete in 6.1 |
-| S-6 Plattform-API | BELASTBAR | 2026-10-13 | ADR-021, ADR-026, ADR-028, ADR-029, ADR-031; Grundgerüst umgesetzt in 2.7 (`app.*`, `measure.*`), `packs.*` in 2.4, Fehlerform, `saves.*`, `logs.*` und `onCoreExit` mit `restarting` in 2.5 (Rauchtest mit erzwungenem Absturz des Kern-Prozesses); `settings.*` und `lang.*` in 2.6 (ADR-031, Rauchtest mit Sprachwechsel und Sprachpaket) |
+| S-6 Plattform-API | BELASTBAR | 2026-10-13 | ADR-021, ADR-026, ADR-028, ADR-029, ADR-031, ADR-032 (`game.new` ab 3.1); Grundgerüst umgesetzt in 2.7 (`app.*`, `measure.*`), `packs.*` in 2.4, Fehlerform, `saves.*`, `logs.*` und `onCoreExit` mit `restarting` in 2.5 (Rauchtest mit erzwungenem Absturz des Kern-Prozesses); `settings.*` und `lang.*` in 2.6 (ADR-031, Rauchtest mit Sprachwechsel und Sprachpaket) |
+| S-8 Kern-Prozess-Steuerung | BELASTBAR | 2026-10-19 | ADR-032: beschreibt den in 2.4–2.6 umgesetzten Kanal Hauptprozess ↔ Kern-Prozess (Prüfung beider Seiten, Tests `core-status.test.ts`, Rauchtest auf drei Plattformen) |
+| Weltdarstellung im Spielfeld (Raster, Bauten, Zonen) | OFFEN | 2026-10-19 | ADR-032 (L-1): Weg in das Spielfeld im Entwurfsschritt 3.8 vor 3.1 |
 | Oberfläche mit großen Tabellen | BELASTBAR | 2026-10-13 | Spike 1.4 auf Referenz-PC (Windows) und Mac M3 Pro: virtualisiert bis 5.000 sortierte Zeilen ohne Einfluss auf die Bildrate, bis 20.000 bei wenigen Aktualisierungen/s; Bedingungen: Virtualisierung Pflicht; Abfrage-Schnittstelle S-7 mit Sortierung im Kern (ADR-021), fachliche Tabellen ab 3.6 (ADR-016); Linux in 7.2 (ADR-011) |
 | Verpackung für drei Plattformen | VORLÄUFIG | 2026-10-13 | Schritt 1.6 erledigt (Bau und Start auf allen drei Plattformen); bleibt vorläufig: unsigniert (Entscheidung 7.1), Linux-Sandbox (7.2) |
 | Verkehr, Blockadevermeidung | VORLÄUFIG | 2026-10-13 | Erkundung vor Umsetzung des Verkehrs |

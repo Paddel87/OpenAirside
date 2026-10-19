@@ -24,6 +24,52 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 15:30 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 16 Minuten seit `[SESSIONSTART]` 15:14 UTC.
+- **Bearbeitet:** Übernahme des Sessionende-Commits `1816efb` auf `erkundung/2-11-sammelpruefung-vertragssaetze`; Schritt 2.11 vollständig: Prüfliste (81 Sätze), Vorlage, Freigabe „Alle Empfehlungen“, ADR-032, Fortschreibung von `architecture.md` (Modul-Karte, Grundlagen, S-1 bis S-7, neu S-8), Landeplätze im Fahrplan, Reflexion Reaktiv-Quote mit Kenntnisnahme.
+- **Erreicht:** 2.11 `[ERLEDIGT]`; S-8 `[BELASTBAR]`; Weltdarstellung `[OFFEN]` mit Entwurfsschritt 3.8. Commits `aa0a7da`, `ae2f751`, `aca6ac5` plus dieser Sessionende-Commit; CI auf `ae2f751` grün (Lauf 39276970557), auf `aca6ac5` gestartet (Lauf 39278162416); PR nach Anweisung „Merge bei grün“.
+- **Offen geblieben:** ungemergte fremde Branches und die alten Branches `feat/2-5-spielstand-mit-autosave` und `feat/2-6-lokalisierung` (gemergt, nicht weiterverwendet; Löschen nur auf Anweisung). Die Mermaid-Modul-Karte wurde nur per markdownlint geprüft, nicht gerendert; Sichtprüfung auf GitHub empfohlen.
+- **Nächster Schritt:** 2.10 (Stilleitfaden, SVG-Pipeline und Messung der Darstellung; Bildname = Objekt-ID nach ADR-032) in einer neuen Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 15:13 und 15:29 UTC); 2.11 empfiehlt die Entscheidungs-Klasse, 0 Schritte oberhalb der Empfehlung (Logbuch- und README-Pflege als Routine-Teilarbeit nicht abgegeben, Probelauf offen).
+- **Kontextgröße:** über die Laufzeitumgebung nicht feststellbar (`get_session` meldet `used_tokens` 0); kein Hinweis möglich.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 15:29 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf.
+- **Archivierung:** Logbuch über 800 Zeilen, alle Einträge aus Oktober 2026 – nichts auszulagern (wie 2026-10-19 12:48); Verdichtung mit dem `[PHASEN-WECHSEL]` nach Phase 2.
+- **Drift-Prüfung:** README nachgezogen (Phase, Architektur-Reife, Skizze mit Plattform ↔ Kern, Nächste Schritte). ADR-032 verweist auf vorhandene Schritte (2.10, 2.11, 3.1, 3.6, 3.8, 5.1, 5.6, 6.1). Reifegrade S-8 und Weltdarstellung passen zu ADR-032. Modul-Liste unverändert (Benchmark & Leistung mit TypeScript-Teil ist dasselbe Modul). FR-010 (bei 3.8 vorbereitend) existiert. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 7 / 10 (ADR-023 bis ADR-032) stimmt mit den Tags. Phase 2: 11 Schritte bei Plan 10 (unter der Schwelle); Phase 3 noch ohne festgehaltenen Schrittplan (Verfeinerung vor Phasenbeginn). Größen: `project-context.md` 369 Zeilen.
+
+### 2026-10-19 15:28 (UTC) – [BEOBACHTUNG]
+
+- **Uhrzeit geschätzt statt gemessen:** Die Vorlage von 2.11 stand zunächst mit 15:50 UTC in Logbuch, Fahrplan und ADR-032; tatsächlich 15:19 UTC (Commit `ae2f751`). Beim Fortschreiben bemerkt und korrigiert. Lehre: Zeitangaben in Einträgen immer mit `date -u` holen.
+- **Hooks beim ersten Commit nicht installiert:** `ae2f751` entstand vor `pre-commit install` (Container ohne Einrichtung); die Hooks liefen danach über die drei Dateien grün (markdownlint und allgemeine Prüfungen). Seitdem aktiv.
+
+### 2026-10-19 15:27 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Neu `[BELASTBAR]`:** S-8 Kern-Prozess-Steuerung (Plattform ↔ Kern-Prozess) per ADR-032; beschreibt den in 2.4–2.6 umgesetzten, mit Tests und Rauchtest auf drei Plattformen geprüften Kanal, keine Verhaltensänderung.
+- **Neu `[OFFEN]`:** Weltdarstellung im Spielfeld (Raster, Bauten, Zonen) – Entwurfsschritt 3.8 vor 3.1.
+- S-1 bis S-7 bleiben `[BELASTBAR]`, fortgeschrieben durch ADR-032.
+
+### 2026-10-19 15:24 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-032** `[REAKTIV]` „Funde der Sammelprüfung der Vertragssätze S-1 bis S-7": freigegeben vom Projektinhaber per Auswahl „Alle Empfehlungen" (L-1 Entwurf 3.8, L-2 S-7 `catalog`, L-3 S-6 `game.new`, L-4 Bildname = Objekt-ID, L-5 `ParamValue { key }`, L-6 Wörterbuch `{ key }`/`{ text }` und `tick` im Detail, L-7 Debug-Vermerk in 5.6, L-8 S-8, L-9 `sessionEnded` gestrichen, L-10 Texte der laufenden Sitzung in 6.1; Modul-Karte K-1 … K-5; R-1 … R-8). Reaktiv-Quote 7 / 10, Reflexion im Fahrplan, Kenntnisnahme ausstehend. Schritt 2.11 damit erledigt.
+
+### 2026-10-19 15:19 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 2.11, Sammelprüfung:** Prüfliste `docs/research/2.11-sammelpruefung.md` (81 Sätze, 41 ohne Fund). Vorgelegt: 10 Lücken mit Optionen (Kategorie 5, für L-8 und die Modul-Karte Kategorie 1), 5 Kartenfunde, 8 redaktionelle Funde; Empfehlungen und Landeplätze im Fahrplan bei 2.11. Auffälligster Kartenfund K-1: die Mermaid-Kennung `ABF` steht doppelt, Abfrage und Abfertigung & Gepäck sind ein Knoten. Ein gemeinsamer ADR wäre `[REAKTIV]` (14-Tage-Regel gegenüber ADR-021), Quote 7 / 10.
+
+### 2026-10-19 15:14 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 14:44 UTC plus `[BEOBACHTUNG]` 14:51 (Merge PR #23, `987c2ee`). Der Sessionende-Commit `1816efb` nach `project-context.md` Abschnitt 10 auf den neuen Branch `erkundung/2-11-sammelpruefung-vertragssaetze` vom aktuellen `main` übernommen (`aa0a7da`); `feat/2-6-lokalisierung` wird nicht weiterverwendet.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht). Für 2.11 zusätzlich Architektur Abschnitte 3 und 4 vollständig (Vertiefung: Gegenstand der Prüfung).
+- **Geplant für diese Session:** Schritt 2.11 (Sammelprüfung der Vertragssätze S-1 bis S-7, Maßnahme 10): Prüfliste in `docs/research/2.11-sammelpruefung.md`, Lücken gesammelt als `ENTSCHEIDUNG ERFORDERLICH`; ADR und Doku erst nach Freigabe.
+- **Vorabprüfung:** S-1 bis S-7 `[BELASTBAR]`; 2.11 ist Entwurfsschritt (ERKUNDUNG-Kontext) ohne Code; Eingangskriterium 2.6 erledigt. Reaktiv-Quote 6 / 10, Maßnahmen (7)–(10) gelten. Befund 2 aus 2.6 (Gesamtgrenze über alle Pakete) hat den Landeplatz 6.1 und wird hier nicht gelöst.
+- **Modus/Werkzeug:** semi-autonom, Claude Code in einer Cloud-Session (Container ohne eingerichtete Werkzeuge; Einrichtung nur, falls Funde Code berühren).
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` laut `get_session` 15:13 UTC → **Entscheidungs-Klasse**; entspricht der Empfehlung für 2.11.
+
+### 2026-10-19 14:51 (UTC) – [BEOBACHTUNG]
+
+- **Merge:** PR #23 (Schritt 2.6) auf Anweisung des Projektinhabers („Erstelle den PR für 2.6, merge bei grün“) nach `main` gemergt, Merge-Commit `987c2ee`; vorher grün: Push-Lauf 39271631746, PR-Läufe CI 39272068681 und Security 39272068679 auf `781b50d`. Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf dem Arbeits-Branch und geht mit dem PR des nächsten Schritts nach `main`.
+
 ### 2026-10-19 14:44 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 1 Stunde 16 Minuten seit `[SESSIONSTART]` 13:28 UTC; Neustart des Arbeitsprozesses gegen 14:05 UTC (zwischen Frage und Antwort), ohne Verlust.

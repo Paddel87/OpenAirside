@@ -120,7 +120,7 @@ Das Spiel ist aufgebaut wie eine Web-Anwendung mit Backend und Frontend, die bei
 - Lokalisierung (TypeScript) – Sprachpakete
 - Benchmark und Leistungsüberwachung (Rust/TypeScript)
 
-**Kommunikationsmuster:** Präsentation → Kern über einen Befehlskanal (Nachrichten); Kern → Präsentation über einen Zustandspuffer im Kern-Prozess, der je Bild per `MessagePort` an den Renderer übertragen wird (ADR-009), plus einen Ereignisstrom für Benachrichtigungen. Präsentation ↔ Plattform über die abgesicherte Electron-Schnittstelle (Preload). Details und Reifegrade in `architecture.md`.
+**Kommunikationsmuster:** Präsentation → Kern über einen Befehlskanal (Nachrichten); Kern → Präsentation über einen Zustandspuffer im Kern-Prozess, der je Bild per `MessagePort` an den Renderer übertragen wird (ADR-009), plus einen Ereignisstrom für Benachrichtigungen. Präsentation ↔ Plattform über die abgesicherte Electron-Schnittstelle (Preload, S-6); Plattform ↔ Kern-Prozess über die Nachrichten des Utility-Prozesses (S-8, ADR-032). Details und Reifegrade in `architecture.md`.
 
 <!-- ANCHOR:externe-abhaengigkeiten -->
 ## 5. Externe Abhängigkeiten
