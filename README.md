@@ -30,11 +30,11 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 2: Fundament (UMSETZUNG), Schritte 2.1 (Projektgerüst und CI), 2.8 (Weltmaßstab und Zeitmodell, ADR-020), 2.9 (Schnittstellenverträge, ADR-021), 2.2 (Takt, Zeitsteuerung, Befehle und Ereignisse im Kern, ADR-022) 2.3 (Raster in Blöcken und Wegweiser im Kern, ADR-023), 2.7 (Brücke und Plattformschicht, ADR-024) 2.4 (Datenpakete mit Lader und Schema, ADR-025, ADR-026) 2.5 (Spielstände mit Autosave, ADR-027 bis ADR-030) und 2.6 (Lokalisierung und Einstellungen, ADR-031) abgeschlossen; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
+- **Projektphase:** Phase 2: Fundament (UMSETZUNG), Schritte 2.1 (Projektgerüst und CI), 2.8 (Weltmaßstab und Zeitmodell, ADR-020), 2.9 (Schnittstellenverträge, ADR-021), 2.2 (Takt, Zeitsteuerung, Befehle und Ereignisse im Kern, ADR-022) 2.3 (Raster in Blöcken und Wegweiser im Kern, ADR-023), 2.7 (Brücke und Plattformschicht, ADR-024) 2.4 (Datenpakete mit Lader und Schema, ADR-025, ADR-026) 2.5 (Spielstände mit Autosave, ADR-027 bis ADR-030) 2.6 (Lokalisierung und Einstellungen, ADR-031) und 2.11 (Sammelprüfung der Schnittstellenverträge, ADR-032) abgeschlossen; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-19
-- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern, Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009), Datenmodell im Kern (ADR-010; Weltmaßstab 2 m je Zelle mit Luftseite im Raster und Speicherung in Blöcken nach ADR-020), Wegweiser-Prinzip und Leistung von Simulation und Zustandsübergabe BELASTBAR seit dem Leistungsnachweis (ADR-014; Linux-Messung in 7.2); Leistung der Darstellung mit echten Grafiken und mit Fahrzeugen und Flugzeugen VORLÄUFIG (ADR-017); Bauaktion im nächsten Bild VORLÄUFIG; Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Schnittstellenverträge für Befehle, Ereignisse, Abfragen, Datenpakete, Spielstände und Plattform BELASTBAR (ADR-021); Takt des Simulationskerns BELASTBAR (Umsetzung 2.2); Grundraster der Welt BELASTBAR (Umsetzung 2.3); Brücke zwischen Kern und Oberfläche sowie Plattformschicht BELASTBAR (Umsetzung und Messung 2.7); Lader für Datenpakete BELASTBAR (Umsetzung 2.4); Spielstand-Format durch Umsetzung bestätigt (2.5); Lokalisierung BELASTBAR (Umsetzung 2.6)
+- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern, Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009), Datenmodell im Kern (ADR-010; Weltmaßstab 2 m je Zelle mit Luftseite im Raster und Speicherung in Blöcken nach ADR-020), Wegweiser-Prinzip und Leistung von Simulation und Zustandsübergabe BELASTBAR seit dem Leistungsnachweis (ADR-014; Linux-Messung in 7.2); Leistung der Darstellung mit echten Grafiken und mit Fahrzeugen und Flugzeugen VORLÄUFIG (ADR-017); Bauaktion im nächsten Bild VORLÄUFIG; Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Schnittstellenverträge für Befehle, Ereignisse, Abfragen, Datenpakete, Spielstände und Plattform BELASTBAR (ADR-021, fortgeschrieben durch ADR-032), Steuerung des Kern-Prozesses durch die Plattform BELASTBAR (ADR-032); Weg der Bauten in die Darstellung OFFEN (Entwurf 3.8); Takt des Simulationskerns BELASTBAR (Umsetzung 2.2); Grundraster der Welt BELASTBAR (Umsetzung 2.3); Brücke zwischen Kern und Oberfläche sowie Plattformschicht BELASTBAR (Umsetzung und Messung 2.7); Lader für Datenpakete BELASTBAR (Umsetzung 2.4); Spielstand-Format durch Umsetzung bestätigt (2.5); Lokalisierung BELASTBAR (Umsetzung 2.6)
 - **Aktive Blocker:** 0
 
 ## Quick Start
@@ -67,6 +67,7 @@ graph LR
   K -->|Zustandspuffer, Ereignisse| P
   D[Datenpakete & Mods] --> K
   P -->|Preload-API| PL[Plattform<br/>Dateien, Spielstände]
+  PL <-->|Start, Spielstände, Pakete| K
 ```
 
 **Module (Auswahl):**
@@ -92,8 +93,8 @@ Sprache und Einstellungen: Die Oberfläche gibt es auf Deutsch und Englisch, bei
 
 ## Nächste Schritte
 
-- 2.11: Sammelprüfung der Schnittstellenverträge (Maßnahme 10)
 - 2.10: Stilleitfaden, SVG-Pipeline und Messung der Darstellung
+- Phase 3 beginnt mit den Entwurfsschritten 3.7 (Personengruppen) und 3.8 (Weltdarstellung im Spielfeld)
 - Phase 2 insgesamt: lauffähiger, leerer Spielrahmen mit grüner CI auf drei Plattformen
 
 → Vollständiger Fahrplan: [`docs/fahrplan.md`](docs/fahrplan.md)

@@ -33,7 +33,7 @@
 | 018 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, STACK | Build/Deploy, Externe Abhängigkeiten | Projektgerüst, CI-Gates und napi-Versionen für Phase 2 |
 | 019 | 2026-10-13 | Aktiv | REAKTIV | STACK | Lizenz/Compliance | Erlaubte Lizenzen um BlueOak-1.0.0, 0BSD, Python-2.0 und WTFPL erweitert |
 | 020 | 2026-10-13 | Aktiv | REAKTIV | DATENMODELL, PERFORMANCE | Datenmodell | Weltmaßstab 2 m je Zelle, Luftseite im Raster, Wegweiser in Blöcken, Zeitmodell |
-| 021 | 2026-10-13 | Aktiv (S-6 für Pakete geändert durch ADR-026, um `saves.preview` ergänzt durch ADR-028, `onCoreExit` durch ADR-029, `lang.*` und Modul-Karte durch ADR-031; S-5-Grenzen geändert durch ADR-030) | ERKENNTNIS | SCHNITTSTELLE, SECURITY | API-Verträge, Architektur, Sicherheit | Schnittstellenverträge S-2 bis S-7 |
+| 021 | 2026-10-13 | Aktiv (S-6 für Pakete geändert durch ADR-026, um `saves.preview` ergänzt durch ADR-028, `onCoreExit` durch ADR-029, `lang.*` und Modul-Karte durch ADR-031; S-5-Grenzen geändert durch ADR-030; fortgeschrieben und um S-8 ergänzt durch ADR-032) | ERKENNTNIS | SCHNITTSTELLE, SECURITY | API-Verträge, Architektur, Sicherheit | Schnittstellenverträge S-2 bis S-7 |
 | 022 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Kern-Benchmark als CI-Gate und Prüfung der erzeugten TypeScript-Typen |
 | 023 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Wegweiser-Benchmark als Schritt im CI-Job „Kern-Benchmark“ |
 | 024 | 2026-10-14 | Aktiv (Einschränkung auf die Brücke aufgehoben durch ADR-025) | OPERATIV | STACK, SCHNITTSTELLE | Externe Abhängigkeiten | Umwandlung JS ↔ Rust in der Brücke mit napi `serde-json` |
@@ -44,10 +44,11 @@
 | 029 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE | API-Verträge | `onCoreExit` meldet, ob die Plattform den Kern neu startet |
 | 030 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE, SECURITY | API-Verträge, Sicherheit | Obergrenzen des Spielstands auf 512 MB gesenkt |
 | 031 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE, MODUL | API-Verträge, Architektur | Sprachpakete erreichen die Oberfläche über `lang.*` in S-6 |
+| 032 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE, MODUL | API-Verträge, Architektur | Funde der Sammelprüfung der Vertragssätze S-1 bis S-7 |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 6 / 10 über die letzten 10 ADRs (ADR-022 bis ADR-031: ADR-025, ADR-026, ADR-028, ADR-029, ADR-030, ADR-031), 60 % – **über dem Schwellenwert**; gesamt 12 / 31. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-031, 2026-10-19)
+- **Aktueller Wert:** 7 / 10 über die letzten 10 ADRs (ADR-023 bis ADR-032: ADR-025, ADR-026, ADR-028, ADR-029, ADR-030, ADR-031, ADR-032), 70 % – **über dem Schwellenwert**; gesamt 13 / 32. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-032, 2026-10-19)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -128,6 +129,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-029: `onCoreExit` meldet, ob die Plattform den Kern neu startet](decisions/ADR-029.md)
 - [ADR-030: Obergrenzen des Spielstands auf 512 MB gesenkt](decisions/ADR-030.md)
 - [ADR-031: Sprachpakete erreichen die Oberfläche über `lang.*` in S-6](decisions/ADR-031.md)
+- [ADR-032: Funde der Sammelprüfung der Vertragssätze S-1 bis S-7](decisions/ADR-032.md)
 
 ---
 

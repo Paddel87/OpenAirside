@@ -24,7 +24,22 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
-### 2026-10-19 15:50 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+### 2026-10-19 15:28 (UTC) – [BEOBACHTUNG]
+
+- **Uhrzeit geschätzt statt gemessen:** Die Vorlage von 2.11 stand zunächst mit 15:50 UTC in Logbuch, Fahrplan und ADR-032; tatsächlich 15:19 UTC (Commit `ae2f751`). Beim Fortschreiben bemerkt und korrigiert. Lehre: Zeitangaben in Einträgen immer mit `date -u` holen.
+- **Hooks beim ersten Commit nicht installiert:** `ae2f751` entstand vor `pre-commit install` (Container ohne Einrichtung); die Hooks liefen danach über die drei Dateien grün (markdownlint und allgemeine Prüfungen). Seitdem aktiv.
+
+### 2026-10-19 15:27 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Neu `[BELASTBAR]`:** S-8 Kern-Prozess-Steuerung (Plattform ↔ Kern-Prozess) per ADR-032; beschreibt den in 2.4–2.6 umgesetzten, mit Tests und Rauchtest auf drei Plattformen geprüften Kanal, keine Verhaltensänderung.
+- **Neu `[OFFEN]`:** Weltdarstellung im Spielfeld (Raster, Bauten, Zonen) – Entwurfsschritt 3.8 vor 3.1.
+- S-1 bis S-7 bleiben `[BELASTBAR]`, fortgeschrieben durch ADR-032.
+
+### 2026-10-19 15:24 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-032** `[REAKTIV]` „Funde der Sammelprüfung der Vertragssätze S-1 bis S-7": freigegeben vom Projektinhaber per Auswahl „Alle Empfehlungen" (L-1 Entwurf 3.8, L-2 S-7 `catalog`, L-3 S-6 `game.new`, L-4 Bildname = Objekt-ID, L-5 `ParamValue { key }`, L-6 Wörterbuch `{ key }`/`{ text }` und `tick` im Detail, L-7 Debug-Vermerk in 5.6, L-8 S-8, L-9 `sessionEnded` gestrichen, L-10 Texte der laufenden Sitzung in 6.1; Modul-Karte K-1 … K-5; R-1 … R-8). Reaktiv-Quote 7 / 10, Reflexion im Fahrplan, Kenntnisnahme ausstehend. Schritt 2.11 damit erledigt.
+
+### 2026-10-19 15:19 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt 2.11, Sammelprüfung:** Prüfliste `docs/research/2.11-sammelpruefung.md` (81 Sätze, 41 ohne Fund). Vorgelegt: 10 Lücken mit Optionen (Kategorie 5, für L-8 und die Modul-Karte Kategorie 1), 5 Kartenfunde, 8 redaktionelle Funde; Empfehlungen und Landeplätze im Fahrplan bei 2.11. Auffälligster Kartenfund K-1: die Mermaid-Kennung `ABF` steht doppelt, Abfrage und Abfertigung & Gepäck sind ein Knoten. Ein gemeinsamer ADR wäre `[REAKTIV]` (14-Tage-Regel gegenüber ADR-021), Quote 7 / 10.
 
