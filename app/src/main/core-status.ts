@@ -154,6 +154,20 @@ function isBytes(value: unknown): value is Uint8Array {
 /** Most files in one `saves:info` request. */
 export const MAX_INFO_FILES = 1000;
 
+/**
+ * Request number of a message that claims to be a save game request, even
+ * an invalid one: the core host answers it with `invalidArgument` instead
+ * of leaving the main process to its time limit.
+ */
+export function savesRequestNumber(value: unknown): number | undefined {
+  return isRecord(value) &&
+    typeof value.type === "string" &&
+    value.type.startsWith("saves:") &&
+    isRequestNumber(value.request)
+    ? value.request
+    : undefined;
+}
+
 /** Validates a save game request of the main process in the core host. */
 export function parseSavesRequest(value: unknown): SavesRequest | undefined {
   if (!isRecord(value) || !isRequestNumber(value.request)) return undefined;

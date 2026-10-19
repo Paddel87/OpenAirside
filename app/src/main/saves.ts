@@ -21,8 +21,8 @@ export const SAVES_DIR = "saves";
 export const SAVE_EXTENSION = ".oasave";
 /** Suffix of a file being written; renamed when complete (S-5 "Schreiben"). */
 export const TEMP_SUFFIX = ".tmp";
-/** Largest save game file (as `MAX_FILE_BYTES` in the core). */
-export const MAX_FILE_BYTES = 2 ** 30;
+/** Largest save game file (as `MAX_FILE_BYTES` in the core, 512 MB, ADR-030). */
+export const MAX_FILE_BYTES = 2 ** 29;
 /** Bytes of a file read for the list (as `MAX_INFO_BYTES` in the core). */
 export const MAX_INFO_BYTES = 12 + 1 + 64 + 16 + 64 * 1024;
 /** Largest preview image (as `MAX_PREVIEW_BYTES` in the core). */
@@ -31,12 +31,43 @@ export const MAX_PREVIEW_BYTES = 2 * 1024 * 1024;
 export const MAX_NAME_CHARS = 64;
 /** Width of the preview image in pixels (step 2.5, point h). */
 export const PREVIEW_WIDTH = 480;
+/** Files sent to the core process in one `saves:info` request. */
+export const INFO_BATCH = 100;
+/** Largest preview image (as `MAX_PREVIEW_WIDTH`/`HEIGHT` in the core). */
+export const MAX_PREVIEW_SIZE = { width: 1920, height: 1080 } as const;
+
+/**
+ * Size of the preview for a window of `size`: at most
+ * {@link PREVIEW_WIDTH} wide and within {@link MAX_PREVIEW_SIZE}, aspect
+ * kept; `undefined` for a degenerate window (finding 8 of the separate
+ * review: a tall narrow window gave an image the core refuses).
+ */
+export function previewSize(size: {
+  readonly width: number;
+  readonly height: number;
+}): { width: number; height: number } | undefined {
+  if (size.width <= 0 || size.height <= 0) return undefined;
+  const scale = Math.min(
+    1,
+    PREVIEW_WIDTH / size.width,
+    MAX_PREVIEW_SIZE.width / size.width,
+    MAX_PREVIEW_SIZE.height / size.height,
+  );
+  const width = Math.floor(size.width * scale);
+  const height = Math.floor(size.height * scale);
+  return width > 0 && height > 0 ? { width, height } : undefined;
+}
+
 /** Autosave files in rotation; adjustable in step 2.6 (1–20, META-10). */
 export const AUTOSAVE_SLOTS = 5;
 /** Running game time between two autosaves; adjustable in step 2.6. */
 export const AUTOSAVE_INTERVAL_MS = 10 * 60 * 1000;
 /** Id of the single quick save. */
 export const QUICK_ID = "quick";
+/** Most manual save games; more are refused with `limitExceeded`. */
+export const MAX_MANUAL_SAVES = 200;
+/** Most files read for one list; the newest by modification time count. */
+export const MAX_LISTED_FILES = 1000;
 
 const SAVE_ID = /^(?:quick|auto-(?:[1-9]|1\d|20)|m-[0-9a-f]{16})$/;
 const KINDS: ReadonlySet<string> = new Set<SaveKind>(["manual", "quick", "auto"]);
@@ -78,14 +109,36 @@ export function idOfFileName(name: string): string | undefined {
 
 /** Whether `name` is a file left over by an interrupted save. */
 export function isTempFileName(name: string): boolean {
-  return name.endsWith(`${SAVE_EXTENSION}${TEMP_SUFFIX}`);
+  return /\.oasave(?:\.[0-9a-f]{16})?\.tmp$/.test(name);
+}
+
+/**
+ * Temporary file name of a save in progress: random, so that no file
+ * placed in advance under a predictable name is written through.
+ *
+ * @param random 8 random bytes.
+ */
+export function tempFileName(id: string, random: Uint8Array): string {
+  return `${saveFileName(id)}.${hex(random)}${TEMP_SUFFIX}`;
+}
+
+function hex(random: Uint8Array): string {
+  return [...random.subarray(0, 8)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Whether `text` may have at most `max` characters: a cheap upper bound
+ * before counting code points (at most two UTF-16 units each), so that a
+ * huge string from the renderer is refused without walking through it.
+ */
+export function withinChars(text: string, max: number): boolean {
+  return text.length <= max || (text.length <= 2 * max && Array.from(text).length <= max);
 }
 
 /** Checks a name as the core does: at most 64 characters, no control characters. */
 export function isSaveName(value: unknown): value is string {
-  if (typeof value !== "string") return false;
-  const chars = Array.from(value);
-  return chars.length <= MAX_NAME_CHARS && !chars.some(isControl);
+  if (typeof value !== "string" || !withinChars(value, MAX_NAME_CHARS)) return false;
+  return !Array.from(value).some(isControl);
 }
 
 /** Unicode category Cc, as `char::is_control` in Rust. */
@@ -109,27 +162,26 @@ export function parseSaveArgs(value: unknown): { name: string; kind: SaveKind } 
 /**
  * Id for a new save game of `kind`: a fresh random id for a manual save,
  * the single slot for a quick save, and for an autosave the first free
- * slot or else the oldest (damaged files count as oldest).
+ * slot or else the one modified longest ago.
  *
+ * @param modified modification times (ms) of the existing files by id.
  * @param random 8 random bytes for a manual id.
  */
 export function newSaveId(
   kind: SaveKind,
-  entries: readonly SaveEntry[],
+  modified: ReadonlyMap<string, number>,
   random: Uint8Array,
   slots: number = AUTOSAVE_SLOTS,
 ): string {
   if (kind === "quick") return QUICK_ID;
-  if (kind === "manual") {
-    return `m-${[...random.subarray(0, 8)].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
-  }
-  const autos = new Map(entries.filter((e) => /^auto-\d+$/.test(e.id)).map((e) => [e.id, e]));
-  let oldest: { id: string; at: string } | undefined;
+  if (kind === "manual") return `m-${hex(random)}`;
+  // The modification time decides, not `savedAt` from the file content
+  // (finding 11 of the separate review: a placed file could pin a slot).
+  let oldest: { id: string; at: number } | undefined;
   for (let slot = 1; slot <= slots; slot += 1) {
     const id = `auto-${String(slot)}`;
-    const entry = autos.get(id);
-    if (entry === undefined) return id;
-    const at = entry.state === "ok" ? entry.meta.savedAt : "";
+    const at = modified.get(id);
+    if (at === undefined) return id;
     if (oldest === undefined || at < oldest.at) oldest = { id, at };
   }
   return oldest?.id ?? "auto-1";

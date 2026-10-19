@@ -26,6 +26,7 @@ import {
 import { randomBytes } from "node:crypto";
 import {
   appendFileSync,
+  constants as fsConstants,
   mkdirSync,
   readdirSync,
   readFileSync,
@@ -33,7 +34,16 @@ import {
   rmSync,
   statSync,
 } from "node:fs";
-import { mkdir, open, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import {
+  type FileHandle,
+  lstat,
+  mkdir,
+  open,
+  readdir,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -52,7 +62,7 @@ import {
   type SavesAnswer,
   type SavesRequest,
 } from "./core-status.js";
-import { LOG_FILE, LogFile, type LogLevel, LOGS_DIR, parseLogArgs } from "./logs.js";
+import { LOG_FILE, LogFile, type LogLevel, LOGS_DIR, parseLogArgs, RateGate } from "./logs.js";
 import { MeasureRun, MEMORY_INTERVAL_MS, reportFileName } from "./measure.js";
 import {
   ACTIVE_FILE,
@@ -66,20 +76,23 @@ import {
 import { answer, fail, type IpcAnswer, PlatformFailure, platformReason } from "./platform-error.js";
 import {
   idOfFileName,
+  INFO_BATCH,
   isSaveId,
   isTempFileName,
   MAX_FILE_BYTES,
   MAX_INFO_BYTES,
+  MAX_LISTED_FILES,
+  MAX_MANUAL_SAVES,
   newSaveId,
   parseInfoAnswer,
   parseSaveArgs,
   parseSaveMeta,
-  PREVIEW_WIDTH,
+  previewSize,
   type SaveEntry,
   saveFileName,
   SAVES_DIR,
   sortEntries,
-  TEMP_SUFFIX,
+  tempFileName,
   writeErrorCode,
 } from "./saves.js";
 import {
@@ -351,10 +364,20 @@ function trusted(event: IpcMainInvokeEvent): boolean {
  * Registers an S-6 handler: checks the sender and answers with the
  * envelope of the error form (app/src/main/platform-error.ts).
  */
+/** Lines about refused calls per second; the renderer can cause them at will. */
+const refusedGate = new RateGate(20);
+
+function logRefused(level: LogLevel, message: string): void {
+  const { pass, dropped } = refusedGate.pass(performance.now());
+  if (!pass) return;
+  if (dropped > 0) log("warn", `${String(dropped)} lines about refused IPC calls dropped`);
+  log(level, message);
+}
+
 function handle(channel: string, run: (...args: unknown[]) => unknown): void {
   ipcMain.handle(channel, (event, ...args: unknown[]): Promise<IpcAnswer> | IpcAnswer => {
     if (!trusted(event)) {
-      log("warn", `rejected IPC call ${channel} from an untrusted sender`);
+      logRefused("warn", `rejected IPC call ${channel} from an untrusted sender`);
       return { ok: false, error: platformReason("untrustedSender") };
     }
     return answer(
@@ -363,7 +386,7 @@ function handle(channel: string, run: (...args: unknown[]) => unknown): void {
         log("error", `IPC call ${channel} failed: ${errorCode(error)}`);
       },
     ).then((result) => {
-      if (!result.ok) log("info", `IPC call ${channel} refused: ${result.error.code}`);
+      if (!result.ok) logRefused("info", `IPC call ${channel} refused: ${result.error.code}`);
       return result;
     });
   });
@@ -434,11 +457,26 @@ async function setActivePacks(arg: unknown): Promise<PackReport[]> {
     fail("unknownPack");
   }
   return exclusive("packs", () => changePacks(ids)).catch((error: unknown) => {
-    // The core host answers with a code as message.
+    // The core host answers with a code as message; only known codes pass.
     if (error instanceof PlatformFailure) throw error;
-    fail(error instanceof Error ? error.message : "internal");
+    const code = error instanceof Error ? error.message : "";
+    fail(PACK_CODES.has(code) ? code : "internal");
   });
 }
+
+/** Codes of a refused `packs.setActive` passed on to the renderer. */
+const PACK_CODES: ReadonlySet<string> = new Set([
+  "invalidArgument",
+  "invalidId",
+  "limitExceeded",
+  "unknownPack",
+  "busy",
+  "notReady",
+  "ioError",
+  "timeout",
+  "coreExited",
+  "invalidAnswer",
+]);
 
 async function changePacks(ids: string[]): Promise<PackReport[]> {
   const target = core;
@@ -495,18 +533,75 @@ const previews = new Map<string, { offset: number; length: number }>();
 
 /** Removes files of interrupted saves (S-5 "Schreiben"); runs at start. */
 function removeTempFiles(): void {
+  let names: string[];
   try {
     mkdirSync(savesDir(), { recursive: true });
-    for (const name of readdirSync(savesDir())) {
-      if (isTempFileName(name)) rmSync(path.join(savesDir(), name), { force: true });
-    }
+    names = readdirSync(savesDir());
   } catch (error) {
-    log("warn", `cannot clean up the save game folder: ${errorCode(error)}`);
+    log("warn", `cannot read the save game folder: ${errorCode(error)}`);
+    return;
+  }
+  for (const name of names) {
+    if (!isTempFileName(name)) continue;
+    try {
+      rmSync(path.join(savesDir(), name), { force: true });
+    } catch (error) {
+      // E.g. a folder of that name: the others are still removed.
+      log("warn", `cannot remove a temporary save game file: ${errorCode(error)}`);
+    }
   }
 }
 
-/** Reads the save game list; the core checks header and metadata (S-5). */
-async function listSaves(): Promise<SaveEntry[]> {
+/** Flags for opening a save game: never blocks on a FIFO (POSIX only). */
+const OPEN_FLAGS =
+  fsConstants.O_RDONLY | (process.platform === "win32" ? 0 : fsConstants.O_NONBLOCK);
+
+/**
+ * Opens the save game `id` for reading and checks on the open handle that
+ * it is a regular file within {@link MAX_FILE_BYTES} (finding 4 of the
+ * separate review: no devices, FIFOs or links to them).
+ */
+async function openSave(
+  id: string,
+): Promise<{ handle: FileHandle; size: number; mtimeMs: number }> {
+  let handle: FileHandle;
+  try {
+    handle = await open(savePath(id), OPEN_FLAGS);
+  } catch (error) {
+    if (errorCode(error) === "ENOENT") fail("unknownSave");
+    fail("ioError");
+  }
+  try {
+    const info = await handle.stat();
+    if (!info.isFile()) fail("invalidState", { check: "file" });
+    if (info.size > MAX_FILE_BYTES) fail("limitExceeded", { limit: "file", max: MAX_FILE_BYTES });
+    return { handle, size: info.size, mtimeMs: info.mtimeMs };
+  } catch (error) {
+    await handle.close();
+    if (error instanceof PlatformFailure) throw error;
+    fail("ioError");
+  }
+}
+
+/** Reads `length` bytes at `offset` from an open save game. */
+async function readExactly(
+  handle: FileHandle,
+  length: number,
+  offset: number,
+): Promise<Uint8Array> {
+  const bytes = new Uint8Array(length);
+  let done = 0;
+  while (done < length) {
+    const { bytesRead } = await handle.read(bytes, done, length - done, offset + done);
+    // The file got shorter meanwhile.
+    if (bytesRead === 0) fail("unknownSave");
+    done += bytesRead;
+  }
+  return bytes;
+}
+
+/** Ids of the save game files with their modification times, newest first. */
+async function saveFiles(): Promise<{ id: string; mtimeMs: number }[]> {
   let names: string[];
   try {
     names = await readdir(savesDir());
@@ -515,58 +610,112 @@ async function listSaves(): Promise<SaveEntry[]> {
     log("warn", `cannot read the save game folder: ${errorCode(error)}`);
     fail("ioError");
   }
-  const ids = names.flatMap((name) => {
+  const files: { id: string; mtimeMs: number }[] = [];
+  for (const name of names) {
     const id = idOfFileName(name);
-    return id === undefined ? [] : [id];
-  });
-  const files: { id: string; prefix: Uint8Array; size: number }[] = [];
-  for (const id of ids) {
+    if (id === undefined) continue;
     try {
-      const handle = await open(savePath(id), "r");
-      try {
-        const { size } = await handle.stat();
-        const prefix = new Uint8Array(Math.min(size, MAX_INFO_BYTES));
-        await handle.read(prefix, 0, prefix.length, 0);
-        files.push({ id, prefix, size });
-      } finally {
-        await handle.close();
-      }
-    } catch (error) {
-      // Deleted meanwhile or unreadable: not listed.
-      log("warn", `cannot read a save game: ${errorCode(error)}`);
+      // lstat: a link or special file is listed and refused when opened.
+      files.push({ id, mtimeMs: (await lstat(path.join(savesDir(), name))).mtimeMs });
+    } catch {
+      // Deleted meanwhile.
     }
   }
-  const answers = await requestSaves((request) => ({
-    type: "saves:info",
-    request,
-    files: files.map(({ prefix, size }) => ({ prefix, size })),
-  }));
-  if (!Array.isArray(answers) || answers.length !== files.length) fail("invalidAnswer");
+  return files.sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
+/** Reads the save game list; the core checks header and metadata (S-5). */
+async function listSaves(): Promise<SaveEntry[]> {
+  const all = await saveFiles();
+  if (all.length > MAX_LISTED_FILES) {
+    log(
+      "warn",
+      `save game folder holds ${String(all.length)} files; the newest ${String(MAX_LISTED_FILES)} are listed`,
+    );
+  }
   previews.clear();
-  const entries: SaveEntry[] = files.map(({ id }, i) => {
-    const parsed = parseInfoAnswer(answers[i]);
-    if (parsed === undefined) fail("invalidAnswer");
-    if (!parsed.ok) return { id, state: "damaged", error: parsed.error };
-    previews.set(id, { offset: parsed.info.previewOffset, length: parsed.info.previewLen });
-    return { id, state: "ok", gameVersion: parsed.info.gameVersion, meta: parsed.info.meta };
-  });
+  const entries: SaveEntry[] = [];
+  // Batches of 100: the prefixes (up to 64 KB each) are not all held at once.
+  const listed = all.slice(0, MAX_LISTED_FILES);
+  for (let start = 0; start < listed.length; start += INFO_BATCH) {
+    const files: { id: string; prefix: Uint8Array; size: number }[] = [];
+    for (const { id } of listed.slice(start, start + INFO_BATCH)) {
+      try {
+        const { handle, size } = await openSave(id);
+        try {
+          files.push({
+            id,
+            prefix: await readExactly(handle, Math.min(size, MAX_INFO_BYTES), 0),
+            size,
+          });
+        } finally {
+          await handle.close();
+        }
+      } catch (error) {
+        const reason = error instanceof PlatformFailure ? error.reason : platformReason("ioError");
+        // Deleted meanwhile: not listed; otherwise shown as damaged.
+        if (reason.code !== "unknownSave") entries.push({ id, state: "damaged", error: reason });
+      }
+    }
+    const answers = await requestSaves((request) => ({
+      type: "saves:info",
+      request,
+      files: files.map(({ prefix, size }) => ({ prefix, size })),
+    }));
+    if (!Array.isArray(answers) || answers.length !== files.length) fail("invalidAnswer");
+    files.forEach(({ id }, i) => {
+      const parsed = parseInfoAnswer(answers[i]);
+      if (parsed === undefined) fail("invalidAnswer");
+      if (!parsed.ok) {
+        entries.push({ id, state: "damaged", error: parsed.error });
+        return;
+      }
+      previews.set(id, { offset: parsed.info.previewOffset, length: parsed.info.previewLen });
+      entries.push({
+        id,
+        state: "ok",
+        gameVersion: parsed.info.gameVersion,
+        meta: parsed.info.meta,
+      });
+    });
+  }
   return sortEntries(entries);
 }
 
-/** Screenshot of the game window as preview, {@link PREVIEW_WIDTH} pixels wide (S-5). */
+/** Longest wait for the screenshot of the window. */
+const PREVIEW_TIMEOUT_MS = 5000;
+
+/**
+ * Screenshot of the game window as preview, at most {@link PREVIEW_WIDTH}
+ * pixels wide and within 1920 × 1080 (S-5); empty if it fails or takes
+ * longer than {@link PREVIEW_TIMEOUT_MS} – a save without preview is still a save.
+ */
 async function previewImage(): Promise<Uint8Array> {
   const window = gameWindow;
   if (window === undefined) return new Uint8Array(0);
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const image = await window.webContents.capturePage();
+    const image = await Promise.race([
+      window.webContents.capturePage(),
+      new Promise<undefined>((resolve) => {
+        timer = setTimeout(() => {
+          resolve(undefined);
+        }, PREVIEW_TIMEOUT_MS);
+      }),
+    ]);
+    if (image === undefined) {
+      log("warn", "preview image timed out");
+      return new Uint8Array(0);
+    }
     if (image.isEmpty()) return new Uint8Array(0);
-    const { width } = image.getSize();
-    const scaled = width > PREVIEW_WIDTH ? image.resize({ width: PREVIEW_WIDTH }) : image;
-    return new Uint8Array(scaled.toPNG());
+    const size = previewSize(image.getSize());
+    if (size === undefined) return new Uint8Array(0);
+    return new Uint8Array(image.resize(size).toPNG());
   } catch (error) {
-    // A save without preview is still a save.
     log("warn", `cannot take the preview image: ${errorCode(error)}`);
     return new Uint8Array(0);
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -578,8 +727,11 @@ async function saveGame(arg: unknown): Promise<{ id: string }> {
 }
 
 async function writeSave(name: string, kind: SaveMeta["kind"]): Promise<{ id: string }> {
-  const entries = kind === "auto" ? await listSaves() : [];
-  const id = newSaveId(kind, entries, randomBytes(8));
+  const files = await saveFiles();
+  if (kind === "manual" && files.filter((f) => f.id.startsWith("m-")).length >= MAX_MANUAL_SAVES) {
+    fail("limitExceeded", { limit: "manualSaves", max: MAX_MANUAL_SAVES });
+  }
+  const id = newSaveId(kind, new Map(files.map((f) => [f.id, f.mtimeMs])), randomBytes(8));
   const preview = await previewImage();
   const bytes = await requestSaves((request) => ({
     type: "saves:save",
@@ -591,13 +743,21 @@ async function writeSave(name: string, kind: SaveMeta["kind"]): Promise<{ id: st
   }));
   if (!(bytes instanceof Uint8Array)) fail("invalidAnswer");
   const file = savePath(id);
+  const temp = path.join(savesDir(), tempFileName(id, randomBytes(8)));
   try {
     await mkdir(savesDir(), { recursive: true });
-    // Write and rename: a crash while saving never destroys the previous state.
-    await writeFile(`${file}${TEMP_SUFFIX}`, bytes);
-    await rename(`${file}${TEMP_SUFFIX}`, file);
+    // Write, sync and rename: neither a crash nor a power loss while saving
+    // destroys the previous state. "wx": never write through a placed file.
+    const handle = await open(temp, "wx");
+    try {
+      await handle.writeFile(bytes);
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    await rename(temp, file);
   } catch (error) {
-    await rm(`${file}${TEMP_SUFFIX}`, { force: true }).catch(() => undefined);
+    await rm(temp, { force: true }).catch(() => undefined);
     log("warn", `cannot write a save game: ${errorCode(error)}`);
     fail(writeErrorCode(error));
   }
@@ -606,28 +766,23 @@ async function writeSave(name: string, kind: SaveMeta["kind"]): Promise<{ id: st
   return { id };
 }
 
-/** Size of the save game `id`; refuses unknown ids. */
-async function saveSize(arg: unknown): Promise<{ id: string; size: number }> {
+/** Checks the form of a save game id from the renderer. */
+function saveId(arg: unknown): string {
   if (!isSaveId(arg)) fail("invalidArgument");
-  try {
-    return { id: arg, size: (await stat(savePath(arg))).size };
-  } catch (error) {
-    if (errorCode(error) === "ENOENT") fail("unknownSave");
-    fail("ioError");
-  }
+  return arg;
 }
 
 /** S-6 `saves.load(id)`: checks the file in the core and starts its session. */
 async function loadGame(arg: unknown): Promise<SaveMeta> {
-  const { id, size } = await saveSize(arg);
+  const id = saveId(arg);
   return exclusive("load", async () => {
-    if (size > MAX_FILE_BYTES) fail("limitExceeded", { limit: "file", max: MAX_FILE_BYTES });
+    const { handle, size } = await openSave(id);
     let bytes: Uint8Array;
     try {
-      bytes = await readFile(savePath(id));
-    } catch (error) {
-      if (errorCode(error) === "ENOENT") fail("unknownSave");
-      fail("ioError");
+      // Size and content from the same handle.
+      bytes = await readExactly(handle, size, 0);
+    } finally {
+      await handle.close();
     }
     const meta = parseSaveMeta(
       await requestSaves((request) => ({ type: "saves:load", request, bytes })),
@@ -638,9 +793,9 @@ async function loadGame(arg: unknown): Promise<SaveMeta> {
   });
 }
 
-/** S-6 `saves.delete(id)`. */
+/** S-6 `saves.delete(id)`; removes a link itself, never its target. */
 async function deleteSave(arg: unknown): Promise<null> {
-  const { id } = await saveSize(arg);
+  const id = saveId(arg);
   return exclusive("delete", async () => {
     try {
       await rm(savePath(id));
@@ -656,28 +811,22 @@ async function deleteSave(arg: unknown): Promise<null> {
 
 /** S-6 `saves.preview(id)` (ADR-028): PNG bytes, empty if the save has none. */
 async function savePreview(arg: unknown): Promise<ArrayBuffer> {
-  const { id } = await saveSize(arg);
+  const id = saveId(arg);
   return exclusive("preview", async () => {
     const place = previews.get(id);
     // Not listed since its last change: read the list first.
     if (place === undefined) fail("unknownSave");
-    const png = new Uint8Array(place.length);
+    const { handle, size } = await openSave(id);
+    let png: Uint8Array;
     try {
-      const handle = await open(savePath(id), "r");
-      try {
-        const { bytesRead } = await handle.read(png, 0, png.length, place.offset);
-        if (bytesRead !== png.length) fail("unknownSave");
-      } finally {
-        await handle.close();
-      }
-    } catch (error) {
-      if (error instanceof PlatformFailure) throw error;
-      if (errorCode(error) === "ENOENT") fail("unknownSave");
-      fail("ioError");
+      if (place.offset + place.length > size) fail("unknownSave");
+      png = await readExactly(handle, place.length, place.offset);
+    } finally {
+      await handle.close();
     }
     if (png.length > 0)
       await requestSaves((request) => ({ type: "saves:checkPreview", request, png }));
-    return png.buffer;
+    return png.buffer as ArrayBuffer;
   });
 }
 

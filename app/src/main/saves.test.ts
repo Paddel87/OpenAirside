@@ -6,6 +6,9 @@ import {
   isSaveId,
   isSaveName,
   isTempFileName,
+  previewSize,
+  tempFileName,
+  withinChars,
   newSaveId,
   parseInfoAnswer,
   parseSaveArgs,
@@ -58,6 +61,10 @@ describe("save game ids and file names", () => {
     expect(idOfFileName("my game.oasave")).toBeUndefined();
     expect(idOfFileName("notes.txt")).toBeUndefined();
     expect(isTempFileName("quick.oasave.tmp")).toBe(true);
+    const temp = tempFileName("quick", Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 255]));
+    expect(temp).toBe("quick.oasave.01020304050607ff.tmp");
+    expect(isTempFileName(temp)).toBe(true);
+    expect(idOfFileName(temp)).toBeUndefined();
     expect(isTempFileName("quick.oasave")).toBe(false);
   });
 });
@@ -90,23 +97,15 @@ describe("ids of new save games", () => {
   const random = Uint8Array.from([0, 1, 2, 3, 250, 251, 252, 255, 9]);
 
   it("gives a manual save a random id and a quick save its single slot", () => {
-    expect(newSaveId("manual", [], random)).toBe("m-00010203fafbfcff");
-    expect(newSaveId("quick", [ok("quick", "quick", "2026")], random)).toBe("quick");
+    expect(newSaveId("manual", new Map(), random)).toBe("m-00010203fafbfcff");
+    expect(newSaveId("quick", new Map([["quick", 1]]), random)).toBe("quick");
   });
 
-  it("fills free autosave slots first, then overwrites the oldest", () => {
-    expect(newSaveId("auto", [], random)).toBe("auto-1");
-    expect(newSaveId("auto", [ok("auto-1", "auto", "2026-10-19T10:00:00Z")], random)).toBe(
-      "auto-2",
-    );
-    const full = [1, 2, 3, 4, 5].map((n) =>
-      ok(`auto-${String(n)}`, "auto", `2026-10-19T1${String(n % 5)}:00:00Z`),
-    );
+  it("fills free autosave slots first, then overwrites the one modified longest ago", () => {
+    expect(newSaveId("auto", new Map(), random)).toBe("auto-1");
+    expect(newSaveId("auto", new Map([["auto-1", 10]]), random)).toBe("auto-2");
+    const full = new Map([1, 2, 3, 4, 5].map((n) => [`auto-${String(n)}`, (n % 5) * 100]));
     expect(newSaveId("auto", full, random)).toBe("auto-5");
-    // A damaged autosave counts as the oldest.
-    expect(newSaveId("auto", [...full.slice(0, 4), damaged("auto-5")].reverse(), random)).toBe(
-      "auto-5",
-    );
     expect(newSaveId("auto", full, random, 1)).toBe("auto-1");
   });
 });
@@ -186,5 +185,23 @@ describe("autosave clock", () => {
     expect(clock.observe(74_500, 2, true)).toBe(false);
     expect(clock.observe(84_000, 2, true)).toBe(false);
     expect(clock.observe(84_600, 2, true)).toBe(true);
+  });
+});
+
+describe("bounds against huge or odd input (separate review of 2.5b)", () => {
+  it("refuses a huge string before counting its characters", () => {
+    expect(withinChars("x".repeat(64), 64)).toBe(true);
+    expect(withinChars("😀".repeat(64), 64)).toBe(true);
+    expect(withinChars("😀".repeat(65), 64)).toBe(false);
+    expect(withinChars("x".repeat(10_000_000), 64)).toBe(false);
+    expect(isSaveName("x".repeat(10_000_000))).toBe(false);
+  });
+
+  it("fits the preview into 480 pixels width and 1920 × 1080", () => {
+    expect(previewSize({ width: 1280, height: 800 })).toEqual({ width: 480, height: 300 });
+    expect(previewSize({ width: 400, height: 300 })).toEqual({ width: 400, height: 300 });
+    expect(previewSize({ width: 600, height: 1400 })).toEqual({ width: 462, height: 1080 });
+    expect(previewSize({ width: 1, height: 100_000 })).toBeUndefined();
+    expect(previewSize({ width: 0, height: 10 })).toBeUndefined();
   });
 });

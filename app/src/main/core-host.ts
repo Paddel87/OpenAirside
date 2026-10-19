@@ -18,6 +18,7 @@ import {
   parsePackRequest,
   parseSavesRequest,
   type SavesRequest,
+  savesRequestNumber,
 } from "./core-status.js";
 import {
   type BridgeOutgoing,
@@ -115,6 +116,16 @@ try {
           post({ type: "savesAnswer", request: saves.request, ok: false, error: reason });
         },
       );
+      return;
+    }
+    const invalid = savesRequestNumber(event.data);
+    if (invalid !== undefined) {
+      post({
+        type: "savesAnswer",
+        request: invalid,
+        ok: false,
+        error: { code: "invalidArgument", textKey: "save.error.invalidArgument", params: {} },
+      });
       return;
     }
     const request = parsePackRequest(event.data);

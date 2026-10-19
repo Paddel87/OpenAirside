@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -5,6 +6,7 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import os from "node:os";
@@ -257,6 +259,46 @@ test("window opens and core reports ready", async () => {
     expect(logText).toContain("INFO renderer smoke test\\nsecond line");
     expect(logText).toContain("saved manual game");
     expect(existsSync(path.join(userData, "logs"))).toBe(true);
+    // Special files in the save game folder are refused, not read (separate
+    // review of 2.5b, finding 4): a link to /dev/zero and a FIFO.
+    if (process.platform !== "win32") {
+      const savesFolder = path.join(userData, "saves");
+      symlinkSync("/dev/zero", path.join(savesFolder, "auto-3.oasave"));
+      execFileSync("mkfifo", [path.join(savesFolder, "auto-4.oasave")]);
+      const special = await window.evaluate(async () => {
+        const api = (
+          globalThis as {
+            openairside?: {
+              saves: {
+                list(): Promise<{ id: string; state: string; error?: { code: string } }[]>;
+                load(id: string): Promise<unknown>;
+              };
+            };
+          }
+        ).openairside;
+        if (api === undefined) return undefined;
+        const list = await api.saves.list();
+        let load: unknown = "accepted";
+        try {
+          await api.saves.load("auto-3");
+        } catch (error) {
+          load = (error as { code?: unknown }).code;
+        }
+        return {
+          damaged: list
+            .filter((e) => e.state === "damaged")
+            .map((e) => `${e.id}:${e.error?.code ?? ""}`)
+            .sort(),
+          load,
+        };
+      });
+      expect(special).toEqual({
+        damaged: ["auto-3:invalidState", "auto-4:invalidState"],
+        load: "invalidState",
+      });
+      rmSync(path.join(savesFolder, "auto-3.oasave"));
+      rmSync(path.join(savesFolder, "auto-4.oasave"));
+    }
 
     // Reloading the page hands over a fresh port and starts a new session (S-6).
     await window.reload();

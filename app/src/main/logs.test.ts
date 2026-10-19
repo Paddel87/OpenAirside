@@ -7,6 +7,7 @@ import {
   maskMessage,
   MAX_ENTRIES_PER_SECOND,
   parseLogArgs,
+  RateGate,
 } from "./logs.js";
 
 /** Files in memory. */
@@ -97,5 +98,37 @@ describe("log file", () => {
     expect(() => {
       log.write("error", "main", "lost");
     }).not.toThrow();
+  });
+});
+
+describe("bounds (separate review of 2.5b)", () => {
+  it("refuses a huge message before counting it", () => {
+    expect(parseLogArgs("info", "x".repeat(10_000_000))).toBeUndefined();
+  });
+
+  it("does not drop entries for good when the clock steps back", () => {
+    const fs = new MemoryFs();
+    const log = new LogFile(fs, "log", "debug", at);
+    for (let n = 0; n < MAX_ENTRIES_PER_SECOND; n += 1) log.writeThrottled("info", "x", 5000);
+    expect(log.writeThrottled("info", "back", 100)).toBe(true);
+  });
+
+  it("drops entries instead of growing when rotation fails", () => {
+    const fs = new MemoryFs();
+    fs.rename = () => undefined;
+    const log = new LogFile(fs, "log", "debug", at);
+    fs.files.set("log", "x".repeat(LOG_FILE_BYTES - 10));
+    log.write("info", "main", "too much");
+    expect(fs.size("log")).toBe(LOG_FILE_BYTES - 10);
+  });
+
+  it("lets at most n events per second pass and counts the rest", () => {
+    const gate = new RateGate(2);
+    expect(gate.pass(0)).toEqual({ pass: true, dropped: 0 });
+    expect(gate.pass(10)).toEqual({ pass: true, dropped: 0 });
+    expect(gate.pass(20)).toEqual({ pass: false, dropped: 0 });
+    expect(gate.pass(30)).toEqual({ pass: false, dropped: 0 });
+    expect(gate.pass(1000)).toEqual({ pass: true, dropped: 2 });
+    expect(gate.pass(500)).toEqual({ pass: true, dropped: 0 });
   });
 });

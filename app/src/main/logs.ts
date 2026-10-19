@@ -72,6 +72,8 @@ export function parseLogArgs(
   message: unknown,
 ): { level: LogLevel; message: string } | undefined {
   if (!isLogLevel(level) || typeof message !== "string") return undefined;
+  // Cheap bound first: a huge string is refused without walking through it.
+  if (message.length > 2 * MAX_MESSAGE_CHARS) return undefined;
   if (Array.from(message).length > MAX_MESSAGE_CHARS) return undefined;
   return { level, message };
 }
@@ -102,12 +104,12 @@ export class LogFile {
   }
 
   /**
-   * Writes an entry of the renderer at real time `nowMs`; returns `false`
+   * Writes an entry of the renderer at monotonic time `nowMs`; returns `false`
    * if the throttle dropped it (the number of dropped entries is logged
    * with the next accepted one).
    */
   writeThrottled(level: LogLevel, message: string, nowMs: number): boolean {
-    if (nowMs - this.windowStart >= 1000) {
+    if (nowMs - this.windowStart >= 1000 || nowMs < this.windowStart) {
       this.windowStart = nowMs;
       this.inWindow = 0;
     }
@@ -126,8 +128,11 @@ export class LogFile {
 
   private append(line: string): void {
     try {
-      if (this.fs.size(this.file) + Buffer.byteLength(line) > LOG_FILE_BYTES) {
+      const bytes = Buffer.byteLength(line);
+      if (this.fs.size(this.file) + bytes > LOG_FILE_BYTES) {
         this.rotate();
+        // Rotation failed (file held open elsewhere): drop instead of growing without bound.
+        if (this.fs.size(this.file) + bytes > LOG_FILE_BYTES) return;
       }
       this.fs.append(this.file, line);
     } catch {
@@ -141,5 +146,37 @@ export class LogFile {
       this.fs.rename(`${this.file}.${String(n)}`, `${this.file}.${String(n + 1)}`);
     }
     this.fs.rename(this.file, `${this.file}.1`);
+  }
+}
+
+/**
+ * At most `perSecond` events per second of monotonic time; counts the
+ * rest. Bounds the lines about refused IPC calls (finding 1 of the
+ * separate review of step 2.5b), which the renderer can cause at will.
+ */
+export class RateGate {
+  private windowStart = -Infinity;
+  private inWindow = 0;
+  private dropped = 0;
+
+  constructor(private readonly perSecond: number) {}
+
+  /**
+   * Whether an event at `nowMs` passes; `dropped` is the number of events
+   * held back since the last one that passed.
+   */
+  pass(nowMs: number): { pass: boolean; dropped: number } {
+    if (nowMs - this.windowStart >= 1000 || nowMs < this.windowStart) {
+      this.windowStart = nowMs;
+      this.inWindow = 0;
+    }
+    if (this.inWindow >= this.perSecond) {
+      this.dropped += 1;
+      return { pass: false, dropped: 0 };
+    }
+    this.inWindow += 1;
+    const dropped = this.dropped;
+    this.dropped = 0;
+    return { pass: true, dropped };
   }
 }

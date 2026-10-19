@@ -9,6 +9,7 @@ import {
   parsePackRequest,
   parseSavesRequest,
   restartDecision,
+  savesRequestNumber,
 } from "./core-status.js";
 
 const info = { name: "openairside-core", version: "0.0.0" };
@@ -238,5 +239,14 @@ describe("save game messages (step 2.5)", () => {
     expect(parseSavesRequest({ type: "saves:info", request: 5, files: many })).toBeUndefined();
     expect(parseSavesRequest({ type: "saves:delete", request: 6 })).toBeUndefined();
     expect(parseSavesRequest({ type: "saves:load", bytes })).toBeUndefined();
+  });
+});
+
+describe("invalid save game requests", () => {
+  it("still name their request number, so that they can be answered", () => {
+    expect(savesRequestNumber({ type: "saves:info", request: 9, files: "x" })).toBe(9);
+    expect(savesRequestNumber({ type: "saves:info", files: [] })).toBeUndefined();
+    expect(savesRequestNumber({ type: "packs:setActive", request: 9 })).toBeUndefined();
+    expect(savesRequestNumber("saves:info")).toBeUndefined();
   });
 });
