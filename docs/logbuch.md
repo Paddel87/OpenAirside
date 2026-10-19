@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 10:59 (UTC) – [BEOBACHTUNG]
+
+- **Nachtrag nach dem Sessionende:** Projektinhaber: „Zur Kenntnis genommen, Reflexion und Abweichung“. Kenntnisnahme der Reflexion zu ADR-028 (Maßnahme 8 gilt) und der Abweichung nach Stopp-Kriterium 5 in 2.5a im Fahrplan vermerkt; kein Umbau.
+
 ### 2026-10-19 02:45 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 51 Minuten seit `[SESSIONSTART]` 01:54 UTC. Mini-Reibung: Die Uhrzeit des Eintrags war zuerst geschätzt (02:48) statt mit `date -u` abgefragt (02:42) – wie am 2026-10-18; vor dem Commit korrigiert.
