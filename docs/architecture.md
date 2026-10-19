@@ -413,7 +413,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 
 ### Schnittstelle: S-5 Spielstand-Format [BELASTBAR]
 
-- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021; Bestätigung durch Umsetzung in 2.5
+- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021 (Grenzen geändert durch ADR-030); Bestätigung durch Umsetzung in 2.5
 
 - **Anbieter:** Takt & Weltzustand (Inhalt), Plattform (Datei). **Konsument:** dieselben beim Laden.
 - **Datei:** Binärcontainer `.oasave` mit Abschnitten:
@@ -426,7 +426,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 - **Gleichheit (FR-004):** Nach dem Laden ergibt die Zustands-Prüfsumme des Kerns (deterministischer Hash über den Weltzustand, unabhängig von der Datei-Prüfsumme) denselben Wert wie vor dem Speichern, auch wenn beim Speichern eine Neuberechnung lief.
 - **Versionierung:** Format-Version des Weltzustands steigt bei jeder nicht additiven Änderung. Ältere Spielstände werden schrittweise migriert. Die Zusage, ältere Spielstände zu laden, gilt ab Version 1.0 (ADR-021); vor 1.0 darf eine Version ältere Spielstände mit Hinweis abweisen. Neuere werden mit Hinweis abgewiesen.
 - **Fehlende Datenpakete:** Das Laden wird mit Liste der fehlenden Pakete verweigert (`packMissing`); Laden mit Entfernen der betroffenen Objekte folgt in 6.1 (ADR-021). Ein vorhandenes Paket mit anderer Version gilt als passend, wenn die Hauptversion (SemVer) gleich ist; sonst wie fehlend.
-- **Grenzen gegen schädliche Dateien** (Fehlercode `limitExceeded`): Datei höchstens 1 GB; jede Abschnittslänge wird gegen die Restgröße der Datei geprüft; Metadaten höchstens 64 KB, Vorschaubild höchstens 2 MB und 1920 × 1080 Pixel; ausgepackte Größe (falls komprimiert) höchstens 2 GB. Die Kartengröße muss 1536 oder 2048 sein; Höchstzahlen für Objekte, Personen und Fahrzeuge legt 2.5 als Konstanten fest. Das Serialisierungsformat muss Speicherzuteilung bei Längenangaben begrenzen (Auswahlkriterium in 2.5).
+- **Grenzen gegen schädliche Dateien** (Fehlercode `limitExceeded`): Datei höchstens 512 MB (ADR-030, bis dahin 1 GB); jede Abschnittslänge wird gegen die Restgröße der Datei geprüft; Metadaten höchstens 64 KB, Vorschaubild höchstens 2 MB und 1920 × 1080 Pixel; ausgepackte Größe (falls komprimiert) höchstens 512 MB (ADR-030, bis dahin 2 GB; Nachmessung in 4.1). Die Kartengröße muss 1536 oder 2048 sein; Höchstzahlen für Objekte, Personen und Fahrzeuge legt 2.5 als Konstanten fest. Das Serialisierungsformat muss Speicherzuteilung bei Längenangaben begrenzen (Auswahlkriterium in 2.5).
 - **Reihenfolge der Prüfung:** Kennung und Längen → Prüfsumme → Metadaten → Weltzustand deserialisieren → Invarianten prüfen (Handles gültig, Zellen in der Karte, Wertebereiche, Verweise auf geladene Pakete). Die Prüfsumme belegt nur Unversehrtheit, kein Vertrauen.
 - **Fehlercodes beim Laden:** `badMagic`, `truncated`, `checksumMismatch`, `versionTooNew`, `migrationFailed`, `packMissing`, `packVersionMismatch`, `limitExceeded`, `invalidState`; beim Speichern `ioError`, `diskFull`.
 - **Spielstand-Liste:** Die Metadaten werden getrennt und begrenzt gelesen; eine beschädigte Datei erscheint als „beschädigt" und bricht die Liste nicht ab. Das Vorschaubild zeigt die Oberfläche als `blob:`-URL (CSP in 2.5 anpassen und prüfen).
