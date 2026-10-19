@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-19 (Session 16:18–17:10 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner; 2.10 ERLEDIGT am 2026-10-19 (ADR-033, ADR-034) – damit sind alle 11 Schritte von Phase 2 erledigt
-- **Nächster Schritt:** PR für 2.10; danach Phasenabschluss Phase 2 in einer neuen Session: Vision-Abgleich gegen `docs/vision.md`, Pflichtfrage „Weiterbauen, umbauen oder neu aufsetzen?“ mit Bewertung durch eine getrennte Instanz (`CLAUDE.md` Abschnitt 12), Archivierung und Logbuch-Verdichtung beim `[PHASEN-WECHSEL]`
+- **Aktiver Schritt:** keiner; 2.10 ERLEDIGT am 2026-10-19 (ADR-033, ADR-034), mit PR #25 nach `main` gemergt (`302e3ce`) – damit sind alle 11 Schritte von Phase 2 erledigt
+- **Nächster Schritt:** Phasenabschluss Phase 2 in einer neuen Session auf einem neuen Branch vom aktuellen `main` (Merge-Vermerk von `feat/2-10-stilleitfaden-svg-pipeline` übernehmen): Vision-Abgleich gegen `docs/vision.md`, Pflichtfrage „Weiterbauen, umbauen oder neu aufsetzen?“ mit Bewertung durch eine getrennte Instanz (`CLAUDE.md` Abschnitt 12), Archivierung und Logbuch-Verdichtung beim `[PHASEN-WECHSEL]`
 - **Offene STOPP-Situationen:** Reaktiv-Quote 7 / 10 nach ADR-032 über dem Schwellenwert – Reflexion zu ADR-032 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, kein Umbau
 
 <!-- ANCHOR:phasen-typen -->
