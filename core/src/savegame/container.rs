@@ -258,7 +258,7 @@ fn meta(bytes: &[u8]) -> Result<SaveMeta, Reason> {
 ///
 /// `invalidState` for data that is not a PNG, `limitExceeded` for a larger
 /// image.
-pub(super) fn check_preview(png: &[u8]) -> Result<(), Reason> {
+pub fn check_preview(png: &[u8]) -> Result<(), Reason> {
     if png.is_empty() {
         return Ok(());
     }

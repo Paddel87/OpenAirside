@@ -17,7 +17,7 @@ use crate::geometry::MapSize;
 use crate::text::Reason;
 use crate::time::Tick;
 
-pub use container::{SaveInfo, decode, read_info};
+pub use container::{SaveInfo, check_preview, decode, read_info};
 pub use state::{LoadedGame, SaveSnapshot};
 
 /// File name extension of save games.

@@ -400,6 +400,22 @@ impl Simulation {
         self.state = CoreState::Loading;
     }
 
+    /// Answers every waiting command with `notReady`; used for commands
+    /// that arrived while a game was being loaded and the load failed
+    /// (S-5 "Laden ist atomar"), without computing a tick.
+    pub fn reject_waiting(&mut self) {
+        for (id, _) in std::mem::take(&mut self.inbox) {
+            self.events.push(
+                self.tick,
+                Event::CommandRejected {
+                    id,
+                    tick: self.tick,
+                    reason: rejection(code::NOT_READY),
+                },
+            );
+        }
+    }
+
     /// Ends loading; the session continues as before when loading failed.
     pub fn end_loading(&mut self) {
         self.state = CoreState::Ready;
@@ -744,6 +760,27 @@ mod tests {
             sim.ack(sim.session(), last.seq);
         }
         records.into_iter().map(|r| r.event).collect()
+    }
+
+    #[test]
+    fn commands_waiting_after_a_failed_load_are_rejected_without_a_tick() {
+        let mut sim = Simulation::new(config(0)).unwrap();
+        sim.submit(1, 1, Command::SetSpeed { speed: Speed::X1 });
+        sim.step();
+        let _ = events(&mut sim);
+        sim.begin_loading();
+        assert_eq!(sim.state(), CoreState::Loading);
+        sim.submit(1, 2, Command::SetSpeed { speed: Speed::X3 });
+        let tick = sim.tick();
+        sim.reject_waiting();
+        sim.end_loading();
+        assert_eq!(
+            (sim.tick(), sim.state(), sim.speed()),
+            (tick, CoreState::Ready, Speed::X1)
+        );
+        assert!(!sim.has_pending_commands());
+        assert!(events(&mut sim).iter().any(|e| matches!(e,
+            Event::CommandRejected { id: 2, reason, .. } if reason.code == code::NOT_READY)));
     }
 
     #[test]
