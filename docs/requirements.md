@@ -200,7 +200,7 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | FR-047 | Musik, Geräusche, Atmosphäre | UC-005 | Soll | AUDIO-01 sinngemäß, freie Bibliotheken | 6.2 | `app/audio.test.ts` | OFFEN |
 | FR-048 | Fracht spielbar | UC-004 | Kann | nach 1.0 | – | – | OFFEN |
 | FR-049 | Intro-/Menü-Video | UC-001 | Kann | – | 6.2 | – | OFFEN |
-| FR-050 | Grafiken als eigene SVG, im Build gerastert | UC-002 | Soll | ADR-008; keine Grafik aus Original oder Mods | 2.10 | `scripts/assets.test.ts` | OFFEN |
+| FR-050 | Grafiken als eigene SVG, im Build gerastert | UC-002 | Soll | ADR-008; keine Grafik aus Original oder Mods | 2.10 | `scripts/assets.test.mjs`, `tools/assets` (cargo test), `e2e/smoke.spec.ts` | ERLEDIGT 2026-10-19 (ADR-033, ADR-034) |
 | FR-051 | Isometrische Sicht | UC-002 | Kann | spätere Ausbaustufe | – | – | OFFEN |
 
 **Regeln:**

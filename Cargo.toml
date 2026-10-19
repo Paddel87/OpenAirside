@@ -1,10 +1,11 @@
 # Cargo workspace of OpenAirside (roadmap step 2.1, ADR-018).
 # core/   simulation core, free of any binding code (rule 006)
 # bridge/ napi-rs binding for the Electron utility process (ADR-009)
+# tools/assets/ build tool for the graphics pipeline, not shipped (ADR-033)
 # Spikes keep their own workspaces and are not part of this one.
 [workspace]
 resolver = "3"
-members = ["core", "bridge"]
+members = ["core", "bridge", "tools/assets"]
 exclude = ["spikes"]
 
 [workspace.package]
@@ -36,6 +37,9 @@ schemars = { version = "=1.2.2", default-features = false, features = ["derive",
 # with Deflate; the file checksum is FNV-1a 64 from core/src/hash.rs.
 postcard = { version = "=1.1.3", default-features = false, features = ["use-std"] }
 miniz_oxide = "=0.9.1"
+# SVG rasteriser of the graphics pipeline, build tool only (ADR-033, verified 2026-10-19).
+# Without default features: no text, no fonts, no raster images inside SVG.
+resvg = { version = "=0.48.1", default-features = false }
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "deny"

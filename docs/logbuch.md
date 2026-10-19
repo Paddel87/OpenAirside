@@ -24,6 +24,96 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 18:53 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 2 Stunden 35 Minuten seit `[SESSIONSTART]` 16:18 UTC (mit Wartezeit auf die Messung; Zwischenstand-Eintrag 17:10).
+- **Bearbeitet seit 17:10:** Sichtprüfung des Programmsymbols (Installer, Startmenü, Taskleiste, Dock), drei Messläufe des Projektinhabers abgelegt und ausgewertet, Vorlage und ADR-034, Abschluss von 2.10.
+- **Erreicht:** 2.10 `[ERLEDIGT]`, Phase 2 vollständig (11 von 11 Schritten); NFR Darstellung im gemessenen Umfang `[BELASTBAR]`; FR-050 erledigt; neuer Schritt 4.3.
+- **Offen geblieben:** PR für `feat/2-10-stilleitfaden-svg-pipeline` (nach Anweisung); Phasenabschluss Phase 2 (Vision-Abgleich, Pflichtfrage mit getrennter Instanz, Archivierung, Logbuch-Verdichtung); Abkündigung `rustup show` (Q.1, freigabepflichtig).
+- **Nächster Schritt:** Phasenabschluss Phase 2 in einer neuen Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 18:50 UTC); 0 Schritte oberhalb der Empfehlung; keine Teilarbeit abgegeben (Probelauf offen).
+- **Kontextgröße:** 511.369 Token laut `get_session` 18:50 UTC – **über der Grenze von 400.000 Token** (`project-context.md` Abschnitt 6); Empfehlung: die nächste Arbeit in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 18:50 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt.
+- **Archivierung:** Logbuch über 800 Zeilen, alle Einträge aus Oktober 2026; Auslagerung und Verdichtung mit dem `[PHASEN-WECHSEL]` beim Phasenabschluss.
+- **Drift-Prüfung:** README nachgezogen (Architektur-Reife, Nächste Schritte). ADR-034 verweist auf vorhandene Schritte (2.10, 3.4, 3.8, 4.1, 4.3, 5.5, 5.8, 7.2). Reifegrade passen zu ADR-033 und ADR-034. Modul-Liste unverändert. FR-050 erledigt mit Schritt 2.10. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 7 / 10 (ADR-025 bis ADR-034) stimmt mit den Tags. Phase 2: 11 Schritte bei Plan 10, abgeschlossen.
+
+### 2026-10-19 18:52 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **NFR Performance Darstellung geteilt (ADR-034):** Darstellung statischer Objekt-Sprites (Stufe 8 px je Zelle) mit Zonen und 10.000 Personen auf Windows und macOS `[VORLÄUFIG]` → `[BELASTBAR]`; Stufen 16/32, große Atlanten, Verkehr, Linux und integrierte Grafik bleiben `[VORLÄUFIG]` (3.8, 3.4/5.5, 4.1, 7.2, 5.8).
+
+### 2026-10-19 18:52 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-034** `[ERKENNTNIS]` „Darstellung mit echten Grafiken belastbar im gemessenen Umfang": freigegeben vom Projektinhaber per Auswahl A; neuer Schritt 4.3 (Schrittzeit-Spitzen auf Apple-Chips). Schritt 2.10 damit erledigt, Phase 2 vollständig. Reaktiv-Quote 7 / 10 über ADR-025 bis ADR-034 (in der Vorlage stand irrtümlich 6 / 10; ADR-024 war nicht reaktiv).
+
+### 2026-10-19 18:49 (UTC) – [BEOBACHTUNG]
+
+- **Messung 2.10, Mac-Lauf 2 (`--background-threads=4`) eingegangen:** abgelegt als `docs/research/2.10-ergebnisse/mac-m3pro-background-4.json`. 119,9–120,0 Bilder/s, keine langen Aufgaben; Schrittzeit-Spitzen in gleich vielen Fenstern (11 von 20), größter Schritt 36,9 statt 75,3 ms, Takt kurz bis 176 Ticks/s, Neuberechnung rund 40 % länger. Gesamturteil aller drei Läufe in `docs/research/2.10-messung.md`; Ursache der Mac-Aussetzer weiter offen.
+
+### 2026-10-19 18:38 (UTC) – [BEOBACHTUNG]
+
+- **Messung 2.10, Referenz-PC eingegangen:** abgelegt als `docs/research/2.10-ergebnisse/referenz-pc-windows.json`. 59,9–60,0 Bilder/s bei 60 Hz in allen 20 Fenstern, keine langen Aufgaben, kein Rückstand, Schrittzeit-Ausreißer nur im letzten Fenster; Bauaktion bis zum Bild 2–3 statt 1–2 Bilder (2.7). Ausstehend: Mac-Lauf 2 (`--background-threads=4`).
+
+### 2026-10-19 18:37 (UTC) – [BEOBACHTUNG]
+
+- **Messung 2.10, Mac-Lauf 1 (Standardaufteilung 2 + 8) eingegangen:** abgelegt als `docs/research/2.10-ergebnisse/mac-m3pro-standard.json`. 119,1–120,1 Bilder/s bei 120 Hz mit Szene (20.000 Objekte, 64 Zonen, 10.000 Personen); neu zwei lange Aufgaben im Renderer (131 und 83 ms); Schrittzeit-Ausreißer wie in 2.7 (bis 75 ms, 11 von 20 Fenstern über 4 ms), Minimum 180 Ticks/s in allen Fenstern. Auswertung in `docs/research/2.10-messung.md`. Ausstehend: Mac-Lauf 2 (`--background-threads=4`) und Referenz-PC.
+
+### 2026-10-19 17:10 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 52 Minuten seit `[SESSIONSTART]` 16:18 UTC.
+- **Bearbeitet:** Übernahme des Merge-Vermerks auf `feat/2-10-stilleitfaden-svg-pipeline`; Schritt 2.10: Vorlage des Rasterers, Freigabe A, ADR-033, Werkzeug-Crate `tools/assets`, Stilleitfaden mit Palette, SVG-Quellen (Bank, Betonboden, Betonwand, Ersatzgrafik, Programmsymbol), Prüfer `scripts/assets.mjs`, Atlanten im Spielfeld, Szene im Messwerkzeug, Fenstersymbol unter Linux, Rauchtest, Messanleitung, Dokumentation.
+- **Erreicht:** Pipeline umgesetzt und auf drei Plattformen grün (CI-Lauf 39290398392, 17 Jobs; Release-Lauf 39291102397 mit Paketen); Grafik-Pipeline `[BELASTBAR]`; Coverage: Vitest gesamt 86,5 % Lines (`atlas.ts` 100 %, `measure.ts` 98,0 %, `assets.mjs` 93,6 %), Rust gesamt und Kern über den Schwellen (Kern 98,4 %), `tools/assets/src/lib.rs` 96,0 % Lines; Onboarding im frischen Worktree validiert. Commits `f975893` … `62f3ac0` plus dieser Sessionende-Commit.
+- **Offen geblieben:** 2.10 bleibt `[IN ARBEIT]`: Messung auf Referenz-PC und Mac (je ein Lauf, Mac zusätzlich mit `--background-threads=4`) durch den Projektinhaber nach `docs/research/2.10-messung.md`, danach Auswertung und ADR zur NFR Darstellung. Kein PR vor dem Abschluss des Schritts. Abkündigung `rustup show` wartet auf Q.1 (freigabepflichtig).
+- **Nächster Schritt:** Ergebnisdateien der Messung auswerten (gegen 2.7), ADR zur NFR Darstellung, 2.10 abschließen, PR.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 16:18 und 17:10 UTC); 2.10 empfiehlt die Entscheidungs-Klasse, 0 Schritte oberhalb der Empfehlung; Routine-Teilarbeiten (Logbuch, README) nicht abgegeben, Probelauf offen.
+- **Kontextgröße:** über die Laufzeitumgebung nicht feststellbar (`get_session` meldet `used_tokens` 0); kein Hinweis möglich.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 17:10 UTC.
+- **Ablaufdaten-Prüfung:** neuer Eintrag `rustup show` (Q.1); kein Eintrag mit erreichtem Vorlauf ohne Schritt.
+- **Archivierung:** Logbuch über 800 Zeilen, alle Einträge aus Oktober 2026 – nichts auszulagern; Verdichtung mit dem `[PHASEN-WECHSEL]` nach Phase 2.
+- **Drift-Prüfung:** README nachgezogen (Verwendung: Grafiken, `measure` mit Szene; Architektur-Reife: Grafik-Pipeline); Nächste Schritte unverändert (2.10 läuft). ADR-033 verweist auf vorhandene Schritte (2.10, Q.1). Reifegrad Grafik-Pipeline passt zu ADR-008/ADR-033 und Umsetzung. Modul-Liste unverändert (`tools/assets` ist Werkzeug des Moduls Inhalte & Mods, `atlas.ts` gehört zum Spielfeld). FR-050 verweist auf 2.10. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 7 / 10 (ADR-024 bis ADR-033) stimmt mit den Tags. Phase 2: 11 Schritte bei Plan 10. Größen: `project-context.md` unter 400 Zeilen.
+
+### 2026-10-19 17:04 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Grafik-Pipeline (SVG → Atlanten):** `[VORLÄUFIG]` (ADR-008) → `[BELASTBAR]` durch funktionierende Umsetzung in 2.10 (Beförderungsregel): Werkzeug und Prüfer mit Tests, CI-Lauf 39290398392 auf `5862b4e` grün auf drei Plattformen (17 Jobs), Rauchtest lädt die Atlanten unter der CSP. NFR Darstellung mit echten Grafiken bleibt `[VORLÄUFIG]` bis zur Messung.
+- **CI-Protokoll gelesen (Warnungsquellen ohne Schalter):** neu `rustup show` „auto-installation is deprecated“ (rustup#4836) – Ablaufdaten-Register und Q.1 ergänzt (Umstellung freigabepflichtig, Kategorie 7); bekannt: Hinweis Ubuntu 26, `npm warn deprecated` (electron-builder-Unterpakete), `install-scripts` electron-winstaller, 8 × moderate; neu, nur Hinweis der Plattform: Wartezeiten der macOS-arm64-Runner.
+
+### 2026-10-19 17:02 (UTC) – [ONBOARDING-VALIDATION]
+
+- **Anlass:** `package.json` (`build` mit neuem Schritt `build:assets`) und Runbook geändert – Quick-Start-relevant. Frischer Worktree von `5862b4e` im Scratchpad: `npm ci`, `npm run build` (Kern, Brücke, Atlanten, Hauptprozess, Renderer) und Rauchtest `xvfb-run -a npx playwright test` grün (1 passed); Atlanten und `build/icon.png` entstehen ohne weitere Voraussetzung. Worktree danach entfernt.
+
+### 2026-10-19 17:00 (UTC) – [PROBLEM-GELÖST]
+
+- **CI rot auf macOS und Windows (Lauf 39289876778, Job „Rust Tests"):** Der Test `reports_bad_inputs_with_their_file` legte `Bench.svg` neben `bench.svg` an; auf Dateisystemen ohne Unterscheidung von Groß- und Kleinschreibung ist das dieselbe Datei, das Werkzeug fand also keinen ungültigen Namen. Fehler im Test, nicht im Werkzeug. Behoben mit `bench.old.svg` (Commit `5862b4e`).
+- **Mini-Reibung, zwei Entwurfsfehler vor dem Commit bemerkt:** (1) Die SVG-Quellen lagen zuerst in `content/base/graphics/` – das hätte das Paketformat S-4 um einen Ordner erweitert und die Quellen ausgeliefert; verlegt nach `assets/graphics/base/`. (2) Die Bank war zuerst 4 × 2 Zellen groß gezeichnet; `width`/`depth` im Paket sind Meter (ADR-020), richtig sind 2 × 1 Zellen. Der Prüfer vergleicht seitdem die Größe mit der Grundfläche.
+- **Laden ohne CSP-Änderung:** PixiJS `Assets` lädt über `fetch`, die CSP hat `connect-src 'none'` (Kategorie 6). Stattdessen Bildliste per Vite-Import im Bündel, Seiten als `<img>` unter `img-src 'self'`.
+
+### 2026-10-19 16:59 (UTC) – [BEOBACHTUNG]
+
+- **Probelauf der Messung im Container:** `measure 1` mit Szene (20.000 Objekte, 200 mit Ersatzgrafik, 64 Zonen) läuft durch, Ergebnisdatei mit `series.scene` und `tierPx`; einmal über Canvas (ohne WebGL), einmal über WebGL2/SwiftShader. Bildraten ohne Aussage (Software-Grafik auf 4 vCPU), Tabelle in `docs/research/2.10-messung.md`.
+- **Uhrzeit wieder geschätzt:** Die Vorlage stand zunächst mit 16:31 UTC in Fahrplan und Logbuch, `date -u` meldete 16:22; vor dem Commit korrigiert. Die Lehre aus 15:28 wirkt noch nicht zuverlässig: Uhrzeit jetzt immer im selben Befehl wie die Änderung holen.
+
+### 2026-10-19 16:29 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-033** `[OPERATIV]` „SVG-Rasterer resvg im Werkzeug-Crate `tools/assets`": freigegeben vom Projektinhaber per Auswahl A (resvg 0.48.1, Rust). Benannte Ausnahme `miniz_oxide@0.8.9` im Warnungs-Bestand. Reaktiv-Quote 7 / 10 über ADR-024 bis ADR-033, unverändert über dem Schwellenwert (kein neuer `[REAKTIV]`-ADR, Reflexion zu ADR-032 gilt).
+
+### 2026-10-19 16:22 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 2.10, SVG-Rasterer (Kategorie 3, mit Kategorie 7):** Optionen A resvg 0.48.1 als Rust-Werkzeug-Crate im Workspace, B @resvg/resvg-js 2.6.2 (npm), C Rasterung in Electron/Chromium; Empfehlung A. Belege aus crates.io und npm (Abruf 16:19–16:21 UTC) und einem Probe-Projekt im Scratchpad: 37 Crates ohne Standard-Features, alle Lizenzen erlaubt, `miniz_oxide` doppelt (0.8.9 über png 0.18.1, 0.9.1 über flate2) – benannte Ausnahme nötig. sharp verworfen (libvips-Binärdateien unter LGPL-3.0).
+- **Mini-Reibung:** Die Einrichtung im Hintergrund brach bei `rustup component add` ab, weil ein gleichzeitiges `cargo --version` die Toolchain aus `rust-toolchain.toml` installierte (rustup-Sperre); einzeln wiederholt, grün. Lehre: Toolchain-Aufrufe während der Einrichtung nicht parallel starten.
+
+### 2026-10-19 16:18 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 15:30 UTC plus `[BEOBACHTUNG]` 16:13 (Merge PR #24, `2a464bf`). Der Merge-Vermerk `de7eabb` nach `project-context.md` Abschnitt 10 auf den neuen Branch `feat/2-10-stilleitfaden-svg-pipeline` vom aktuellen `main` übernommen; `erkundung/2-11-sammelpruefung-vertragssaetze` wird nicht weiterverwendet.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht). Vertiefung für 2.10: ADR-008.
+- **Geplant für diese Session:** Schritt 2.10 (Stilleitfaden, SVG-Pipeline, Messung): Versionen des SVG-Rasterers nach Regel-001 belegen und als `ENTSCHEIDUNG ERFORDERLICH` (Kategorie 3) vorlegen; erst nach Freigabe ADR und Code; Messwerkzeug und Ablauf so vorbereiten, dass der Projektinhaber auf Referenz-PC und Mac nur starten und die JSON-Datei zurückgeben muss.
+- **Vorabprüfung:** S-1 `[BELASTBAR]`, Spielfeld-Grundgerüst aus 2.7 vorhanden; Weltdarstellung `[OFFEN]` (3.8) – das Messwerkzeug platziert die Sprites selbst (ADR-032, L-4), 2.10 hängt also nicht vom offenen Bestandteil ab (Regel-007). Reaktiv-Quote 7 / 10, Maßnahmen (7)–(9) gelten.
+- **Modus/Werkzeug:** semi-autonom, Claude Code in einer Cloud-Session.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` (Entscheidungs-Klasse), Quelle `get_session` 16:18 UTC (`configured_model`, `session_context.model`, `last_served_model`); Kontingent 5-Stunden-Fenster `allowed`.
+
+### 2026-10-19 16:13 (UTC) – [BEOBACHTUNG]
+
+- **Merge:** PR #24 (Schritt 2.11) auf Anweisung des Projektinhabers („Kenntnis + PR bei grün“) nach `main` gemergt, Merge-Commit `2a464bf`; vorher grün auf `a96a040`: Push-Lauf 39278499215, PR-Läufe CI 39278544213 und Security 39278543616. Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf dem Arbeits-Branch und geht mit dem PR des nächsten Schritts nach `main`.
+
 ### 2026-10-19 15:30 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 16 Minuten seit `[SESSIONSTART]` 15:14 UTC.

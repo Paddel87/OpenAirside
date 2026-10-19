@@ -17,3 +17,9 @@ lcov*.info
 app/native/
 test-results/
 playwright-report/
+
+# Grafik-Pipeline (Schritt 2.10, ADR-033): erzeugt von `npm run build:assets`
+app/renderer/atlas/
+app/renderer/public/atlas/
+app/renderer/public/icon.png
+build/icon.png

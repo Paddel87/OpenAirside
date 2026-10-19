@@ -1048,6 +1048,10 @@ function createWindow(): void {
     width: 1280,
     height: 800,
     title: "OpenAirside",
+    // Windows and macOS take the icon of the program package; Linux needs it on the window (step 2.10).
+    ...(process.platform === "linux"
+      ? { icon: fileURLToPath(new URL("icon.png", rendererRoot)) }
+      : {}),
     show: false,
     webPreferences: hardenedWebPreferences(preloadPath, !app.isPackaged),
   });

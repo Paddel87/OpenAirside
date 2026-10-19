@@ -2,19 +2,39 @@
  * Playfield (module "Spielfeld"): top view with PixiJS over WebGL2. Shows
  * the map bounds and the persons of the newest frame (S-1) as particles in
  * one `ParticleContainer` (spike 1.3: sprites are too slow at 50,000
- * objects). Display only (rule 002).
+ * objects). Since step 2.10 it loads the texture atlases of the graphics
+ * pipeline and draws object sprites and zone overlays that the measurement
+ * tool places (ADR-032: the way of the world display is open until 3.8).
+ * Display only (rule 002).
  *
  * The grid itself (floors, walls, zones) is not drawn yet.
  * TODO(fahrplan-ref: 3.1): draw the grid with building in the grid.
  */
-import { Application, Container, Graphics, Particle, ParticleContainer, Texture } from "pixi.js";
+import {
+  Application,
+  Container,
+  Graphics,
+  Particle,
+  ParticleContainer,
+  Rectangle,
+  Sprite,
+  Texture,
+} from "pixi.js";
 // Replaces the eval-based particle upload, so that the CSP needs no 'unsafe-eval' (spike 1.3).
 import "pixi.js/unsafe-eval";
 import type { FrameFilter } from "../src/generated/FrameFilter.js";
+import {
+  type AtlasIndex,
+  bundledIndex,
+  chooseTier,
+  imageNames,
+  lookup,
+  textureBytes,
+} from "./atlas.js";
 import { type Camera, centerCamera, fitCamera, pan, visibleRect, zoomAt } from "./camera.js";
 import { type Frame, type PersonRecord, readPerson } from "./frame-reader.js";
 import { densestSpot } from "./hotspot.js";
-import type { View } from "./measure.js";
+import type { MeasureScene, SceneInfo, View } from "./measure.js";
 
 /** Lowest and highest floor (BAU-07). */
 const MIN_FLOOR = -2;
@@ -23,6 +43,40 @@ const MAX_FLOOR = 2;
 const PERSON_SIZE = 0.8;
 /** Smallest diameter of a person on the screen in pixels, so that crowds stay visible in the overview. */
 const MIN_PERSON_PIXELS = 2;
+/** Colours of the zone overlays (palette fabric_blue, plant, signal_yellow, signal_red) and their opacity. */
+const ZONE_COLOURS = [0x3f6fa8, 0x5e9c4f, 0xe8b730, 0xc8433b];
+const ZONE_ALPHA = 0.25;
+/** Colour of an object drawn without any atlas (palette metal). */
+const NO_ATLAS_TINT = 0x8a929e;
+
+/** Loaded atlas: the index and one texture per page of each tier. */
+interface Atlas {
+  readonly index: AtlasIndex;
+  readonly pages: readonly (readonly Texture[])[];
+}
+
+async function loadImage(url: string): Promise<Texture> {
+  const image = new Image();
+  image.src = url;
+  await image.decode();
+  return Texture.from(image);
+}
+
+/** Loads the pages of the bundled atlas; `undefined` without atlas or if a page fails to load. */
+async function loadAtlas(): Promise<Atlas | undefined> {
+  const index = bundledIndex();
+  if (index === undefined) {
+    return undefined;
+  }
+  try {
+    const pages = await Promise.all(
+      index.tiers.map((tier) => Promise.all(tier.pages.map((p) => loadImage(p.image)))),
+    );
+    return { index, pages };
+  } catch {
+    return undefined;
+  }
+}
 
 function dotTexture(): Texture {
   const canvas = document.createElement("canvas");
@@ -43,6 +97,12 @@ export class Playfield {
   readonly #app: Application;
   readonly #world = new Container();
   readonly #bounds = new Graphics();
+  readonly #objects = new Container();
+  readonly #zones = new Graphics();
+  readonly #objectNames: string[] = [];
+  readonly #atlas: Atlas | undefined;
+  readonly #textures = new Map<string, { texture: Texture; scale: number }>();
+  #tier = -1;
   readonly #persons: ParticleContainer;
   readonly #pool: Particle[] = [];
   readonly #texture: Texture;
@@ -52,14 +112,18 @@ export class Playfield {
   #map = { width: 0, height: 0 };
   #shown = 0;
 
-  private constructor(app: Application) {
+  private constructor(app: Application, atlas: Atlas | undefined) {
     this.#app = app;
+    this.#atlas = atlas;
     this.#texture = dotTexture();
     this.#persons = new ParticleContainer({
       texture: this.#texture,
       dynamicProperties: { position: true },
     });
-    this.#world.addChild(this.#bounds, this.#persons);
+    // Static layer under a moving camera: its own render group keeps the
+    // transforms of the sprites when only the camera changes.
+    this.#objects.isRenderGroup = true;
+    this.#world.addChild(this.#bounds, this.#objects, this.#zones, this.#persons);
     app.stage.addChild(this.#world);
   }
 
@@ -75,7 +139,7 @@ export class Playfield {
       autoDensity: true,
     });
     parent.append(app.canvas);
-    const field = new Playfield(app);
+    const field = new Playfield(app, await loadAtlas());
     field.#bindInput(app.canvas);
     return field;
   }
@@ -92,6 +156,63 @@ export class Playfield {
     const ext = gl.getExtension("WEBGL_debug_renderer_info");
     const name = String(gl.getParameter(ext === null ? gl.RENDERER : ext.UNMASKED_RENDERER_WEBGL));
     return `${gl2 === null ? "WebGL1" : "WebGL2"} ${name}`;
+  }
+
+  /** `true` if the atlas of the build was loaded. */
+  get hasAtlas(): boolean {
+    return this.#atlas !== undefined;
+  }
+
+  /** Image names of the atlas without the fallback; empty without atlas. */
+  imageNames(): readonly string[] {
+    return this.#atlas === undefined ? [] : imageNames(this.#atlas.index);
+  }
+
+  /** Resolution drawn with now in pixels per cell, 0 without atlas. */
+  tierPx(): number {
+    return this.#atlas?.index.tiers[this.#tier]?.pxPerCell ?? 0;
+  }
+
+  /** Draws the objects and zones of `scene` instead of the previous ones (step 2.10). */
+  scene(scene: MeasureScene): SceneInfo {
+    for (const child of this.#objects.removeChildren()) {
+      child.destroy();
+    }
+    this.#objectNames.length = 0;
+    let fallbacks = 0;
+    for (const object of scene.objects) {
+      const sprite = new Sprite();
+      sprite.position.set(object.x, object.y);
+      this.#objects.addChild(sprite);
+      this.#objectNames.push(object.name);
+      if (
+        this.#atlas === undefined ||
+        lookup(this.#atlas.index, 0, object.name)?.fallback !== false
+      ) {
+        fallbacks += 1;
+      }
+    }
+    this.#tier = -1;
+    this.#applyTier();
+    this.#zones.clear();
+    for (const zone of scene.zones) {
+      this.#zones.rect(zone.x, zone.y, zone.w, zone.h).fill({
+        color: ZONE_COLOURS[zone.colour % ZONE_COLOURS.length] ?? NO_ATLAS_TINT,
+        alpha: ZONE_ALPHA,
+      });
+    }
+    const index = this.#atlas?.index;
+    return {
+      objects: scene.objects.length,
+      fallbacks,
+      zones: scene.zones.length,
+      tiers: index?.tiers.map((t) => t.pxPerCell) ?? [],
+      pages: index?.tiers.reduce((sum, t) => sum + t.pages.length, 0) ?? 0,
+      textureMbMax:
+        index === undefined
+          ? 0
+          : Math.round((textureBytes(index, index.tiers.length - 1) / 1048576) * 100) / 100,
+    };
   }
 
   /** Shown floor. */
@@ -180,12 +301,68 @@ export class Playfield {
     return cells / this.#texture.width;
   }
 
+  /** Gives every object sprite the texture of the tier for the current zoom, if the tier changed. */
+  #applyTier(): void {
+    const atlas = this.#atlas;
+    const tier =
+      atlas === undefined
+        ? 0
+        : chooseTier(atlas.index, this.#camera.zoom, this.#app.renderer.resolution);
+    if (tier === this.#tier) {
+      return;
+    }
+    this.#tier = tier;
+    const old = [...this.#textures.values()];
+    this.#textures.clear();
+    const sprites = this.#objects.children as Sprite[];
+    for (let i = 0; i < sprites.length; i += 1) {
+      const sprite = sprites[i];
+      if (sprite !== undefined) {
+        const { texture, scale } = this.#objectTexture(this.#objectNames[i] ?? "");
+        sprite.texture = texture;
+        sprite.tint = atlas === undefined ? NO_ATLAS_TINT : 0xffffff;
+        sprite.scale.set(scale);
+      }
+    }
+    // Views into the atlas pages only; the pages themselves stay.
+    for (const { texture } of old) {
+      if (texture !== Texture.WHITE) {
+        texture.destroy(false);
+      }
+    }
+  }
+
+  /** Texture of `name` in the current tier and its scale to cells (cached per tier). */
+  #objectTexture(name: string): { texture: Texture; scale: number } {
+    const cached = this.#textures.get(name);
+    if (cached !== undefined) {
+      return cached;
+    }
+    const atlas = this.#atlas;
+    const hit = atlas === undefined ? undefined : lookup(atlas.index, this.#tier, name);
+    const page = hit === undefined ? undefined : atlas?.pages[this.#tier]?.[hit.page];
+    let entry: { texture: Texture; scale: number };
+    if (hit === undefined || page === undefined || atlas === undefined) {
+      // No atlas built: one neutral cell (Texture.WHITE is 1 × 1 px).
+      entry = { texture: Texture.WHITE, scale: 1 };
+    } else {
+      const { x, y, w, h } = hit.frame;
+      entry = {
+        texture: new Texture({ source: page.source, frame: new Rectangle(x, y, w, h) }),
+        scale: 1 / (atlas.index.tiers[this.#tier]?.pxPerCell ?? 1),
+      };
+    }
+    this.#textures.set(name, entry);
+    return entry;
+  }
+
   #setCamera(camera: Camera): void {
     const zoomed = camera.zoom !== this.#camera.zoom;
     this.#camera = camera;
     this.#world.scale.set(camera.zoom);
     this.#world.position.set(-camera.x * camera.zoom, -camera.y * camera.zoom);
     if (zoomed) {
+      this.#applyTier();
       const scale = this.#personScale();
       for (const particle of this.#pool) {
         particle.scaleX = scale;

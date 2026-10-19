@@ -6,7 +6,10 @@ import {
   defaultConfig,
   type FrameInfo,
   type MeasureConfig,
+  type MeasureScene,
   MeasureSeries,
+  measureScene,
+  MISSING_IMAGE,
   quantile,
   REFERENCE_EDGE,
   type SeriesHost,
@@ -56,7 +59,7 @@ describe("WindowRecorder", () => {
     rec.query(3);
     rec.query(5);
     const known = new Set<number>([1]);
-    const w = rec.summarize({ window: 0, atS: 30, view: "overview", seconds: 1 }, known);
+    const w = rec.summarize({ window: 0, atS: 30, view: "overview", seconds: 1, tierPx: 8 }, known);
     expect(w.fps).toBe(61);
     expect(w.frameMsP50).toBe(16);
     expect(w.frameMsMax).toBe(16);
@@ -76,7 +79,10 @@ describe("WindowRecorder", () => {
     // A revision counted before is not counted again.
     const again = new WindowRecorder();
     again.stats(stats({ lastRecompute: { revision: 2, millis: 1100 } }));
-    const w2 = again.summarize({ window: 1, atS: 60, view: "circle", seconds: 30 }, known);
+    const w2 = again.summarize(
+      { window: 1, atS: 60, view: "circle", seconds: 30, tierPx: 8 },
+      known,
+    );
     expect(w2.recomputes).toBe(0);
     expect(w2.fps).toBe(0);
 
@@ -118,6 +124,7 @@ function harness(config: MeasureConfig, options: { load?: boolean } = {}) {
   const views: View[] = [];
   const pendingQueries: number[] = [];
   const accepted: { id: number; tick: number }[] = [];
+  const scenes: MeasureScene[] = [];
   const persons = config.persons;
   const ref: { series?: MeasureSeries } = {};
   const info = (): FrameInfo => ({
@@ -179,17 +186,30 @@ function harness(config: MeasureConfig, options: { load?: boolean } = {}) {
     },
     hotspot: () => ({ x: 1000, y: 900 }),
     status: () => undefined,
+    imageNames: () => ["base:bench", "base:floor_concrete"],
+    scene: (scene) => {
+      scenes.push(scene);
+      return {
+        objects: scene.objects.length,
+        fallbacks: 1,
+        zones: scene.zones.length,
+        tiers: [8, 16, 32],
+        pages: 3,
+        textureMbMax: 0.1,
+      };
+    },
+    tierPx: () => 16,
   };
   const series = new MeasureSeries(host, config);
   ref.series = series;
   series.onSession(1);
-  return { series, commands, views };
+  return { series, commands, views, scenes };
 }
 
 describe("MeasureSeries", () => {
   it("runs the long run with alternating views, builds and queries", async () => {
     const config = { ...defaultConfig(1), loadTimeoutMs: 1000 };
-    const { series, commands, views } = harness(config);
+    const { series, commands, views, scenes } = harness({ ...config, objects: 300, zones: 4 });
     series.onLongTask(55);
     const result = await series.run();
     expect(result.version).toBe(1);
@@ -197,6 +217,13 @@ describe("MeasureSeries", () => {
     expect(result.windows.map((w) => w.view)).toEqual(["overview", "circle"]);
     expect(result.threads).toBe(2);
     expect(result.hotspot).toEqual({ x: 1000, y: 900 });
+    // The scene is placed once, on the map of the loaded scenario, and removed at the end.
+    expect(scenes).toHaveLength(2);
+    expect(scenes[1]).toEqual({ objects: [], zones: [] });
+    expect(scenes[0]?.objects).toHaveLength(300);
+    expect(scenes[0]?.zones).toHaveLength(4);
+    expect(result.scene).toMatchObject({ objects: 300, zones: 4, fallbacks: 1 });
+    expect(result.windows.map((w) => w.tierPx)).toEqual([16, 16]);
     const [first, second] = result.windows;
     expect(first?.fps).toBeGreaterThan(55);
     expect(first?.queries).toBeGreaterThan(100);
@@ -239,7 +266,39 @@ describe("MeasureSeries", () => {
       view: () => undefined,
       hotspot: () => ({ x: 0, y: 0 }),
       status: () => undefined,
+      imageNames: () => [],
+      scene: () => ({ objects: 0, fallbacks: 0, zones: 0, tiers: [], pages: 0, textureMbMax: 0 }),
+      tierPx: () => 0,
     };
     await expect(new MeasureSeries(host, defaultConfig(1)).run()).rejects.toThrow("not connected");
+  });
+});
+
+describe("measureScene", () => {
+  it("places the objects on a grid over the terminal, cycling through the names", () => {
+    const scene = measureScene(10_000, 9, 2048, 2048, ["base:a", "base:b"]);
+    const origin = (2048 - REFERENCE_EDGE) / 2;
+    expect(scene.objects).toHaveLength(10_000);
+    expect(scene.objects[0]).toEqual({ name: "base:a", x: origin, y: origin });
+    expect(scene.objects[1]).toMatchObject({ name: "base:b", y: origin });
+    expect(scene.objects[99]?.name).toBe(MISSING_IMAGE);
+    expect(scene.objects.filter((o) => o.name === MISSING_IMAGE)).toHaveLength(100);
+    for (const o of scene.objects) {
+      expect(o.x).toBeGreaterThanOrEqual(origin);
+      expect(o.x).toBeLessThan(origin + REFERENCE_EDGE);
+      expect(o.y).toBeGreaterThanOrEqual(origin);
+      expect(o.y).toBeLessThan(origin + REFERENCE_EDGE);
+    }
+    expect(new Set(scene.objects.map((o) => `${String(o.x)},${String(o.y)}`)).size).toBe(10_000);
+    expect(measureScene(10_000, 9, 2048, 2048, ["base:a", "base:b"])).toEqual(scene);
+  });
+
+  it("tiles the terminal with zones and uses the fallback without atlas", () => {
+    const scene = measureScene(3, 4, 2048, 2048, []);
+    expect(scene.objects.every((o) => o.name === MISSING_IMAGE)).toBe(true);
+    expect(scene.zones.map((z) => z.colour)).toEqual([0, 1, 2, 3]);
+    const origin = (2048 - REFERENCE_EDGE) / 2;
+    expect(scene.zones[0]).toEqual({ x: origin + 2, y: origin + 2, w: 380, h: 380, colour: 0 });
+    expect(scene.zones[3]).toMatchObject({ x: origin + 386, y: origin + 386 });
   });
 });

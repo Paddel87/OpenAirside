@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Program icon of OpenAirside: runway with centre line and an aircraft from above; CC0. -->
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="#2a5b8c" />
+  <rect x="96" y="24" width="64" height="208" rx="6" fill="#3b3f45" />
+  <path d="M128 40 V64 M128 84 V108 M128 128 V152 M128 172 V196" fill="none" stroke="#eef0f2" stroke-width="2" />
+  <path d="M104 216 H152" fill="none" stroke="#eef0f2" stroke-width="2" />
+  <path d="M128 52 C136 52 138 62 138 74 L138 108 L196 140 L196 154 L138 140 L138 176 L156 190 L156 200 L128 194 L100 200 L100 190 L118 176 L118 140 L60 154 L60 140 L118 108 L118 74 C118 62 120 52 128 52 Z" fill="#eef0f2" stroke="#262a30" stroke-width="2" />
+  <rect x="122" y="66" width="12" height="8" rx="2" fill="#9cc7e0" />
+</svg>

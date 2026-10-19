@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Neutral fallback for objects without a graphic (ADR-032, L-4); CC0. -->
+  <rect x="0.5" y="0.5" width="31" height="31" fill="#8a929e" stroke="#262a30" stroke-width="1" />
+  <path d="M0.5 31.5 L31.5 0.5 M0.5 15.5 L15.5 0.5 M16.5 31.5 L31.5 16.5" fill="none" stroke="#4a515c" stroke-width="2" />
+</svg>

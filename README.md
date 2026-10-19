@@ -34,7 +34,7 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-19
-- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern, Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009), Datenmodell im Kern (ADR-010; Weltmaßstab 2 m je Zelle mit Luftseite im Raster und Speicherung in Blöcken nach ADR-020), Wegweiser-Prinzip und Leistung von Simulation und Zustandsübergabe BELASTBAR seit dem Leistungsnachweis (ADR-014; Linux-Messung in 7.2); Leistung der Darstellung mit echten Grafiken und mit Fahrzeugen und Flugzeugen VORLÄUFIG (ADR-017); Bauaktion im nächsten Bild VORLÄUFIG; Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Schnittstellenverträge für Befehle, Ereignisse, Abfragen, Datenpakete, Spielstände und Plattform BELASTBAR (ADR-021, fortgeschrieben durch ADR-032), Steuerung des Kern-Prozesses durch die Plattform BELASTBAR (ADR-032); Weg der Bauten in die Darstellung OFFEN (Entwurf 3.8); Takt des Simulationskerns BELASTBAR (Umsetzung 2.2); Grundraster der Welt BELASTBAR (Umsetzung 2.3); Brücke zwischen Kern und Oberfläche sowie Plattformschicht BELASTBAR (Umsetzung und Messung 2.7); Lader für Datenpakete BELASTBAR (Umsetzung 2.4); Spielstand-Format durch Umsetzung bestätigt (2.5); Lokalisierung BELASTBAR (Umsetzung 2.6)
+- **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern, Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009), Datenmodell im Kern (ADR-010; Weltmaßstab 2 m je Zelle mit Luftseite im Raster und Speicherung in Blöcken nach ADR-020), Wegweiser-Prinzip und Leistung von Simulation und Zustandsübergabe BELASTBAR seit dem Leistungsnachweis (ADR-014; Linux-Messung in 7.2); Leistung der Darstellung mit echten Grafiken BELASTBAR im gemessenen Umfang (20.000 Objekte, Windows und macOS, ADR-034), Nahansicht und Fahrzeuge und Flugzeuge VORLÄUFIG; Bauaktion im nächsten Bild VORLÄUFIG; Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Schnittstellenverträge für Befehle, Ereignisse, Abfragen, Datenpakete, Spielstände und Plattform BELASTBAR (ADR-021, fortgeschrieben durch ADR-032), Steuerung des Kern-Prozesses durch die Plattform BELASTBAR (ADR-032); Weg der Bauten in die Darstellung OFFEN (Entwurf 3.8); Takt des Simulationskerns BELASTBAR (Umsetzung 2.2); Grundraster der Welt BELASTBAR (Umsetzung 2.3); Brücke zwischen Kern und Oberfläche sowie Plattformschicht BELASTBAR (Umsetzung und Messung 2.7); Lader für Datenpakete BELASTBAR (Umsetzung 2.4); Spielstand-Format durch Umsetzung bestätigt (2.5); Lokalisierung BELASTBAR (Umsetzung 2.6); Grafik-Pipeline (SVG → Atlanten) BELASTBAR (Umsetzung 2.10, ADR-033)
 - **Aktive Blocker:** 0
 
 ## Quick Start
@@ -83,7 +83,9 @@ graph LR
 
 ## Verwendung
 
-Noch nicht spielbar. `npm start` öffnet das Spielfenster mit leerer Karte; der Simulationskern läuft in einem eigenen Prozess. Im Debug-Panel oben links zeigt `help` die Konsolenbefehle (z. B. `spawn 1000`, `speed x3`, `scenario reference 10000`). Das Referenz-Terminal aus dem Leistungsnachweis startet direkt mit `npx electron . --scenario=referenceTerminal --persons=10000`. `measure` startet eine zehnminütige Messreihe und speichert das Ergebnis als JSON-Datei im Download-Ordner.
+Noch nicht spielbar. `npm start` öffnet das Spielfenster mit leerer Karte; der Simulationskern läuft in einem eigenen Prozess. Im Debug-Panel oben links zeigt `help` die Konsolenbefehle (z. B. `spawn 1000`, `speed x3`, `scenario reference 10000`). Das Referenz-Terminal aus dem Leistungsnachweis startet direkt mit `npx electron . --scenario=referenceTerminal --persons=10000`. `measure` startet eine zehnminütige Messreihe mit 20.000 Objekt-Grafiken und speichert das Ergebnis als JSON-Datei im Download-Ordner.
+
+Grafiken sind eigene SVG-Dateien unter `assets/` (eine je Objekt in `assets/graphics/base/`, Regeln im [Stilleitfaden](docs/stilleitfaden.md)); `npm run build` rastert sie zu Atlanten und zum Programmsymbol, `npm run check:graphics` prüft sie gegen den Leitfaden.
 
 Inhalte kommen aus Datenpaketen: Das Basispaket liegt in `content/base/`, eigene Pakete gehören in den Ordner `packs` im Datenordner des Spiels (eins je Unterordner, Aufbau und Fehlercodes in [`docs/architecture.md`](docs/architecture.md) Abschnitt 4, S-4). Editoren prüfen die Dateien mit den Schemas aus `content/schema/`, wenn die Datei `"$schema"` setzt. In der Konsole zeigt `packs` alle gefundenen Pakete mit Fehlern, `packs set <id> …` wählt die aktiven Pakete ab der nächsten Sitzung (z. B. nach `scenario hall`), `build <paket:eintrag> <x> <y>` prüft eine Inhalts-ID im Kern.
 
@@ -93,7 +95,7 @@ Sprache und Einstellungen: Die Oberfläche gibt es auf Deutsch und Englisch, bei
 
 ## Nächste Schritte
 
-- 2.10: Stilleitfaden, SVG-Pipeline und Messung der Darstellung
+- Abschluss von Phase 2: Vision-Abgleich und Bewertung „Weiterbauen, umbauen oder neu aufsetzen?“
 - Phase 3 beginnt mit den Entwurfsschritten 3.7 (Personengruppen) und 3.8 (Weltdarstellung im Spielfeld)
 - Phase 2 insgesamt: lauffähiger, leerer Spielrahmen mit grüner CI auf drei Plattformen
 
