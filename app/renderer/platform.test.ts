@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { CORE_PORT_TAG, onCorePort, type PortSource } from "./platform.js";
+import {
+  CORE_PORT_TAG,
+  describeError,
+  isPlatformError,
+  onCorePort,
+  type PortSource,
+} from "./platform.js";
 
 describe("onCorePort", () => {
   it("passes only tagged ports of the own window", () => {
@@ -22,5 +28,23 @@ describe("onCorePort", () => {
     expect(callback).not.toHaveBeenCalled();
     send(CORE_PORT_TAG, self, [port]);
     expect(callback).toHaveBeenCalledWith(port);
+  });
+});
+
+describe("error form of S-6", () => {
+  it("recognises { code, textKey, params } and describes it for the console", () => {
+    const error = {
+      code: "limitExceeded",
+      textKey: "save.error.limitExceeded",
+      params: { limit: "file", max: 5 },
+    };
+    expect(isPlatformError(error)).toBe(true);
+    expect(describeError(error)).toBe("limitExceeded (limit=file, max=5)");
+    expect(describeError({ code: "busy", textKey: "platform.error.busy", params: {} })).toBe(
+      "busy",
+    );
+    expect(isPlatformError({ code: "busy" })).toBe(false);
+    expect(describeError(new Error("boom"))).toBe("boom");
+    expect(describeError("text")).toBe("text");
   });
 });

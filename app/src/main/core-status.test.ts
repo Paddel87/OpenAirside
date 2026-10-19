@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   exitedCoreStatus,
   isPackAnswer,
+  isSavesAnswer,
+  MAX_INFO_FILES,
   nextCoreStatus,
   parseCoreHostMessage,
   parsePackRequest,
+  parseSavesRequest,
   restartDecision,
 } from "./core-status.js";
 
@@ -160,5 +163,80 @@ describe("restartDecision", () => {
   it("forgets restarts older than 60 seconds", () => {
     const decision = restartDecision([0, 1000, 2000], 62_001);
     expect(decision).toEqual({ allowed: true, restarts: [62_001] });
+  });
+});
+
+describe("save game messages (step 2.5)", () => {
+  const reason = { code: "checksumMismatch", textKey: "save.error.checksumMismatch", params: {} };
+  const bytes = new Uint8Array([1, 2, 3]);
+
+  it("reads answers and the autosave signal of the core host", () => {
+    expect(parseCoreHostMessage({ type: "savesAnswer", request: 4, ok: true, value: 7 })).toEqual({
+      type: "savesAnswer",
+      request: 4,
+      ok: true,
+      value: 7,
+    });
+    expect(
+      parseCoreHostMessage({ type: "savesAnswer", request: 4, ok: false, error: reason }),
+    ).toEqual({ type: "savesAnswer", request: 4, ok: false, error: reason });
+    expect(parseCoreHostMessage({ type: "autosave" })).toEqual({ type: "autosave" });
+    expect(
+      parseCoreHostMessage({ type: "savesAnswer", request: 4, ok: false, error: "x" }),
+    ).toBeUndefined();
+    expect(parseCoreHostMessage({ type: "savesAnswer", request: -1, ok: true })).toBeUndefined();
+    expect(isSavesAnswer({ type: "savesAnswer" })).toBe(true);
+    expect(isSavesAnswer({ type: "packs" })).toBe(false);
+  });
+
+  it("never takes a save game message for a status", () => {
+    expect(nextCoreStatus({ type: "autosave" })).toEqual({
+      state: "failed",
+      reason: "unexpected message from core host",
+    });
+  });
+
+  it("checks the requests of the main process in the core host", () => {
+    expect(
+      parseSavesRequest({
+        type: "saves:save",
+        request: 1,
+        name: "a",
+        kind: "quick",
+        savedAt: "2026-10-19T12:00:00Z",
+        preview: bytes,
+      }),
+    ).toMatchObject({ type: "saves:save", kind: "quick" });
+    expect(
+      parseSavesRequest({
+        type: "saves:save",
+        request: 1,
+        name: "a",
+        kind: "x",
+        savedAt: "",
+        preview: bytes,
+      }),
+    ).toBeUndefined();
+    expect(parseSavesRequest({ type: "saves:load", request: 2, bytes })).toEqual({
+      type: "saves:load",
+      request: 2,
+      bytes,
+    });
+    expect(parseSavesRequest({ type: "saves:load", request: 2, bytes: [1] })).toBeUndefined();
+    expect(parseSavesRequest({ type: "saves:checkPreview", request: 3, png: bytes })).toEqual({
+      type: "saves:checkPreview",
+      request: 3,
+      png: bytes,
+    });
+    expect(
+      parseSavesRequest({ type: "saves:info", request: 5, files: [{ prefix: bytes, size: 3 }] }),
+    ).toEqual({ type: "saves:info", request: 5, files: [{ prefix: bytes, size: 3 }] });
+    expect(
+      parseSavesRequest({ type: "saves:info", request: 5, files: [{ prefix: bytes, size: -3 }] }),
+    ).toBeUndefined();
+    const many = Array.from({ length: MAX_INFO_FILES + 1 }, () => ({ prefix: bytes, size: 3 }));
+    expect(parseSavesRequest({ type: "saves:info", request: 5, files: many })).toBeUndefined();
+    expect(parseSavesRequest({ type: "saves:delete", request: 6 })).toBeUndefined();
+    expect(parseSavesRequest({ type: "saves:load", bytes })).toBeUndefined();
   });
 });
