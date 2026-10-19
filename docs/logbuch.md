@@ -24,6 +24,16 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 01:54 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** 2.4 erledigt (2026-10-18), PR Paddel87/OpenAirside#21 gemergt (`eead91b`); kein `[IN ARBEIT]`-Schritt; nächster Schritt 2.5. Letzter `[SESSIONENDE]`: 2026-10-18 23:27 UTC, danach Beobachtungen 23:30 und 23:38 UTC.
+- **Branches:** Neuer Branch `feat/2-5-spielstand-mit-autosave` von `main` `eead91b` (Schema `CLAUDE.md` Abschnitt 11; das Werkzeug hat keinen Namen vergeben). Merge-Vermerk `b59a95f` von `scp/zealous-ride-mwvv5m` als `dae5b43` übernommen (`project-context.md` Abschnitt 10). `docs/branch-konvention` ist vollständig in `main`. Übrige ungemergte Branches unverändert wie im `[SESSIONENDE]` 23:27 genannt; Löschen nur auf Anweisung.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant für diese Session:** kein ausdrücklicher Auftrag („Neue Session“); nach Fahrplan 2.5 beginnen: Vertrag S-5 und S-6 vertiefen, Maßnahme (7) anwenden (Vertragssätze vor dem Code gegen den Plan prüfen), Freigabe von Serialisierungsformat, Prüfsumme und ggf. Kompression mit belegten Versionen vorlegen.
+- **Vorabprüfung:** keine aktiven Blocker; Eingangskriterien 2.5 (S-5, S-6 `[BELASTBAR]`) erfüllt; Reaktiv-Quote 5 / 10 über dem Schwellenwert, Reflexionen zu ADR-025 und ADR-026 zur Kenntnis genommen, kein neuer reaktiver ADR seitdem; Phase 2 bei 10 Schritten (Plan 10). Ablaufdaten: heute stellt GitHub `ubuntu-latest` auf Ubuntu 26 um – ersten CI-Lauf dieser Session darauf prüfen (Q.1); sonst kein Vorlauf erreicht.
+- **Modus/Werkzeug:** Claude Code, Cloud-Session (Start über die iOS-App).
+- **Modell:** eingestellt und bedient `claude-opus-5-5` laut `get_session` 01:54 UTC – Entscheidungs-Klasse (Pflicht für die Freigabe in 2.5, Auslöser 1). Kontingent: 5-Stunden-Fenster `allowed`, Zurücksetzen 2026-10-19 02:10 UTC.
+
 ### 2026-10-18 23:38 (UTC) – [BEOBACHTUNG]
 
 - **PR Paddel87/OpenAirside#21 gemergt** (`eead91b`, Merge-Commit) auf Anweisung des Projektinhabers („merge wenn grün“); vorher alle 39 Prüfläufe auf `f52f469` grün (CI für Push und PR, CodeQL, wöchentliche Audits), PR konfliktfrei, keine Reviews oder Kommentare. Branch `scp/zealous-ride-mwvv5m` per Fast-Forward auf den neuen `main` gesetzt. Dieser Eintrag liegt nach `project-context.md` Abschnitt 10 nur auf dem Branch und geht mit dem PR des nächsten Schritts (2.5) nach `main`.
