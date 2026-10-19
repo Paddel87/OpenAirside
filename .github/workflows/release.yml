@@ -43,7 +43,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-      - run: rustup show
+      - run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2.9.2
       - run: npm ci
       - name: Paket bauen (ohne Beglaubigung, siehe project-context.md Abschnitt 8)

@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - run: rustup show # installiert die Version aus rust-toolchain.toml (1.98.1)
+      - run: rustup toolchain install # installiert die Version aus rust-toolchain.toml (1.98.1), ADR-035
       - uses: Swatinem/rust-cache@v2.9.2
       - name: rustfmt
         run: cargo fmt --all --check
@@ -77,7 +77,7 @@ jobs:
       actions: read # nur für den Vergleich mit dem letzten Lauf auf main (Anzeige, ADR-022, ADR-023)
     steps:
       - uses: actions/checkout@v7.0.1
-      - run: rustup show
+      - run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2.9.2
       # Rot bei Mittelwert > 1 ms oder p99 > 4 ms je Schritt mit 10.000 Personen (ADR-022).
       - name: Tick mit 10.000 Personen
@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - run: rustup show
+      - run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2.9.2
       - run: cargo install --locked cargo-deny@0.20.2
       - name: cargo-deny (Advisories, Lizenzen, Herkunft)
@@ -145,7 +145,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7.0.1
-      - run: rustup show
+      - run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2.9.2
       - run: cargo test --workspace --locked
 
@@ -154,7 +154,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - run: rustup show
+      - run: rustup toolchain install
       - run: rustup component add llvm-tools-preview
       - uses: Swatinem/rust-cache@v2.9.2
       - run: cargo install --locked cargo-llvm-cov@0.9.1
@@ -253,7 +253,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-      - run: rustup show
+      - run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2.9.2
       - run: npm ci
       - run: npm run build
