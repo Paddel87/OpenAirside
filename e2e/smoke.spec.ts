@@ -24,7 +24,7 @@ const packaged = process.env.OPENAIRSIDE_E2E_EXECUTABLE;
 // SUID helper; same pattern as the spike builds. Linux sandbox: roadmap step 7.2.
 const sandboxArgs = process.platform === "linux" ? ["--no-sandbox"] : [];
 
-/** Entries of the base pack: its 3 objects plus every text of `lang/` (S-4, ADR-031). */
+/** Entries of the base pack: its 3 objects plus every language entry and text of `lang/` (S-4, ADR-031). */
 function baseEntries(): number {
   const dir = path.join(import.meta.dirname, "..", "content", "base", "lang");
   let texts = 0;
@@ -32,7 +32,7 @@ function baseEntries(): number {
     const parsed = JSON.parse(readFileSync(path.join(dir, file), "utf8")) as {
       languages: { texts: Record<string, string> }[];
     };
-    for (const language of parsed.languages) texts += Object.keys(language.texts).length;
+    for (const language of parsed.languages) texts += 1 + Object.keys(language.texts).length;
   }
   return 3 + texts;
 }
@@ -82,7 +82,12 @@ function writeLanguagePack(userData: string): void {
         {
           id: "fr",
           name: "Français",
-          texts: { "ui.settings.open": "Paramètres", "ui.saves.load": "Charger" },
+          texts: {
+            "ui.settings.open": "Paramètres",
+            "ui.saves.load": "Charger",
+            // Finding 6 of the separate review of 2.6: a plain key end to end.
+            ["__proto__"]: "proto",
+          },
         },
       ],
     }),
@@ -382,10 +387,10 @@ test("window opens and core reports ready", async () => {
     await expect(settingsButton).toHaveText("Einstellungen");
     await command.fill("packs set kiosks french");
     await command.press("Enter");
-    await expect(log).toContainText("active user french 1.0.0 – 2 entries");
+    await expect(log).toContainText("active user french 1.0.0 – 4 entries");
     await command.fill("lang");
     await command.press("Enter");
-    await expect(log).toContainText("lang fr Français – 2 texts");
+    await expect(log).toContainText("lang fr Français – 3 texts");
     await command.fill("lang fr");
     await command.press("Enter");
     await expect(root).toHaveAttribute("data-language", "fr");
@@ -422,6 +427,11 @@ test("window opens and core reports ready", async () => {
         language: await refusal({ language: "xx" }),
         unknown: await refusal({ theme: "dark" }),
         saved: await api?.settings.set({ autosaveMinutes: 30, autosaveCount: 3 }),
+        protoKey: await (
+          api as unknown as { lang: { texts(code: string): Promise<object> } } | undefined
+        )?.lang
+          .texts("fr")
+          .then((texts) => Object.getOwnPropertyDescriptor(texts, "__proto__")?.value as unknown),
       };
     });
     expect(settingsCalls).toEqual({
@@ -429,6 +439,7 @@ test("window opens and core reports ready", async () => {
       language: "invalidArgument",
       unknown: "invalidArgument",
       saved: { language: "fr", autosaveMinutes: 30, autosaveCount: 3 },
+      protoKey: "proto",
     });
     expect(JSON.parse(readFileSync(path.join(userData, "settings.json"), "utf8"))).toEqual({
       language: "fr",
