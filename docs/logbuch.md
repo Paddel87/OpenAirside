@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 14:01 (UTC) – [BEOBACHTUNG]
+
+- **Abweichung von der Commit-Konvention:** `fbf72e3` („core: …“) enthält zusätzlich die Brücke (`bridge/src/lib.rs`) und die Korrektur des Schlüsselmusters in `architecture.md`, `ADR-031.md` und `fahrplan.md`; Ursache: ein `git add -A` vor `check:types`, das alle Änderungen vormerkte. Nicht nachträglich aufgeteilt (Änderung der Historie, Stopp-Kriterium 6). Lehre: vor dem Prüflauf nur die erzeugten Dateien vormerken.
+
 ### 2026-10-19 13:58 (UTC) – [PROBLEM-GELÖST]
 
 - **Problem:** Nach dem Einbau von `lang/` scheiterten `core/tests/datapacks.rs::base_pack_of_the_repository_loads` und der Rauchtest an „3 Einträge“ des Basispakets (jetzt 111).
