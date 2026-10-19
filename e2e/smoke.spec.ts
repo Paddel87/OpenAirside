@@ -24,6 +24,19 @@ const packaged = process.env.OPENAIRSIDE_E2E_EXECUTABLE;
 // SUID helper; same pattern as the spike builds. Linux sandbox: roadmap step 7.2.
 const sandboxArgs = process.platform === "linux" ? ["--no-sandbox"] : [];
 
+/** Entries of the base pack: its 3 objects plus every text of `lang/` (S-4, ADR-031). */
+function baseEntries(): number {
+  const dir = path.join(import.meta.dirname, "..", "content", "base", "lang");
+  let texts = 0;
+  for (const file of readdirSync(dir).filter((name) => name.endsWith(".json"))) {
+    const parsed = JSON.parse(readFileSync(path.join(dir, file), "utf8")) as {
+      languages: { texts: Record<string, string> }[];
+    };
+    for (const language of parsed.languages) texts += Object.keys(language.texts).length;
+  }
+  return 3 + texts;
+}
+
 /** A user pack "kiosks" with one object type in the pack folder of `userData` (FR-044). */
 function writeUserPack(userData: string): void {
   const pack = path.join(userData, "packs", "kiosks");
@@ -135,7 +148,7 @@ test("window opens and core reports ready", async () => {
       }
       return { base: list.find((p) => p.id === "base"), refused };
     });
-    expect(packs?.base).toMatchObject({ state: "active", entries: 3 });
+    expect(packs?.base).toMatchObject({ state: "active", entries: baseEntries() });
     expect(packs?.refused).toBe("unknownPack");
 
     // Console commands reach the core and take effect in the frames (S-2, S-3, FR-009).
@@ -158,7 +171,9 @@ test("window opens and core reports ready", async () => {
     await expect(window.locator("#hud")).toContainText("ticks/s");
     await input.fill("packs");
     await input.press("Enter");
-    await expect(window.locator("#log")).toContainText("active base base 0.0.0 – 3 entries");
+    await expect(window.locator("#log")).toContainText(
+      `active base base 0.0.0 – ${String(baseEntries())} entries`,
+    );
     await input.fill("speed x4");
     await input.press("Enter");
     await expect(window.locator("#log")).toContainText("speed paused|x1|x2|x3");
