@@ -58,9 +58,9 @@ export function previewSize(size: {
   return width > 0 && height > 0 ? { width, height } : undefined;
 }
 
-/** Autosave files in rotation; adjustable in step 2.6 (1–20, META-10). */
+/** Autosave files in rotation before the settings are read (setting `autosaveCount`, 1–20). */
 export const AUTOSAVE_SLOTS = 5;
-/** Running game time between two autosaves; adjustable in step 2.6. */
+/** Running game time between two autosaves before the settings are read (setting `autosaveMinutes`). */
 export const AUTOSAVE_INTERVAL_MS = 10 * 60 * 1000;
 /** Id of the single quick save. */
 export const QUICK_ID = "quick";
@@ -312,7 +312,16 @@ export class AutosaveClock {
   private runningMs = 0;
   private last: number | undefined;
 
-  constructor(private readonly intervalMs: number = AUTOSAVE_INTERVAL_MS) {}
+  constructor(private intervalMs: number = AUTOSAVE_INTERVAL_MS) {}
+
+  /**
+   * Takes a new interval from the settings at once; the running time
+   * counted so far stays, so a shorter interval may be due at the next
+   * observation.
+   */
+  setInterval(intervalMs: number): void {
+    this.intervalMs = intervalMs;
+  }
 
   /**
    * Observes the core at `now`; returns `true` once when an autosave is due.

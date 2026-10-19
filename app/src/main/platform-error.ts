@@ -14,6 +14,33 @@ import type { Reason } from "../generated/Reason.js";
 /** Prefix of the text keys of errors raised by the main process. */
 export const PLATFORM_TEXT_PREFIX = "platform.error";
 
+/**
+ * Every code the main process raises; the base pack has a text
+ * `platform.error.<code>` for each in every language (app/renderer/i18n.test.ts,
+ * checked against the sources in platform-error.test.ts).
+ */
+export const PLATFORM_CODES: readonly string[] = [
+  "alreadyRunning",
+  "busy",
+  "coreExited",
+  "diskFull",
+  "internal",
+  "invalidAnswer",
+  "invalidArgument",
+  "invalidId",
+  "invalidState",
+  "ioError",
+  "limitExceeded",
+  "notAnObject",
+  "notReady",
+  "notStarted",
+  "timeout",
+  "tooLarge",
+  "unknownPack",
+  "unknownSave",
+  "untrustedSender",
+];
+
 /** Answer of an IPC handler of S-6. */
 export type IpcAnswer =
   { readonly ok: true; readonly value: unknown } | { readonly ok: false; readonly error: Reason };

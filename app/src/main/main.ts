@@ -10,6 +10,8 @@
  * main process keeps its reports for `packs.list()`. Since step 2.5 also
  * save games (`saves.*`, S-5) with autosave and quick save, the log file
  * (`logs.*`) and the error form `{ code, textKey, params }` of every call.
+ * Since step 2.6 the settings (`settings.*`) and the languages of the
+ * loaded packs (`lang.*`, ADR-031).
  */
 import {
   app,
@@ -47,8 +49,10 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import type { LanguageInfo } from "../generated/LanguageInfo.js";
 import type { PackReport } from "../generated/PackReport.js";
 import type { SaveMeta } from "../generated/SaveMeta.js";
+import type { Settings } from "../generated/Settings.js";
 import { parseCoreArgs, withoutPackOptions } from "./core-port.js";
 import {
   type CoreStatus,
@@ -95,6 +99,15 @@ import {
   tempFileName,
   writeErrorCode,
 } from "./saves.js";
+import {
+  applySettings,
+  defaultSettings,
+  isLanguageCode,
+  MAX_SETTINGS_BYTES,
+  parseTexts,
+  SETTINGS_FILE,
+  settingsFromFile,
+} from "./settings.js";
 import {
   hardenedWebPreferences,
   isAllowedNavigation,
@@ -191,10 +204,88 @@ function savedActivePacks(): string[] {
   }
 }
 
+/** Languages of the last loaded packs (S-6 `lang.list`, ADR-031). */
+let languageList: LanguageInfo[] = [];
+/** The player's settings (S-6 `settings.*`); read once the app is ready. */
+let settings: Settings = defaultSettings([]);
+/** Writes of `settings.json` one after the other, so the last call wins. */
+let settingsWrite: Promise<unknown> = Promise.resolve();
+
+function settingsPath(): string {
+  return path.join(app.getPath("userData"), SETTINGS_FILE);
+}
+
+/**
+ * Reads `settings.json`; a missing file gives the defaults of a new
+ * installation, a broken one its valid fields plus defaults and a warning.
+ */
+function readSettings(): Settings {
+  const defaults = defaultSettings(app.getPreferredSystemLanguages());
+  let text: string;
+  try {
+    if (statSync(settingsPath()).size > MAX_SETTINGS_BYTES) {
+      log("warn", "settings file too large; using the defaults");
+      return defaults;
+    }
+    text = readFileSync(settingsPath(), "utf8");
+  } catch {
+    return defaults;
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    log("warn", "settings file unreadable; using the defaults");
+    return defaults;
+  }
+  const result = settingsFromFile(parsed, defaults);
+  if (!result.valid) log("warn", "settings file partly invalid; invalid values replaced");
+  return result.settings;
+}
+
+/** Tells the core process the autosave interval of the settings. */
+function sendAutosaveInterval(): void {
+  core?.postMessage({ type: "autosave:interval", minutes: settings.autosaveMinutes });
+}
+
+/** S-6 `settings.set`: checks the update, writes the file, then applies it. */
+async function setSettings(patch: unknown): Promise<Settings> {
+  const next = applySettings(settings, patch, languageList) ?? fail("invalidArgument");
+  const write = settingsWrite.then(async () => {
+    // Write and rename: an interrupted write never leaves half a file.
+    const file = settingsPath();
+    const temp = `${file}.tmp`;
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(temp, `${JSON.stringify(next, null, 2)}\n`);
+    await rename(temp, file);
+  });
+  settingsWrite = write.catch(() => undefined);
+  try {
+    await write;
+  } catch (error) {
+    log("warn", `cannot save the settings: ${errorCode(error)}`);
+    fail("ioError");
+  }
+  const intervalChanged = next.autosaveMinutes !== settings.autosaveMinutes;
+  settings = next;
+  if (intervalChanged) sendAutosaveInterval();
+  log("info", `settings changed: ${JSON.stringify(next)}`);
+  return next;
+}
+
+/** S-6 `lang.texts`: the texts of a listed language from the core process. */
+async function languageTexts(arg: unknown): Promise<Record<string, string>> {
+  if (!isLanguageCode(arg) || !languageList.some((l) => l.code === arg)) fail("invalidArgument");
+  const value = await requestSaves((request) => ({ type: "lang:texts", request, code: arg }));
+  // `null`: the language vanished with a pack change since the list.
+  if (value === null) fail("invalidArgument");
+  return parseTexts(value) ?? fail("invalidAnswer");
+}
+
 /** Settles the open `packs.setActive` call if `answer` belongs to it. */
 function settlePacks(
   answer:
-    | { type: "packs"; request: number; packs: PackReport[] }
+    | { type: "packs"; request: number; packs: PackReport[]; languages: LanguageInfo[] }
     | { type: "packsError"; request: number; message: string },
 ): void {
   const pending = packsPending;
@@ -205,6 +296,7 @@ function settlePacks(
   packsPending = undefined;
   if (answer.type === "packs") {
     packReports = answer.packs;
+    languageList = answer.languages;
     pending.resolve(answer.packs);
   } else {
     pending.reject(new Error(answer.message));
@@ -314,6 +406,8 @@ function startCore(): void {
     }
     if (message?.type === "ready") {
       packReports = message.packs;
+      languageList = message.languages;
+      sendAutosaveInterval();
     }
     globalThis.openairsideCoreStatus = nextCoreStatus(raw);
     connect();
@@ -731,7 +825,12 @@ async function writeSave(name: string, kind: SaveMeta["kind"]): Promise<{ id: st
   if (kind === "manual" && files.filter((f) => f.id.startsWith("m-")).length >= MAX_MANUAL_SAVES) {
     fail("limitExceeded", { limit: "manualSaves", max: MAX_MANUAL_SAVES });
   }
-  const id = newSaveId(kind, new Map(files.map((f) => [f.id, f.mtimeMs])), randomBytes(8));
+  const id = newSaveId(
+    kind,
+    new Map(files.map((f) => [f.id, f.mtimeMs])),
+    randomBytes(8),
+    settings.autosaveCount,
+  );
   const preview = await previewImage();
   const bytes = await requestSaves((request) => ({
     type: "saves:save",
@@ -945,6 +1044,7 @@ if (!app.commandLine.hasSwitch("no-sandbox")) {
 
 void app.whenReady().then(() => {
   openLogFile();
+  settings = readSettings();
   removeTempFiles();
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
     callback(false);
@@ -973,6 +1073,10 @@ void app.whenReady().then(() => {
   handle("saves:preview", savePreview);
   handle("logs:write", writeLog);
   handle("logs:openFolder", openLogFolder);
+  handle("settings:get", () => settings);
+  handle("settings:set", setSettings);
+  handle("lang:list", () => languageList);
+  handle("lang:texts", languageTexts);
   startCore();
   createWindow();
 });

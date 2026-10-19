@@ -6,7 +6,9 @@
  * (S-4) and changes the active packs on request of the main process (S-6
  * `packs.*`, step 2.4). Saves, loads and reads save games for the main
  * process and tells it when an autosave is due (S-5, S-6 `saves.*`, step
- * 2.5); encoding and checking run off this thread in the bridge.
+ * 2.5); encoding and checking run off this thread in the bridge. Hands out
+ * the languages and texts of the loaded packs (S-6 `lang.*`, step 2.6,
+ * ADR-031) and takes the autosave interval from the settings.
  */
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
@@ -15,6 +17,7 @@ import type { Reason } from "../generated/Reason.js";
 import {
   type CoreHostOutgoing,
   type CoreInfo,
+  parseAutosaveInterval,
   parsePackRequest,
   parseSavesRequest,
   type SavesRequest,
@@ -35,6 +38,8 @@ interface NativeCore {
   pump(): BridgeOutgoing[];
   packs(): unknown;
   setActivePacks(ids: string[]): unknown;
+  languages(): unknown;
+  texts(code: string): unknown;
   status(): { session: number; running: boolean };
   saveGame(name: string, kind: string, savedAt: string, preview: Buffer): Promise<Buffer>;
   loadGame(bytes: Buffer): Promise<string>;
@@ -81,6 +86,8 @@ async function answerSaves(
     case "saves:checkPreview":
       bridge.checkPreview(asBuffer(request.png));
       return null;
+    case "lang:texts":
+      return core.texts(request.code);
     case "saves:info":
       return request.files.map((file) => {
         try {
@@ -103,6 +110,7 @@ try {
   const bridge = require(nativeModulePath) as BridgeModule;
   const core = new bridge.Core(parseCoreArgs(process.argv));
   let current: MessagePortMain | undefined;
+  const autosave = new AutosaveClock();
 
   process.parentPort.on("message", (event) => {
     const saves = parseSavesRequest(event.data);
@@ -128,10 +136,16 @@ try {
       });
       return;
     }
+    const interval = parseAutosaveInterval(event.data);
+    if (interval !== undefined) {
+      autosave.setInterval(interval.minutes * 60_000);
+      return;
+    }
     const request = parsePackRequest(event.data);
     if (request !== undefined) {
       try {
-        post({ type: "packs", request: request.request, packs: core.setActivePacks(request.ids) });
+        const packs = core.setActivePacks(request.ids);
+        post({ type: "packs", request: request.request, packs, languages: core.languages() });
       } catch (error) {
         post({
           type: "packsError",
@@ -158,7 +172,6 @@ try {
       send(current, core.pump());
     }
   }, PUMP_MS);
-  const autosave = new AutosaveClock();
   setInterval(() => {
     try {
       const status = core.status();
@@ -170,7 +183,12 @@ try {
     }
   }, AUTOSAVE_TICK_MS);
 
-  post({ type: "ready", info: bridge.coreInfo(), packs: core.packs() });
+  post({
+    type: "ready",
+    info: bridge.coreInfo(),
+    packs: core.packs(),
+    languages: core.languages(),
+  });
 } catch (error) {
   post({ type: "error", message: error instanceof Error ? error.message : String(error) });
   process.exitCode = 1;

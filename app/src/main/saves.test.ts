@@ -108,6 +108,24 @@ describe("ids of new save games", () => {
     expect(newSaveId("auto", full, random)).toBe("auto-5");
     expect(newSaveId("auto", full, random, 1)).toBe("auto-1");
   });
+
+  it("rotates only over the chosen number of slots and keeps the others (step 2.6)", () => {
+    // Count lowered from 5 to 2: auto-3 … auto-5 stay untouched, even if older.
+    const files = new Map([
+      ["auto-1", 500],
+      ["auto-2", 400],
+      ["auto-5", 1],
+    ]);
+    expect(newSaveId("auto", files, random, 2)).toBe("auto-2");
+    // Count raised to 20: the first free slot comes next.
+    expect(newSaveId("auto", files, random, 20)).toBe("auto-3");
+    const twenty = new Map(
+      Array.from({ length: 20 }, (_, i) => [`auto-${String(i + 1)}`, 100 - i] as const),
+    );
+    expect(newSaveId("auto", twenty, random, 20)).toBe("auto-20");
+    expect(isSaveId("auto-20")).toBe(true);
+    expect(isSaveId("auto-21")).toBe(false);
+  });
 });
 
 describe("list order", () => {
@@ -185,6 +203,17 @@ describe("autosave clock", () => {
     expect(clock.observe(74_500, 2, true)).toBe(false);
     expect(clock.observe(84_000, 2, true)).toBe(false);
     expect(clock.observe(84_600, 2, true)).toBe(true);
+  });
+
+  it("takes a new interval at once and keeps the time counted so far (step 2.6)", () => {
+    const clock = new AutosaveClock(10_000);
+    expect(clock.observe(0, 1, true)).toBe(false);
+    expect(clock.observe(4_000, 1, true)).toBe(false);
+    clock.setInterval(3_000);
+    expect(clock.observe(4_001, 1, true)).toBe(true);
+    clock.setInterval(60_000);
+    expect(clock.observe(50_000, 1, true)).toBe(false);
+    expect(clock.observe(64_002, 1, true)).toBe(true);
   });
 });
 
