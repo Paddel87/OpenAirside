@@ -8,7 +8,7 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-19 (Session ab 16:18 UTC)
+- **Stand vom:** 2026-10-19 (Session 16:18–17:10 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
 - **Aktiver Schritt:** 2.10 (Stilleitfaden, SVG-Pipeline, Messung) – IN ARBEIT, Pipeline umgesetzt (ADR-033), wartet auf die Messung durch den Projektinhaber; zuvor 2.11 ERLEDIGT (ADR-032, PR #24, `2a464bf`)
@@ -362,7 +362,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Artefakte:** Stilleitfaden, Pipeline-Skript, Atlanten, Messprotokoll, ADR
 - **Stand 2026-10-19 16:22 UTC:** Vorlage als `ENTSCHEIDUNG ERFORDERLICH` (Kategorie 3, mit Kategorie 7 für den neuen Bauschritt): A resvg 0.48.1 (Rust, crates.io, Apache-2.0 OR MIT) in einem eigenen Werkzeug-Crate `tools/assets` im Cargo-Workspace, nur im Build, mit Atlas-Packer und Bildliste ohne weitere Abhängigkeit; B @resvg/resvg-js 2.6.2 (npm, MPL-2.0, vorgebaute native Pakete; letzte stabile Version 2024-03-26, seither nur Alpha-Versionen); C Rasterung in Electron/Chromium ohne neue Abhängigkeit. Verworfen ohne Option: sharp (vorgebaute libvips-Binärdateien unter LGPL-3.0, nicht erlaubt). Empfehlung A. Belege: Probe-Projekt mit `default-features = false` – 37 Crates, alle Lizenzen erlaubt, eine doppelte Version `miniz_oxide` 0.8.9 neben 0.9.1 (über png 0.18.1) als benannte Ausnahme in `deny.toml` nötig; Rasterung eines Test-SVG in 1× und 2× lief. Wartet auf Freigabe.
 - **Freigabe (2026-10-19 16:28 UTC):** Option A per Auswahl, ADR-033 `[OPERATIV]`.
-- **Stand 2026-10-19 17:02 UTC:** umgesetzt und lokal geprüft: Werkzeug-Crate `tools/assets` (Atlanten in 8/16/32 px je Zelle, Bildliste, Programmsymbol), Stilleitfaden `docs/stilleitfaden.md` mit Palette `assets/palette.json`, SVG-Quellen in `assets/` (außerhalb des Paketordners, S-4 unverändert), Prüfer `scripts/assets.mjs`, Atlanten im Spielfeld (`app/renderer/atlas.ts`, ohne `fetch`, CSP unverändert), Szene des Messwerkzeugs (20.000 Objekte, 64 Zonen), Fenstersymbol unter Linux, Rauchtest mit `data-atlas`. Onboarding im frischen Worktree validiert. Messanleitung `docs/research/2.10-messung.md`. **Offen:** Messung auf Referenz-PC und Mac durch den Projektinhaber (Hardware), danach Auswertung und ADR zur NFR Darstellung; bis dahin bleibt der Schritt `[IN ARBEIT]`.
+- **Stand 2026-10-19 17:02 UTC:** umgesetzt und lokal geprüft: Werkzeug-Crate `tools/assets` (Atlanten in 8/16/32 px je Zelle, Bildliste, Programmsymbol), Stilleitfaden `docs/stilleitfaden.md` mit Palette `assets/palette.json`, SVG-Quellen in `assets/` (außerhalb des Paketordners, S-4 unverändert), Prüfer `scripts/assets.mjs`, Atlanten im Spielfeld (`app/renderer/atlas.ts`, ohne `fetch`, CSP unverändert), Szene des Messwerkzeugs (20.000 Objekte, 64 Zonen), Fenstersymbol unter Linux, Rauchtest mit `data-atlas`. Onboarding im frischen Worktree validiert. Messanleitung `docs/research/2.10-messung.md`. CI-Lauf 39290398392 grün (17 Jobs); Messpakete aus Release-Lauf 39291102397 (`62f3ac0`). **Offen:** Messung auf Referenz-PC und Mac durch den Projektinhaber (Hardware), danach Auswertung und ADR zur NFR Darstellung; bis dahin bleibt der Schritt `[IN ARBEIT]`.
 
 ### Phase 3: Vertikaler Schnitt „Kleiner Flughafen" – Typ: UMSETZUNG
 

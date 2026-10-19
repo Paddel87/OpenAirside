@@ -24,6 +24,20 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 17:10 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 55 Minuten seit `[SESSIONSTART]` 16:18 UTC.
+- **Bearbeitet:** Übernahme des Merge-Vermerks auf `feat/2-10-stilleitfaden-svg-pipeline`; Schritt 2.10: Vorlage des Rasterers, Freigabe A, ADR-033, Werkzeug-Crate `tools/assets`, Stilleitfaden mit Palette, SVG-Quellen (Bank, Betonboden, Betonwand, Ersatzgrafik, Programmsymbol), Prüfer `scripts/assets.mjs`, Atlanten im Spielfeld, Szene im Messwerkzeug, Fenstersymbol unter Linux, Rauchtest, Messanleitung, Dokumentation.
+- **Erreicht:** Pipeline umgesetzt und auf drei Plattformen grün (CI-Lauf 39290398392, 17 Jobs; Release-Lauf 39291102397 mit Paketen); Grafik-Pipeline `[BELASTBAR]`; Coverage: Vitest gesamt 86,5 % Lines (`atlas.ts` 100 %, `measure.ts` 98,0 %, `assets.mjs` 93,6 %), Rust gesamt und Kern über den Schwellen (Kern 98,4 %), `tools/assets/src/lib.rs` 96,0 % Lines; Onboarding im frischen Worktree validiert. Commits `f975893` … `62f3ac0` plus dieser Sessionende-Commit.
+- **Offen geblieben:** 2.10 bleibt `[IN ARBEIT]`: Messung auf Referenz-PC und Mac (je ein Lauf, Mac zusätzlich mit `--background-threads=4`) durch den Projektinhaber nach `docs/research/2.10-messung.md`, danach Auswertung und ADR zur NFR Darstellung. Kein PR vor dem Abschluss des Schritts. Abkündigung `rustup show` wartet auf Q.1 (freigabepflichtig).
+- **Nächster Schritt:** Ergebnisdateien der Messung auswerten (gegen 2.7), ADR zur NFR Darstellung, 2.10 abschließen, PR.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 16:18 und 17:10 UTC); 2.10 empfiehlt die Entscheidungs-Klasse, 0 Schritte oberhalb der Empfehlung; Routine-Teilarbeiten (Logbuch, README) nicht abgegeben, Probelauf offen.
+- **Kontextgröße:** über die Laufzeitumgebung nicht feststellbar (`get_session` meldet `used_tokens` 0); kein Hinweis möglich.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 17:10 UTC.
+- **Ablaufdaten-Prüfung:** neuer Eintrag `rustup show` (Q.1); kein Eintrag mit erreichtem Vorlauf ohne Schritt.
+- **Archivierung:** Logbuch über 800 Zeilen, alle Einträge aus Oktober 2026 – nichts auszulagern; Verdichtung mit dem `[PHASEN-WECHSEL]` nach Phase 2.
+- **Drift-Prüfung:** README nachgezogen (Verwendung: Grafiken, `measure` mit Szene; Architektur-Reife: Grafik-Pipeline); Nächste Schritte unverändert (2.10 läuft). ADR-033 verweist auf vorhandene Schritte (2.10, Q.1). Reifegrad Grafik-Pipeline passt zu ADR-008/ADR-033 und Umsetzung. Modul-Liste unverändert (`tools/assets` ist Werkzeug des Moduls Inhalte & Mods, `atlas.ts` gehört zum Spielfeld). FR-050 verweist auf 2.10. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 7 / 10 (ADR-024 bis ADR-033) stimmt mit den Tags. Phase 2: 11 Schritte bei Plan 10. Größen: `project-context.md` unter 400 Zeilen.
+
 ### 2026-10-19 17:04 (UTC) – [REIFEGRAD-WECHSEL]
 
 - **Grafik-Pipeline (SVG → Atlanten):** `[VORLÄUFIG]` (ADR-008) → `[BELASTBAR]` durch funktionierende Umsetzung in 2.10 (Beförderungsregel): Werkzeug und Prüfer mit Tests, CI-Lauf 39290398392 auf `5862b4e` grün auf drei Plattformen (17 Jobs), Rauchtest lädt die Atlanten unter der CSP. NFR Darstellung mit echten Grafiken bleibt `[VORLÄUFIG]` bis zur Messung.
