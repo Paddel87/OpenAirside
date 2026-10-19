@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 13:25 (UTC) – [BEOBACHTUNG]
+
+- **Kenntnisnahme:** Projektinhaber: „Zur Kenntnis genommen, Reflexionen ADR-029 und ADR-030“. Im Fahrplan vermerkt; kein Umbau, Maßnahme (9) gilt.
+
 ### 2026-10-19 13:24 (UTC) – [BEOBACHTUNG]
 
 - **Merge:** PR #22 (Schritt 2.5) auf Anweisung des Projektinhabers („merge bei grün“) nach `main` gemergt, Merge-Commit `12a2c77`; vorher grün: Push-Lauf 39254862979, PR-Läufe CI 39259088549 und Security 39259088469 auf `a773a44`. Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf dem Arbeits-Branch und geht mit dem PR des nächsten Schritts nach `main`.
