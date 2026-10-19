@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 18:38 (UTC) – [BEOBACHTUNG]
+
+- **Messung 2.10, Referenz-PC eingegangen:** abgelegt als `docs/research/2.10-ergebnisse/referenz-pc-windows.json`. 59,9–60,0 Bilder/s bei 60 Hz in allen 20 Fenstern, keine langen Aufgaben, kein Rückstand, Schrittzeit-Ausreißer nur im letzten Fenster; Bauaktion bis zum Bild 2–3 statt 1–2 Bilder (2.7). Ausstehend: Mac-Lauf 2 (`--background-threads=4`).
+
 ### 2026-10-19 18:37 (UTC) – [BEOBACHTUNG]
 
 - **Messung 2.10, Mac-Lauf 1 (Standardaufteilung 2 + 8) eingegangen:** abgelegt als `docs/research/2.10-ergebnisse/mac-m3pro-standard.json`. 119,1–120,1 Bilder/s bei 120 Hz mit Szene (20.000 Objekte, 64 Zonen, 10.000 Personen); neu zwei lange Aufgaben im Renderer (131 und 83 ms); Schrittzeit-Ausreißer wie in 2.7 (bis 75 ms, 11 von 20 Fenstern über 4 ms), Minimum 180 Ticks/s in allen Fenstern. Auswertung in `docs/research/2.10-messung.md`. Ausstehend: Mac-Lauf 2 (`--background-threads=4`) und Referenz-PC.
