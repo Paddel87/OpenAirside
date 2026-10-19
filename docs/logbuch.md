@@ -24,6 +24,13 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 02:41 (UTC) – [BEOBACHTUNG]
+
+- **Stufe 2.5a umgesetzt** (`07188d5`): Spielstand-Container im Kern, Tests `core/tests/savegame_roundtrip.rs` (10) und Unit-Tests der Invarianten (4) grün, Coverage Kern 98,49 % Lines. Alle Tests liefen beim ersten Versuch grün bis auf eine eigene Annahme im Unit-Test (geteilte Leer-Blöcke im offenen Saal – dort ist jeder Block bebaut; Prüfung auf eine leere Welt umgestellt) und einen clippy-Befund (`err().expect` → `expect_err`).
+- **Entwurfsentscheidungen im Rahmen des freigegebenen Plans:** Die „Bauänderungen seit der Revision“ (S-5) sind die Blöcke, die sich zwischen Eingabe der aktiven Wegweiser und aktuellem Raster unterscheiden; dafür behält `FieldSet` ihre Eingabe (geteilte Blöcke, zusätzlich nur die Tabelle der Zeiger). Das Tempo wird mitgespeichert, weil es Teil der Zustands-Prüfsumme ist. Befehle prüft der Kern jetzt gegen die Karte der Welt statt gegen die Einstellung, damit ein Spielstand mit anderer Kartengröße richtig geprüft wird.
+- **CI-Lauf 39188204304** (Vorlage, `a4ace0c`): 17 von 17 Jobs grün. Ubuntu-Jobs noch auf Ubuntu 24.04.5 (Image `ubuntu-24.04` 20261012): Umstellung auf Ubuntu 26 noch nicht erfolgt, Register-Eintrag ergänzt. Neu im Protokoll: `npm audit` mit 8 Befunden „moderate“ (sprintf-js über electron-builder, nur Bauwerkzeug) – in den Warnungs-Bestand (`project-context.md` Abschnitt 7) und nach Q.1 aufgenommen. Der Hinweis „install scripts not yet covered“ nennt nur noch electron-winstaller.
+- **Dauer der Tests:** `savegame_roundtrip` braucht im Debug-Build rund 22 s (300 zufällige Änderungen am Referenz-Terminal 256²); vertretbar, aber im Blick behalten.
+
 ### 2026-10-19 02:10 (UTC) – [ADR-ANGELEGT]
 
 - **ADR-027 `[OPERATIV]`:** Spielstand mit `postcard` 1.1.3, Deflate über `miniz_oxide` 0.9.1, Prüfsumme FNV-1a 64 aus dem Kern (Option A), freigegeben vom Projektinhaber per Auswahl.
