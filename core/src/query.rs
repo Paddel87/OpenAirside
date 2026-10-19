@@ -251,6 +251,16 @@ pub mod code {
     pub const LIMIT_EXCEEDED: &str = "limitExceeded";
     /// Handle does not name an existing object.
     pub const STALE_HANDLE: &str = "staleHandle";
+
+    /// Every code above; the base pack has a text for each
+    /// (`core/tests/lang.rs`).
+    pub const ALL: &[&str] = &[
+        UNKNOWN_TABLE,
+        UNKNOWN_COLUMN,
+        INVALID_FILTER,
+        LIMIT_EXCEEDED,
+        STALE_HANDLE,
+    ];
 }
 
 /// Prefix of the localisation keys of query errors.

@@ -24,6 +24,19 @@ const packaged = process.env.OPENAIRSIDE_E2E_EXECUTABLE;
 // SUID helper; same pattern as the spike builds. Linux sandbox: roadmap step 7.2.
 const sandboxArgs = process.platform === "linux" ? ["--no-sandbox"] : [];
 
+/** Entries of the base pack: its 3 objects plus every language entry and text of `lang/` (S-4, ADR-031). */
+function baseEntries(): number {
+  const dir = path.join(import.meta.dirname, "..", "content", "base", "lang");
+  let texts = 0;
+  for (const file of readdirSync(dir).filter((name) => name.endsWith(".json"))) {
+    const parsed = JSON.parse(readFileSync(path.join(dir, file), "utf8")) as {
+      languages: { texts: Record<string, string> }[];
+    };
+    for (const language of parsed.languages) texts += 1 + Object.keys(language.texts).length;
+  }
+  return 3 + texts;
+}
+
 /** A user pack "kiosks" with one object type in the pack folder of `userData` (FR-044). */
 function writeUserPack(userData: string): void {
   const pack = path.join(userData, "packs", "kiosks");
@@ -49,10 +62,47 @@ function writeUserPack(userData: string): void {
   );
 }
 
+/**
+ * A language pack "french" in the pack folder (FR-006, ADR-031): two texts
+ * only, the rest falls back to English. Plus the settings file of a player
+ * who chose English, so that the texts checked below do not depend on the
+ * system language of the machine.
+ */
+function writeLanguagePack(userData: string): void {
+  const pack = path.join(userData, "packs", "french");
+  mkdirSync(path.join(pack, "lang"), { recursive: true });
+  writeFileSync(
+    path.join(pack, "manifest.json"),
+    JSON.stringify({ id: "french", name: "Français", version: "1.0.0", format: 1, game: "*" }),
+  );
+  writeFileSync(
+    path.join(pack, "lang", "fr.json"),
+    JSON.stringify({
+      languages: [
+        {
+          id: "fr",
+          name: "Français",
+          texts: {
+            "ui.settings.open": "Paramètres",
+            "ui.saves.load": "Charger",
+            // Finding 6 of the separate review of 2.6: a plain key end to end.
+            ["__proto__"]: "proto",
+          },
+        },
+      ],
+    }),
+  );
+  writeFileSync(
+    path.join(userData, "settings.json"),
+    JSON.stringify({ language: "en", autosaveMinutes: 10, autosaveCount: 5 }),
+  );
+}
+
 test("window opens and core reports ready", async () => {
   // A fresh user data folder: saved pack choices of a developer do not interfere.
   const userData = mkdtempSync(path.join(os.tmpdir(), "openairside-e2e-"));
   writeUserPack(userData);
+  writeLanguagePack(userData);
   const app = await electron.launch({
     // OPENAIRSIDE_E2E_EXECUTABLE points to a packaged build (release.yml); without
     // it the test starts the development build from the repository root.
@@ -135,7 +185,7 @@ test("window opens and core reports ready", async () => {
       }
       return { base: list.find((p) => p.id === "base"), refused };
     });
-    expect(packs?.base).toMatchObject({ state: "active", entries: 3 });
+    expect(packs?.base).toMatchObject({ state: "active", entries: baseEntries() });
     expect(packs?.refused).toBe("unknownPack");
 
     // Console commands reach the core and take effect in the frames (S-2, S-3, FR-009).
@@ -158,7 +208,9 @@ test("window opens and core reports ready", async () => {
     await expect(window.locator("#hud")).toContainText("ticks/s");
     await input.fill("packs");
     await input.press("Enter");
-    await expect(window.locator("#log")).toContainText("active base base 0.0.0 – 3 entries");
+    await expect(window.locator("#log")).toContainText(
+      `active base base 0.0.0 – ${String(baseEntries())} entries`,
+    );
     await input.fill("speed x4");
     await input.press("Enter");
     await expect(window.locator("#log")).toContainText("speed paused|x1|x2|x3");
@@ -320,6 +372,84 @@ test("window opens and core reports ready", async () => {
     await command.fill("build kiosks:kiosk 10 10");
     await command.press("Enter");
     await expect(log).toContainText("#1 ok");
+
+    // Language (FR-006, step 2.6): switched without restart; a language pack
+    // from the pack folder is recognised; missing texts fall back to English.
+    const settingsButton = window.locator("#settings-button");
+    await expect(root).toHaveAttribute("data-language", "en", { timeout: 20_000 });
+    await expect(settingsButton).toHaveText("Settings");
+    await window.evaluate(() => {
+      (globalThis as { e2eNoReload?: boolean }).e2eNoReload = true;
+    });
+    await command.fill("lang de");
+    await command.press("Enter");
+    await expect(root).toHaveAttribute("data-language", "de");
+    await expect(settingsButton).toHaveText("Einstellungen");
+    await command.fill("packs set kiosks french");
+    await command.press("Enter");
+    await expect(log).toContainText("active user french 1.0.0 – 4 entries");
+    await command.fill("lang");
+    await command.press("Enter");
+    await expect(log).toContainText("lang fr Français – 3 texts");
+    await command.fill("lang fr");
+    await command.press("Enter");
+    await expect(root).toHaveAttribute("data-language", "fr");
+    await expect(settingsButton).toHaveText("Paramètres");
+    await settingsButton.click();
+    const settingsBox = window.locator("#settings");
+    await expect(settingsBox.locator("h2")).toHaveText("Settings");
+    await expect(settingsBox.locator("option")).toHaveText([
+      "Deutsch (de)",
+      "English (en)",
+      "Français (fr)",
+    ]);
+    // No reload, same session: the switch needed no restart.
+    expect(await window.evaluate(() => (globalThis as { e2eNoReload?: boolean }).e2eNoReload)).toBe(
+      true,
+    );
+    await expect(root).toHaveAttribute("data-session", "4");
+    const settingsCalls = await window.evaluate(async () => {
+      const api = (
+        globalThis as {
+          openairside?: { settings: { set(patch: unknown): Promise<unknown> } };
+        }
+      ).openairside;
+      const refusal = async (patch: unknown): Promise<unknown> => {
+        try {
+          await api?.settings.set(patch);
+          return "accepted";
+        } catch (error) {
+          return (error as { code?: unknown }).code;
+        }
+      };
+      return {
+        count: await refusal({ autosaveCount: 21 }),
+        language: await refusal({ language: "xx" }),
+        unknown: await refusal({ theme: "dark" }),
+        saved: await api?.settings.set({ autosaveMinutes: 30, autosaveCount: 3 }),
+        protoKey: await (
+          api as unknown as { lang: { texts(code: string): Promise<object> } } | undefined
+        )?.lang
+          .texts("fr")
+          .then((texts) => Object.getOwnPropertyDescriptor(texts, "__proto__")?.value as unknown),
+      };
+    });
+    expect(settingsCalls).toEqual({
+      count: "invalidArgument",
+      language: "invalidArgument",
+      unknown: "invalidArgument",
+      saved: { language: "fr", autosaveMinutes: 30, autosaveCount: 3 },
+      protoKey: "proto",
+    });
+    expect(JSON.parse(readFileSync(path.join(userData, "settings.json"), "utf8"))).toEqual({
+      language: "fr",
+      autosaveMinutes: 30,
+      autosaveCount: 3,
+    });
+    await settingsBox.getByRole("button", { name: "Close" }).click();
+    await command.fill("lang en");
+    await command.press("Enter");
+    await expect(settingsButton).toHaveText("Settings");
 
     // Crash of the core (S-6, ADR-029), forced: the platform restarts it and
     // the interface offers the last autosave; after the third restart within

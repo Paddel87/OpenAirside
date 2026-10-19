@@ -87,6 +87,24 @@ pub mod code {
     pub const IO_ERROR: &str = "ioError";
     /// The disk is full (reported by the platform).
     pub const DISK_FULL: &str = "diskFull";
+
+    /// Every code above, plus `coreStopped` of the runner; the base pack has
+    /// a text for each (`core/tests/lang.rs`).
+    pub const ALL: &[&str] = &[
+        BAD_MAGIC,
+        TRUNCATED,
+        CHECKSUM_MISMATCH,
+        VERSION_TOO_NEW,
+        MIGRATION_FAILED,
+        PACK_MISSING,
+        PACK_VERSION_MISMATCH,
+        LIMIT_EXCEEDED,
+        INVALID_STATE,
+        INVALID_ARGUMENT,
+        IO_ERROR,
+        DISK_FULL,
+        crate::runner::CORE_STOPPED,
+    ];
 }
 
 /// Prefix of the localisation keys of save and load errors.

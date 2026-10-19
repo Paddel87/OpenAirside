@@ -49,7 +49,8 @@ body {
 }
 
 #saves,
-#notice {
+#notice,
+#settings {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -70,7 +71,8 @@ body {
 }
 
 #saves[hidden],
-#notice[hidden] {
+#notice[hidden],
+#settings[hidden] {
   display: none;
 }
 
@@ -104,7 +106,9 @@ body {
 }
 
 #saves button,
-#notice button {
+#notice button,
+#settings button,
+#settings-button {
   margin-right: 4px;
   background: #2a3038;
   color: inherit;
@@ -112,4 +116,38 @@ body {
   border-radius: 3px;
   font: inherit;
   padding: 2px 8px;
+}
+
+#settings h2 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+#settings label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+#settings label span {
+  flex: 1;
+}
+
+#settings select,
+#settings input {
+  width: 200px;
+  background: #0d0f12;
+  color: inherit;
+  border: 1px solid #3a414b;
+  font: inherit;
+}
+
+#settings-button {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  font:
+    13px/1.4 system-ui,
+    sans-serif;
 }

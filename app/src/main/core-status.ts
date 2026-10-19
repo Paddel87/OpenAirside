@@ -4,15 +4,18 @@
  * The utility process (core-host.ts) reports once after start-up whether the
  * native bridge module could be loaded, together with the found data packs,
  * and answers requests to change the active packs (step 2.4) and to save,
- * load and read save games (step 2.5); it also says when an autosave is
- * due. Messages cross a process boundary and are therefore validated
+ * load and read save games (step 2.5) and to hand out the texts of a
+ * language (step 2.6, ADR-031); it also says when an autosave is due. The
+ * language list travels with the pack reports. Messages cross a process boundary and are therefore validated
  * instead of trusted.
  */
+import type { LanguageInfo } from "../generated/LanguageInfo.js";
 import type { PackReport } from "../generated/PackReport.js";
 import type { Reason } from "../generated/Reason.js";
 import type { SaveKind } from "../generated/SaveKind.js";
 import { parseActiveIds, parsePackReports } from "./packs.js";
 import { parseReason } from "./platform-error.js";
+import { AUTOSAVE_MINUTES, isLanguageCode, parseLanguageList } from "./settings.js";
 
 /** Identification of the loaded core (mirrors `CoreInfo` in bridge/src/lib.rs). */
 export interface CoreInfo {
@@ -22,9 +25,19 @@ export interface CoreInfo {
 
 /** Message of the core host as validated by the main process. */
 export type CoreHostMessage =
-  | { readonly type: "ready"; readonly info: CoreInfo; readonly packs: PackReport[] }
+  | {
+      readonly type: "ready";
+      readonly info: CoreInfo;
+      readonly packs: PackReport[];
+      readonly languages: LanguageInfo[];
+    }
   | { readonly type: "error"; readonly message: string }
-  | { readonly type: "packs"; readonly request: number; readonly packs: PackReport[] }
+  | {
+      readonly type: "packs";
+      readonly request: number;
+      readonly packs: PackReport[];
+      readonly languages: LanguageInfo[];
+    }
   | { readonly type: "packsError"; readonly request: number; readonly message: string }
   | SavesAnswer
   | { readonly type: "autosave" };
@@ -50,7 +63,11 @@ export interface InfoFile {
   readonly size: number;
 }
 
-/** Request of the main process to the core host for save games (S-6 `saves.*`). */
+/**
+ * Request of the main process to the core host that expects an answer:
+ * save games (S-6 `saves.*`, step 2.5) and the texts of a language
+ * (`lang.texts`, step 2.6).
+ */
 export type SavesRequest =
   | {
       readonly type: "saves:save";
@@ -62,13 +79,30 @@ export type SavesRequest =
     }
   | { readonly type: "saves:load"; readonly request: number; readonly bytes: Uint8Array }
   | { readonly type: "saves:info"; readonly request: number; readonly files: readonly InfoFile[] }
-  | { readonly type: "saves:checkPreview"; readonly request: number; readonly png: Uint8Array };
+  | { readonly type: "saves:checkPreview"; readonly request: number; readonly png: Uint8Array }
+  | { readonly type: "lang:texts"; readonly request: number; readonly code: string };
+
+/** Autosave interval for the clock of the core host (S-6 `settings.*`, step 2.6). */
+export interface AutosaveIntervalMessage {
+  readonly type: "autosave:interval";
+  readonly minutes: number;
+}
 
 /** Message as posted by the core host (reports straight from the bridge). */
 export type CoreHostOutgoing =
-  | { readonly type: "ready"; readonly info: CoreInfo; readonly packs: unknown }
+  | {
+      readonly type: "ready";
+      readonly info: CoreInfo;
+      readonly packs: unknown;
+      readonly languages: unknown;
+    }
   | { readonly type: "error"; readonly message: string }
-  | { readonly type: "packs"; readonly request: number; readonly packs: unknown }
+  | {
+      readonly type: "packs";
+      readonly request: number;
+      readonly packs: unknown;
+      readonly languages: unknown;
+    }
   | { readonly type: "packsError"; readonly request: number; readonly message: string }
   | SavesAnswer
   | { readonly type: "autosave" };
@@ -115,12 +149,21 @@ export function parseCoreHostMessage(value: unknown): CoreHostMessage | undefine
   }
   if (value.type === "ready" && isCoreInfo(value.info)) {
     const packs = parsePackReports(value.packs);
-    if (packs === undefined) return undefined;
-    return { type: "ready", info: { name: value.info.name, version: value.info.version }, packs };
+    const languages = parseLanguageList(value.languages);
+    if (packs === undefined || languages === undefined) return undefined;
+    return {
+      type: "ready",
+      info: { name: value.info.name, version: value.info.version },
+      packs,
+      languages,
+    };
   }
   if (value.type === "packs" && isRequestNumber(value.request)) {
     const packs = parsePackReports(value.packs);
-    return packs === undefined ? undefined : { type: "packs", request: value.request, packs };
+    const languages = parseLanguageList(value.languages);
+    return packs === undefined || languages === undefined
+      ? undefined
+      : { type: "packs", request: value.request, packs, languages };
   }
   if (
     value.type === "packsError" &&
@@ -162,7 +205,7 @@ export const MAX_INFO_FILES = 1000;
 export function savesRequestNumber(value: unknown): number | undefined {
   return isRecord(value) &&
     typeof value.type === "string" &&
-    value.type.startsWith("saves:") &&
+    (value.type.startsWith("saves:") || value.type.startsWith("lang:")) &&
     isRequestNumber(value.request)
     ? value.request
     : undefined;
@@ -204,9 +247,25 @@ export function parseSavesRequest(value: unknown): SavesRequest | undefined {
       }
       return { type: "saves:info", request, files };
     }
+    case "lang:texts":
+      return isLanguageCode(value.code)
+        ? { type: "lang:texts", request, code: value.code }
+        : undefined;
     default:
       return undefined;
   }
+}
+
+/** Validates an autosave interval message of the main process in the core host. */
+export function parseAutosaveInterval(value: unknown): AutosaveIntervalMessage | undefined {
+  return isRecord(value) &&
+    value.type === "autosave:interval" &&
+    typeof value.minutes === "number" &&
+    Number.isInteger(value.minutes) &&
+    value.minutes >= AUTOSAVE_MINUTES.min &&
+    value.minutes <= AUTOSAVE_MINUTES.max
+    ? { type: "autosave:interval", minutes: value.minutes }
+    : undefined;
 }
 
 function isRequestNumber(value: unknown): value is number {

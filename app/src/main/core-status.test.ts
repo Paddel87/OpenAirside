@@ -5,6 +5,7 @@ import {
   isSavesAnswer,
   MAX_INFO_FILES,
   nextCoreStatus,
+  parseAutosaveInterval,
   parseCoreHostMessage,
   parsePackRequest,
   parseSavesRequest,
@@ -26,29 +27,38 @@ const packs = [
     errorsOmitted: 0,
   },
 ];
+const languages = [
+  { code: "de", name: "Deutsch", keys: 54 },
+  { code: "en", name: "English", keys: 54 },
+];
 
 describe("parseCoreHostMessage", () => {
   it("accepts a ready message with core info and packs", () => {
-    expect(parseCoreHostMessage({ type: "ready", info, packs })).toEqual({
+    expect(parseCoreHostMessage({ type: "ready", info, packs, languages })).toEqual({
       type: "ready",
       info,
       packs,
+      languages,
     });
   });
 
   it("drops unknown extra fields from core info", () => {
-    expect(parseCoreHostMessage({ type: "ready", info: { ...info, extra: 1 }, packs })).toEqual({
+    expect(
+      parseCoreHostMessage({ type: "ready", info: { ...info, extra: 1 }, packs, languages }),
+    ).toEqual({
       type: "ready",
       info,
       packs,
+      languages,
     });
   });
 
   it("accepts pack reports and pack errors with their request number", () => {
-    expect(parseCoreHostMessage({ type: "packs", request: 3, packs })).toEqual({
+    expect(parseCoreHostMessage({ type: "packs", request: 3, packs, languages })).toEqual({
       type: "packs",
       request: 3,
       packs,
+      languages,
     });
     expect(parseCoreHostMessage({ type: "packsError", request: 4, message: "invalidId" })).toEqual({
       type: "packsError",
@@ -82,6 +92,9 @@ describe("parseCoreHostMessage", () => {
     { type: "ready", info: { name: "", version: "0.0.0" }, packs },
     { type: "ready", info: { name: "core", version: 1 }, packs },
     { type: "packs", request: 1, packs: [{ folder: "x" }] },
+    { type: "ready", info, packs },
+    { type: "ready", info, packs, languages: [{ code: "DE", name: "x", keys: 1 }] },
+    { type: "packs", request: 1, packs, languages: "de" },
     { type: "packs", packs },
     { type: "packs", request: -1, packs },
     { type: "packsError", request: 1.5, message: "x" },
@@ -95,7 +108,10 @@ describe("parseCoreHostMessage", () => {
 
 describe("nextCoreStatus", () => {
   it("becomes ready on a ready message", () => {
-    expect(nextCoreStatus({ type: "ready", info, packs })).toEqual({ state: "ready", info });
+    expect(nextCoreStatus({ type: "ready", info, packs, languages })).toEqual({
+      state: "ready",
+      info,
+    });
   });
 
   it("fails with the reported reason on an error message", () => {
@@ -248,5 +264,29 @@ describe("invalid save game requests", () => {
     expect(savesRequestNumber({ type: "saves:info", files: [] })).toBeUndefined();
     expect(savesRequestNumber({ type: "packs:setActive", request: 9 })).toBeUndefined();
     expect(savesRequestNumber("saves:info")).toBeUndefined();
+  });
+});
+
+describe("language messages (step 2.6)", () => {
+  it("parses a request for the texts of a language", () => {
+    expect(parseSavesRequest({ type: "lang:texts", request: 7, code: "pt-br" })).toEqual({
+      type: "lang:texts",
+      request: 7,
+      code: "pt-br",
+    });
+    expect(parseSavesRequest({ type: "lang:texts", request: 7, code: "../x" })).toBeUndefined();
+    expect(savesRequestNumber({ type: "lang:texts", request: 8 })).toBe(8);
+    expect(savesRequestNumber({ type: "other:texts", request: 8 })).toBeUndefined();
+  });
+
+  it("parses the autosave interval within its bounds", () => {
+    expect(parseAutosaveInterval({ type: "autosave:interval", minutes: 60 })).toEqual({
+      type: "autosave:interval",
+      minutes: 60,
+    });
+    for (const minutes of [0, 61, 1.5, "10"]) {
+      expect(parseAutosaveInterval({ type: "autosave:interval", minutes })).toBeUndefined();
+    }
+    expect(parseAutosaveInterval({ type: "port" })).toBeUndefined();
   });
 });

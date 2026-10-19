@@ -1,8 +1,11 @@
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   answer,
   fail,
   parseReason,
+  PLATFORM_CODES,
   PlatformFailure,
   platformReason,
   reasonOfBridgeError,
@@ -64,5 +67,28 @@ describe("error form of S-6", () => {
     expect(parseReason({ code: "a", textKey: "b", params: { n: Infinity } })).toBeUndefined();
     expect(parseReason({ code: "a", params: {} })).toBeUndefined();
     expect(parseReason([])).toBeUndefined();
+  });
+});
+
+describe("PLATFORM_CODES (step 2.6)", () => {
+  it("lists every code the main process raises", () => {
+    const dir = path.join(import.meta.dirname);
+    const used = new Set<string>();
+    for (const file of readdirSync(dir).filter(
+      (f) => f.endsWith(".ts") && !f.endsWith(".test.ts"),
+    )) {
+      const text = readFileSync(path.join(dir, file), "utf8");
+      for (const match of text.matchAll(/(?:fail|platformReason)\("([A-Za-z]+)"/g)) {
+        used.add(match[1] ?? "");
+      }
+      // Codes given as values: pack refusals, measurement and write errors.
+      const sets = /PACK_CODES[^\]]*\]|ReportError = [^;]*;|"diskFull" \| "ioError"/g;
+      for (const block of text.match(sets) ?? []) {
+        for (const match of block.matchAll(/"([A-Za-z]+)"/g)) used.add(match[1] ?? "");
+      }
+    }
+    expect(used.size).toBeGreaterThan(15);
+    expect([...used].filter((code) => !PLATFORM_CODES.includes(code))).toEqual([]);
+    expect(new Set(PLATFORM_CODES).size).toBe(PLATFORM_CODES.length);
   });
 });

@@ -5,10 +5,12 @@
  * window message (app/src/main/preload.cts).
  */
 
+import type { LanguageInfo } from "../src/generated/LanguageInfo.js";
 import type { PackReport } from "../src/generated/PackReport.js";
 import type { Reason } from "../src/generated/Reason.js";
 import type { SaveKind } from "../src/generated/SaveKind.js";
 import type { SaveMeta } from "../src/generated/SaveMeta.js";
+import type { Settings } from "../src/generated/Settings.js";
 
 /** Tag of the window message with the port (same as in preload.cts). */
 export const CORE_PORT_TAG = "openairside:core-port";
@@ -95,6 +97,19 @@ export interface OpenAirsideApi {
     delete(id: string): Promise<null>;
     /** PNG bytes of the preview (empty if none, ADR-028); list first. */
     preview(id: string): Promise<ArrayBuffer>;
+  };
+  /** Settings of the player (step 2.6, ADR-031). */
+  readonly settings: {
+    get(): Promise<Settings>;
+    /** Changes the given fields; resolves with all settings, rejects invalid values. */
+    set(patch: Partial<Settings>): Promise<Settings>;
+  };
+  /** Languages of the loaded packs (step 2.6, ADR-031). */
+  readonly lang: {
+    /** Languages sorted by code; they follow the last loaded packs. */
+    list(): Promise<LanguageInfo[]>;
+    /** Texts of a listed language by key. */
+    texts(code: string): Promise<Record<string, string>>;
   };
   /** Log file (step 2.5). */
   readonly logs: {

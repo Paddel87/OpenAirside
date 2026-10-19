@@ -225,3 +225,23 @@ describe("save game commands (step 2.5)", () => {
     expect(parseConsoleLine(line)).toEqual({ kind: "error", text });
   });
 });
+
+describe("language and settings commands (step 2.6)", () => {
+  it.each([
+    ["lang", { kind: "languages" }],
+    ["lang DE", { kind: "setLanguage", code: "de" }],
+    ["lang pt-br", { kind: "setLanguage", code: "pt-br" }],
+    ["settings", { kind: "settings" }],
+  ])("parses %s", (line, expected) => {
+    expect(parseConsoleLine(line)).toEqual(expected);
+  });
+
+  it.each(["lang de en", "lang ../x", "lang d", "settings now"])("refuses %s", (line) => {
+    expect(parseConsoleLine(line).kind).toBe("error");
+  });
+
+  it("lists both commands in the help", () => {
+    expect(HELP).toContain("lang [code]");
+    expect(HELP).toContain("settings –");
+  });
+});

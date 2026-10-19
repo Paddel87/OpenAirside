@@ -24,6 +24,80 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 14:44 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 1 Stunde 16 Minuten seit `[SESSIONSTART]` 13:28 UTC; Neustart des Arbeitsprozesses gegen 14:05 UTC (zwischen Frage und Antwort), ohne Verlust.
+- **Bearbeitet:** Übernahme der Sessionende-Commits auf `feat/2-6-lokalisierung`; Abgleich vor 2.6 (Maßnahmen 7–9) mit Vorlage; ADR-031; Reflexion Reaktiv-Quote, Schritt 2.11 (Maßnahme 10); Stufe 2.6a; Vorlage Ort von `Settings` (Option A); Stufe 2.6b; getrennte Prüfung (Kategorie 6) und Erledigung; Entscheidung zu Befund 2 (Landeplatz 6.1); Abschluss von 2.6.
+- **Erreicht:** 2.6 `[ERLEDIGT]` (CI-Lauf 39270974482 auf `ff53c01`); FR-006 erledigt; Modul Lokalisierung `[BELASTBAR]`. Commits `10d1965` … `ff53c01` plus dieser Sessionende-Commit; Branch gepusht, kein PR.
+- **Offen geblieben:** PR für 2.6 nach `main` (nur auf Anweisung); ungemergte fremde Branches wie im `[SESSIONENDE]` 2026-10-18 23:27 (Löschen nur auf Anweisung); der alte Branch `feat/2-5-spielstand-mit-autosave` (gemergt, nicht weiterverwendet; Löschen nur auf Anweisung).
+- **Nächster Schritt:** PR für 2.6, danach 2.11 (Sammelprüfung der Vertragssätze) in einer neuen Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 13:27 und 14:42 UTC). Freigaben (Auslöser 1) und Beförderung (Auslöser 4) auf der Pflicht-Klasse; 2.6a und 2.6b als Routine-Arbeit: 2 Stufen oberhalb der Empfehlung (Warnung zu Beginn). Abgegeben: keine Teilarbeit (Probelauf offen); die getrennte Prüfung lief bewusst auf Sonnet 5.5 als Prüfinstanz, nicht als Abgabe.
+- **Kontextgröße:** 472.458 Token laut `get_session` 14:42 UTC – **über der Grenze von 400.000**: die nächste Arbeit (PR, 2.11) in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed`, Zurücksetzen 2026-10-19 15:50 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf.
+- **Archivierung:** Logbuch 880+ Zeilen (Trigger > 800); alle Einträge aus Oktober 2026, keine vorletzte Monats-Scheibe – nichts auszulagern (Lücke der Methodik wie am 2026-10-19 12:48 festgehalten). Verdichtung mit dem `[PHASEN-WECHSEL]` nach Phase 2.
+- **Drift-Prüfung:** README nachgezogen (Phase, Architektur-Reife, Verwendung, Nächste Schritte). ADR-031 verweist auf vorhandene Schritte (2.6, 5.1, 6.1). Reifegrad Lokalisierung `[BELASTBAR]` passt zu ADR-031 und Umsetzung. Modul-Liste: 2.6 berührte Lokalisierung, Oberfläche, Inhalte & Mods, Brücke, Plattform, Spielfeld (Konsole) und mit `core/src/settings.rs` den Kern-Crate – alle vor dem Code vorgelegt und freigegeben. FR-006 nennt 2.6, Status erledigt. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 6 / 10 (ADR-022 bis ADR-031) stimmt mit den Tags. Phase 2: 11 Schritte bei Plan 10 (unter der Schwelle). Größen: `project-context.md` 369 Zeilen.
+
+### 2026-10-19 14:43 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Modul Lokalisierung:** `[VORLÄUFIG]` → `[BELASTBAR]` durch Umsetzung in 2.6 (Regel-007, ADR-031); Beleg: `core/tests/lang.rs`, `app/renderer/i18n.test.ts`, Rauchtest mit Sprachwechsel ohne Neustart und Sprachpaket aus dem Ordner `packs`, getrennte Prüfung.
+
+### 2026-10-19 14:41 (UTC) – [BEOBACHTUNG]
+
+- **Getrennte Prüfung 2.6** (Sonnet 5.5, nur Diff und Bedrohungsbild): 7 Befunde, keiner hoch. Behoben 1 (quadratischer Aufwand, Sprach-Einträge zählen), 3 (Wettlauf `setSettings`), 4 (`settings.json` über Handle), 5 (Temp-Datei), 6 (`__proto__` als Schlüssel, Texte als Paare); 2 teilweise behoben, Gesamtgrenze per Entscheidung des Projektinhabers („Landeplatz 6.1“) in 6.1; 7 begründet nicht geändert. Liste: `docs/research/2.6-getrennte-pruefung.md`.
+
+### 2026-10-19 14:20 (UTC) – [PROBLEM-GELÖST]
+
+- **Problem:** Der erste Commit von 2.6b scheiterte am Pre-Commit-Hook „TypeScript type-check“: noch nicht vorgemerkte Renderer-Dateien nutzten Typen aus späteren Commits.
+- **Ursache:** Der Hook prüft den ganzen Arbeitsbaum; neue, nicht verfolgte Dateien stellt `pre-commit` nicht beiseite.
+- **Lösung:** Renderer und Rauchtest kurz mit `git stash push --include-untracked` beiseitegelegt, Kern und Plattform committet, zurückgeholt, Rest committet. Kein `--no-verify`.
+
+### 2026-10-19 14:05 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Vor 2.6b (Maßnahme 7, Stopp-Kriterium 5):** Ort des erzeugten Typs `Settings` (S-6). Projektinhaber per Auswahl: „A: Rust im Kern-Crate“ – `core/src/settings.rs` nur mit Typ und Grenzen für ts-rs; berührt formal den Kern-Crate (Modul Takt & Weltzustand), entgegen der Ankündigung „unberührt“; Vertrag unverändert, kein ADR. Arbeitsprozess vor der Antwort neu gestartet, ohne Verlust (Stand `8753163` gepusht).
+
+### 2026-10-19 14:01 (UTC) – [BEOBACHTUNG]
+
+- **Abweichung von der Commit-Konvention:** `fbf72e3` („core: …“) enthält zusätzlich die Brücke (`bridge/src/lib.rs`) und die Korrektur des Schlüsselmusters in `architecture.md`, `ADR-031.md` und `fahrplan.md`; Ursache: ein `git add -A` vor `check:types`, das alle Änderungen vormerkte. Nicht nachträglich aufgeteilt (Änderung der Historie, Stopp-Kriterium 6). Lehre: vor dem Prüflauf nur die erzeugten Dateien vormerken.
+
+### 2026-10-19 13:58 (UTC) – [PROBLEM-GELÖST]
+
+- **Problem:** Nach dem Einbau von `lang/` scheiterten `core/tests/datapacks.rs::base_pack_of_the_repository_loads` und der Rauchtest an „3 Einträge“ des Basispakets (jetzt 111).
+- **Ursache:** gewollte Folge der Festlegung „jeder Text zählt als Eintrag“ (ADR-031); die Tests kannten nur die Objekte.
+- **Lösung:** Die Erwartung wird aus den Daten abgeleitet (Kern-Test aus `outcome.languages`, Rauchtest aus `content/base/lang/*.json`), nicht als neue feste Zahl eingetragen. Rauchtest danach grün im Container.
+
+### 2026-10-19 13:57 (UTC) – [BEOBACHTUNG]
+
+- **Stufe 2.6a umgesetzt** (Routine-Arbeit oberhalb der Empfehlung; Warnung zu Beginn): Format `lang/`, Basis-Sprachdateien `de`/`en` (54 Texte je Sprache), Schema, Brücke; 9 neue Integrationstests, Coverage Kern 98,33 % Lines. Fehler der eigenen Vorlage vor dem Code korrigiert: Schlüsselmuster `[A-Za-z0-9_.-]` statt `[a-z0-9_.-]` (vorhandene Schlüssel enthalten Großbuchstaben), in ADR-031 vermerkt, dem Projektinhaber zu melden.
+- **Für 2.6b festgestellt (Maßnahme 7, vor dem Code vorzulegen):** S-6 verlangt `Settings` als erzeugten Typ (ts-rs aus Rust). Der Kern liest keine Einstellungen; ein Rust-Typ dafür läge im Kern-Crate außerhalb der zugesagten Module (Takt & Weltzustand sollte unberührt bleiben).
+
+### 2026-10-19 13:37 (UTC) – [BEOBACHTUNG]
+
+- **Kenntnisnahme:** Projektinhaber zur Reflexion ADR-031 per Auswahl „Kenntnis + Maßnahme (10)“. Schritt 2.11 (Sammelprüfung der Vertragssätze) vor 2.10 angelegt; Phase 2 damit 11 Schritte bei Plan 10 (Wucherungs-Schwelle: 20 und +5, nicht erreicht).
+
+### 2026-10-19 13:35 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-031** `[REAKTIV]`: Sprachpakete erreichen die Oberfläche über `lang.list`/`lang.texts` in S-6; Basis-Sprachdateien zusätzlich beim Build eingebunden; neue Beziehung Inhalte & Mods → Lokalisierung. Freigabe des Projektinhabers per Auswahl: „A: lang.* in S-6“ und „Ja, alle“ (Festlegungen). Architektur Abschnitt 2, 3 (Lokalisierung), 4 (S-4, S-6) nachgezogen; Landeplätze 5.1 (Einstellungs-Menü, Prüfung der 60 Minuten) und 6.1 (Überschreiben fremder Texte). Reaktiv-Quote 6 / 10, Reflexion mit Vorschlag Maßnahme (10) im Fahrplan.
+
+### 2026-10-19 13:31 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 2.6, Abgleich vor dem Code (Maßnahmen 7–9):** keine Bibliothek (Kategorie 3 nicht berührt). Zwei Lücken: S-3/S-4 setzen voraus, dass Texte aus `lang/` die Oberfläche erreichen, S-6 und der Port bieten keinen Weg (Empfehlung A: `lang.list`/`lang.texts` in S-6, `[REAKTIV]` nach der 14-Tage-Regel, Quote danach 6 / 10); Texte ohne laufenden Kern (Basis-Sprachdateien zusätzlich beim Build eingebunden). Abweichung „Betroffene Module“: zusätzlich Inhalte & Mods, Brücke, Plattform, Spielfeld. Einstellungen mit Grenzen und Herkunft (Maßnahme 9), Aufteilung 2.6a/2.6b. Volltext im Fahrplan bei 2.6.
+
+### 2026-10-19 13:28 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 12:48 UTC plus `[BEOBACHTUNG]` 13:24 (Merge PR #22, `12a2c77`) und 13:25 (Kenntnisnahme ADR-029/ADR-030). Die beiden Sessionende-Commits `3323131` und `5d83103` nach `project-context.md` Abschnitt 10 auf den neuen Branch `feat/2-6-lokalisierung` vom aktuellen `main` übernommen (`10d1965`, `b37249d`); `feat/2-5-spielstand-mit-autosave` wird nicht weiterverwendet.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Modell:** eingestellt und bedient `claude-opus-5-5` laut `get_session` 13:27 UTC → Entscheidungs-Klasse. Schritt 2.6 empfiehlt Routine; Teile oberhalb der Empfehlung werden zu Beginn gewarnt.
+- **Vorhaben:** Schritt 2.6 (Lokalisierung): Abgleich der Vertragssätze S-6 `settings.*` und S-4 `lang/` sowie der „Betroffenen Module“ gegen den Plan (Maßnahmen 7–9), dann Vorlage bzw. Umsetzung.
+
+### 2026-10-19 13:25 (UTC) – [BEOBACHTUNG]
+
+- **Kenntnisnahme:** Projektinhaber: „Zur Kenntnis genommen, Reflexionen ADR-029 und ADR-030“. Im Fahrplan vermerkt; kein Umbau, Maßnahme (9) gilt.
+
+### 2026-10-19 13:24 (UTC) – [BEOBACHTUNG]
+
+- **Merge:** PR #22 (Schritt 2.5) auf Anweisung des Projektinhabers („merge bei grün“) nach `main` gemergt, Merge-Commit `12a2c77`; vorher grün: Push-Lauf 39254862979, PR-Läufe CI 39259088549 und Security 39259088469 auf `a773a44`. Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf dem Arbeits-Branch und geht mit dem PR des nächsten Schritts nach `main`.
+
 ### 2026-10-19 12:48 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 1 Stunde 46 Minuten seit `[SESSIONSTART]` 11:02 UTC; Neustart des Arbeitsprozesses zwischen Frage und Antwort (11:06–11:37), ohne Verlust.

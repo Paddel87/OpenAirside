@@ -17,7 +17,7 @@ use napi::{Env, Task};
 use napi_derive::napi;
 use openairside_core::adoption::AdoptionMode;
 use openairside_core::command::Scenario;
-use openairside_core::datapack::{self, PackReport};
+use openairside_core::datapack::{self, Languages, PackReport};
 use openairside_core::geometry::MapSize;
 use openairside_core::host::{Outgoing, PortHost};
 use openairside_core::port::{ClientMessage, CommandEnvelope, MAX_MESSAGE_BYTES};
@@ -241,6 +241,7 @@ pub struct Core {
     threads: (usize, usize),
     pack_dirs: PackDirs,
     packs: Vec<PackReport>,
+    languages: Languages,
 }
 
 #[napi]
@@ -311,6 +312,7 @@ impl Core {
             threads: (threads, background_threads),
             pack_dirs,
             packs: loaded.reports,
+            languages: loaded.languages,
         })
     }
 
@@ -410,7 +412,37 @@ impl Core {
         let loaded = self.pack_dirs.load(&ids);
         self.runner()?.set_next_content(Arc::new(loaded.catalog));
         self.packs = loaded.reports;
+        self.languages = loaded.languages;
         self.packs()
+    }
+
+    /// Languages of the loaded packs (S-6 `lang.list`, ADR-031), sorted by
+    /// code; they follow the last loaded packs like [`Core::packs`].
+    ///
+    /// # Errors
+    ///
+    /// Fails if the list cannot be converted.
+    #[napi]
+    pub fn languages(&self) -> napi::Result<serde_json::Value> {
+        serde_json::to_value(self.languages.list()).map_err(napi_error)
+    }
+
+    /// Texts of the language `code` as `[key, text]` pairs sorted by key
+    /// (S-6 `lang.texts`, ADR-031), or `null` if no loaded pack has this
+    /// language. Pairs instead of an object: a key such as `__proto__`
+    /// would be lost when napi sets it as an object property (finding 6 of
+    /// the separate review of 2.6).
+    ///
+    /// # Errors
+    ///
+    /// Fails if the texts cannot be converted.
+    #[napi]
+    pub fn texts(&self, code: String) -> napi::Result<serde_json::Value> {
+        let pairs = self
+            .languages
+            .texts(&code)
+            .map(|texts| texts.iter().collect::<Vec<_>>());
+        serde_json::to_value(pairs).map_err(napi_error)
     }
 
     /// Current status.

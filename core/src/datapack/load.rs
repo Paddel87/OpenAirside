@@ -10,8 +10,8 @@
 //! 5. Load order: dependencies first, otherwise the player's order; packs
 //!    left over form or need a cycle (`dependencyCycle`).
 //! 6. Content of each pack in load order: stage 1 (limits, structure) and
-//!    stage 2 (ids, values, `replaces`); only a pack without any error
-//!    reaches the catalog, as a whole.
+//!    stage 2 (ids, values, `replaces`, text keys); only a pack without any
+//!    error reaches the catalog and the languages, as a whole.
 
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -22,7 +22,10 @@ use serde::de::DeserializeOwned;
 
 use super::catalog::{ActivePack, Catalog, ObjectType};
 use super::files::{ContentFile, Folder, Kind, MANIFEST};
-use super::model::{Manifest, ObjectEntry, ObjectsFile, Placement, PlacementKind};
+use super::languages::{Languages, is_language_code, is_text_key};
+use super::model::{
+    LangFile, LanguageEntry, Manifest, ObjectEntry, ObjectsFile, Placement, PlacementKind,
+};
 use super::scan::{self, Limit, Limits, MAX_PATH_CHARS, truncate};
 use super::{
     BASE_PACK_ID, FORMAT, MAX_DEPTH, MAX_ENTRIES, MAX_FILES, MAX_LIST_LEN, MAX_PACKS,
@@ -59,6 +62,8 @@ pub struct PackFolder {
 pub struct LoadOutcome {
     /// Content of all loaded packs.
     pub catalog: Catalog,
+    /// Texts of all loaded packs by language (S-6 `lang.*`).
+    pub languages: Languages,
     /// One report per found folder, in the order of the folders.
     pub reports: Vec<PackReport>,
 }
@@ -140,8 +145,9 @@ pub fn load(folders: &[PackFolder], active: &[String], game: &Version) -> LoadOu
     check_dependencies(&mut packs, &wanted);
     let order = load_order(&mut packs, &wanted);
     let mut catalog = Catalog::empty();
+    let mut languages = Languages::empty();
     for index in order {
-        load_content(&mut packs, index, &mut catalog);
+        load_content(&mut packs, index, &mut catalog, &mut languages);
     }
     let base_failed = packs
         .iter()
@@ -149,6 +155,7 @@ pub fn load(folders: &[PackFolder], active: &[String], game: &Version) -> LoadOu
     catalog.set_base_failed(base_failed);
     LoadOutcome {
         catalog,
+        languages,
         reports: packs.into_iter().map(|p| p.report).collect(),
     }
 }
@@ -594,7 +601,12 @@ fn reaches(edges: &HashMap<usize, Vec<usize>>, from: usize, target: usize) -> bo
     false
 }
 
-fn load_content(packs: &mut [Pack], index: usize, catalog: &mut Catalog) {
+fn load_content(
+    packs: &mut [Pack],
+    index: usize,
+    catalog: &mut Catalog,
+    languages: &mut Languages,
+) {
     let Some(valid) = &packs[index].valid else {
         return;
     };
@@ -629,9 +641,13 @@ fn load_content(packs: &mut [Pack], index: usize, catalog: &mut Catalog) {
         pack: &pack_id,
         dependencies: &dependencies,
         catalog: &*catalog,
+        languages: &*languages,
         ids: BTreeSet::new(),
         objects: Vec::new(),
         replaces: Vec::new(),
+        texts: Vec::new(),
+        text_keys: BTreeSet::new(),
+        named: BTreeSet::new(),
         entries: 0,
         errors,
     };
@@ -639,6 +655,7 @@ fn load_content(packs: &mut [Pack], index: usize, catalog: &mut Catalog) {
     let Stage {
         objects,
         replaces,
+        texts,
         entries,
         errors,
         ..
@@ -656,9 +673,19 @@ fn load_content(packs: &mut [Pack], index: usize, catalog: &mut Catalog) {
     for (target, by) in replaces {
         catalog.replace(target, by);
     }
+    for language in texts {
+        languages.add(language.code, language.name, language.texts);
+    }
     catalog.add_pack(active);
     report.state = PackState::Active;
     report.entries = as_u32(entries);
+}
+
+/// Texts of one language entry that passed stage 2.
+struct CheckedLanguage {
+    code: String,
+    name: Option<String>,
+    texts: Vec<(String, String)>,
 }
 
 /// Entries of one pack checked so far, not yet in the catalog.
@@ -666,9 +693,16 @@ struct Stage<'a> {
     pack: &'a str,
     dependencies: &'a [String],
     catalog: &'a Catalog,
+    languages: &'a Languages,
     ids: BTreeSet<String>,
     objects: Vec<ObjectType>,
     replaces: Vec<(String, String)>,
+    texts: Vec<CheckedLanguage>,
+    /// Language code and key of every text of this pack so far.
+    text_keys: BTreeSet<(String, String)>,
+    /// Languages named by an entry of this pack so far (finding 1 of the
+    /// separate review of 2.6: a set instead of a scan of `texts`).
+    named: BTreeSet<String>,
     entries: usize,
     errors: Vec<PackError>,
 }
@@ -695,7 +729,75 @@ impl Stage<'_> {
                     }
                     add_positions(&mut self.errors, from, &file.file, &file.bytes);
                 }
+                Kind::Lang => {
+                    let Some(parsed) = parse::<LangFile>(&file.file, &file.bytes, &mut self.errors)
+                    else {
+                        continue;
+                    };
+                    let from = self.errors.len();
+                    for (i, entry) in parsed.languages.into_iter().enumerate() {
+                        // The language entry and each of its texts count (S-4, ADR-031).
+                        self.entries += 1 + entry.texts.0.len();
+                        if self.entries > MAX_ENTRIES {
+                            let reason = limit_error("entries", as_u32(MAX_ENTRIES));
+                            self.errors.push(PackError::file(&file.file, reason));
+                            return;
+                        }
+                        self.check_language(&file.file, &format!("languages[{i}]"), entry);
+                    }
+                    add_positions(&mut self.errors, from, &file.file, &file.bytes);
+                }
             }
+        }
+    }
+
+    /// Stage 2 of a language entry: code, name of a new language, keys and
+    /// texts; a key exists once per language across all packs.
+    fn check_language(&mut self, file: &str, path: &str, entry: LanguageEntry) {
+        let before = self.errors.len();
+        let code = entry.id;
+        if !is_language_code(&code) {
+            self.at(file, &format!("{path}.id"), error(code::INVALID_ID));
+            return;
+        }
+        let named_before = self.languages.is_named(&code) || self.named.contains(&code);
+        match &entry.name {
+            Some(name) if name.trim().is_empty() => {
+                self.at(file, &format!("{path}.name"), error(code::INVALID_VALUE));
+            }
+            None if !named_before => {
+                let reason = error(code::INVALID_STRUCTURE)
+                    .with_text("detail", "missing field `name` for a new language");
+                self.at(file, path, reason);
+            }
+            _ => {}
+        }
+        for (key, text) in &entry.texts.0 {
+            let at = format!("{path}.texts.{key}");
+            if !is_text_key(key) {
+                self.at(file, &at, error(code::INVALID_ID));
+                continue;
+            }
+            if self.languages.has_text(&code, key)
+                || !self.text_keys.insert((code.clone(), key.clone()))
+            {
+                let reason = error(code::DUPLICATE_ID).with_text("id", &format!("{code}:{key}"));
+                self.at(file, &at, reason);
+                continue;
+            }
+            if text.trim().is_empty() {
+                self.at(file, &at, error(code::INVALID_VALUE));
+            }
+        }
+        if self.errors.len() == before {
+            if entry.name.is_some() {
+                self.named.insert(code.clone());
+            }
+            self.texts.push(CheckedLanguage {
+                code,
+                name: entry.name,
+                texts: entry.texts.0,
+            });
         }
     }
 

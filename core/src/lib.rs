@@ -23,6 +23,7 @@ pub mod query;
 pub mod runner;
 pub mod savegame;
 pub mod scenario;
+pub mod settings;
 pub mod simulation;
 pub mod target;
 pub mod text;

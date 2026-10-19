@@ -67,6 +67,14 @@ contextBridge.exposeInMainWorld("openairside", {
     delete: (id: unknown): Promise<unknown> => call("saves:delete", id),
     preview: (id: unknown): Promise<unknown> => call("saves:preview", id),
   },
+  settings: {
+    get: (): Promise<unknown> => call("settings:get"),
+    set: (patch: unknown): Promise<unknown> => call("settings:set", patch),
+  },
+  lang: {
+    list: (): Promise<unknown> => call("lang:list"),
+    texts: (code: unknown): Promise<unknown> => call("lang:texts", code),
+  },
   logs: {
     write: (level: unknown, message: unknown): Promise<unknown> =>
       call("logs:write", level, message),

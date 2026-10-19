@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-19 (Session ab 11:02 UTC)
+- **Stand vom:** 2026-10-19 (Session ab 13:28 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner; 2.5 (Spielstand mit Autosave) ERLEDIGT am 2026-10-19 (CI-Lauf 39253155836 grün), Branch `feat/2-5-spielstand-mit-autosave` gepusht, kein PR (PR nur auf Anweisung)
-- **Nächster Schritt:** PR für 2.5 nach `main` (auf Anweisung), danach 2.6 (Lokalisierung)
-- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-030 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion“; Kenntnisnahme zu ADR-029 und ADR-030 offen)
+- **Aktiver Schritt:** keiner; 2.6 (Lokalisierung) ERLEDIGT am 2026-10-19 (CI-Lauf 39270974482 grün), Branch `feat/2-6-lokalisierung` gepusht, kein PR (PR nur auf Anweisung)
+- **Nächster Schritt:** PR für 2.6 nach `main` (auf Anweisung), danach 2.11 (Sammelprüfung der Vertragssätze), dann 2.10
+- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 6 / 10 nach ADR-031 über dem Schwellenwert (Reflexion zu ADR-031 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, Maßnahme (10) als Schritt 2.11)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -92,7 +92,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 **Ursprünglicher Schrittplan:** 10 Schritte, festgehalten am 2026-10-13 in Schritt 1.7 (ADR-016).
 
-**Reihenfolge:** 2.1 und 2.8 parallel → 2.9 → 2.2 → 2.3 → 2.7 → 2.4 → 2.5 → 2.6 → 2.10. Die Nummern 2.1–2.7 stammen aus der Grobplanung (Verweise in `requirements.md` und `project-context.md`), 2.8–2.10 kamen in 1.7 hinzu.
+**Reihenfolge:** 2.1 und 2.8 parallel → 2.9 → 2.2 → 2.3 → 2.7 → 2.4 → 2.5 → 2.6 → 2.11 → 2.10. 2.11 kam am 2026-10-19 hinzu (Maßnahme (10), Reflexion zu ADR-031); Phase 2 damit 11 Schritte bei 10 geplanten, unter der Wucherungs-Schwelle. Die Nummern 2.1–2.7 stammen aus der Grobplanung (Verweise in `requirements.md` und `project-context.md`), 2.8–2.10 kamen in 1.7 hinzu.
 
 **Phasentyp-Hinweis:** 2.8 und 2.9 sind Entwurfsschritte mit Phasentyp-Kontext ERKUNDUNG innerhalb der Umsetzungsphase (wie die Erkundungen vor 3.3 und 3.4). Sie liefern Entscheidungen, keinen Code.
 
@@ -298,7 +298,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.6: Lokalisierung
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT 2026-10-19 (ADR-031); CI-Lauf 39270974482 auf `ff53c01` grün auf drei Plattformen (17 Jobs)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.7
 - **Freigabepflichtig:** ja, falls eine Bibliothek für Lokalisierung eingeführt wird (Kategorie 3)
@@ -307,9 +307,42 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Anforderungen (ab Klasse M):** FR-006
 - **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7); Autosave-Intervall und Zahl der Autosave-Dateien 1–20 als Einstellungen (aus 2.5, dort feste Werte: 10 Minuten laufender Spielzeit, 5 Dateien; META-10); Schema der Inhaltsart `lang/` in Datenpaketen nach S-4 (Landeplatz aus 2.4, ADR-025).
 - **Akzeptanzkriterien:** `app/i18n.test.ts` grün; ein Sprachpaket aus dem Ordner wird erkannt.
-- **Betroffene Module:** Lokalisierung, Oberfläche
+- **Betroffene Module:** Lokalisierung, Oberfläche; zusätzlich Inhalte & Mods, Brücke, Plattform, Spielfeld (Konsole) – Abweichung vor dem Code vorgelegt und freigegeben am 2026-10-19 (ADR-031); in 2.6b zusätzlich der Kern-Crate mit dem Typ `Settings` (`core/src/settings.rs`, Takt & Weltzustand; vorgelegt und freigegeben am 2026-10-19, Option A)
 - **Reifegrad-Wirkung:** Modul Lokalisierung → `[BELASTBAR]`
 - **Artefakte:** Lokalisierungs-Code, Sprachdateien, Tests
+- **Vorlage zur Freigabe (2026-10-19, Entscheidungs-Klasse; Abgleich nach Maßnahmen 7, 8, 9; freigegeben: A und alle Festlegungen, ADR-031):**
+  - **Keine Bibliothek:** eigenes Modul `app/renderer/i18n.ts` (Nachschlagen, Platzhalter `{name}` nur als Text eingesetzt, Zahlen über `Intl.NumberFormat` der gewählten Sprache, Rückfall gewählte Sprache → Englisch → Schlüssel); Kategorie 3 wird nicht berührt. Nicht vorgeschlagen: i18next und ähnliche (Funktionen wie Pluralformen und Namensräume werden in 2.6 nicht gebraucht; jede Bibliothek wäre eine Abhängigkeit mehr im Renderer).
+  - **Lücke 1 (Maßnahme 8):** S-3 („Texte … auch für Texte aus Datenpaketen (`lang/`)“) und S-4 (`lang/` als Inhaltsart, Konsument Takt & Weltzustand) setzen voraus, dass Texte aus Paketen die Oberfläche erreichen. Weder S-6 noch der Port (S-1/S-2/S-3/S-7) bietet dafür einen Weg; die Modul-Karte kennt keine Beziehung Inhalte → Lokalisierung. Optionen: **A** neue Funktionen in S-6 (additiv): `lang.list()` → verfügbare Sprachen `{ code, name, keys }`, `lang.texts(code)` → Texte einer Sprache (zusammengeführt über die Pakete); der Hauptprozess holt sie vom Kern-Prozess wie `packs.*`; **B** neue Nachricht auf dem Port (Renderer ↔ Kern direkt), ändert die gemeinsamen Grundlagen von S-1 bis S-7; **C** nur Deutsch und Englisch beim Build eingebunden, keine Sprachpakete aus Ordnern – erfüllt FR-006 nicht (bräuchte Descope-ADR). Empfehlung A. Klassifikation: ändert S-6 und die Modul-Karte aus ADR-021 (6 Tage alt) → nach der 14-Tage-Regel `[REAKTIV]`, Reaktiv-Quote danach 6 / 10 (ADR-022 bis ADR-031).
+  - **Lücke 2 (Maßnahme 8):** Meldungen müssen auch ohne laufenden Kern lesbar sein (S-6 „Absturz des Kerns“, Fehler beim Start). Festlegung: Die Sprachdateien des Basispakets werden zusätzlich beim Build in den Renderer eingebunden (dieselben Dateien, keine zweite Quelle); `lang.texts` ersetzt sie, sobald der Kern bereit ist.
+  - **Inhaltsart `lang/` (S-4):** Datei `{ "$schema"?, "languages": [ { "id", "name"?, "texts": { Schlüssel: Text } } ] }`; `id` ist der Sprachcode (`[a-z]{2,3}` mit optionalem Zusatz `-[a-z0-9]{2,8}`, z. B. `de`, `pt-br`); mehrere Pakete tragen zur selben Sprache bei; `name` muss die Sprache mindestens einmal benennen (Basispaket: `Deutsch`, `English`). Schlüssel `[a-z0-9_.-]{1,128}` (korrigiert vor dem Code auf `[A-Za-z0-9_.-]{1,128}`, siehe ADR-031), Text höchstens 4.096 Zeichen (Grenze aus S-4), jeder Text zählt als Eintrag (Grenze 100.000 je Paket aus S-4). Derselbe Schlüssel zweimal in einer Sprache: `duplicateId` für das später geladene Paket. Überschreiben fremder Texte (wie `replaces`) nicht in 2.6, Landeplatz 6.1. `content/base/lang/de.json`, `en.json`; Schema-Datei `content/schema/lang.schema.json`.
+  - **Einstellungen (S-6 `settings.*`, S-5, META-10):** erzeugter Typ `Settings` (Rust, ts-rs) mit `language`, `autosaveMinutes` (1–60, Standard 10), `autosaveCount` (1–20, Standard 5). Herkunft der Grenzen (Maßnahme 9): 1–20 aus S-5; 60 Minuten ist eine Schätzung (seltener schützt der Autosave kaum noch), Überprüfung mit dem Spielmenü in 5.1. Standard-Sprache beim ersten Start aus der Systemsprache (Deutsch → `de`, sonst `en`). Datei `settings.json` im Datenordner (Schreiben und Umbenennen); unlesbar oder ungültig → Standardwerte, Warnung im Log. `settings.set(teilweise)` prüft jedes Feld (Sprache muss in `lang.list` stehen), liefert die vollständigen Einstellungen und weist ab mit `invalidArgument` oder `ioError`; kein `busy` (unabhängig von Spielständen). Intervall gilt sofort (der Hauptprozess meldet es dem Kern-Prozess); bei kleinerer Zahl bleiben vorhandene Autosaves über der Zahl erhalten (kein Löschen von Spielerdaten), die Rotation läuft nur noch über `auto-1` … `auto-N`.
+  - **Umfang der Übersetzung:** übersetzt werden alle Texte für den Spieler – Spielstand-Liste, Angebot nach Absturz, Hinweis auf die Logdatei, Fehlermeldungen über `textKey` (`save.error.*`, `platform.error.*`, `datapack.error.*`, `command.rejected.*`), Objektnamen (`object.*`) und ein neues, minimales Einstellungs-Panel (Sprache, Autosave-Intervall, Autosave-Zahl; Ausbau im Spielmenü 5.1). Konsole und Leistungsanzeige bleiben englische Entwicklerwerkzeuge (FR-009); neuer Konsolenbefehl `lang [Code]`. Ein Test prüft, dass `de` und `en` jeden im Code erzeugten Schlüssel enthalten.
+  - **Gültigkeit nach `packs.setActive`:** Die Texte folgen dem zuletzt geladenen Katalog (wie `packs.list`). Objekte einer laufenden Sitzung aus einem abgewählten Paket zeigen bis zur nächsten Sitzung ihren Schlüssel.
+  - **„Betroffene Module“ gegen den geplanten Code (Abweichung, Stopp-Kriterium 5):** geplant Lokalisierung, Oberfläche. Tatsächlich zusätzlich **Inhalte & Mods** (Format `lang/` im Lader `core/src/datapack/`, Schema, Basispaket), **Brücke** (Texte und Sprachliste aus dem Ladeergebnis, `bridge/src/lib.rs`), **Plattform** (`settings.*`, `lang.*`, `settings.json`, Autosave-Intervall an `core-host.ts`, Rotation in `saves.ts`, Preload) und **Spielfeld** (Konsole `lang`, Verdrahtung in `main.ts`). Takt & Weltzustand bleibt unberührt (die Texte gehen nicht in den Katalog der Simulation).
+  - **Aufteilung in zwei Stufen (zählt als ein Schritt):** 2.6a Kern (Format `lang/`, Lader, Schema, Basispaket `de`/`en`, Brücke; Tests in `core/tests/datapacks.rs`); 2.6b Plattform und Oberfläche (`settings.*`, `lang.*`, `i18n.ts`, Panels, Rauchtest mit Sprachwechsel ohne Neustart und Sprachpaket aus dem Ordner `packs`). Getrennte Prüfung am Ende (Kategorie 6: neue IPC-Funktionen, `settings.json` als nicht vertrauenswürdige Eingabe, Texte aus Mods in der Oberfläche).
+
+- **Zwischenstand Stufe 2.6a (2026-10-19, Entscheidungs-Klasse; Routine-Arbeit oberhalb der Empfehlung):** Inhaltsart `lang/` im Lader (`core/src/datapack/languages.rs`, Stufe 2 in `load.rs`, `LangFile`/`LanguageEntry`/`Texts` in `model.rs`; `Texts` behält doppelte Schlüssel einer Datei, damit sie als `duplicateId` gemeldet werden), `LoadOutcome.languages`; Schema `content/schema/lang.schema.json`; Basispaket `content/base/lang/de.json` und `en.json` mit 54 Texten je Sprache (Objektnamen und alle Schlüssel des Kerns); `text::core_text_keys()` aus Listen `ALL` in den Code-Modulen von S-2, S-4, S-5, S-7; Brücke `Core.languages()`/`Core.texts(code)`; erzeugter Typ `LanguageInfo`. Jeder Text zählt als Eintrag des Pakets (Basispaket jetzt 111 Einträge). Tests: `core/tests/lang.rs` 9 Fälle (Abdeckung aller Kern-Schlüssel und Objektnamen in `de` und `en`, gleiche Schlüssel und Platzhalter, neue Sprache aus einem Paket, Texte zu vorhandener Sprache, Schlüssel eines anderen Pakets und doppelter Schlüssel in einer Datei → ganzes Paket aus, fehlerhafte Einträge mit Stelle, strenge Struktur), Unit-Tests in `languages.rs` und `model.rs`; Kern 133 Unit-Tests, Rust gesamt 198 Tests grün; Coverage Kern 98,33 % Lines (`languages.rs` 100 %, `load.rs` 96,5 %). Erwartungen „3 Einträge“ des Basispakets in `core/tests/datapacks.rs` und im Rauchtest auf die neue Zählung umgestellt (Rauchtest leitet sie aus den Sprachdateien ab, grün im Container). Gates lokal grün: rustfmt, clippy `-D warnings`, cargo-deny, ESLint, Prettier, tsc, Vitest (300 Tests). Offen: 2.6b.
+
+- **Zwischenstand Stufe 2.6b (2026-10-19, Entscheidungs-Klasse; Routine-Arbeit oberhalb der Empfehlung):** umgesetzt in `62dd9fe` (Kern: Typ `Settings` in `core/src/settings.rs`, nur für ts-rs, Ort freigegeben Option A), `5905d75` (Plattform: `app/src/main/settings.ts` mit Prüfung je Feld, `settings.json` mit Schreiben und Umbenennen nacheinander, `settings:*` und `lang:*` in `main.ts` und Preload, Sprachliste mit `ready`/`packs` vom Kern-Prozess, Anfrage `lang:texts`, Autosave-Intervall `autosave:interval` an `AutosaveClock.setInterval`, Rotation über `autosaveCount`; `PLATFORM_CODES` mit Test gegen den Quelltext; Basis-Sprachdateien jetzt 96 Texte je Sprache), `eb216a8` (Renderer: `app/renderer/i18n.ts` ohne Bibliothek mit eingebundenen Basis-Texten und Rückfall gewählte Sprache → Englisch → Schlüssel, nur der jüngste Sprachwechsel wirkt; Einstellungs-Panel `settings-panel.ts` und Knopf; Spielstand-Liste und Absturz-Hinweise übersetzt; Konsolenbefehle `lang [Code]`, `settings`), `ebd3db8` (Rauchtest). Tests: `app/renderer/i18n.test.ts` (Format, Rückfall, Wechsel mit Benachrichtigung, gleiche Schlüssel und Platzhalter `de`/`en`, Abdeckung aller `ui.*`-Schlüssel und Fehlercodes des Hauptprozesses, Laden mit Rückfall auf eingebundene Texte), `settings.test.ts`, `settings-panel.test.ts`, Ergänzungen in `core-status`, `saves`, `console`, `platform-error`; TypeScript 338 Tests, Coverage 85,5 % Lines (DOM-Panels `saves-panel.ts` 0 %, `settings-panel.ts` 13 %, nur über den Rauchtest). Rauchtest dreimal grün im Container: `settings.json` vorab mit Englisch, Wechsel `lang de` und `lang fr` ohne Neuladen und in derselben Sitzung, Sprachpaket `french` aus dem Ordner `packs` erkannt (`lang` listet „Français – 2 texts“), fehlende Texte auf Englisch, Abweisung ungültiger Einstellungen mit `invalidArgument`, Datei `settings.json` geschrieben. Nicht Ende-zu-Ende belegt: Wirkung des Autosave-Intervalls (Unit-Test `AutosaveClock`). Abweichung beim Committen: der Typ-Check des Pre-Commit-Hooks prüft den ganzen Arbeitsbaum; Renderer und Rauchtest wurden dafür kurz per `git stash` beiseitegelegt. Offen: getrennte Prüfung (Kategorie 6), CI-Lauf, Abschluss.
+
+- **Abschluss (2026-10-19, Entscheidungs-Klasse):** Akzeptanzkriterien erfüllt – `app/renderer/i18n.test.ts` grün; ein Sprachpaket aus dem Ordner `packs` wird erkannt (Rauchtest auf drei Plattformen, dazu `core/tests/lang.rs`); Sprachwechsel ohne Neustart im Rauchtest belegt. Getrennte Prüfung (Sonnet 5.5) mit 7 Befunden, keiner hoch; Erledigung in [`docs/research/2.6-getrennte-pruefung.md`](research/2.6-getrennte-pruefung.md) (`d53f808`, `ba64ad2`, `72eab85`, `4ad8d38`): Befunde 1, 3, 4, 5, 6 behoben, 2 teilweise behoben und Rest per Entscheidung des Projektinhabers in 6.1, 7 begründet nicht geändert. Nach den Korrekturen: Kern 133 Unit-Tests plus `core/tests/lang.rs` 11 Fälle, Coverage Kern 98,43 % Lines; TypeScript 338 Tests, Coverage 85,5 % Lines; Rauchtest dreimal grün im Container. Modul Lokalisierung `[BELASTBAR]`, FR-006 erledigt. Onboarding-Pfad nicht berührt (keine neue Voraussetzung, keine Änderung an `package.json` oder Skripten); README „Verwendung“ ergänzt. Landeplätze: Einstellungs-Menü und Prüfung der 60-Minuten-Grenze 5.1; Überschreiben fremder Texte und Gesamtgrenze über alle Pakete 6.1.
+
+#### 2.11: Sammelprüfung der Vertragssätze S-1 bis S-7 (Maßnahme 10)
+
+- **Status:** OFFEN
+- **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt in Phase 2, wie 2.9)
+- **Schritt-Art (nur ERKUNDUNG):** sonstiges (Prüfung von Verträgen)
+- **Zeitbox (nur ERKUNDUNG):** maximal eine Session
+- **Abhängigkeiten:** 2.6
+- **Freigabepflichtig:** ja, falls Funde Verträge ändern (Kategorie 5, ggf. 1)
+- **Empfohlene Klasse:** Entscheidung – Ergebnis ist ein ADR zu Schnittstellenverträgen.
+- **Eingangskriterien:** 2.6 erledigt
+- **Anforderungen (ab Klasse M):** keine (Infrastruktur der Verträge)
+- **Zu tun:** Jeden Satz in `architecture.md` Abschnitt 4 (S-1 bis S-7 und gemeinsame Grundlagen), der Daten oder Funktionen einer anderen Schnittstelle oder eines anderen Moduls voraussetzt, gegen deren Funktionslisten und gegen die Modul-Karte lesen; Funde gesammelt mit Optionen vorlegen (Maßnahme (10), Reflexion zu ADR-031).
+- **Akzeptanzkriterien:** Liste aller geprüften Sätze mit Ergebnis (passt / Lücke); Lücken per ADR entschieden oder mit Landeplatz versehen.
+- **Betroffene Module:** Brücke, Plattform, Oberfläche, Inhalte & Mods, Takt & Weltzustand (nur Verträge, kein Code)
+- **Reifegrad-Wirkung:** keine (S-1 bis S-7 bleiben `[BELASTBAR]`, ggf. per ADR fortgeschrieben)
+- **Artefakte:** Prüfliste in `docs/research/`, ggf. ADR
 
 #### 2.10: Stilleitfaden, SVG-Pipeline und Messung der Darstellung
 
@@ -357,7 +390,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 5.1 | Spielstart vollständig: Standort, Kartengröße, Sandbox, Einstellungen; Flughafenname im Weltzustand und in den Spielstand-Metadaten (META-02, Feld leer seit 2.5); Spielmenü mit Speichern, Laden und Spielstand-Liste (ersetzt die einfache Liste aus 2.5) | FR-001, FR-002, FR-005 |
+| 5.1 | Spielstart vollständig: Standort, Kartengröße, Sandbox, Einstellungen; Flughafenname im Weltzustand und in den Spielstand-Metadaten (META-02, Feld leer seit 2.5); Spielmenü mit Speichern, Laden und Spielstand-Liste (ersetzt die einfache Liste aus 2.5); Einstellungs-Menü (ersetzt das minimale Panel aus 2.6), dabei Obergrenze des Autosave-Intervalls (60 Minuten, Schätzung aus 2.6, ADR-031) überprüfen | FR-001, FR-002, FR-005 |
 | 5.2 | Etagen, Zonen (international), Bauen vollständig | FR-010, FR-012 |
 | 5.3 | Landseite: Parken, ÖPNV, Kreuzungen mit wählbarer Vorfahrt | FR-013, FR-015 |
 | 5.4 | Terminal vollständig: moderner Check-in, Kontrollspuren, Grenze, Läden, Info | FR-019 bis FR-024 |
@@ -372,7 +405,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11); Grafiken und Töne in Mods; Spielstände mit fehlenden Paketen laden unter Entfernen der betroffenen Objekte (ADR-021); aus der getrennten Prüfung 2.4: Pakete im Hintergrund laden statt auf dem JavaScript-Thread des Kern-Prozesses, neu abgelegte Pakete ohne Neustart erkennen (`docs/research/2.4-getrennte-pruefung.md`, Befunde 7 und 14) | FR-044 |
+| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11); Grafiken und Töne in Mods; Spielstände mit fehlenden Paketen laden unter Entfernen der betroffenen Objekte (ADR-021); aus der getrennten Prüfung 2.4: Pakete im Hintergrund laden statt auf dem JavaScript-Thread des Kern-Prozesses, neu abgelegte Pakete ohne Neustart erkennen (`docs/research/2.4-getrennte-pruefung.md`, Befunde 7 und 14); Überschreiben von Texten anderer Pakete in `lang/` (wie `replaces`, ADR-031); prüfen, ob eine Gesamtgrenze für Einträge und Texte über alle Pakete nötig ist (Befund 2 der getrennten Prüfung von 2.6, `docs/research/2.6-getrennte-pruefung.md`) | FR-044 |
 | 6.2 | Audio, Durchsagen, Musik, ggf. Intro-Video | FR-047, FR-049 |
 | 6.3 | Abgleich der Funktionsgleichheit gegen das gesamte Inventar | – |
 
@@ -525,7 +558,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): ein zusätzliches Argument eines bestehenden Ereignisses, keine Modulgrenze, kein Datenformat.
 - **Eigener Fehler beim Abgleich:** Punkt (e) widersprach ADR-028 (`unknownSave`); bemerkt beim Schreiben von ADR-029, vor dem Code. Lehre: Beim Abgleich auch die ADRs desselben Schritts gegen die eigenen Festlegungen lesen.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-030, 2 / 10 (Schwellenwert eingehalten) ab ADR-036.
-- **Kenntnisnahme:** offen.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-19: „Zur Kenntnis genommen, Reflexionen ADR-029 und ADR-030“; kein Umbau, Maßnahme (9) gilt.
 
 ---
 
@@ -537,7 +570,19 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): zwei Konstanten, Nachmessung in 4.1 eingeplant.
 - **Maßnahme (9):** Neue Obergrenzen in Verträgen nennen künftig die Messung oder Schätzung, aus der sie stammen, und den Schritt, der sie nachmisst.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs bleibt der Wert 5 / 10 bis ADR-034; 4 / 10 ab ADR-035, 3 / 10 ab ADR-036, 2 / 10 (Schwellenwert eingehalten) ab ADR-038. Der Ausblick zu ADR-029 ist damit überholt.
-- **Kenntnisnahme:** offen.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-19: „Zur Kenntnis genommen, Reflexionen ADR-029 und ADR-030“; kein Umbau, Maßnahme (9) gilt.
+
+---
+
+### Ergänzung Reaktiv-Quote (2026-10-19, Anlass ADR-031)
+
+- **Befund:** 6 / 10 `[REAKTIV]` über ADR-022 bis ADR-031 (ADR-025, ADR-026, ADR-028, ADR-029, ADR-030, ADR-031), 60 %; steigend (ADR-021 `[ERKENNTNIS]` fällt heraus, ADR-031 kommt hinzu).
+- **Ursache von ADR-031:** dasselbe Muster wie bei ADR-028 und ADR-029 – S-3 und S-4 setzen voraus, dass Texte aus `lang/` die Oberfläche erreichen; S-6 bietet keinen Weg, die Modul-Karte keine Beziehung. Gefunden vor dem Code durch Maßnahme (8). Inhaltlich eine additive Funktion; reaktiv nur nach der 14-Tage-Regel, weil ADR-021 sechs Tage alt ist.
+- **Muster:** Dritte Lücke derselben Art in S-6 binnen eines Tages. Die Verträge aus 2.9 beschreiben je Schnittstelle, was sie liefert, aber nicht, welche Daten zwischen den Schnittstellen fließen müssen. Die übrigen offenen Sätze dieser Art lassen sich jetzt vollständig prüfen statt je Schritt.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): keine Modulgrenze ändert sich, der neue Weg folgt `packs.*`.
+- **Maßnahme (10), Vorschlag:** Vor 2.10 einmal alle Sätze in S-1 bis S-7, die Daten einer anderen Schnittstelle oder eines anderen Moduls voraussetzen, gegen die Funktionslisten und die Modul-Karte lesen und die Funde gesammelt in einem ADR vorlegen (statt einzeln je Schritt).
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs 6 / 10 bis ADR-034; 5 / 10 ab ADR-035, 2 / 10 (Schwellenwert eingehalten) ab ADR-039.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-19 per Auswahl: „Kenntnis + Maßnahme (10)“; kein Umbau; Maßnahme (10) als Schritt 2.11 vor 2.10 angelegt.
 
 ---
 
