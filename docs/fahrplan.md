@@ -13,7 +13,7 @@
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
 - **Aktiver Schritt:** keiner; 2.5 (Spielstand mit Autosave) ERLEDIGT am 2026-10-19 (CI-Lauf 39253155836 grün), Branch `feat/2-5-spielstand-mit-autosave` gepusht, kein PR (PR nur auf Anweisung)
 - **Nächster Schritt:** PR für 2.5 nach `main` (auf Anweisung), danach 2.6 (Lokalisierung)
-- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-030 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion“; Kenntnisnahme zu ADR-029 und ADR-030 offen)
+- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-030 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion“, zu ADR-029 und ADR-030 vom Projektinhaber am 2026-10-19 zur Kenntnis genommen)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -525,7 +525,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): ein zusätzliches Argument eines bestehenden Ereignisses, keine Modulgrenze, kein Datenformat.
 - **Eigener Fehler beim Abgleich:** Punkt (e) widersprach ADR-028 (`unknownSave`); bemerkt beim Schreiben von ADR-029, vor dem Code. Lehre: Beim Abgleich auch die ADRs desselben Schritts gegen die eigenen Festlegungen lesen.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-030, 2 / 10 (Schwellenwert eingehalten) ab ADR-036.
-- **Kenntnisnahme:** offen.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-19: „Zur Kenntnis genommen, Reflexionen ADR-029 und ADR-030“; kein Umbau, Maßnahme (9) gilt.
 
 ---
 
@@ -537,7 +537,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): zwei Konstanten, Nachmessung in 4.1 eingeplant.
 - **Maßnahme (9):** Neue Obergrenzen in Verträgen nennen künftig die Messung oder Schätzung, aus der sie stammen, und den Schritt, der sie nachmisst.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs bleibt der Wert 5 / 10 bis ADR-034; 4 / 10 ab ADR-035, 3 / 10 ab ADR-036, 2 / 10 (Schwellenwert eingehalten) ab ADR-038. Der Ausblick zu ADR-029 ist damit überholt.
-- **Kenntnisnahme:** offen.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-19: „Zur Kenntnis genommen, Reflexionen ADR-029 und ADR-030“; kein Umbau, Maßnahme (9) gilt.
 
 ---
 
