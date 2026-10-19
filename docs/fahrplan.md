@@ -13,7 +13,7 @@
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
 - **Aktiver Schritt:** 2.6 (Lokalisierung) IN ARBEIT, Stufe 2.6a (Kern); freigegeben per ADR-031; Branch `feat/2-6-lokalisierung`
 - **Nächster Schritt:** Stufe 2.6b (Plattform und Oberfläche), getrennte Prüfung, Abschluss von 2.6
-- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 6 / 10 nach ADR-031 über dem Schwellenwert (Reflexion zu ADR-031 siehe „Iterations-Reflexion“, Kenntnisnahme offen)
+- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 6 / 10 nach ADR-031 über dem Schwellenwert (Reflexion zu ADR-031 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, Maßnahme (10) als Schritt 2.11)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -92,7 +92,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 **Ursprünglicher Schrittplan:** 10 Schritte, festgehalten am 2026-10-13 in Schritt 1.7 (ADR-016).
 
-**Reihenfolge:** 2.1 und 2.8 parallel → 2.9 → 2.2 → 2.3 → 2.7 → 2.4 → 2.5 → 2.6 → 2.10. Die Nummern 2.1–2.7 stammen aus der Grobplanung (Verweise in `requirements.md` und `project-context.md`), 2.8–2.10 kamen in 1.7 hinzu.
+**Reihenfolge:** 2.1 und 2.8 parallel → 2.9 → 2.2 → 2.3 → 2.7 → 2.4 → 2.5 → 2.6 → 2.11 → 2.10. 2.11 kam am 2026-10-19 hinzu (Maßnahme (10), Reflexion zu ADR-031); Phase 2 damit 11 Schritte bei 10 geplanten, unter der Wucherungs-Schwelle. Die Nummern 2.1–2.7 stammen aus der Grobplanung (Verweise in `requirements.md` und `project-context.md`), 2.8–2.10 kamen in 1.7 hinzu.
 
 **Phasentyp-Hinweis:** 2.8 und 2.9 sind Entwurfsschritte mit Phasentyp-Kontext ERKUNDUNG innerhalb der Umsetzungsphase (wie die Erkundungen vor 3.3 und 3.4). Sie liefern Entscheidungen, keinen Code.
 
@@ -320,6 +320,23 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
   - **Gültigkeit nach `packs.setActive`:** Die Texte folgen dem zuletzt geladenen Katalog (wie `packs.list`). Objekte einer laufenden Sitzung aus einem abgewählten Paket zeigen bis zur nächsten Sitzung ihren Schlüssel.
   - **„Betroffene Module“ gegen den geplanten Code (Abweichung, Stopp-Kriterium 5):** geplant Lokalisierung, Oberfläche. Tatsächlich zusätzlich **Inhalte & Mods** (Format `lang/` im Lader `core/src/datapack/`, Schema, Basispaket), **Brücke** (Texte und Sprachliste aus dem Ladeergebnis, `bridge/src/lib.rs`), **Plattform** (`settings.*`, `lang.*`, `settings.json`, Autosave-Intervall an `core-host.ts`, Rotation in `saves.ts`, Preload) und **Spielfeld** (Konsole `lang`, Verdrahtung in `main.ts`). Takt & Weltzustand bleibt unberührt (die Texte gehen nicht in den Katalog der Simulation).
   - **Aufteilung in zwei Stufen (zählt als ein Schritt):** 2.6a Kern (Format `lang/`, Lader, Schema, Basispaket `de`/`en`, Brücke; Tests in `core/tests/datapacks.rs`); 2.6b Plattform und Oberfläche (`settings.*`, `lang.*`, `i18n.ts`, Panels, Rauchtest mit Sprachwechsel ohne Neustart und Sprachpaket aus dem Ordner `packs`). Getrennte Prüfung am Ende (Kategorie 6: neue IPC-Funktionen, `settings.json` als nicht vertrauenswürdige Eingabe, Texte aus Mods in der Oberfläche).
+
+#### 2.11: Sammelprüfung der Vertragssätze S-1 bis S-7 (Maßnahme 10)
+
+- **Status:** OFFEN
+- **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt in Phase 2, wie 2.9)
+- **Schritt-Art (nur ERKUNDUNG):** sonstiges (Prüfung von Verträgen)
+- **Zeitbox (nur ERKUNDUNG):** maximal eine Session
+- **Abhängigkeiten:** 2.6
+- **Freigabepflichtig:** ja, falls Funde Verträge ändern (Kategorie 5, ggf. 1)
+- **Empfohlene Klasse:** Entscheidung – Ergebnis ist ein ADR zu Schnittstellenverträgen.
+- **Eingangskriterien:** 2.6 erledigt
+- **Anforderungen (ab Klasse M):** keine (Infrastruktur der Verträge)
+- **Zu tun:** Jeden Satz in `architecture.md` Abschnitt 4 (S-1 bis S-7 und gemeinsame Grundlagen), der Daten oder Funktionen einer anderen Schnittstelle oder eines anderen Moduls voraussetzt, gegen deren Funktionslisten und gegen die Modul-Karte lesen; Funde gesammelt mit Optionen vorlegen (Maßnahme (10), Reflexion zu ADR-031).
+- **Akzeptanzkriterien:** Liste aller geprüften Sätze mit Ergebnis (passt / Lücke); Lücken per ADR entschieden oder mit Landeplatz versehen.
+- **Betroffene Module:** Brücke, Plattform, Oberfläche, Inhalte & Mods, Takt & Weltzustand (nur Verträge, kein Code)
+- **Reifegrad-Wirkung:** keine (S-1 bis S-7 bleiben `[BELASTBAR]`, ggf. per ADR fortgeschrieben)
+- **Artefakte:** Prüfliste in `docs/research/`, ggf. ADR
 
 #### 2.10: Stilleitfaden, SVG-Pipeline und Messung der Darstellung
 
@@ -559,7 +576,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): keine Modulgrenze ändert sich, der neue Weg folgt `packs.*`.
 - **Maßnahme (10), Vorschlag:** Vor 2.10 einmal alle Sätze in S-1 bis S-7, die Daten einer anderen Schnittstelle oder eines anderen Moduls voraussetzen, gegen die Funktionslisten und die Modul-Karte lesen und die Funde gesammelt in einem ADR vorlegen (statt einzeln je Schritt).
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 6 / 10 bis ADR-034; 5 / 10 ab ADR-035, 2 / 10 (Schwellenwert eingehalten) ab ADR-039.
-- **Kenntnisnahme:** offen.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-19 per Auswahl: „Kenntnis + Maßnahme (10)“; kein Umbau; Maßnahme (10) als Schritt 2.11 vor 2.10 angelegt.
 
 ---
 

@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 13:37 (UTC) – [BEOBACHTUNG]
+
+- **Kenntnisnahme:** Projektinhaber zur Reflexion ADR-031 per Auswahl „Kenntnis + Maßnahme (10)“. Schritt 2.11 (Sammelprüfung der Vertragssätze) vor 2.10 angelegt; Phase 2 damit 11 Schritte bei Plan 10 (Wucherungs-Schwelle: 20 und +5, nicht erreicht).
+
 ### 2026-10-19 13:35 (UTC) – [ADR-ANGELEGT]
 
 - **ADR-031** `[REAKTIV]`: Sprachpakete erreichen die Oberfläche über `lang.list`/`lang.texts` in S-6; Basis-Sprachdateien zusätzlich beim Build eingebunden; neue Beziehung Inhalte & Mods → Lokalisierung. Freigabe des Projektinhabers per Auswahl: „A: lang.* in S-6“ und „Ja, alle“ (Festlegungen). Architektur Abschnitt 2, 3 (Lokalisierung), 4 (S-4, S-6) nachgezogen; Landeplätze 5.1 (Einstellungs-Menü, Prüfung der 60 Minuten) und 6.1 (Überschreiben fremder Texte). Reaktiv-Quote 6 / 10, Reflexion mit Vorschlag Maßnahme (10) im Fahrplan.
