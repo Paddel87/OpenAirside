@@ -9,12 +9,12 @@
      die Inventar-IDs, damit nichts doppelt gepflegt wird. -->
 
 <!-- ANCHOR:uebersicht -->
-## 1. Übersicht (Stand vom 2026-10-13)
+## 1. Übersicht (Stand vom 2026-10-19)
 
 | Kennzahl | Wert |
 |---|---|
-| Anforderungen gesamt | 51 |
-| davon Muss / Soll / Kann | 43 / 5 / 3 |
+| Anforderungen gesamt | 52 |
+| davon Muss / Soll / Kann | 44 / 5 / 3 |
 | Muss-Anforderungen ohne Fahrplan-Schritt | 0 |
 | Muss-Anforderungen ohne Test (Pflicht ab Klasse G) | 0 (Testpfade geplant, entstehen mit dem Schritt) |
 | Verworfen (mit ADR) | 0 |
@@ -134,22 +134,23 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | FR-011 | Bauaufträge mit Bauarbeitern, sofort sichtbar übernommen | UC-002 | Muss | Auftrag erscheint im nächsten Bild; im Referenzszenario < 100 ms bis zur Anzeige | 3.1 | `core/tests/construction.rs` | OFFEN |
 | FR-012 | Zonen, Räume und Overlays | UC-002 | Muss | Inventar Abschnitt 3 (ZON-*) abgebildet | 3.2, 5.2 | `core/tests/zones.rs` | OFFEN |
 | FR-013 | Landseite: Straßen, Parken (Parkhäuser mit Ebenen), ÖPNV, Taxis | UC-005 | Muss | Inventar Abschnitt 5 (LAND-*), MOD-21 | 5.3 | `core/tests/landside.rs` | OFFEN |
-| FR-014 | Straßenverkehr nach festen Regeln ohne Blockade | UC-005 | Muss | eigene Spuren je Richtung, Abbiegen behindert Gegenverkehr nicht, kein Einfahren in nicht räumbare Kreuzung; 1 h Spielzeit Referenzszenario ohne Dauerstau | 3.4 | `core/tests/road_traffic.rs` | OFFEN |
+| FR-014 | Straßenverkehr nach festen Regeln ohne Blockade | UC-005 | Muss | eigene Spuren je Richtung, Abbiegen behindert Gegenverkehr nicht, kein Einfahren in nicht räumbare Kreuzung; 1 h Spielzeit Referenzszenario ohne Dauerstau | 3.12, 3.4 | `core/tests/road_traffic.rs` | OFFEN |
 | FR-015 | Vorfahrt automatisch, je Kreuzung manuell umschaltbar | UC-005 | Muss | Schilder, Stoppstellen, Ampeln wählbar | 5.3 | `core/tests/intersections.rs` | OFFEN |
 
 ### Passagiere und Terminal
 
 | ID | Anforderung | Anwendungsfall | Priorität | Prüfbare Akzeptanz | Fahrplan-Schritt | Test (ab Klasse G) | Status |
 |---|---|---|---|---|---|---|---|
-| FR-016 | Passagiere mit Bedürfnissen, Zufriedenheit und Ablauf Abflug/Ankunft | UC-005 | Muss | Inventar Abschnitt 4 (PAX-*); Kernprozesse Abflug und Ankunft | 3.2 | `core/tests/pax_flow.rs` | OFFEN |
-| FR-017 | Wegfindung nach Wegweiser-Prinzip | UC-010 | Muss | ADR-004; 10.000 Personen mit ≤ 4 ms je Simulationstakt auf Referenz-Hardware | 1.2, 2.3, 3.3 | `core/benches/flowfield.rs` | OFFEN (Wegweiser im Kern und Benchmark als CI-Gate seit 2.3: p99 0,38 ms mit 10.000 Personen auf dem GitHub-Runner; Passagierführung 3.3) |
-| FR-018 | Passagierführung über Schilder und Bodenmarkierungen; ohne Schilder Suchen | UC-005 | Muss | mit Beschilderung messbar kürzere Wegzeit als ohne | 3.3 | `core/tests/signage.rs` | OFFEN |
+| FR-016 | Passagiere mit Bedürfnissen, Zufriedenheit und Ablauf Abflug/Ankunft | UC-005 | Muss | Inventar Abschnitt 4 (PAX-*); Kernprozesse Abflug und Ankunft; 1 h Spielzeit im Szenario ohne Stillstand, der sich nicht selbst auflöst (Vision „Kein Stillstand“, ADR-036) | 3.2, 4.1 | `core/tests/pax_flow.rs` | OFFEN |
+| FR-017 | Wegfindung nach Wegweiser-Prinzip | UC-010 | Muss | ADR-004; 10.000 Personen mit ≤ 4 ms je Simulationstakt auf Referenz-Hardware | 1.2, 2.3, 3.11, 3.3 | `core/benches/flowfield.rs` | OFFEN (Wegweiser im Kern und Benchmark als CI-Gate seit 2.3: p99 0,38 ms mit 10.000 Personen auf dem GitHub-Runner; Passagierführung 3.3) |
+| FR-018 | Passagierführung über Schilder und Bodenmarkierungen; ohne Schilder Suchen | UC-005 | Muss | mit Beschilderung messbar kürzere Wegzeit als ohne | 3.11, 3.3 | `core/tests/signage.rs` | OFFEN |
 | FR-019 | Check-in modern: Online-Anteil, Gepäckabgabe, Self Bag Drop, Common Use | UC-005 | Muss | Inventar Abschnitt 6 (CHK-*), MOD-01 bis MOD-03 | 3.2, 5.4 | `core/tests/checkin.rs` | OFFEN |
 | FR-020 | Sicherheitskontrolle mit Spuren, Technikstufen und Nachkontrolle | UC-005 | Muss | Inventar Abschnitt 7 (SEC-*), MOD-05 bis MOD-07 | 3.2, 5.4 | `core/tests/security.rs` | OFFEN |
 | FR-021 | Grenzkontrolle und Zoll mit E-Gates | UC-005 | Muss | MOD-10, SEC-03 | 5.4 | `core/tests/border.rs` | OFFEN |
 | FR-022 | Gates, Boarding (inkl. Self-Boarding), Stellplätze, Brücken, Busse | UC-005 | Muss | Inventar Abschnitt 9 (GATE-*), MOD-12 | 3.2, 5.4 | `core/tests/gates.rs` | OFFEN |
 | FR-023 | Läden, Gastronomie, Lounges, Toiletten, Franchises | UC-005 | Muss | Inventar Abschnitt 10, MOD-16 | 5.4 | `core/tests/commercial.rs` | OFFEN |
 | FR-024 | Infoschalter und digitale Beschilderung mit spürbarer Wirkung | UC-005 | Muss | MOD-14; Gate-Wechsel erreicht Passagiere messbar schneller | 5.4 | `core/tests/info.rs` | OFFEN |
+| FR-052 | Walk-out-Positionen: Fluggäste gehen auf Vorfeld-Gehwegen zum Flugzeug an Stellplätzen ohne Fluggastbrücke | UC-005 | Muss | MOD-13, GATE-06; Querungen von Betriebsstraßen gesperrt oder geregelt (3.7); Boarding und Aussteigen zu Fuß im Szenario (ADR-036, 2026-10-19) | 3.7, 3.4 | `core/tests/walk_out.rs` | OFFEN |
 
 ### Gepäck
 
@@ -163,7 +164,7 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | ID | Anforderung | Anwendungsfall | Priorität | Prüfbare Akzeptanz | Fahrplan-Schritt | Test (ab Klasse G) | Status |
 |---|---|---|---|---|---|---|---|
 | FR-027 | Bahnen, Rollwege mit gezogenen Mittellinien, Stellplätze, Befeuerung, Flugsicherung | UC-003 | Muss | Inventar Abschnitt 11 (RWY-*, TWY-*, ATC-*) | 3.4, 5.5 | `core/tests/airside.rs` | OFFEN |
-| FR-028 | Automatische Verkehrssteuerung mit Vorrangregeln nach ADR-005 | UC-003 | Muss | 7-stufige Rangfolge; Szenario-Test mit Notfall ohne Blockade; Entscheidungen für Spieler einsehbar | 3.4 | `core/tests/traffic_control.rs` | OFFEN |
+| FR-028 | Automatische Verkehrssteuerung mit Vorrangregeln nach ADR-005 | UC-003 | Muss | 7-stufige Rangfolge; Szenario-Test mit Notfall ohne Blockade; Entscheidungen für Spieler einsehbar | 3.12, 3.4 | `core/tests/traffic_control.rs` | OFFEN |
 | FR-029 | Startfreigabe-Zeit am Gate, „Aufrollen und Warten" | UC-003 | Muss | MOD-41, MOD-42 | 5.5 | `core/tests/departure_sequencing.rs` | OFFEN |
 | FR-030 | Airlines, Verhandlungen, Verträge, Flugplanung | UC-004 | Muss | Inventar Abschnitt 12 (FLT-*, AIR-*) | 3.6, 5.5 | `core/tests/flights.rs` | OFFEN |
 | FR-031 | Flugzeugtypen inklusive aller Add-on-Klassen (Vintage, Ost, Überschall, Hubschrauber) als Daten | UC-004 | Muss | ACFT-01 bis ACFT-05 mit eigenen Typen und Airlines | 5.7 | `core/tests/aircraft_data.rs` | OFFEN |
