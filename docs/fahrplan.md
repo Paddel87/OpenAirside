@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-19 (Session ab 15:14 UTC)
+- **Stand vom:** 2026-10-19 (Session ab 16:18 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner; 2.11 (Sammelprüfung der Vertragssätze) ERLEDIGT am 2026-10-19 (ADR-032), mit PR #24 nach `main` gemergt (`2a464bf`)
-- **Nächster Schritt:** 2.10 (Stilleitfaden, SVG-Pipeline, Messung) in einer neuen Session auf einem neuen Branch vom aktuellen `main` (Sessionende-Commit von `erkundung/2-11-sammelpruefung-vertragssaetze` übernehmen)
+- **Aktiver Schritt:** 2.10 (Stilleitfaden, SVG-Pipeline, Messung) – WARTET-AUF-FREIGABE (Wahl des SVG-Rasterers, Kategorie 3 und 7); zuvor 2.11 ERLEDIGT (ADR-032, PR #24, `2a464bf`)
+- **Nächster Schritt:** nach Freigabe ADR-033 anlegen, dann Pipeline, Stilleitfaden, Programmsymbol und Messwerkzeug für 2.10 auf `feat/2-10-stilleitfaden-svg-pipeline`
 - **Offene STOPP-Situationen:** Reaktiv-Quote 7 / 10 nach ADR-032 über dem Schwellenwert – Reflexion zu ADR-032 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, kein Umbau
 
 <!-- ANCHOR:phasen-typen -->
@@ -348,7 +348,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.10: Stilleitfaden, SVG-Pipeline und Messung der Darstellung
 
-- **Status:** OFFEN
+- **Status:** WARTET-AUF-FREIGABE
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.7, 2.11 (Zuordnung Objekt → Bild, ADR-032)
 - **Freigabepflichtig:** ja (Kategorie 3: SVG-Rasterer als neue Abhängigkeit)
@@ -360,6 +360,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Spielfeld, Build/CI
 - **Reifegrad-Wirkung:** NFR Performance Darstellung mit echten Grafiken `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen
 - **Artefakte:** Stilleitfaden, Pipeline-Skript, Atlanten, Messprotokoll, ADR
+- **Stand 2026-10-19 16:22 UTC:** Vorlage als `ENTSCHEIDUNG ERFORDERLICH` (Kategorie 3, mit Kategorie 7 für den neuen Bauschritt): A resvg 0.48.1 (Rust, crates.io, Apache-2.0 OR MIT) in einem eigenen Werkzeug-Crate `tools/assets` im Cargo-Workspace, nur im Build, mit Atlas-Packer und Bildliste ohne weitere Abhängigkeit; B @resvg/resvg-js 2.6.2 (npm, MPL-2.0, vorgebaute native Pakete; letzte stabile Version 2024-03-26, seither nur Alpha-Versionen); C Rasterung in Electron/Chromium ohne neue Abhängigkeit. Verworfen ohne Option: sharp (vorgebaute libvips-Binärdateien unter LGPL-3.0, nicht erlaubt). Empfehlung A. Belege: Probe-Projekt mit `default-features = false` – 37 Crates, alle Lizenzen erlaubt, eine doppelte Version `miniz_oxide` 0.8.9 neben 0.9.1 (über png 0.18.1) als benannte Ausnahme in `deny.toml` nötig; Rasterung eines Test-SVG in 1× und 2× lief. Wartet auf Freigabe.
 
 ### Phase 3: Vertikaler Schnitt „Kleiner Flughafen" – Typ: UMSETZUNG
 

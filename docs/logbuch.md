@@ -24,6 +24,20 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 16:22 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 2.10, SVG-Rasterer (Kategorie 3, mit Kategorie 7):** Optionen A resvg 0.48.1 als Rust-Werkzeug-Crate im Workspace, B @resvg/resvg-js 2.6.2 (npm), C Rasterung in Electron/Chromium; Empfehlung A. Belege aus crates.io und npm (Abruf 16:19–16:21 UTC) und einem Probe-Projekt im Scratchpad: 37 Crates ohne Standard-Features, alle Lizenzen erlaubt, `miniz_oxide` doppelt (0.8.9 über png 0.18.1, 0.9.1 über flate2) – benannte Ausnahme nötig. sharp verworfen (libvips-Binärdateien unter LGPL-3.0).
+- **Mini-Reibung:** Die Einrichtung im Hintergrund brach bei `rustup component add` ab, weil ein gleichzeitiges `cargo --version` die Toolchain aus `rust-toolchain.toml` installierte (rustup-Sperre); einzeln wiederholt, grün. Lehre: Toolchain-Aufrufe während der Einrichtung nicht parallel starten.
+
+### 2026-10-19 16:18 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 15:30 UTC plus `[BEOBACHTUNG]` 16:13 (Merge PR #24, `2a464bf`). Der Merge-Vermerk `de7eabb` nach `project-context.md` Abschnitt 10 auf den neuen Branch `feat/2-10-stilleitfaden-svg-pipeline` vom aktuellen `main` übernommen; `erkundung/2-11-sammelpruefung-vertragssaetze` wird nicht weiterverwendet.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht). Vertiefung für 2.10: ADR-008.
+- **Geplant für diese Session:** Schritt 2.10 (Stilleitfaden, SVG-Pipeline, Messung): Versionen des SVG-Rasterers nach Regel-001 belegen und als `ENTSCHEIDUNG ERFORDERLICH` (Kategorie 3) vorlegen; erst nach Freigabe ADR und Code; Messwerkzeug und Ablauf so vorbereiten, dass der Projektinhaber auf Referenz-PC und Mac nur starten und die JSON-Datei zurückgeben muss.
+- **Vorabprüfung:** S-1 `[BELASTBAR]`, Spielfeld-Grundgerüst aus 2.7 vorhanden; Weltdarstellung `[OFFEN]` (3.8) – das Messwerkzeug platziert die Sprites selbst (ADR-032, L-4), 2.10 hängt also nicht vom offenen Bestandteil ab (Regel-007). Reaktiv-Quote 7 / 10, Maßnahmen (7)–(9) gelten.
+- **Modus/Werkzeug:** semi-autonom, Claude Code in einer Cloud-Session.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` (Entscheidungs-Klasse), Quelle `get_session` 16:18 UTC (`configured_model`, `session_context.model`, `last_served_model`); Kontingent 5-Stunden-Fenster `allowed`.
+
 ### 2026-10-19 16:13 (UTC) – [BEOBACHTUNG]
 
 - **Merge:** PR #24 (Schritt 2.11) auf Anweisung des Projektinhabers („Kenntnis + PR bei grün“) nach `main` gemergt, Merge-Commit `2a464bf`; vorher grün auf `a96a040`: Push-Lauf 39278499215, PR-Läufe CI 39278544213 und Security 39278543616. Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf dem Arbeits-Branch und geht mit dem PR des nächsten Schritts nach `main`.
