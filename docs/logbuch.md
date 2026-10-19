@@ -24,6 +24,12 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 02:05 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 2.5, Kategorie 3:** Serialisierungsformat, Kompression und Prüfsumme des Spielstands. Optionen A `postcard` + `miniz_oxide` + FNV-1a 64 aus dem Kern (Empfehlung), B wie A mit `zstd` (C), C nur `postcard` ohne Kompression. Belege, Messung und Abgleich mit S-5/S-6 (Maßnahme 7) im Fahrplan bei 2.5.
+- **Umgebung:** Container frisch: Node 26.11.1 über `/opt/nvm`, `npm ci`, `pre-commit install`, `cargo-deny` 0.20.2 aus dem GitHub-Release. Probeaufbau unter dem Scratchpad, nicht im Repository.
+- **Beobachtung:** `bincode` trägt seit 2025-12-16 das Advisory RUSTSEC-2025-0141 (nicht mehr gepflegt; 3.0.0 ist eine Abschluss-Version); `ruzstd` hatte vor 8 Tagen ein Advisory zur Dekompressionsbombe. Beides schließt sie für nicht vertrauenswürdige Spielstände aus.
+
 ### 2026-10-19 01:54 (UTC) – [SESSIONSTART]
 
 - **Letzter Stand:** 2.4 erledigt (2026-10-18), PR Paddel87/OpenAirside#21 gemergt (`eead91b`); kein `[IN ARBEIT]`-Schritt; nächster Schritt 2.5. Letzter `[SESSIONENDE]`: 2026-10-18 23:27 UTC, danach Beobachtungen 23:30 und 23:38 UTC.

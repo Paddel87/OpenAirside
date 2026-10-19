@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-18 (Session ab 22:09 UTC, Ende 23:27 UTC)
+- **Stand vom:** 2026-10-19 (Session ab 01:54 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (2.4 erledigt am 2026-10-18)
-- **Nächster Schritt:** 2.5 (Spielstand mit Autosave), zuerst Freigabe von Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3; Entscheidungs-Klasse), dabei Maßnahme (7): Vertragssätze S-5/S-6 vor dem Code gegen den Plan prüfen
+- **Aktiver Schritt:** 2.5 `[WARTET-AUF-FREIGABE]` (Spielstand mit Autosave): Vorlage zu Serialisierungsformat, Prüfsumme, Kompression und zum Abgleich mit S-5/S-6 (Maßnahme 7) vom 2026-10-19
+- **Nächster Schritt:** nach der Freigabe ADR-027 (und ggf. ADR-028), dann 2.5a (Kern)
 - **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-026 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion" zu ADR-025 und ADR-026, beide vom Projektinhaber am 2026-10-18 zur Kenntnis genommen)
 
 <!-- ANCHOR:phasen-typen -->
@@ -268,7 +268,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.5: Spielstand mit Autosave
 
-- **Status:** OFFEN
+- **Status:** WARTET-AUF-FREIGABE (Vorlage vom 2026-10-19, siehe unten)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.7, 2.9
 - **Freigabepflichtig:** ja, für Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3, ADR-021)
@@ -280,6 +280,13 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Takt & Weltzustand, Plattform
 - **Reifegrad-Wirkung:** S-5 durch Umsetzung bestätigt
 - **Artefakte:** Spielstand-Code, Tests
+- **Vorlage zur Freigabe (2026-10-19, Entscheidungs-Klasse):**
+  - Kategorie 3, Versionen belegt auf crates.io am 2026-10-19 (Regel-001), Probeaufbau in einer Kopie des Workspace mit `cargo deny check` grün: A `postcard =1.1.3` (ohne Standard-Features, `use-std`) für den Weltzustand, `miniz_oxide =0.9.1` (Deflate, `forbid(unsafe_code)`) für den Weltzustand-Abschnitt, Datei-Prüfsumme FNV-1a 64 aus `core/src/hash.rs` (keine Abhängigkeit); neu im Lockfile `postcard`, `cobs` 0.3.0, `miniz_oxide`, `adler2` (dazu `embedded-io` 0.4/0.6 nur als Lockfile-Eintrag, nicht gebaut); alle MIT oder Apache-2.0 bzw. Zlib/0BSD. B wie A mit `zstd =0.14.2` (libzstd 1.5.7 in C) statt `miniz_oxide`. C nur `postcard`, ohne Kompression. Empfehlung A.
+  - Nicht vorgeschlagen: `bincode` (RUSTSEC-2025-0141, nicht mehr gepflegt), `lz4_flex` (RUSTSEC-2026-0041 im Entpacker, März 2026), `ruzstd` (RUSTSEC-2026-0344 Dekompressionsbombe, behoben vor 8 Tagen), `rmp-serde` und `ciborium` (selbstbeschreibend und größer; `ciborium` zuletzt 2024-01), JSON für den Weltzustand (zu groß und langsam für das Raster).
+  - Messung im Container (4 vCPU, Release-Build), Raster des Referenz-Terminals 768² × 5 in Welt 2048²: 4.988 Blöcke, 15,4 MB als postcard, Schreiben 23 ms, Lesen 23 ms; Deflate Stufe 6: 59 KB, Packen 33 ms, Entpacken 19 ms; zstd Stufe 3: 24 KB, 6 ms / 10 ms; FNV-1a 64 über 15 MB 21 ms (über die gepackte Datei unter 1 ms). Das synthetische Terminal ist sehr gleichförmig; echte Flughäfen packen schlechter.
+  - Abgleich mit S-5/S-6 (Maßnahme 7): (1) Den Container (Kopf, Metadaten als JSON mit `serde_json`, Vorschaubild, Weltzustand, Prüfsumme) baut und prüft der Kern (`core/src/savegame/`); der Hauptprozess liefert das Vorschaubild, schreibt die Datei und reicht sie beim Laden und für die Liste (Kopf und Metadaten, höchstens 64 KB) an den Kern. (2) Neu und additiv: `saves.preview(id)` → PNG-Bytes für die `blob:`-URL der Liste (S-6 nennt nur `list`/`save`/`load`/`delete`, die Liste liefert keine Bilder). (3) „Flughafenname“ gibt es im Weltzustand noch nicht: Feld bleibt leer bis 5.1 (META-02). (4) Autosave-Intervall und -Anzahl („einstellbar“): in 2.5 feste Werte (alle 10 Minuten laufender Spielzeit, 5 Dateien), einstellbar mit `settings.*` in 2.6. (5) Ältere Spielstände vor 1.0 werden mit `migrationFailed` abgewiesen (kein eigener Code). (6) Die Liste prüft nur Kopf und Metadaten; Schäden im Rest meldet erst das Laden (`checksumMismatch`). (7) Höchstzahlen: Personen 200.000 (`MAX_PERSONS`), Objekte 1.000.000 (wirksam ab 3.1), Fahrzeuge 50.000 (wirksam ab 3.4). (8) Oberfläche in 2.5 minimal: Konsolenbefehle und eine einfache Spielstand-Liste mit Vorschau, Angebot „letzten Autosave laden“ nach Absturz des Kerns; das Spielmenü folgt in 5.1. (9) Fehlerform `{ code, textKey, params }` für alle S-6-Aufrufe über eine Antwort-Hülle im IPC, auch `measure.*` und `packs.*`.
+  - Aufteilung in zwei Stufen (zählt als ein Schritt): 2.5a Kern (Weltzustand, Container, Grenzen, Prüfreihenfolge, Fehlerkatalog, `core/tests/savegame_roundtrip.rs`); 2.5b Plattform (Fehlerform, `saves.*`, `logs.*`, Autosave, Schnellspeichern, Vorschaubild, CSP `img-src blob:`, Liste, Rauchtest). Getrennte Prüfung am Ende (Kategorie 6: CSP, `logs.openFolder`, nicht vertrauenswürdige Dateien).
+  - Klassifikation: ADR-027 (Bibliotheken) füllt den in ADR-021 offen gelassenen Punkt und ist `[OPERATIV]`; die Ergänzung (2) ändert S-6 aus ADR-021 (6 Tage alt) und wird vorsichtshalber als eigener ADR-028 `[REAKTIV]` geführt. Reaktiv-Quote danach 5 / 10 (ADR-019 bis ADR-028).
 
 #### 2.6: Lokalisierung
 
