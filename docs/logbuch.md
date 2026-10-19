@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 16:13 (UTC) – [BEOBACHTUNG]
+
+- **Merge:** PR #24 (Schritt 2.11) auf Anweisung des Projektinhabers („Kenntnis + PR bei grün“) nach `main` gemergt, Merge-Commit `2a464bf`; vorher grün auf `a96a040`: Push-Lauf 39278499215, PR-Läufe CI 39278544213 und Security 39278543616. Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf dem Arbeits-Branch und geht mit dem PR des nächsten Schritts nach `main`.
+
 ### 2026-10-19 15:30 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** ca. 16 Minuten seit `[SESSIONSTART]` 15:14 UTC.
