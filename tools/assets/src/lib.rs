@@ -674,7 +674,9 @@ mod tests {
     #[test]
     fn reports_bad_inputs_with_their_file() {
         let (root, layout) = repo("bad");
-        let wrong = file(&root, "assets/graphics/base/Bench.svg", RECT);
+        // Not an entry id on any file system (an upper-case variant of an existing file would be
+        // the same file on macOS and Windows).
+        let wrong = file(&root, "assets/graphics/base/bench.old.svg", RECT);
         assert_eq!(run(&layout).unwrap_err().file, wrong);
         fs::remove_file(&wrong).unwrap();
 
