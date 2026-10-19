@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-19 (Session 16:18–17:10 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.10 (Stilleitfaden, SVG-Pipeline, Messung) – IN ARBEIT, Pipeline umgesetzt (ADR-033), wartet auf die Messung durch den Projektinhaber; zuvor 2.11 ERLEDIGT (ADR-032, PR #24, `2a464bf`)
-- **Nächster Schritt:** Messung 2.10 auf Referenz-PC und Mac durch den Projektinhaber (Anleitung `docs/research/2.10-messung.md`), dann Auswertung und ADR zur NFR Darstellung
+- **Aktiver Schritt:** keiner; 2.10 ERLEDIGT am 2026-10-19 (ADR-033, ADR-034) – damit sind alle 11 Schritte von Phase 2 erledigt
+- **Nächster Schritt:** PR für 2.10; danach Phasenabschluss Phase 2 in einer neuen Session: Vision-Abgleich gegen `docs/vision.md`, Pflichtfrage „Weiterbauen, umbauen oder neu aufsetzen?“ mit Bewertung durch eine getrennte Instanz (`CLAUDE.md` Abschnitt 12), Archivierung und Logbuch-Verdichtung beim `[PHASEN-WECHSEL]`
 - **Offene STOPP-Situationen:** Reaktiv-Quote 7 / 10 nach ADR-032 über dem Schwellenwert – Reflexion zu ADR-032 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, kein Umbau
 
 <!-- ANCHOR:phasen-typen -->
@@ -348,7 +348,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.10: Stilleitfaden, SVG-Pipeline und Messung der Darstellung
 
-- **Status:** IN ARBEIT
+- **Status:** ERLEDIGT (2026-10-19)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.7, 2.11 (Zuordnung Objekt → Bild, ADR-032)
 - **Freigabepflichtig:** ja (Kategorie 3: SVG-Rasterer als neue Abhängigkeit)
@@ -362,7 +362,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Artefakte:** Stilleitfaden, Pipeline-Skript, Atlanten, Messprotokoll, ADR
 - **Stand 2026-10-19 16:22 UTC:** Vorlage als `ENTSCHEIDUNG ERFORDERLICH` (Kategorie 3, mit Kategorie 7 für den neuen Bauschritt): A resvg 0.48.1 (Rust, crates.io, Apache-2.0 OR MIT) in einem eigenen Werkzeug-Crate `tools/assets` im Cargo-Workspace, nur im Build, mit Atlas-Packer und Bildliste ohne weitere Abhängigkeit; B @resvg/resvg-js 2.6.2 (npm, MPL-2.0, vorgebaute native Pakete; letzte stabile Version 2024-03-26, seither nur Alpha-Versionen); C Rasterung in Electron/Chromium ohne neue Abhängigkeit. Verworfen ohne Option: sharp (vorgebaute libvips-Binärdateien unter LGPL-3.0, nicht erlaubt). Empfehlung A. Belege: Probe-Projekt mit `default-features = false` – 37 Crates, alle Lizenzen erlaubt, eine doppelte Version `miniz_oxide` 0.8.9 neben 0.9.1 (über png 0.18.1) als benannte Ausnahme in `deny.toml` nötig; Rasterung eines Test-SVG in 1× und 2× lief. Wartet auf Freigabe.
 - **Freigabe (2026-10-19 16:28 UTC):** Option A per Auswahl, ADR-033 `[OPERATIV]`.
-- **Stand 2026-10-19 17:02 UTC:** umgesetzt und lokal geprüft: Werkzeug-Crate `tools/assets` (Atlanten in 8/16/32 px je Zelle, Bildliste, Programmsymbol), Stilleitfaden `docs/stilleitfaden.md` mit Palette `assets/palette.json`, SVG-Quellen in `assets/` (außerhalb des Paketordners, S-4 unverändert), Prüfer `scripts/assets.mjs`, Atlanten im Spielfeld (`app/renderer/atlas.ts`, ohne `fetch`, CSP unverändert), Szene des Messwerkzeugs (20.000 Objekte, 64 Zonen), Fenstersymbol unter Linux, Rauchtest mit `data-atlas`. Onboarding im frischen Worktree validiert. Messanleitung `docs/research/2.10-messung.md`. CI-Lauf 39290398392 grün (17 Jobs); Messpakete aus Release-Lauf 39291102397 (`62f3ac0`). **Offen:** Messung auf Referenz-PC und Mac durch den Projektinhaber (Hardware), danach Auswertung und ADR zur NFR Darstellung; bis dahin bleibt der Schritt `[IN ARBEIT]`.
+- **Stand 2026-10-19 17:02 UTC:** umgesetzt und lokal geprüft: Werkzeug-Crate `tools/assets` (Atlanten in 8/16/32 px je Zelle, Bildliste, Programmsymbol), Stilleitfaden `docs/stilleitfaden.md` mit Palette `assets/palette.json`, SVG-Quellen in `assets/` (außerhalb des Paketordners, S-4 unverändert), Prüfer `scripts/assets.mjs`, Atlanten im Spielfeld (`app/renderer/atlas.ts`, ohne `fetch`, CSP unverändert), Szene des Messwerkzeugs (20.000 Objekte, 64 Zonen), Fenstersymbol unter Linux, Rauchtest mit `data-atlas`. Onboarding im frischen Worktree validiert. Messanleitung `docs/research/2.10-messung.md`. CI-Lauf 39290398392 grün (17 Jobs); Messpakete aus Release-Lauf 39291102397 (`62f3ac0`).
+- **Ergebnis (2026-10-19):** Messung durch den Projektinhaber auf Referenz-PC (60 Hz) und Mac M3 Pro (120 Hz, zwei Läufe mit 2 + 8 und 2 + 4 Threads), `docs/research/2.10-messung.md`: Bildrate hält auf beiden Rechnern mit 20.000 Sprites, Zonen und 10.000 Personen. ADR-034 (freigegeben per Auswahl A): NFR Darstellung geteilt, Gemessenes `[BELASTBAR]`, Rest `[VORLÄUFIG]` mit Landeplätzen 3.8, 3.4/5.5, 4.1, 5.8, 7.2; Schrittzeit-Spitzen auf Apple-Chips in neuem Schritt 4.3. Programmsymbol auf beiden Plattformen sichtbar (Befund 2.1-N2 erledigt). Akzeptanzkriterien: `scripts/assets.test.mjs` grün, Messprotokoll mit Ergebnis, ADR-034. DoD: Linter, Formatter, Typprüfung, cargo-deny, Tests mit Coverage (Vitest 86,5 % gesamt, `atlas.ts` 100 %, `tools/assets` 96,0 %), Rauchtest auf drei Plattformen, Onboarding-Validierung, CI grün (Lauf 39290398392).
 
 ### Phase 3: Vertikaler Schnitt „Kleiner Flughafen" – Typ: UMSETZUNG
 
@@ -373,7 +374,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
 | 3.7 | **Vor 3.1:** Entwurfsschritt (Phasentyp-Kontext ERKUNDUNG) „Personengruppen, Begehbarkeit und Querungen“: Gruppen aus dem Inventar (PAX-*, PAX-09, STAFF-01, SHOP-03, BAU-03; offen: Crew, Einweiser) mit Begehbarkeit je Gruppe einschließlich Personalzonen (ZON-02); Personal auf dem Vorfeld (nur per Fahrzeug, Stellplatzfläche begehbar oder beides, jeweils mit Erklärung bei Unerreichbarkeit; TURN-03, GEP-06, GATE-06); Bauarbeiter und laufende Bahnen; Querungen und Sperrung von Betriebsstraßen beim Walk-out-Boarding (MOD-13); Messung, wie Personal neben den Wegweisern geführt wird; Ergebnis ADR in Ergänzung von ADR-020 (Kategorie 1 und 4) | FR-018 (vorbereitend) |
-| 3.8 | **Nach 3.7, vor 3.1:** Entwurfsschritt (Phasentyp-Kontext ERKUNDUNG) „Weltdarstellung im Spielfeld“ (ADR-032, L-1): wie Raster, Böden, Wände, Objekte und Zonen das Spielfeld erreichen – Ausgangshypothese geänderte Blöcke seit dem quittierten Stand im Bild (S-1), Gegenmodell Abruf über S-7; Messung von Erstübertragung (ganze Karte), Bauaktion bis zum Bild und Speicher im Renderer im Referenz-Terminal; Ergebnis ADR (Kategorie 5, ggf. 1) mit Fortschreibung von S-1 bzw. S-7 | FR-010 (vorbereitend) |
+| 3.8 | **Nach 3.7, vor 3.1:** Entwurfsschritt (Phasentyp-Kontext ERKUNDUNG) „Weltdarstellung im Spielfeld“ (ADR-032, L-1): wie Raster, Böden, Wände, Objekte und Zonen das Spielfeld erreichen – Ausgangshypothese geänderte Blöcke seit dem quittierten Stand im Bild (S-1), Gegenmodell Abruf über S-7; Messung von Erstübertragung (ganze Karte), Bauaktion bis zum Bild und Speicher im Renderer im Referenz-Terminal, dabei die Atlas-Stufen 16 und 32 px je Zelle (Nahansicht) und Atlanten mit vielen Grafiken (ADR-034); Ergebnis ADR (Kategorie 5, ggf. 1) mit Fortschreibung von S-1 bzw. S-7 | FR-010 (vorbereitend) |
 | 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7) auf dem Weg aus 3.8; Katalog der Sitzung über S-7 `catalog` für Bau-Werkzeug und Vorschau, `game.new({ map })` in S-6 und S-8 (Grundform), Parameter `{ key }` in `ParamValue` (ADR-032, L-2, L-3, L-5); Bewegung der Bauarbeiter nach 3.7; Objekte im Weltzustand und Spielstand mit der Höchstzahl `MAX_OBJECTS` (aus 2.5) | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
 | 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
@@ -389,6 +390,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 |---|---|---|
 | 4.1 | Referenzszenario baubar, Leistungstest als CI-Gate; Messung auf echter 8-Kern-Hardware (Auflage ADR-014); Größe des Weltzustands im Spielstand messen und die Grenzen von S-5 (512 MB, ADR-030) prüfen | FR-040 |
 | 4.2 | Coverage auf Mindestwerte, Langzeittest, erste Funktionsgleichheits-Prüfung der umgesetzten Inventar-IDs | – |
+| 4.3 | Schrittzeit-Spitzen der Simulation auf Apple-Chips (ADR-034): auf dem Mac M3 Pro in 11 von 20 Fenstern Sekunden-p99 über 4 ms, Einzelschritte bis 75 ms (2.7, 2.10), mit 4 Hintergrund-Threads gemildert, nicht beseitigt; Ursache klären (Verteilung auf Leistungs- und Effizienzkerne, Priorität der Tick-Threads, Speicherbereinigung im Renderer) und die langen Aufgaben im Renderer aus Mac-Lauf 1 mitprüfen; Ergebnis Maßnahme oder ADR | – (NFR Performance) |
 
 ### Phase 5: Ausbau in die Breite – Typ: UMSETZUNG
 

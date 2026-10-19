@@ -544,7 +544,7 @@ Befehle und Abfragen adressieren Zellen, Rechtecke oder Handles. Positionen von 
 
 ### Performance
 
-- **Gesamtsystem:** 60 Bilder pro Sekunde im Referenzszenario auf der Zielhardware; Simulation ohne Rückstand bei höchster Spielgeschwindigkeit; mindestens 10.000 Personen. Geteilt nach ADR-017: Simulationsschritt mit 10.000 Personen, Wegweiser 768² × 5 (Terminal, nach ADR-020 in Blöcken in einer Welt 2048²) und Übergabe S-1 `[BELASTBAR]` seit 2026-10-13 – Spike 1.5 auf Referenz-PC und Mac M3 Pro (ADR-014); Linux in 7.2 (ADR-011), echte 8-Kern-Hardware spätestens 4.1. Darstellung mit echten Grafiken (Sprites, Atlanten, Overlays) und Last durch Fahrzeuge, Flugzeuge, Gepäck, Personal `[VORLÄUFIG]` – Messung in 2.10, vor 3.4/5.5 und im Referenzszenario 4.1
+- **Gesamtsystem:** 60 Bilder pro Sekunde im Referenzszenario auf der Zielhardware; Simulation ohne Rückstand bei höchster Spielgeschwindigkeit; mindestens 10.000 Personen. Geteilt nach ADR-017: Simulationsschritt mit 10.000 Personen, Wegweiser 768² × 5 (Terminal, nach ADR-020 in Blöcken in einer Welt 2048²) und Übergabe S-1 `[BELASTBAR]` seit 2026-10-13 – Spike 1.5 auf Referenz-PC und Mac M3 Pro (ADR-014); Linux in 7.2 (ADR-011), echte 8-Kern-Hardware spätestens 4.1. Darstellung statischer Objekt-Sprites (Atlas-Stufe 8 px je Zelle) mit Zonen und 10.000 Personen `[BELASTBAR]` seit 2026-10-19 – Messung 2.10 auf Referenz-PC und Mac M3 Pro (ADR-034). Atlas-Stufen 16/32 px je Zelle, große Atlanten, bewegte Sprites und Last durch Fahrzeuge, Flugzeuge, Gepäck, Personal `[VORLÄUFIG]` – 3.8, vor 3.4/5.5 und im Referenzszenario 4.1
 - **Bauen:** Bauaktion im nächsten Bild sichtbar `[VORLÄUFIG]` – in 1.5 nach 2–6 Bildern, weil erst nach Bestätigung durch den Kern gezeichnet; Maßnahme (vorläufiges Zeichnen im Fenster, Abgleich über Befehlskennung): Vertrag S-2 (ADR-021), Umsetzung in 3.1 (ADR-016)
 - **Langzeit:** konstante Rechenzeit und Speicher pro Simulationsschritt über lange Spielzeit `[BELASTBAR]` seit 2026-10-13 – 10-Minuten-Läufe in Spike 1.5 ohne Anstieg (ADR-014)
 - **Oberfläche:** gedrosselte Aktualisierung, virtualisierte Listen `[VORLÄUFIG]`
@@ -633,7 +633,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 - **Kern als WebAssembly mit mehreren Threads:** derzeit nur mit Nightly-Rust baubar, 1,37–1,50 × langsamer als nativ; nicht endgültig verworfen, sondern zurückgestellt: Neubewertung in Fahrplan-Schritt Q.2 – siehe ADR-009
 
 <!-- ANCHOR:reifegrad-uebersicht -->
-## 9. Reifegrad-Übersicht (Stand vom 2026-10-19, Schritt 2.10 laufend)
+## 9. Reifegrad-Übersicht (Stand vom 2026-10-19, nach Schritt 2.10)
 
 | Bestandteil | Reifegrad | Seit | Validiert durch / wartet auf |
 |---|---|---|---|
@@ -663,7 +663,8 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Verkehr, Blockadevermeidung | VORLÄUFIG | 2026-10-13 | Erkundung vor Umsetzung des Verkehrs |
 | Code-Mods | OFFEN | 2026-10-13 | eigene Erkundung |
 | NFR Performance: Simulationsschritt, Wegweiser, Übergabe S-1, Langzeit | BELASTBAR | 2026-10-13 | Leistungsnachweis 1.5, ADR-014, Grenze nach ADR-017; Linux 7.2, echte 8-Kern-Hardware spätestens 4.1 |
-| NFR Performance: Darstellung mit echten Grafiken, Last durch Fahrzeuge, Flugzeuge, Gepäck, Personal | VORLÄUFIG | 2026-10-13 | ADR-017 (Rückstufung aus ADR-014); Messung 2.10, vor 3.4 und 5.5, Referenzszenario 4.1 |
+| NFR Performance: Darstellung statischer Objekt-Sprites (Atlas-Stufe 8 px je Zelle) mit Zonen und 10.000 Personen, Windows und macOS | BELASTBAR | 2026-10-19 | ADR-034: Messung 2.10 auf Referenz-PC (59,9–60,0 Bilder/s bei 60 Hz) und Mac M3 Pro (119,1–120,1 Bilder/s bei 120 Hz) mit 20.000 Sprites, `docs/research/2.10-messung.md`; Schrittzeit-Spitzen auf Apple-Chips in 4.3 |
+| NFR Performance: Darstellung mit Atlas-Stufen 16/32 px je Zelle und großen Atlanten, bewegte Sprites und Last durch Fahrzeuge, Flugzeuge, Gepäck, Personal; Linux; integrierte Grafik | VORLÄUFIG | 2026-10-13 | ADR-017, geteilt durch ADR-034; Stufen und Atlanten 3.8, Verkehr vor 3.4 und 5.5, Referenzszenario 4.1, Linux 7.2, integrierte Grafik 5.8 |
 | NFR Bauaktion im nächsten Bild | VORLÄUFIG | 2026-10-13 | in 1.5 nicht erreicht (2–6 Bilder); in 2.7 1–3 Bilder (Mac 120 Hz) bzw. 1–2 Bilder (Referenz-PC 60 Hz), weiter nicht im nächsten Bild; Vertrag S-2 mit vorläufigem Zeichnen (ADR-021), Umsetzung 3.1 (ADR-016) |
 
 <!-- ANCHOR:tooling-inventar -->

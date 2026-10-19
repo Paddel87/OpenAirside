@@ -24,6 +24,28 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 18:53 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 2 Stunden 35 Minuten seit `[SESSIONSTART]` 16:18 UTC (mit Wartezeit auf die Messung; Zwischenstand-Eintrag 17:10).
+- **Bearbeitet seit 17:10:** Sichtprüfung des Programmsymbols (Installer, Startmenü, Taskleiste, Dock), drei Messläufe des Projektinhabers abgelegt und ausgewertet, Vorlage und ADR-034, Abschluss von 2.10.
+- **Erreicht:** 2.10 `[ERLEDIGT]`, Phase 2 vollständig (11 von 11 Schritten); NFR Darstellung im gemessenen Umfang `[BELASTBAR]`; FR-050 erledigt; neuer Schritt 4.3.
+- **Offen geblieben:** PR für `feat/2-10-stilleitfaden-svg-pipeline` (nach Anweisung); Phasenabschluss Phase 2 (Vision-Abgleich, Pflichtfrage mit getrennter Instanz, Archivierung, Logbuch-Verdichtung); Abkündigung `rustup show` (Q.1, freigabepflichtig).
+- **Nächster Schritt:** Phasenabschluss Phase 2 in einer neuen Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 18:50 UTC); 0 Schritte oberhalb der Empfehlung; keine Teilarbeit abgegeben (Probelauf offen).
+- **Kontextgröße:** 511.369 Token laut `get_session` 18:50 UTC – **über der Grenze von 400.000 Token** (`project-context.md` Abschnitt 6); Empfehlung: die nächste Arbeit in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 18:50 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt.
+- **Archivierung:** Logbuch über 800 Zeilen, alle Einträge aus Oktober 2026; Auslagerung und Verdichtung mit dem `[PHASEN-WECHSEL]` beim Phasenabschluss.
+- **Drift-Prüfung:** README nachgezogen (Architektur-Reife, Nächste Schritte). ADR-034 verweist auf vorhandene Schritte (2.10, 3.4, 3.8, 4.1, 4.3, 5.5, 5.8, 7.2). Reifegrade passen zu ADR-033 und ADR-034. Modul-Liste unverändert. FR-050 erledigt mit Schritt 2.10. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 7 / 10 (ADR-025 bis ADR-034) stimmt mit den Tags. Phase 2: 11 Schritte bei Plan 10, abgeschlossen.
+
+### 2026-10-19 18:52 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **NFR Performance Darstellung geteilt (ADR-034):** Darstellung statischer Objekt-Sprites (Stufe 8 px je Zelle) mit Zonen und 10.000 Personen auf Windows und macOS `[VORLÄUFIG]` → `[BELASTBAR]`; Stufen 16/32, große Atlanten, Verkehr, Linux und integrierte Grafik bleiben `[VORLÄUFIG]` (3.8, 3.4/5.5, 4.1, 7.2, 5.8).
+
+### 2026-10-19 18:52 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-034** `[ERKENNTNIS]` „Darstellung mit echten Grafiken belastbar im gemessenen Umfang": freigegeben vom Projektinhaber per Auswahl A; neuer Schritt 4.3 (Schrittzeit-Spitzen auf Apple-Chips). Schritt 2.10 damit erledigt, Phase 2 vollständig. Reaktiv-Quote 7 / 10 über ADR-025 bis ADR-034 (in der Vorlage stand irrtümlich 6 / 10; ADR-024 war nicht reaktiv).
+
 ### 2026-10-19 18:49 (UTC) – [BEOBACHTUNG]
 
 - **Messung 2.10, Mac-Lauf 2 (`--background-threads=4`) eingegangen:** abgelegt als `docs/research/2.10-ergebnisse/mac-m3pro-background-4.json`. 119,9–120,0 Bilder/s, keine langen Aufgaben; Schrittzeit-Spitzen in gleich vielen Fenstern (11 von 20), größter Schritt 36,9 statt 75,3 ms, Takt kurz bis 176 Ticks/s, Neuberechnung rund 40 % länger. Gesamturteil aller drei Läufe in `docs/research/2.10-messung.md`; Ursache der Mac-Aussetzer weiter offen.
