@@ -26,7 +26,7 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 
 ### 2026-10-19 17:10 (UTC) – [SESSIONENDE]
 
-- **Session-Dauer:** ca. 55 Minuten seit `[SESSIONSTART]` 16:18 UTC.
+- **Session-Dauer:** 52 Minuten seit `[SESSIONSTART]` 16:18 UTC.
 - **Bearbeitet:** Übernahme des Merge-Vermerks auf `feat/2-10-stilleitfaden-svg-pipeline`; Schritt 2.10: Vorlage des Rasterers, Freigabe A, ADR-033, Werkzeug-Crate `tools/assets`, Stilleitfaden mit Palette, SVG-Quellen (Bank, Betonboden, Betonwand, Ersatzgrafik, Programmsymbol), Prüfer `scripts/assets.mjs`, Atlanten im Spielfeld, Szene im Messwerkzeug, Fenstersymbol unter Linux, Rauchtest, Messanleitung, Dokumentation.
 - **Erreicht:** Pipeline umgesetzt und auf drei Plattformen grün (CI-Lauf 39290398392, 17 Jobs; Release-Lauf 39291102397 mit Paketen); Grafik-Pipeline `[BELASTBAR]`; Coverage: Vitest gesamt 86,5 % Lines (`atlas.ts` 100 %, `measure.ts` 98,0 %, `assets.mjs` 93,6 %), Rust gesamt und Kern über den Schwellen (Kern 98,4 %), `tools/assets/src/lib.rs` 96,0 % Lines; Onboarding im frischen Worktree validiert. Commits `f975893` … `62f3ac0` plus dieser Sessionende-Commit.
 - **Offen geblieben:** 2.10 bleibt `[IN ARBEIT]`: Messung auf Referenz-PC und Mac (je ein Lauf, Mac zusätzlich mit `--background-threads=4`) durch den Projektinhaber nach `docs/research/2.10-messung.md`, danach Auswertung und ADR zur NFR Darstellung. Kein PR vor dem Abschluss des Schritts. Abkündigung `rustup show` wartet auf Q.1 (freigabepflichtig).
