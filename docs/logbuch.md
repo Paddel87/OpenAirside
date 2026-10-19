@@ -24,6 +24,17 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 13:31 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 2.6, Abgleich vor dem Code (Maßnahmen 7–9):** keine Bibliothek (Kategorie 3 nicht berührt). Zwei Lücken: S-3/S-4 setzen voraus, dass Texte aus `lang/` die Oberfläche erreichen, S-6 und der Port bieten keinen Weg (Empfehlung A: `lang.list`/`lang.texts` in S-6, `[REAKTIV]` nach der 14-Tage-Regel, Quote danach 6 / 10); Texte ohne laufenden Kern (Basis-Sprachdateien zusätzlich beim Build eingebunden). Abweichung „Betroffene Module“: zusätzlich Inhalte & Mods, Brücke, Plattform, Spielfeld. Einstellungen mit Grenzen und Herkunft (Maßnahme 9), Aufteilung 2.6a/2.6b. Volltext im Fahrplan bei 2.6.
+
+### 2026-10-19 13:28 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 12:48 UTC plus `[BEOBACHTUNG]` 13:24 (Merge PR #22, `12a2c77`) und 13:25 (Kenntnisnahme ADR-029/ADR-030). Die beiden Sessionende-Commits `3323131` und `5d83103` nach `project-context.md` Abschnitt 10 auf den neuen Branch `feat/2-6-lokalisierung` vom aktuellen `main` übernommen (`10d1965`, `b37249d`); `feat/2-5-spielstand-mit-autosave` wird nicht weiterverwendet.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Modell:** eingestellt und bedient `claude-opus-5-5` laut `get_session` 13:27 UTC → Entscheidungs-Klasse. Schritt 2.6 empfiehlt Routine; Teile oberhalb der Empfehlung werden zu Beginn gewarnt.
+- **Vorhaben:** Schritt 2.6 (Lokalisierung): Abgleich der Vertragssätze S-6 `settings.*` und S-4 `lang/` sowie der „Betroffenen Module“ gegen den Plan (Maßnahmen 7–9), dann Vorlage bzw. Umsetzung.
+
 ### 2026-10-19 13:25 (UTC) – [BEOBACHTUNG]
 
 - **Kenntnisnahme:** Projektinhaber: „Zur Kenntnis genommen, Reflexionen ADR-029 und ADR-030“. Im Fahrplan vermerkt; kein Umbau, Maßnahme (9) gilt.

@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-19 (Session ab 11:02 UTC)
+- **Stand vom:** 2026-10-19 (Session ab 13:28 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner; 2.5 (Spielstand mit Autosave) ERLEDIGT am 2026-10-19 (CI-Lauf 39253155836 grün), Branch `feat/2-5-spielstand-mit-autosave` gepusht, kein PR (PR nur auf Anweisung)
-- **Nächster Schritt:** PR für 2.5 nach `main` (auf Anweisung), danach 2.6 (Lokalisierung)
+- **Aktiver Schritt:** 2.6 (Lokalisierung) WARTET-AUF-FREIGABE – Vorlage vom 2026-10-19 (Lücken in S-6, Abweichung der betroffenen Module); Branch `feat/2-6-lokalisierung`
+- **Nächster Schritt:** nach Freigabe ADR-031, dann Stufe 2.6a (Kern)
 - **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-030 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion“, zu ADR-029 und ADR-030 vom Projektinhaber am 2026-10-19 zur Kenntnis genommen)
 
 <!-- ANCHOR:phasen-typen -->
@@ -298,7 +298,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.6: Lokalisierung
 
-- **Status:** OFFEN
+- **Status:** WARTET-AUF-FREIGABE (Vorlage 2026-10-19, siehe unten)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.7
 - **Freigabepflichtig:** ja, falls eine Bibliothek für Lokalisierung eingeführt wird (Kategorie 3)
@@ -310,6 +310,16 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Lokalisierung, Oberfläche
 - **Reifegrad-Wirkung:** Modul Lokalisierung → `[BELASTBAR]`
 - **Artefakte:** Lokalisierungs-Code, Sprachdateien, Tests
+- **Vorlage zur Freigabe (2026-10-19, Entscheidungs-Klasse; Abgleich nach Maßnahmen 7, 8, 9):**
+  - **Keine Bibliothek:** eigenes Modul `app/renderer/i18n.ts` (Nachschlagen, Platzhalter `{name}` nur als Text eingesetzt, Zahlen über `Intl.NumberFormat` der gewählten Sprache, Rückfall gewählte Sprache → Englisch → Schlüssel); Kategorie 3 wird nicht berührt. Nicht vorgeschlagen: i18next und ähnliche (Funktionen wie Pluralformen und Namensräume werden in 2.6 nicht gebraucht; jede Bibliothek wäre eine Abhängigkeit mehr im Renderer).
+  - **Lücke 1 (Maßnahme 8):** S-3 („Texte … auch für Texte aus Datenpaketen (`lang/`)“) und S-4 (`lang/` als Inhaltsart, Konsument Takt & Weltzustand) setzen voraus, dass Texte aus Paketen die Oberfläche erreichen. Weder S-6 noch der Port (S-1/S-2/S-3/S-7) bietet dafür einen Weg; die Modul-Karte kennt keine Beziehung Inhalte → Lokalisierung. Optionen: **A** neue Funktionen in S-6 (additiv): `lang.list()` → verfügbare Sprachen `{ code, name, keys }`, `lang.texts(code)` → Texte einer Sprache (zusammengeführt über die Pakete); der Hauptprozess holt sie vom Kern-Prozess wie `packs.*`; **B** neue Nachricht auf dem Port (Renderer ↔ Kern direkt), ändert die gemeinsamen Grundlagen von S-1 bis S-7; **C** nur Deutsch und Englisch beim Build eingebunden, keine Sprachpakete aus Ordnern – erfüllt FR-006 nicht (bräuchte Descope-ADR). Empfehlung A. Klassifikation: ändert S-6 und die Modul-Karte aus ADR-021 (6 Tage alt) → nach der 14-Tage-Regel `[REAKTIV]`, Reaktiv-Quote danach 6 / 10 (ADR-022 bis ADR-031).
+  - **Lücke 2 (Maßnahme 8):** Meldungen müssen auch ohne laufenden Kern lesbar sein (S-6 „Absturz des Kerns“, Fehler beim Start). Festlegung: Die Sprachdateien des Basispakets werden zusätzlich beim Build in den Renderer eingebunden (dieselben Dateien, keine zweite Quelle); `lang.texts` ersetzt sie, sobald der Kern bereit ist.
+  - **Inhaltsart `lang/` (S-4):** Datei `{ "$schema"?, "languages": [ { "id", "name"?, "texts": { Schlüssel: Text } } ] }`; `id` ist der Sprachcode (`[a-z]{2,3}` mit optionalem Zusatz `-[a-z0-9]{2,8}`, z. B. `de`, `pt-br`); mehrere Pakete tragen zur selben Sprache bei; `name` muss die Sprache mindestens einmal benennen (Basispaket: `Deutsch`, `English`). Schlüssel `[a-z0-9_.-]{1,128}`, Text höchstens 4.096 Zeichen (Grenze aus S-4), jeder Text zählt als Eintrag (Grenze 100.000 je Paket aus S-4). Derselbe Schlüssel zweimal in einer Sprache: `duplicateId` für das später geladene Paket. Überschreiben fremder Texte (wie `replaces`) nicht in 2.6, Landeplatz 6.1. `content/base/lang/de.json`, `en.json`; Schema-Datei `content/schema/lang.schema.json`.
+  - **Einstellungen (S-6 `settings.*`, S-5, META-10):** erzeugter Typ `Settings` (Rust, ts-rs) mit `language`, `autosaveMinutes` (1–60, Standard 10), `autosaveCount` (1–20, Standard 5). Herkunft der Grenzen (Maßnahme 9): 1–20 aus S-5; 60 Minuten ist eine Schätzung (seltener schützt der Autosave kaum noch), Überprüfung mit dem Spielmenü in 5.1. Standard-Sprache beim ersten Start aus der Systemsprache (Deutsch → `de`, sonst `en`). Datei `settings.json` im Datenordner (Schreiben und Umbenennen); unlesbar oder ungültig → Standardwerte, Warnung im Log. `settings.set(teilweise)` prüft jedes Feld (Sprache muss in `lang.list` stehen), liefert die vollständigen Einstellungen und weist ab mit `invalidArgument` oder `ioError`; kein `busy` (unabhängig von Spielständen). Intervall gilt sofort (der Hauptprozess meldet es dem Kern-Prozess); bei kleinerer Zahl bleiben vorhandene Autosaves über der Zahl erhalten (kein Löschen von Spielerdaten), die Rotation läuft nur noch über `auto-1` … `auto-N`.
+  - **Umfang der Übersetzung:** übersetzt werden alle Texte für den Spieler – Spielstand-Liste, Angebot nach Absturz, Hinweis auf die Logdatei, Fehlermeldungen über `textKey` (`save.error.*`, `platform.error.*`, `datapack.error.*`, `command.rejected.*`), Objektnamen (`object.*`) und ein neues, minimales Einstellungs-Panel (Sprache, Autosave-Intervall, Autosave-Zahl; Ausbau im Spielmenü 5.1). Konsole und Leistungsanzeige bleiben englische Entwicklerwerkzeuge (FR-009); neuer Konsolenbefehl `lang [Code]`. Ein Test prüft, dass `de` und `en` jeden im Code erzeugten Schlüssel enthalten.
+  - **Gültigkeit nach `packs.setActive`:** Die Texte folgen dem zuletzt geladenen Katalog (wie `packs.list`). Objekte einer laufenden Sitzung aus einem abgewählten Paket zeigen bis zur nächsten Sitzung ihren Schlüssel.
+  - **„Betroffene Module“ gegen den geplanten Code (Abweichung, Stopp-Kriterium 5):** geplant Lokalisierung, Oberfläche. Tatsächlich zusätzlich **Inhalte & Mods** (Format `lang/` im Lader `core/src/datapack/`, Schema, Basispaket), **Brücke** (Texte und Sprachliste aus dem Ladeergebnis, `bridge/src/lib.rs`), **Plattform** (`settings.*`, `lang.*`, `settings.json`, Autosave-Intervall an `core-host.ts`, Rotation in `saves.ts`, Preload) und **Spielfeld** (Konsole `lang`, Verdrahtung in `main.ts`). Takt & Weltzustand bleibt unberührt (die Texte gehen nicht in den Katalog der Simulation).
+  - **Aufteilung in zwei Stufen (zählt als ein Schritt):** 2.6a Kern (Format `lang/`, Lader, Schema, Basispaket `de`/`en`, Brücke; Tests in `core/tests/datapacks.rs`); 2.6b Plattform und Oberfläche (`settings.*`, `lang.*`, `i18n.ts`, Panels, Rauchtest mit Sprachwechsel ohne Neustart und Sprachpaket aus dem Ordner `packs`). Getrennte Prüfung am Ende (Kategorie 6: neue IPC-Funktionen, `settings.json` als nicht vertrauenswürdige Eingabe, Texte aus Mods in der Oberfläche).
 
 #### 2.10: Stilleitfaden, SVG-Pipeline und Messung der Darstellung
 
