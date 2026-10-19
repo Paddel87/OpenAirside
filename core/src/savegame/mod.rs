@@ -31,8 +31,8 @@ pub const CONTAINER_VERSION: u16 = 1;
 /// `migrationFailed` (S-5).
 pub const FORMAT_VERSION: u32 = 1;
 
-/// Largest save game file (1 GB).
-pub const MAX_FILE_BYTES: u64 = 1 << 30;
+/// Largest save game file (512 MB, ADR-030).
+pub const MAX_FILE_BYTES: u64 = 1 << 29;
 /// Largest metadata section (64 KB).
 pub const MAX_META_BYTES: u32 = 64 * 1024;
 /// Largest preview image (2 MB).
@@ -41,8 +41,9 @@ pub const MAX_PREVIEW_BYTES: u32 = 2 * 1024 * 1024;
 pub const MAX_PREVIEW_WIDTH: u32 = 1920;
 /// Largest preview image height in pixels.
 pub const MAX_PREVIEW_HEIGHT: u32 = 1080;
-/// Largest unpacked world state (2 GB).
-pub const MAX_UNPACKED_BYTES: u32 = 1 << 31;
+/// Largest unpacked world state (512 MB, ADR-030): bounds the memory a
+/// small prepared file can claim while it is unpacked.
+pub const MAX_UNPACKED_BYTES: u32 = 1 << 29;
 /// Longest save game name and airport name in characters.
 pub const MAX_NAME_CHARS: usize = 64;
 /// Longest save time text (ISO 8601) in characters.

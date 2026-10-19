@@ -298,6 +298,11 @@ fn damaged_files_are_rejected_in_the_order_of_the_contract() {
     let mut unpacked = bytes.clone();
     unpacked[lengths + 12..lengths + 16].copy_from_slice(&u32::MAX.to_le_bytes());
     assert_eq!(code_of(&unpacked), code::LIMIT_EXCEEDED);
+    // Just above the limit of ADR-030 (512 MB): refused before unpacking.
+    let mut above = bytes.clone();
+    above[lengths + 12..lengths + 16]
+        .copy_from_slice(&(openairside_core::savegame::MAX_UNPACKED_BYTES + 1).to_le_bytes());
+    assert_eq!(code_of(&above), code::LIMIT_EXCEEDED);
     let mut world_len = bytes.clone();
     world_len[lengths + 8..lengths + 12].copy_from_slice(&(1u32 << 29).to_le_bytes());
     assert_eq!(code_of(&world_len), code::TRUNCATED);
