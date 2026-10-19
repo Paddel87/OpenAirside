@@ -323,6 +323,9 @@ fn dijkstra(topo: &Topology, seeds: &[u32], dir: &mut [u8], dist: &mut [u32]) {
 /// All flow fields for one grid state, immutable once built.
 pub struct FieldSet {
     revision: u32,
+    /// Input the set was computed from; a save game stores it instead of
+    /// the fields (S-5), and the grid snapshot shares unchanged blocks.
+    source: FieldInput,
     topo: Topology,
     targets: usize,
     data: Vec<u8>,
@@ -374,11 +377,18 @@ impl FieldSet {
         }
         Self {
             revision,
+            source: input.clone(),
             topo,
             targets,
             data,
             unreachable,
         }
+    }
+
+    /// Input this set was computed from.
+    #[must_use]
+    pub fn source(&self) -> &FieldInput {
+        &self.source
     }
 
     /// Revision of the request this set was computed for.

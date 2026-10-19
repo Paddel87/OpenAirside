@@ -131,6 +131,33 @@ impl Network {
         self.edges.len()
     }
 
+    /// Cells of the nodes, indexed by node id.
+    #[must_use]
+    pub fn nodes(&self) -> &[CellPos] {
+        &self.nodes
+    }
+
+    /// Directed edges in the order they were added.
+    #[must_use]
+    pub fn edges(&self) -> &[(NodeId, NodeId)] {
+        &self.edges
+    }
+
+    /// Network of a save game; `None` if an edge refers to an unknown node,
+    /// is a loop or appears twice. Positions are checked by the caller.
+    pub(crate) fn from_parts(
+        kind: NetworkKind,
+        nodes: Vec<CellPos>,
+        edges: Vec<(NodeId, NodeId)>,
+    ) -> Option<Self> {
+        let count = nodes.len();
+        let mut seen = std::collections::HashSet::with_capacity(edges.len());
+        let valid = edges.iter().all(|&(a, b)| {
+            (a.0 as usize) < count && (b.0 as usize) < count && a != b && seen.insert((a, b))
+        });
+        valid.then_some(Self { kind, nodes, edges })
+    }
+
     /// Feeds the network into `hasher`.
     pub fn hash_into(&self, hasher: &mut StateHasher) {
         hasher.u32(self.nodes.len() as u32);

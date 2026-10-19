@@ -14,6 +14,7 @@ use crate::geometry::{CellPos, CellRect, MapSize};
 use crate::grid::{Cell, FLOORS, Grid, GridError, WALL, Zone, floor_index};
 use crate::hash::StateHasher;
 use crate::network::{Network, NetworkKind};
+use crate::savegame::state::SavedPerson;
 use crate::target::{MAX_TARGETS, Target};
 
 /// Walking speed in cells per tick: 0.3 cells per game second, the guide
@@ -87,7 +88,7 @@ pub struct PersonView {
 }
 
 /// Most persons a world holds; the debug command `spawnPersons` stops
-/// there. The limits of save games follow in roadmap step 2.5.
+/// there, and a save game with more is rejected (S-5).
 pub const MAX_PERSONS: usize = 200_000;
 
 /// Population, grid and derived data of one session.
@@ -414,6 +415,100 @@ impl World {
             }
         }
         self.per_floor = counts;
+    }
+
+    /// Hot fields of all persons for a save game (S-5).
+    pub(crate) fn saved_persons(&self) -> Vec<SavedPerson> {
+        self.persons
+            .iter()
+            .map(|p| SavedPerson {
+                x: p.x,
+                y: p.y,
+                floor: p.floor,
+                heading: p.heading,
+                target: p.target,
+                progress: p.progress,
+                rng: p.rng,
+            })
+            .collect()
+    }
+
+    /// World of a loaded save game. `fields` were computed from the saved
+    /// input of the flow fields in use, so the persons keep their headings.
+    ///
+    /// # Errors
+    ///
+    /// Names the first broken invariant: too many targets or persons, a
+    /// target without cells, a cell, node or person off the map or on an
+    /// invalid floor, an unknown target or heading, a step share outside
+    /// 0 … 1, or flow fields of another map.
+    pub(crate) fn from_saved(
+        grid: Grid,
+        targets: Vec<Target>,
+        networks: [Network; 3],
+        fields: FieldSet,
+        persons: &[SavedPerson],
+    ) -> Result<Self, &'static str> {
+        let map = grid.map();
+        let on_map = |p: CellPos| map.contains(p) && floor_index(p.floor).is_some();
+        if targets.len() > MAX_TARGETS {
+            return Err("targets");
+        }
+        if targets
+            .iter()
+            .any(|t| t.cells.is_empty() || !t.cells.iter().all(|&c| on_map(c)))
+        {
+            return Err("targetCells");
+        }
+        if networks
+            .iter()
+            .any(|n| !n.nodes().iter().all(|&c| on_map(c)))
+        {
+            return Err("networkNodes");
+        }
+        if fields.source().grid.map() != map {
+            return Err("fieldsMap");
+        }
+        if persons.len() > MAX_PERSONS {
+            return Err("persons");
+        }
+        let target_limit = targets.len().max(1);
+        let heading_ok = |h: u8| h <= DOWN || h == ARRIVED || h == UNREACHABLE;
+        let mut out = Vec::with_capacity(persons.len());
+        for p in persons {
+            let pos = CellPos {
+                x: p.x,
+                y: p.y,
+                floor: p.floor,
+            };
+            if !on_map(pos)
+                || !heading_ok(p.heading)
+                || usize::from(p.target) >= target_limit
+                || !(0.0..=1.0).contains(&p.progress)
+            {
+                return Err("person");
+            }
+            out.push(Person {
+                x: p.x,
+                y: p.y,
+                floor: p.floor,
+                heading: p.heading,
+                target: p.target,
+                progress: p.progress,
+                rng: p.rng,
+            });
+        }
+        let mut world = Self {
+            grid,
+            targets,
+            networks,
+            fields,
+            next: out.clone(),
+            persons: out,
+            per_floor: [0; FLOORS],
+        };
+        world.count_per_floor_serial();
+        Ok(world)
     }
 
     /// Feeds the complete world state into `hasher`.

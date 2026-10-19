@@ -20,7 +20,7 @@ use semver::{Version, VersionReq};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 
-use super::catalog::{Catalog, ObjectType};
+use super::catalog::{ActivePack, Catalog, ObjectType};
 use super::files::{ContentFile, Folder, Kind, MANIFEST};
 use super::model::{Manifest, ObjectEntry, ObjectsFile, Placement, PlacementKind};
 use super::scan::{self, Limit, Limits, MAX_PATH_CHARS, truncate};
@@ -106,6 +106,7 @@ pub fn discover(base: Option<&Path>, user_dir: Option<&Path>) -> Vec<PackFolder>
 struct Valid {
     id: String,
     version: Version,
+    format: u32,
     dependencies: Vec<(String, VersionReq)>,
 }
 
@@ -422,6 +423,7 @@ fn check_manifest(
     Some(Valid {
         id: manifest.id,
         version: version.ok()?,
+        format: manifest.format,
         dependencies,
     })
 }
@@ -613,6 +615,11 @@ fn load_content(packs: &mut [Pack], index: usize, catalog: &mut Catalog) {
         return;
     }
     let pack_id = valid.id.clone();
+    let active = ActivePack {
+        id: valid.id.clone(),
+        version: valid.version.to_string(),
+        format: valid.format,
+    };
     let Some(folder) = &packs[index].folder else {
         return;
     };
@@ -649,6 +656,7 @@ fn load_content(packs: &mut [Pack], index: usize, catalog: &mut Catalog) {
     for (target, by) in replaces {
         catalog.replace(target, by);
     }
+    catalog.add_pack(active);
     report.state = PackState::Active;
     report.entries = as_u32(entries);
 }
