@@ -116,6 +116,10 @@ describe("renderer Content Security Policy", () => {
     expect(directives.get("connect-src")).toEqual(["'none'"]);
   });
 
+  it("shows images only from the app, data: and blob: URLs (previews of save games, S-5)", () => {
+    expect(directives.get("img-src")).toEqual(["'self'", "data:", "blob:"]);
+  });
+
   it("names no remote origin", () => {
     expect(match?.[1]).not.toMatch(/https?:|\*/);
   });

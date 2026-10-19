@@ -7,7 +7,9 @@
  * API S-6 after checking the sender (ADR-021), including the result file
  * of the measurement tool (step 2.7) and the data packs (step 2.4): the
  * core process gets the pack folders and the player's saved choice, the
- * main process keeps its reports for `packs.list()`.
+ * main process keeps its reports for `packs.list()`. Since step 2.5 also
+ * save games (`saves.*`, S-5) with autosave and quick save, the log file
+ * (`logs.*`) and the error form `{ code, textKey, params }` of every call.
  */
 import {
   app,
@@ -17,25 +19,50 @@ import {
   Menu,
   MessageChannelMain,
   session,
+  shell,
   utilityProcess,
   type UtilityProcess,
 } from "electron";
-import { mkdirSync, readFileSync } from "node:fs";
-import { mkdir, rename, writeFile } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import {
+  appendFileSync,
+  constants as fsConstants,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+} from "node:fs";
+import {
+  type FileHandle,
+  lstat,
+  mkdir,
+  open,
+  readdir,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { PackReport } from "../generated/PackReport.js";
+import type { SaveMeta } from "../generated/SaveMeta.js";
 import { parseCoreArgs, withoutPackOptions } from "./core-port.js";
 import {
   type CoreStatus,
   exitedCoreStatus,
   nextCoreStatus,
   isPackAnswer,
+  isSavesAnswer,
   type PackRequest,
   parseCoreHostMessage,
   restartDecision,
+  type SavesAnswer,
+  type SavesRequest,
 } from "./core-status.js";
+import { LOG_FILE, LogFile, type LogLevel, LOGS_DIR, parseLogArgs, RateGate } from "./logs.js";
 import { MeasureRun, MEMORY_INTERVAL_MS, reportFileName } from "./measure.js";
 import {
   ACTIVE_FILE,
@@ -46,6 +73,28 @@ import {
   readActiveFile,
   USER_PACKS_DIR,
 } from "./packs.js";
+import { answer, fail, type IpcAnswer, PlatformFailure, platformReason } from "./platform-error.js";
+import {
+  idOfFileName,
+  INFO_BATCH,
+  isSaveId,
+  isTempFileName,
+  MAX_FILE_BYTES,
+  MAX_INFO_BYTES,
+  MAX_LISTED_FILES,
+  MAX_MANUAL_SAVES,
+  newSaveId,
+  parseInfoAnswer,
+  parseSaveArgs,
+  parseSaveMeta,
+  previewSize,
+  type SaveEntry,
+  saveFileName,
+  SAVES_DIR,
+  sortEntries,
+  tempFileName,
+  writeErrorCode,
+} from "./saves.js";
 import {
   hardenedWebPreferences,
   isAllowedNavigation,
@@ -72,6 +121,35 @@ let core: UtilityProcess | undefined;
 let gameWindow: BrowserWindow | undefined;
 let pageLoaded = false;
 let restarts: readonly number[] = [];
+
+/** Log file; set once the app is ready. */
+let logFile: LogFile | undefined;
+
+/** Writes an entry of the main process to the console and the log file. */
+function log(level: LogLevel, message: string): void {
+  if (level === "warn" || level === "error") console.warn(message);
+  else console.log(message);
+  logFile?.write(level, "main", message);
+}
+
+/**
+ * Save game or pack operation in progress (S-6 "Gleichzeitigkeit"): a
+ * second one is refused with `busy`; a due autosave waits for its end.
+ */
+let operation: string | undefined;
+let autosaveDue = false;
+
+/** Runs `run` as the only save game or pack operation; others get `busy`. */
+async function exclusive<T>(name: string, run: () => Promise<T>): Promise<T> {
+  if (operation !== undefined) fail("busy");
+  operation = name;
+  try {
+    return await run();
+  } finally {
+    operation = undefined;
+    if (autosaveDue) setImmediate(runAutosave);
+  }
+}
 
 /** Latest pack reports of the core process (S-6 `packs.list`). */
 let packReports: PackReport[] = [];
@@ -133,6 +211,42 @@ function settlePacks(
   }
 }
 
+/** Longest wait for the core's answer to a save game request (loading computes flow fields). */
+const SAVES_TIMEOUT_MS = 120_000;
+/** Open save game requests to the core process by request number. */
+const savesPending = new Map<
+  number,
+  { resolve: (value: unknown) => void; reject: (error: Error) => void; timer: NodeJS.Timeout }
+>();
+let savesRequest = 0;
+
+/** Settles an open save game request; a late or unknown answer is ignored. */
+function settleSaves(answer: SavesAnswer): void {
+  const pending = savesPending.get(answer.request);
+  if (pending === undefined) return;
+  savesPending.delete(answer.request);
+  clearTimeout(pending.timer);
+  if (answer.ok) pending.resolve(answer.value);
+  else pending.reject(new PlatformFailure(answer.error));
+}
+
+/** Sends a save game request to the core process and waits for its answer. */
+function requestSaves(make: (request: number) => SavesRequest): Promise<unknown> {
+  const target = core;
+  if (target === undefined || globalThis.openairsideCoreStatus.state !== "ready") {
+    fail("notReady");
+  }
+  savesRequest += 1;
+  const request = savesRequest;
+  return new Promise<unknown>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      settleSaves({ type: "savesAnswer", request, ok: false, error: platformReason("timeout") });
+    }, SAVES_TIMEOUT_MS);
+    savesPending.set(request, { resolve, reject, timer });
+    target.postMessage(make(request));
+  });
+}
+
 /** Connects the loaded page with the core by a fresh port (S-6 "Port-Übergabe"). */
 function connect(): void {
   if (
@@ -155,7 +269,7 @@ function startCore(): void {
     // Created so that players find the folder for their packs.
     mkdirSync(userPacks, { recursive: true });
   } catch (error) {
-    console.warn(`cannot create the pack folder: ${errorCode(error)}`);
+    log("warn", `cannot create the pack folder: ${errorCode(error)}`);
   }
   // Flags such as --scenario= reach the core; it ignores everything else.
   // The pack flags come last and win over flags of the command line.
@@ -173,9 +287,22 @@ function startCore(): void {
       settlePacks(message);
       return;
     }
+    if (message?.type === "savesAnswer") {
+      settleSaves(message);
+      return;
+    }
+    if (message?.type === "autosave") {
+      autosaveDue = true;
+      runAutosave();
+      return;
+    }
+    if (isSavesAnswer(raw)) {
+      log("warn", "malformed save game answer from the core process");
+      return;
+    }
     if (isPackAnswer(raw)) {
       // A malformed pack answer says nothing about the state of the core.
-      console.warn("malformed pack answer from the core process");
+      log("warn", "malformed pack answer from the core process");
       if (packsPending !== undefined) {
         settlePacks({
           type: "packsError",
@@ -197,10 +324,19 @@ function startCore(): void {
     if (packsPending !== undefined) {
       settlePacks({ type: "packsError", request: packsPending.request, message: "coreExited" });
     }
-    gameWindow?.webContents.send("core:exit", code);
+    for (const request of [...savesPending.keys()]) {
+      settleSaves({ type: "savesAnswer", request, ok: false, error: platformReason("coreExited") });
+    }
     const decision = restartDecision(restarts, Date.now());
     restarts = decision.restarts;
-    if (decision.allowed && !quitting) {
+    const restarting = decision.allowed && !quitting;
+    log(
+      restarting ? "warn" : "error",
+      `core process exited with code ${String(code)}${restarting ? "; restarting" : "; no further restart"}`,
+    );
+    // S-6 `onCoreExit(code, restarting)` (ADR-029).
+    gameWindow?.webContents.send("core:exit", code, restarting);
+    if (restarting) {
       startCore();
     }
   });
@@ -224,13 +360,35 @@ function trusted(event: IpcMainInvokeEvent): boolean {
   );
 }
 
-function handle(channel: string, answer: (arg: unknown) => unknown): void {
-  ipcMain.handle(channel, (event, arg: unknown) => {
+/**
+ * Registers an S-6 handler: checks the sender and answers with the
+ * envelope of the error form (app/src/main/platform-error.ts).
+ */
+/** Lines about refused calls per second; the renderer can cause them at will. */
+const refusedGate = new RateGate(20);
+
+function logRefused(level: LogLevel, message: string): void {
+  const { pass, dropped } = refusedGate.pass(performance.now());
+  if (!pass) return;
+  if (dropped > 0) log("warn", `${String(dropped)} lines about refused IPC calls dropped`);
+  log(level, message);
+}
+
+function handle(channel: string, run: (...args: unknown[]) => unknown): void {
+  ipcMain.handle(channel, (event, ...args: unknown[]): Promise<IpcAnswer> | IpcAnswer => {
     if (!trusted(event)) {
-      console.warn(`rejected IPC call ${channel} from an untrusted sender`);
-      throw new Error("untrusted sender");
+      logRefused("warn", `rejected IPC call ${channel} from an untrusted sender`);
+      return { ok: false, error: platformReason("untrustedSender") };
     }
-    return answer(arg);
+    return answer(
+      () => run(...args),
+      (error) => {
+        log("error", `IPC call ${channel} failed: ${errorCode(error)}`);
+      },
+    ).then((result) => {
+      if (!result.ok) logRefused("info", `IPC call ${channel} refused: ${result.error.code}`);
+      return result;
+    });
   });
 }
 
@@ -244,7 +402,7 @@ function sampleMemory(): void {
 /** S-6 `measure.start`: begins sampling the memory of all processes. */
 function startMeasure(): null {
   if (!measureRun.start(Date.now())) {
-    throw new Error("measurement already running");
+    fail("alreadyRunning");
   }
   sampleMemory();
   measureTimer = setInterval(sampleMemory, MEMORY_INTERVAL_MS);
@@ -271,7 +429,7 @@ async function reportMeasure(result: unknown): Promise<string> {
     finishedAt: new Date().toISOString(),
   });
   if (!done.ok) {
-    throw new Error(`measurement report refused: ${done.error}`);
+    fail(done.error);
   }
   clearInterval(measureTimer);
   measureTimer = undefined;
@@ -280,7 +438,7 @@ async function reportMeasure(result: unknown): Promise<string> {
   const file = path.join(folder, reportFileName(process.platform, new Date()));
   // "wx": never overwrite an existing file.
   await writeFile(file, done.json, { flag: "wx" });
-  console.log(`measurement written to ${file}`);
+  log("info", "measurement written to the downloads folder");
   return file;
 }
 
@@ -292,20 +450,41 @@ async function reportMeasure(result: unknown): Promise<string> {
 async function setActivePacks(arg: unknown): Promise<PackReport[]> {
   const ids = parseActiveIds(arg);
   if (ids === undefined) {
-    console.warn("rejected packs:setActive: invalidArgument");
-    throw new Error("invalidArgument");
+    fail("invalidArgument");
   }
   const choosable = choosableIds(packReports);
   if (!ids.every((id) => choosable.has(id))) {
-    console.warn("rejected packs:setActive: unknownPack");
-    throw new Error("unknownPack");
+    fail("unknownPack");
   }
+  return exclusive("packs", () => changePacks(ids)).catch((error: unknown) => {
+    // The core host answers with a code as message; only known codes pass.
+    if (error instanceof PlatformFailure) throw error;
+    const code = error instanceof Error ? error.message : "";
+    fail(PACK_CODES.has(code) ? code : "internal");
+  });
+}
+
+/** Codes of a refused `packs.setActive` passed on to the renderer. */
+const PACK_CODES: ReadonlySet<string> = new Set([
+  "invalidArgument",
+  "invalidId",
+  "limitExceeded",
+  "unknownPack",
+  "busy",
+  "notReady",
+  "ioError",
+  "timeout",
+  "coreExited",
+  "invalidAnswer",
+]);
+
+async function changePacks(ids: string[]): Promise<PackReport[]> {
   const target = core;
   if (packsPending !== undefined) {
-    throw new Error("busy");
+    fail("busy");
   }
   if (target === undefined || globalThis.openairsideCoreStatus.state !== "ready") {
-    throw new Error("notReady");
+    fail("notReady");
   }
   packsRequest += 1;
   const request = packsRequest;
@@ -333,12 +512,397 @@ async function setActivePacks(arg: unknown): Promise<PackReport[]> {
     await rename(`${file}.tmp`, file);
   } catch (error) {
     settlePacks({ type: "packsError", request, message: "ioError" });
-    console.warn(`cannot save the chosen packs: ${errorCode(error)}`);
+    log("warn", `cannot save the chosen packs: ${errorCode(error)}`);
     return answer;
   }
   const message: PackRequest = { type: "packs:setActive", request, ids };
   target.postMessage(message);
   return answer;
+}
+
+function savesDir(): string {
+  return path.join(app.getPath("userData"), SAVES_DIR);
+}
+
+function savePath(id: string): string {
+  return path.join(savesDir(), saveFileName(id));
+}
+
+/** Where the preview image of each listed save game lies (from `saves.list`). */
+const previews = new Map<string, { offset: number; length: number }>();
+
+/** Removes files of interrupted saves (S-5 "Schreiben"); runs at start. */
+function removeTempFiles(): void {
+  let names: string[];
+  try {
+    mkdirSync(savesDir(), { recursive: true });
+    names = readdirSync(savesDir());
+  } catch (error) {
+    log("warn", `cannot read the save game folder: ${errorCode(error)}`);
+    return;
+  }
+  for (const name of names) {
+    if (!isTempFileName(name)) continue;
+    try {
+      rmSync(path.join(savesDir(), name), { force: true });
+    } catch (error) {
+      // E.g. a folder of that name: the others are still removed.
+      log("warn", `cannot remove a temporary save game file: ${errorCode(error)}`);
+    }
+  }
+}
+
+/** Flags for opening a save game: never blocks on a FIFO (POSIX only). */
+const OPEN_FLAGS =
+  fsConstants.O_RDONLY | (process.platform === "win32" ? 0 : fsConstants.O_NONBLOCK);
+
+/**
+ * Opens the save game `id` for reading and checks on the open handle that
+ * it is a regular file within {@link MAX_FILE_BYTES} (finding 4 of the
+ * separate review: no devices, FIFOs or links to them).
+ */
+async function openSave(
+  id: string,
+): Promise<{ handle: FileHandle; size: number; mtimeMs: number }> {
+  let handle: FileHandle;
+  try {
+    handle = await open(savePath(id), OPEN_FLAGS);
+  } catch (error) {
+    if (errorCode(error) === "ENOENT") fail("unknownSave");
+    fail("ioError");
+  }
+  try {
+    const info = await handle.stat();
+    if (!info.isFile()) fail("invalidState", { check: "file" });
+    if (info.size > MAX_FILE_BYTES) fail("limitExceeded", { limit: "file", max: MAX_FILE_BYTES });
+    return { handle, size: info.size, mtimeMs: info.mtimeMs };
+  } catch (error) {
+    await handle.close();
+    if (error instanceof PlatformFailure) throw error;
+    fail("ioError");
+  }
+}
+
+/** Reads `length` bytes at `offset` from an open save game. */
+async function readExactly(
+  handle: FileHandle,
+  length: number,
+  offset: number,
+): Promise<Uint8Array> {
+  const bytes = new Uint8Array(length);
+  let done = 0;
+  while (done < length) {
+    const { bytesRead } = await handle.read(bytes, done, length - done, offset + done);
+    // The file got shorter meanwhile.
+    if (bytesRead === 0) fail("unknownSave");
+    done += bytesRead;
+  }
+  return bytes;
+}
+
+/** Ids of the save game files with their modification times, newest first. */
+async function saveFiles(): Promise<{ id: string; mtimeMs: number }[]> {
+  let names: string[];
+  try {
+    names = await readdir(savesDir());
+  } catch (error) {
+    if (errorCode(error) === "ENOENT") return [];
+    log("warn", `cannot read the save game folder: ${errorCode(error)}`);
+    fail("ioError");
+  }
+  const files: { id: string; mtimeMs: number }[] = [];
+  for (const name of names) {
+    const id = idOfFileName(name);
+    if (id === undefined) continue;
+    try {
+      // lstat: a link or special file is listed and refused when opened.
+      files.push({ id, mtimeMs: (await lstat(path.join(savesDir(), name))).mtimeMs });
+    } catch {
+      // Deleted meanwhile.
+    }
+  }
+  return files.sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
+/** Reads the save game list; the core checks header and metadata (S-5). */
+async function listSaves(): Promise<SaveEntry[]> {
+  const all = await saveFiles();
+  if (all.length > MAX_LISTED_FILES) {
+    log(
+      "warn",
+      `save game folder holds ${String(all.length)} files; the newest ${String(MAX_LISTED_FILES)} are listed`,
+    );
+  }
+  previews.clear();
+  const entries: SaveEntry[] = [];
+  // Batches of 100: the prefixes (up to 64 KB each) are not all held at once.
+  const listed = all.slice(0, MAX_LISTED_FILES);
+  for (let start = 0; start < listed.length; start += INFO_BATCH) {
+    const files: { id: string; prefix: Uint8Array; size: number }[] = [];
+    for (const { id } of listed.slice(start, start + INFO_BATCH)) {
+      try {
+        const { handle, size } = await openSave(id);
+        try {
+          files.push({
+            id,
+            prefix: await readExactly(handle, Math.min(size, MAX_INFO_BYTES), 0),
+            size,
+          });
+        } finally {
+          await handle.close();
+        }
+      } catch (error) {
+        const reason = error instanceof PlatformFailure ? error.reason : platformReason("ioError");
+        // Deleted meanwhile: not listed; otherwise shown as damaged.
+        if (reason.code !== "unknownSave") entries.push({ id, state: "damaged", error: reason });
+      }
+    }
+    const answers = await requestSaves((request) => ({
+      type: "saves:info",
+      request,
+      files: files.map(({ prefix, size }) => ({ prefix, size })),
+    }));
+    if (!Array.isArray(answers) || answers.length !== files.length) fail("invalidAnswer");
+    files.forEach(({ id }, i) => {
+      const parsed = parseInfoAnswer(answers[i]);
+      if (parsed === undefined) fail("invalidAnswer");
+      if (!parsed.ok) {
+        entries.push({ id, state: "damaged", error: parsed.error });
+        return;
+      }
+      previews.set(id, { offset: parsed.info.previewOffset, length: parsed.info.previewLen });
+      entries.push({
+        id,
+        state: "ok",
+        gameVersion: parsed.info.gameVersion,
+        meta: parsed.info.meta,
+      });
+    });
+  }
+  return sortEntries(entries);
+}
+
+/** Longest wait for the screenshot of the window. */
+const PREVIEW_TIMEOUT_MS = 5000;
+
+/**
+ * Screenshot of the game window as preview, at most {@link PREVIEW_WIDTH}
+ * pixels wide and within 1920 × 1080 (S-5); empty if it fails or takes
+ * longer than {@link PREVIEW_TIMEOUT_MS} – a save without preview is still a save.
+ */
+async function previewImage(): Promise<Uint8Array> {
+  const window = gameWindow;
+  if (window === undefined) return new Uint8Array(0);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const image = await Promise.race([
+      window.webContents.capturePage(),
+      new Promise<undefined>((resolve) => {
+        timer = setTimeout(() => {
+          resolve(undefined);
+        }, PREVIEW_TIMEOUT_MS);
+      }),
+    ]);
+    if (image === undefined) {
+      log("warn", "preview image timed out");
+      return new Uint8Array(0);
+    }
+    if (image.isEmpty()) return new Uint8Array(0);
+    const size = previewSize(image.getSize());
+    if (size === undefined) return new Uint8Array(0);
+    return new Uint8Array(image.resize(size).toPNG());
+  } catch (error) {
+    log("warn", `cannot take the preview image: ${errorCode(error)}`);
+    return new Uint8Array(0);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** S-6 `saves.save({ name, kind })`: writes a new file; resolves with its id. */
+async function saveGame(arg: unknown): Promise<{ id: string }> {
+  const parsed = parseSaveArgs(arg);
+  if (parsed === undefined) fail("invalidArgument");
+  return exclusive("save", () => writeSave(parsed.name, parsed.kind));
+}
+
+async function writeSave(name: string, kind: SaveMeta["kind"]): Promise<{ id: string }> {
+  const files = await saveFiles();
+  if (kind === "manual" && files.filter((f) => f.id.startsWith("m-")).length >= MAX_MANUAL_SAVES) {
+    fail("limitExceeded", { limit: "manualSaves", max: MAX_MANUAL_SAVES });
+  }
+  const id = newSaveId(kind, new Map(files.map((f) => [f.id, f.mtimeMs])), randomBytes(8));
+  const preview = await previewImage();
+  const bytes = await requestSaves((request) => ({
+    type: "saves:save",
+    request,
+    name,
+    kind,
+    savedAt: new Date().toISOString(),
+    preview,
+  }));
+  if (!(bytes instanceof Uint8Array)) fail("invalidAnswer");
+  const file = savePath(id);
+  const temp = path.join(savesDir(), tempFileName(id, randomBytes(8)));
+  try {
+    await mkdir(savesDir(), { recursive: true });
+    // Write, sync and rename: neither a crash nor a power loss while saving
+    // destroys the previous state. "wx": never write through a placed file.
+    const handle = await open(temp, "wx");
+    try {
+      await handle.writeFile(bytes);
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => undefined);
+    log("warn", `cannot write a save game: ${errorCode(error)}`);
+    fail(writeErrorCode(error));
+  }
+  previews.delete(id);
+  log("info", `saved ${kind} game ${id}`);
+  return { id };
+}
+
+/** Checks the form of a save game id from the renderer. */
+function saveId(arg: unknown): string {
+  if (!isSaveId(arg)) fail("invalidArgument");
+  return arg;
+}
+
+/** S-6 `saves.load(id)`: checks the file in the core and starts its session. */
+async function loadGame(arg: unknown): Promise<SaveMeta> {
+  const id = saveId(arg);
+  return exclusive("load", async () => {
+    const { handle, size } = await openSave(id);
+    let bytes: Uint8Array;
+    try {
+      // Size and content from the same handle.
+      bytes = await readExactly(handle, size, 0);
+    } finally {
+      await handle.close();
+    }
+    const meta = parseSaveMeta(
+      await requestSaves((request) => ({ type: "saves:load", request, bytes })),
+    );
+    if (meta === undefined) fail("invalidAnswer");
+    log("info", `loaded game ${id}`);
+    return meta;
+  });
+}
+
+/** S-6 `saves.delete(id)`; removes a link itself, never its target. */
+async function deleteSave(arg: unknown): Promise<null> {
+  const id = saveId(arg);
+  return exclusive("delete", async () => {
+    try {
+      await rm(savePath(id));
+    } catch (error) {
+      if (errorCode(error) === "ENOENT") fail("unknownSave");
+      fail("ioError");
+    }
+    previews.delete(id);
+    log("info", `deleted game ${id}`);
+    return null;
+  });
+}
+
+/** S-6 `saves.preview(id)` (ADR-028): PNG bytes, empty if the save has none. */
+async function savePreview(arg: unknown): Promise<ArrayBuffer> {
+  const id = saveId(arg);
+  return exclusive("preview", async () => {
+    const place = previews.get(id);
+    // Not listed since its last change: read the list first.
+    if (place === undefined) fail("unknownSave");
+    const { handle, size } = await openSave(id);
+    let png: Uint8Array;
+    try {
+      if (place.offset + place.length > size) fail("unknownSave");
+      png = await readExactly(handle, place.length, place.offset);
+    } finally {
+      await handle.close();
+    }
+    if (png.length > 0)
+      await requestSaves((request) => ({ type: "saves:checkPreview", request, png }));
+    return png.buffer as ArrayBuffer;
+  });
+}
+
+/** Saves an autosave once no other operation runs (S-5 rotation). */
+function runAutosave(): void {
+  if (!autosaveDue || operation !== undefined) return;
+  if (core === undefined || globalThis.openairsideCoreStatus.state !== "ready") {
+    autosaveDue = false;
+    return;
+  }
+  autosaveDue = false;
+  exclusive("autosave", () => writeSave("", "auto")).catch((error: unknown) => {
+    const code = error instanceof PlatformFailure ? error.reason.code : errorCode(error);
+    log("warn", `autosave failed: ${code}`);
+  });
+}
+
+/** S-6 `logs.write(level, message)`: throttled entry of the renderer. */
+function writeLog(level: unknown, message: unknown): null {
+  const parsed = parseLogArgs(level, message);
+  if (parsed === undefined) fail("invalidArgument");
+  logFile?.writeThrottled(parsed.level, parsed.message, Date.now());
+  return null;
+}
+
+/** S-6 `logs.openFolder()`: shows the folder of the log files. */
+async function openLogFolder(): Promise<null> {
+  const folder = path.join(app.getPath("userData"), LOGS_DIR);
+  try {
+    await mkdir(folder, { recursive: true });
+  } catch {
+    fail("ioError");
+  }
+  const problem = await shell.openPath(folder);
+  if (problem !== "") {
+    log("warn", "cannot open the log folder");
+    fail("ioError");
+  }
+  return null;
+}
+
+/** Opens the log file in `<userData>/logs` (release builds from level `info`). */
+function openLogFile(): void {
+  const folder = path.join(app.getPath("userData"), LOGS_DIR);
+  try {
+    mkdirSync(folder, { recursive: true });
+  } catch (error) {
+    console.warn(`cannot create the log folder: ${errorCode(error)}`);
+  }
+  logFile = new LogFile(
+    {
+      size: (file) => {
+        try {
+          return statSync(file).size;
+        } catch {
+          return 0;
+        }
+      },
+      append: (file, text) => {
+        appendFileSync(file, text);
+      },
+      rename: (from, to) => {
+        try {
+          renameSync(from, to);
+        } catch {
+          // Missing older file.
+        }
+      },
+      remove: (file) => {
+        rmSync(file, { force: true });
+      },
+    },
+    path.join(folder, LOG_FILE),
+    app.isPackaged ? "info" : "debug",
+  );
+  log("info", `OpenAirside ${app.getVersion()} started on ${process.platform} ${process.arch}`);
 }
 
 function createWindow(): void {
@@ -380,6 +944,8 @@ if (!app.commandLine.hasSwitch("no-sandbox")) {
 }
 
 void app.whenReady().then(() => {
+  openLogFile();
+  removeTempFiles();
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
     callback(false);
   });
@@ -400,6 +966,13 @@ void app.whenReady().then(() => {
   handle("measure:report", reportMeasure);
   handle("packs:list", () => packReports);
   handle("packs:setActive", setActivePacks);
+  handle("saves:list", () => exclusive("list", listSaves));
+  handle("saves:save", saveGame);
+  handle("saves:load", loadGame);
+  handle("saves:delete", deleteSave);
+  handle("saves:preview", savePreview);
+  handle("logs:write", writeLog);
+  handle("logs:openFolder", openLogFolder);
   startCore();
   createWindow();
 });

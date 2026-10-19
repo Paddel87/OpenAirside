@@ -19,7 +19,7 @@ pub mod schema;
 
 use serde::Serialize;
 
-pub use catalog::{Catalog, ObjectType};
+pub use catalog::{ActivePack, Catalog, ObjectType};
 pub use load::{LoadOutcome, PackFolder, discover, game_version, load};
 
 use crate::text::Reason;

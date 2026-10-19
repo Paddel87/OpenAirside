@@ -8,8 +8,7 @@
  */
 import type { PackError } from "../generated/PackError.js";
 import type { PackReport } from "../generated/PackReport.js";
-import type { ParamValue } from "../generated/ParamValue.js";
-import type { Reason } from "../generated/Reason.js";
+import { parseReason } from "./platform-error.js";
 
 /** Most packs, base pack included (S-4, `MAX_PACKS` in core/src/datapack/mod.rs). */
 export const MAX_PACKS = 256;
@@ -89,27 +88,6 @@ function optionalCount(value: unknown): value is number | null {
 
 function isCount(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 0;
-}
-
-function isParam(value: unknown): value is ParamValue {
-  return typeof value === "string" || (typeof value === "number" && Number.isFinite(value));
-}
-
-function parseReason(value: unknown): Reason | undefined {
-  if (
-    !isRecord(value) ||
-    typeof value.code !== "string" ||
-    typeof value.textKey !== "string" ||
-    !isRecord(value.params)
-  ) {
-    return undefined;
-  }
-  const params: Record<string, ParamValue> = {};
-  for (const [name, param] of Object.entries(value.params)) {
-    if (!isParam(param)) return undefined;
-    params[name] = param;
-  }
-  return { code: value.code, textKey: value.textKey, params };
 }
 
 function parseError(value: unknown): PackError | undefined {

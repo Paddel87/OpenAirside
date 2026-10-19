@@ -2,14 +2,18 @@
 //!
 //! Only translates between JavaScript and the public Rust API of
 //! `openairside-core` (with napi `serde-json`, ADR-024); the port logic,
-//! frames and events live in `openairside_core::host`.
+//! frames and events live in `openairside_core::host`. Save games (S-5,
+//! step 2.5) are encoded and checked off the JavaScript thread; a failed
+//! save or load rejects with the reason as JSON text in the message, so
+//! that the core host can pass on `{ code, textKey, params }` (S-6).
 
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use napi::bindgen_prelude::Buffer;
+use napi::bindgen_prelude::{AsyncTask, Buffer};
+use napi::{Env, Task};
 use napi_derive::napi;
 use openairside_core::adoption::AdoptionMode;
 use openairside_core::command::Scenario;
@@ -17,9 +21,11 @@ use openairside_core::datapack::{self, PackReport};
 use openairside_core::geometry::MapSize;
 use openairside_core::host::{Outgoing, PortHost};
 use openairside_core::port::{ClientMessage, CommandEnvelope, MAX_MESSAGE_BYTES};
-use openairside_core::runner::Runner;
+use openairside_core::runner::{Runner, SaveLink};
+use openairside_core::savegame::{self, SaveKind, SaveRequest};
 use openairside_core::scenario::scenario_world;
 use openairside_core::simulation::{SimulationConfig, default_threads};
+use openairside_core::text::Reason;
 
 /// Longest wait for the new session when a second port opens.
 const RESTART_TIMEOUT: Duration = Duration::from_secs(30);
@@ -104,10 +110,112 @@ pub struct CoreStatus {
     pub threads: u32,
     /// Background threads.
     pub background_threads: u32,
+    /// The game runs (not paused); counts towards the autosave interval.
+    pub running: bool,
 }
 
 fn napi_error(message: impl std::fmt::Display) -> napi::Error {
     napi::Error::from_reason(message.to_string())
+}
+
+/// Error whose message is `reason` as JSON (read by app/src/main/core-host.ts).
+fn reason_error(reason: &Reason) -> napi::Error {
+    napi_error(serde_json::to_string(reason).unwrap_or_else(|_| reason.code.clone()))
+}
+
+/// Encodes a save game on a libuv thread (S-6 `saves.save`).
+pub struct SaveTask {
+    link: SaveLink,
+    request: SaveRequest,
+}
+
+impl Task for SaveTask {
+    type Output = Vec<u8>;
+    type JsValue = Buffer;
+
+    fn compute(&mut self) -> napi::Result<Vec<u8>> {
+        let snapshot = self.link.snapshot().map_err(|r| reason_error(&r))?;
+        let version = openairside_core::core_info().version;
+        // TODO(fahrplan-ref: 5.1): the airport name enters the world state
+        // with the new-game settings (META-02); until then it is empty.
+        snapshot
+            .encode(&self.request, "", version)
+            .map_err(|r| reason_error(&r))
+    }
+
+    fn resolve(&mut self, _env: Env, output: Vec<u8>) -> napi::Result<Buffer> {
+        Ok(output.into())
+    }
+}
+
+/// Checks and loads a save game on a libuv thread (S-6 `saves.load`).
+pub struct LoadTask {
+    link: SaveLink,
+    bytes: Vec<u8>,
+}
+
+impl Task for LoadTask {
+    /// Metadata of the loaded game as JSON text.
+    type Output = String;
+    type JsValue = String;
+
+    fn compute(&mut self) -> napi::Result<String> {
+        let bytes = std::mem::take(&mut self.bytes);
+        let game =
+            savegame::decode(&bytes, &savegame::Limits::default()).map_err(|r| reason_error(&r))?;
+        drop(bytes);
+        let meta = serde_json::to_string(game.meta()).map_err(napi_error)?;
+        self.link.load(game).map_err(|r| reason_error(&r))?;
+        Ok(meta)
+    }
+
+    fn resolve(&mut self, _env: Env, output: String) -> napi::Result<String> {
+        Ok(output)
+    }
+}
+
+/// Reads header and metadata of a save game for the list (S-5): `prefix`
+/// is the start of the file, `file_len` its length. Returns
+/// `{ gameVersion, meta, previewOffset, previewLen }`.
+///
+/// # Errors
+///
+/// The reason as JSON for a damaged file.
+#[napi]
+pub fn save_info(prefix: Buffer, file_len: f64) -> napi::Result<serde_json::Value> {
+    if !(0.0..=9_007_199_254_740_991.0).contains(&file_len) || file_len.fract() != 0.0 {
+        return Err(reason_error(&savegame::error(
+            savegame::code::INVALID_ARGUMENT,
+        )));
+    }
+    #[expect(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        reason = "checked above: a non-negative whole number below 2^53"
+    )]
+    let file_len = file_len as u64;
+    let info = savegame::read_info(&prefix, file_len).map_err(|r| reason_error(&r))?;
+    Ok(serde_json::json!({
+        "gameVersion": info.game_version,
+        "meta": info.meta,
+        "previewOffset": info.preview_offset,
+        "previewLen": info.preview_len,
+    }))
+}
+
+/// Checks a preview image as loading does (S-5: PNG, at most 1920 × 1080).
+///
+/// # Errors
+///
+/// The reason as JSON for an image that is not allowed.
+#[napi]
+pub fn check_preview(png: Buffer) -> napi::Result<()> {
+    if png.len() > savegame::MAX_PREVIEW_BYTES as usize {
+        return Err(reason_error(
+            &savegame::error(savegame::code::LIMIT_EXCEEDED).with_text("limit", "preview"),
+        ));
+    }
+    savegame::check_preview(&png).map_err(|r| reason_error(&r))
 }
 
 fn to_js(out: Vec<Outgoing>) -> napi::Result<Vec<OutgoingMessage>> {
@@ -324,7 +432,59 @@ impl Core {
             ticks_per_second: status.stats.ticks_per_second,
             threads: u32::try_from(self.threads.0).unwrap_or(u32::MAX),
             background_threads: u32::try_from(self.threads.1).unwrap_or(u32::MAX),
+            running: status.speed.is_running(),
         })
+    }
+
+    /// Saves the running session (S-6 `saves.save`): resolves with the
+    /// complete file. `kind` is `manual`, `quick` or `auto`; `saved_at` an
+    /// ISO 8601 time; `preview` a PNG or empty.
+    ///
+    /// # Errors
+    ///
+    /// Fails with the reason as JSON for an invalid request or if the core
+    /// is stopped.
+    #[napi(ts_return_type = "Promise<Buffer>")]
+    pub fn save_game(
+        &self,
+        name: String,
+        kind: String,
+        saved_at: String,
+        preview: Buffer,
+    ) -> napi::Result<AsyncTask<SaveTask>> {
+        let kind: SaveKind =
+            serde_json::from_value(serde_json::Value::String(kind)).map_err(|_| {
+                reason_error(
+                    &savegame::error(savegame::code::INVALID_ARGUMENT).with_text("field", "kind"),
+                )
+            })?;
+        let link = self.runner()?.save_link();
+        Ok(AsyncTask::new(SaveTask {
+            link,
+            request: SaveRequest {
+                name,
+                kind,
+                saved_at,
+                preview: preview.to_vec(),
+            },
+        }))
+    }
+
+    /// Checks a save game file and replaces the session by it (S-6
+    /// `saves.load`); resolves with its metadata as JSON text once the new
+    /// session runs.
+    ///
+    /// # Errors
+    ///
+    /// Fails with the reason as JSON if the core is stopped; the checks
+    /// reject the promise.
+    #[napi(ts_return_type = "Promise<string>")]
+    pub fn load_game(&self, bytes: Buffer) -> napi::Result<AsyncTask<LoadTask>> {
+        let link = self.runner()?.save_link();
+        Ok(AsyncTask::new(LoadTask {
+            link,
+            bytes: bytes.to_vec(),
+        }))
     }
 
     /// Stops the simulation thread.

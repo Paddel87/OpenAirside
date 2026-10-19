@@ -6,6 +6,9 @@
  */
 
 import type { PackReport } from "../src/generated/PackReport.js";
+import type { Reason } from "../src/generated/Reason.js";
+import type { SaveKind } from "../src/generated/SaveKind.js";
+import type { SaveMeta } from "../src/generated/SaveMeta.js";
 
 /** Tag of the window message with the port (same as in preload.cts). */
 export const CORE_PORT_TAG = "openairside:core-port";
@@ -15,6 +18,49 @@ export interface AppInfo {
   readonly version: string;
   readonly platform: string;
   readonly dataFolder: string;
+}
+
+/** Entry of `saves.list()`: a readable save game or a damaged file (S-5). */
+export type SaveEntry =
+  | {
+      readonly id: string;
+      readonly state: "ok";
+      readonly gameVersion: string;
+      readonly meta: SaveMeta;
+    }
+  | { readonly id: string; readonly state: "damaged"; readonly error: Reason };
+
+/** Level of a log entry (`logs.write`). */
+export type LogLevel = "debug" | "info" | "warn" | "error";
+
+/**
+ * Whether `value` has the error form of S-6 (`{ code, textKey, params }`);
+ * every refused call rejects with it.
+ */
+export function isPlatformError(value: unknown): value is Reason {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "code" in value &&
+    typeof value.code === "string" &&
+    "textKey" in value &&
+    typeof value.textKey === "string" &&
+    "params" in value &&
+    typeof value.params === "object" &&
+    value.params !== null
+  );
+}
+
+/**
+ * Short text of a refused call for the console: the code with its
+ * parameters (texts follow with the localisation in step 2.6).
+ */
+export function describeError(error: unknown): string {
+  if (isPlatformError(error)) {
+    const params = Object.entries(error.params).map(([k, v]) => `${k}=${String(v)}`);
+    return params.length === 0 ? error.code : `${error.code} (${params.join(", ")})`;
+  }
+  return error instanceof Error ? error.message : String(error);
 }
 
 /** The platform API as exposed by the preload. */
@@ -38,7 +84,26 @@ export interface OpenAirsideApi {
     /** Chooses the active user packs in load order; applies from the next session on. */
     setActive(ids: readonly string[]): Promise<PackReport[]>;
   };
-  onCoreExit(callback: (code: number) => void): void;
+  /** Save games (S-5, step 2.5); ids are given out by the main process. */
+  readonly saves: {
+    /** All save games, newest first; damaged files with their error. */
+    list(): Promise<SaveEntry[]>;
+    /** Saves the running game; resolves with the id of the new file. */
+    save(request: { readonly name: string; readonly kind: SaveKind }): Promise<{ id: string }>;
+    /** Loads a save game; a new session starts. */
+    load(id: string): Promise<SaveMeta>;
+    delete(id: string): Promise<null>;
+    /** PNG bytes of the preview (empty if none, ADR-028); list first. */
+    preview(id: string): Promise<ArrayBuffer>;
+  };
+  /** Log file (step 2.5). */
+  readonly logs: {
+    /** Throttled entry: at most 100 per second, 2,000 characters. */
+    write(level: LogLevel, message: string): Promise<null>;
+    openFolder(): Promise<null>;
+  };
+  /** The core process ended; `restarting` if the platform starts a new one (ADR-029). */
+  onCoreExit(callback: (code: number, restarting: boolean) => void): void;
 }
 
 declare global {

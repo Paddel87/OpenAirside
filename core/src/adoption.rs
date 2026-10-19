@@ -47,6 +47,17 @@ impl<T: Send + 'static> Adoption<T> {
         }
     }
 
+    /// Adoption of a loaded save game (S-5): requests continue with
+    /// `next_revision` (at least 1).
+    #[must_use]
+    pub fn resumed(mode: AdoptionMode, next_revision: u32) -> Self {
+        Self {
+            mode,
+            next_revision: next_revision.max(1),
+            pending: None,
+        }
+    }
+
     /// Starts `job` on `pool` at `tick`; the job receives the revision of
     /// the request, which is also returned.
     pub fn request<F>(&mut self, pool: &ThreadPool, tick: Tick, job: F) -> u32
@@ -55,21 +66,51 @@ impl<T: Send + 'static> Adoption<T> {
     {
         let revision = self.next_revision;
         self.next_revision = self.next_revision.wrapping_add(1).max(1);
+        let delay = match self.mode {
+            AdoptionMode::WhenReady => 0,
+            AdoptionMode::FixedTick { delay } => delay.max(1),
+        };
+        self.start(pool, revision, tick.saturating_add(delay), job);
+        revision
+    }
+
+    /// Starts again the request that was open when a game was saved, with
+    /// its revision and adoption tick, so that the verification mode
+    /// continues bit for bit (S-5).
+    pub fn resume_request<F>(&mut self, pool: &ThreadPool, revision: u32, due: Tick, job: F)
+    where
+        F: FnOnce(u32) -> T + Send + 'static,
+    {
+        self.start(pool, revision, due, job);
+    }
+
+    fn start<F>(&mut self, pool: &ThreadPool, revision: u32, due: Tick, job: F)
+    where
+        F: FnOnce(u32) -> T + Send + 'static,
+    {
         let (sender, result) = mpsc::sync_channel(1);
         pool.spawn(move || {
             // The receiver is gone if a newer request replaced this one.
             let _ = sender.send(job(revision));
         });
-        let delay = match self.mode {
-            AdoptionMode::WhenReady => 0,
-            AdoptionMode::FixedTick { delay } => delay.max(1),
-        };
         self.pending = Some(Pending {
             revision,
-            due: tick.saturating_add(delay),
+            due,
             result,
         });
-        revision
+    }
+
+    /// Revision the next request gets.
+    #[must_use]
+    pub fn next_revision(&self) -> u32 {
+        self.next_revision
+    }
+
+    /// Revision and adoption tick of the open request (the tick counts only
+    /// in the verification mode).
+    #[must_use]
+    pub fn pending(&self) -> Option<(u32, Tick)> {
+        self.pending.as_ref().map(|p| (p.revision, p.due))
     }
 
     /// Returns the result to adopt at `tick`, together with its revision.

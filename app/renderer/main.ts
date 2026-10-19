@@ -1,7 +1,9 @@
 /**
  * Renderer entry of OpenAirside: connects to the core over the port of the
  * platform (S-6), shows the playfield (PixiJS) and the debug panel with
- * console, performance display and measurement series (FR-009, step 2.7).
+ * console, performance display and measurement series (FR-009, step 2.7),
+ * plus the simple save game list, quick save (F5) and the offer to load the
+ * last autosave after a crash of the core (step 2.5).
  * The interface panels (React) follow from roadmap step 3.6 on.
  */
 import type { PackReport } from "../src/generated/PackReport.js";
@@ -10,7 +12,9 @@ import { type ClientHandlers, CoreClient } from "./core-client.js";
 import { basePackLoaded, formatPacks, parseConsoleLine, TABLE_COLUMNS } from "./console.js";
 import { defaultConfig, MeasureSeries, type SeriesHost } from "./measure.js";
 import { PerfMeter } from "./perf.js";
-import { onCorePort } from "./platform.js";
+import { describeError, onCorePort } from "./platform.js";
+import { formatSaves, latestAutosave } from "./saves.js";
+import { loadSave, SavesPanel, showNotice } from "./saves-panel.js";
 import { Playfield } from "./playfield.js";
 import { cell, readTable } from "./table-reader.js";
 
@@ -19,6 +23,8 @@ const hud = document.getElementById("hud");
 const log = document.getElementById("log");
 const form = document.getElementById("console");
 const input = document.getElementById("console-input");
+const savesBox = document.getElementById("saves");
+const noticeBox = document.getElementById("notice");
 
 function write(line: string): void {
   if (log === null) return;
@@ -184,8 +190,65 @@ async function start(): Promise<void> {
   };
   portArrived = connect;
   for (const port of ports.splice(0)) connect(port);
-  window.openairside?.onCoreExit((code) => {
-    write(`core process ended (code ${String(code)}); restarting`);
+  const api = window.openairside;
+  const panel =
+    api === undefined || savesBox === null
+      ? undefined
+      : new SavesPanel(document, savesBox, api, write);
+  const save = (name: string, kind: "manual" | "quick"): void => {
+    if (api === undefined) {
+      write("save: not connected");
+      return;
+    }
+    api.saves.save({ name, kind }).then(
+      ({ id }) => {
+        write(`saved ${id}`);
+      },
+      (error: unknown) => {
+        write(`save failed: ${describeError(error)}`);
+      },
+    );
+  };
+  const loadLastAutosave = async (): Promise<void> => {
+    if (api === undefined) return;
+    try {
+      const id = latestAutosave(await api.saves.list());
+      if (id === undefined) write("no autosave to load");
+      else await loadSave(api, id, write);
+    } catch (error) {
+      write(`load failed: ${describeError(error)}`);
+    }
+  };
+  api?.onCoreExit((code, restarting) => {
+    write(`core process ended (code ${String(code)})${restarting ? "; restarting" : ""}`);
+    void api.logs
+      .write("error", `core process ended (code ${String(code)})`)
+      .catch(() => undefined);
+    if (noticeBox === null) return;
+    // S-6 "Absturz des Kerns" (ADR-029): offer the last autosave, or point to the log file.
+    if (restarting) {
+      showNotice(
+        document,
+        noticeBox,
+        "The game core stopped and is restarting. Load the last autosave?",
+        [{ label: "Load last autosave", run: () => void loadLastAutosave() }],
+      );
+    } else {
+      showNotice(
+        document,
+        noticeBox,
+        "The game core stopped repeatedly and is not restarted. Details are in the log file.",
+        [
+          {
+            label: "Open log folder",
+            run: () =>
+              void api.logs.openFolder().catch((error: unknown) => {
+                write(`log folder: ${describeError(error)}`);
+              }),
+          },
+        ],
+      );
+    }
   });
 
   const host: SeriesHost = {
@@ -253,7 +316,7 @@ async function start(): Promise<void> {
     if (result.kind === "measure") {
       write(`measure: ${String(result.minutes)} min – do not touch, keep the window visible`);
       measure(result.minutes).catch((error: unknown) => {
-        write(`measure failed: ${error instanceof Error ? error.message : String(error)}`);
+        write(`measure failed: ${describeError(error)}`);
         root.dataset.measure = "failed";
       });
     } else if (result.kind === "packs" || result.kind === "setPacks") {
@@ -270,8 +333,36 @@ async function start(): Promise<void> {
             write("packs: chosen packs apply from the next session (e.g. scenario hall)");
         })
         .catch((error: unknown) => {
-          write(`packs failed: ${error instanceof Error ? error.message : String(error)}`);
+          write(`packs failed: ${describeError(error)}`);
         });
+    } else if (result.kind === "saves") {
+      if (api === undefined || panel === undefined) {
+        write("saves: not connected");
+        return;
+      }
+      api.saves.list().then(
+        (entries) => {
+          for (const line of formatSaves(entries)) write(line);
+          void panel.show(entries);
+        },
+        (error: unknown) => {
+          write(`saves failed: ${describeError(error)}`);
+        },
+      );
+    } else if (result.kind === "save") {
+      save(result.name, result.saveKind);
+    } else if (result.kind === "load") {
+      if (api === undefined) write("load: not connected");
+      else void loadSave(api, result.id, write);
+    } else if (result.kind === "deleteSave") {
+      api?.saves.delete(result.id).then(
+        () => {
+          write(`deleted ${result.id}`);
+        },
+        (error: unknown) => {
+          write(`delete failed: ${describeError(error)}`);
+        },
+      );
     } else if (result.kind === "command") {
       const id = client?.send(result.command) ?? 0;
       write(id === 0 ? "not connected" : `#${String(id)} ${line}`);
@@ -285,6 +376,12 @@ async function start(): Promise<void> {
     }
   });
   window.addEventListener("keydown", (event) => {
+    // Quick save also while typing in the console.
+    if (event.key === "F5") {
+      event.preventDefault();
+      save("", "quick");
+      return;
+    }
     if (event.target === input) return;
     if (event.key === "PageUp") playfield.changeFloor(1);
     if (event.key === "PageDown") playfield.changeFloor(-1);

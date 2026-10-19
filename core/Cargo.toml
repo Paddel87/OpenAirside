@@ -20,6 +20,8 @@ rayon.workspace = true
 serde_json.workspace = true
 serde_path_to_error.workspace = true
 semver.workspace = true
+postcard.workspace = true
+miniz_oxide.workspace = true
 ts-rs = { workspace = true, optional = true }
 schemars = { workspace = true, optional = true }
 

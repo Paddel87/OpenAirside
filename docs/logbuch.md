@@ -17,12 +17,119 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 erledigt (ADR-024, Messung auf Mac und Referenz-PC 2026-10-15); 2.4 erledigt (ADR-025, ADR-026, 2026-10-18); nächster Schritt 2.5. Neuer Entwurfsschritt 3.7 vor 3.1. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 erledigt (ADR-024, Messung auf Mac und Referenz-PC 2026-10-15); 2.4 erledigt (ADR-025, ADR-026, 2026-10-18); 2.5 erledigt (ADR-027 bis ADR-030, 2026-10-19). Neuer Entwurfsschritt 3.7 vor 3.1. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-19 12:48 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 1 Stunde 46 Minuten seit `[SESSIONSTART]` 11:02 UTC; Neustart des Arbeitsprozesses zwischen Frage und Antwort (11:06–11:37), ohne Verlust.
+- **Bearbeitet:** Abgleich vor 2.5b (Maßnahmen 7, 8) mit Vorlage; ADR-029; Stufe 2.5b umgesetzt; getrennte Prüfung (Kategorie 6); Befunde behoben; ADR-030; Abschluss von 2.5.
+- **Erreicht:** 2.5 `[ERLEDIGT]` (CI-Lauf 39253155836 auf `a4fff12` grün, 17 Jobs, drei Plattformen); FR-004 erledigt; S-5 durch Umsetzung bestätigt. Commits `4813e7e` … `a4fff12` plus dieser Sessionende-Commit; Branch gepusht, kein PR.
+- **Offen geblieben:** PR für 2.5 nach `main` (nur auf Anweisung); Kenntnisnahme der Reflexionen zu ADR-029 und ADR-030; ungemergte fremde Branches wie im `[SESSIONENDE]` 2026-10-18 23:27 (Löschen nur auf Anweisung).
+- **Nächster Schritt:** PR für 2.5, danach 2.6 (Lokalisierung) in einer neuen Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 11:01 und 12:46 UTC). Freigaben (Auslöser 1) auf der Pflicht-Klasse; 2.5b als Routine-Arbeit: 1 Stufe oberhalb der Empfehlung (Warnung zu Beginn). Abgegeben: keine Teilarbeit (Probelauf offen); die getrennte Prüfung lief bewusst auf einem anderen Modell (Sonnet 5.5) als Prüfinstanz, nicht als Abgabe.
+- **Kontextgröße:** 408.755 Token laut `get_session` 12:46 UTC – **über der Grenze von 400.000**: die nächste Arbeit (PR, 2.6) in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed`, Zurücksetzen 2026-10-19 15:50 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf; Runner weiter auf Ubuntu 24.04 (Hinweis zur Umstellung in jedem Lauf). Neuer CI-Hinweis „Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times“ (3 je Lauf), ohne Wirkung auf das Ergebnis, keine Frist.
+- **Archivierung:** Logbuch erreicht 800 Zeilen (Trigger > 800 mit diesem Eintrag überschritten). Alle Einträge stammen aus dem laufenden Monat Oktober 2026; eine vorletzte Monats-Scheibe nach `CLAUDE.md` Abschnitt 14 gibt es nicht, auszulagern ist nichts. Die Verdichtung folgt mit dem `[PHASEN-WECHSEL]` nach Phase 2 (2.6 und 2.10 offen). Lücke der Methodik festgehalten: Der Zeilen-Trigger kann innerhalb eines Monats nicht greifen.
+- **Drift-Prüfung:** README nachgezogen (Phase, Architektur-Reife, Verwendung, Nächste Schritte). ADR-029 und ADR-030 verweisen auf vorhandene Schritte (2.5, 4.1). Reifegrade S-5, S-6 passen zu ADR-027 bis ADR-030. Modul-Liste: 2.5b berührte Takt & Weltzustand, Brücke, Plattform, Spielfeld (Konsole) und Oberfläche (Liste) – wie in „Betroffene Module“ geplant, keine Abweichung. FR-004 nennt 2.5, Status erledigt. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 5 / 10 (ADR-021 bis ADR-030) stimmt mit den Tags. Phase 2 weiter 10 Schritte (Plan 10). Größen: `project-context.md` 369 Zeilen.
+
+### 2026-10-19 12:40 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-030 `[REAKTIV]` – Grenzen des Spielstands 512 MB (Option A, Freigabe per Auswahl); Anlass Befund 5 der getrennten Prüfung. Reaktiv-Quote 5 / 10 (ADR-021 bis ADR-030), Reflexion mit Maßnahme (9) im Fahrplan, Kenntnisnahme offen.
+
+### 2026-10-19 12:30 (UTC) – [BEOBACHTUNG]
+
+- **Getrennte Prüfung 2.5b (Kategorie 6):** 2026-10-19 ab etwa 12:16 UTC (nach dem Push um 12:15), Dauer 9,5 Minuten laut Laufzeitumgebung; Prüfinstanz Sonnet 5.5 (Unteragent ohne Gesprächsverlauf, nur Diff `c43998f..cb6e554`, S-5, S-6, Sicherheitsregeln, Bedrohungsmodell). Ergebnis „Freigabe mit Auflagen“, 12 Befunde (5 mittel, 7 niedrig, keiner hoch); Fuzzing ohne Panik. Erledigung in `docs/research/2.5-getrennte-pruefung.md`: 1–4, 6–8, 10, 12 behoben (`a6763e9`), 5 per ADR-030 (`ad16a93`), 9 und 11 teilweise mit begründetem Restrisiko. Befunde 2 und 4 vor der Korrektur selbst nachgestellt (`Array.from` über 2·10⁷ Zeichen 309 ms; Link auf `/dev/zero`: Größe 0, keine reguläre Datei).
+
+### 2026-10-19 11:58 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** neuer Test `runner::tests::a_failed_load_keeps_the_session`.
+- **Symptom:** rot in 3 von 15 Läufen: Status nach fehlgeschlagenem Laden noch `loading`.
+- **Ursache:** Der Takt-Thread schickte die Antwort vor dem Veröffentlichen des neuen Status; der Aufrufer las den alten.
+- **Lösung:** erst veröffentlichen, dann antworten (`core/src/runner.rs`, `load_game`); danach 25 von 25 Läufen grün.
+- **Lerneffekt:** Tests mit Thread-Übergaben mehrfach hintereinander laufen lassen, bevor sie als grün gelten.
+
+### 2026-10-19 11:50 (UTC) – [BEOBACHTUNG]
+
+- **Rauchtest:** F5 wirkte nicht, solange der Fokus im Konsolenfeld lag (der Tastatur-Handler übergeht Eingaben im Feld). F5 gilt jetzt überall. Der erzwungene Absturz brauchte eine eigene Wartebedingung: Der Status blieb kurz `ready`, nachdem der Prozess schon beendet war, und die Messwerte nannten noch die alte PID.
+
+### 2026-10-19 11:40 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-029 `[REAKTIV]` – `onCoreExit` meldet `restarting` (Option A, Freigabe per Auswahl); Festlegungen (a)–(l) zu 2.5b freigegeben.
+- **Korrektur:** Punkt (e) des Abgleichs widersprach ADR-028 (`unknownSave` für unbekannte IDs); es gilt ADR-028. Dem Projektinhaber gemeldet.
+- **Reaktiv-Quote:** 5 / 10 (ADR-020 bis ADR-029), Reflexion im Fahrplan, Kenntnisnahme offen.
+- **Mini-Reibung:** Der Arbeitsprozess der Session wurde zwischen Frage und Antwort neu gestartet; Arbeitsstand und Container blieben erhalten.
+
+### 2026-10-19 11:06 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Anlass:** Abgleich vor Stufe 2.5b nach Maßnahmen (7) und (8), Wortlaut im Fahrplan bei 2.5.
+- **Befund:** eine Abweichung – das Angebot nach Absturz des Kerns braucht die Angabe, ob die Plattform neu startet; `onCoreExit` liefert nur den Code. Optionen A (zweites Argument, ADR `[REAKTIV]`) und B (Oberfläche zählt selbst). Übrige Punkte (a)–(l) ohne Vertragsänderung; „Betroffene Module“ deckt den geplanten Code.
+- **Umgebung:** Container frisch: Node 26.11.1 über `/opt/nvm`, `npm ci`, Electron-Binärdatei per `install.js`, `pre-commit install`, `cargo fetch`.
+
+### 2026-10-19 11:02 (UTC) – [SESSIONSTART]
+
+- **Session:** `session_01WZthnhceTiMMFDi2Ways2p`, Fortsetzung von `session_01P9QoM7dmXTH6S8x8Uamvco` (dort Kontext über 400.000 Token).
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` (`get_session` 11:01 UTC) – Entscheidungs-Klasse.
+- **Wiedereinstieg:** Branch `feat/2-5-spielstand-mit-autosave` auf `c43998f`, gleich `origin`. Aktiver Schritt 2.5 `[IN ARBEIT]`, Stufe 2.5b (Plattform). Mindest-Lektüre nach `CLAUDE.md` Abschnitt 2 durchlaufen; keine aktiven Blocker.
+- **Warnung (Abschnitt 0):** 2.5b ist Routine-Arbeit (Umsetzung von S-5/S-6 nach Freigabe) und läuft oberhalb ihrer Empfehlung; Abgabe an Unteragenten nicht möglich (Probelauf offen).
+- **Vorgehen:** zuerst Maßnahmen (7) und (8): Vertragssätze S-5/S-6 und „Betroffene Module“ gegen den Plan von 2.5b prüfen, Abweichungen vor dem Code vorlegen.
+
+### 2026-10-19 10:59 (UTC) – [BEOBACHTUNG]
+
+- **Nachtrag nach dem Sessionende:** Projektinhaber: „Zur Kenntnis genommen, Reflexion und Abweichung“. Kenntnisnahme der Reflexion zu ADR-028 (Maßnahme 8 gilt) und der Abweichung nach Stopp-Kriterium 5 in 2.5a im Fahrplan vermerkt; kein Umbau.
+
+### 2026-10-19 02:45 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 51 Minuten seit `[SESSIONSTART]` 01:54 UTC. Mini-Reibung: Die Uhrzeit des Eintrags war zuerst geschätzt (02:48) statt mit `date -u` abgefragt (02:42) – wie am 2026-10-18; vor dem Commit korrigiert.
+- **Bearbeitet:** Sessionstart mit Übernahme des Merge-Vermerks `b59a95f`; Vorlage 2.5 (Kategorie 3, Probeaufbau, Messung, Abgleich mit S-5/S-6 nach Maßnahme 7); Freigabe A und Plan durch den Projektinhaber; ADR-027, ADR-028 mit Reflexion; Stufe 2.5a (Kern) umgesetzt und getestet.
+- **Erreicht:** 2.5 `[IN ARBEIT]`, Stufe 2.5a fertig (`07188d5`); Tests und Gates lokal grün, Coverage Kern 98,49 % Lines. CI-Lauf 39188204304 (Vorlage) grün auf 17 Jobs; CI-Lauf 39191152964 auf `50176b1` (mit dem Kern-Commit `07188d5`) grün. Branch `feat/2-5-spielstand-mit-autosave` gepusht, kein PR (2.5 ist nicht abgeschlossen; PR nur auf Anweisung).
+- **Abweichung (Stopp-Kriterium 5):** 2.5a hat Module berührt, die nicht in „Betroffene Module“ von 2.5 standen: Welt & Bau (`Block::from_fields`, `GridSnapshot::entries`/`from_entries`, `Grid::from_snapshot`, `Network::nodes`/`edges`/`from_parts`), Wegfindung & Passagierführung (`FieldSet::source`) und Inhalte & Mods (`ActivePack` im Katalog). Es sind interne Hilfen ohne neue Verantwortung und ohne Änderung öffentlicher Verträge, aber nach `CLAUDE.md` Abschnitt 8 hätten sie vor dem Code vorgelegt werden müssen – derselbe Fehler wie bei 2.4 (dort Brücke, Plattform, Spielfeld). Nachgetragen im Fahrplan; Kenntnisnahme des Projektinhabers offen. Lehre: Beim Abgleich nach Maßnahme (7) auch die Liste „Betroffene Module“ gegen den geplanten Code prüfen.
+- **Offen geblieben:** 2.5b (Plattform); Kenntnisnahme der Reflexion zu ADR-028 und der Abweichung oben; ungemergte fremde Branches wie im `[SESSIONENDE]` 2026-10-18 23:27 (Löschen nur auf Anweisung).
+- **Nächster Schritt:** 2.5b in einer neuen Session (Fahrplan „Aktueller Stand“).
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 01:54 und 02:41 UTC). Freigabe (Auslöser 1), ADR-028 `[REAKTIV]` mit Reflexion auf der Pflicht-Klasse; 2.5a ist Routine-Arbeit: 1 Stufe oberhalb der Empfehlung (Warnung zu Beginn ausgesprochen). Abgegeben: keine Teilarbeit (Probelauf offen).
+- **Kontextgröße:** `get_session` meldet 0 (nicht aussagekräftig); nach dem Token-Zähler der Laufzeitumgebung rund 450.000 Token – **über der Grenze von 400.000**: 2.5b in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed`, Zurücksetzen 2026-10-19 07:10 UTC (`get_session` 02:41 UTC).
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf. Runner-Umstellung auf Ubuntu 26 noch nicht erfolgt (Register ergänzt). Neue Crates `postcard`, `cobs`, `miniz_oxide`, `adler2` fallen unter die Sammelzeile „Übrige npm-Werkzeuge und Crates“ (Nachprüfung 2027-04-13).
+- **Drift-Prüfung:** README nachgezogen (Letzte Änderung, Nächste Schritte; 2.5a ohne Wirkung für Spieler, Verwendung unverändert). ADR-027 und ADR-028 verweisen auf vorhandene Schritte (2.5, 2.6, 3.1, 3.4, 5.1). Reifegrade S-5, S-6 passen zu ADR-027/028 (unverändert `[BELASTBAR]`). Modul-Liste: „Betroffene Module“ von 2.5 ergänzt (siehe Abweichung). FR-004 nennt 2.5. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 5 / 10 (ADR-019 bis ADR-028) stimmt mit den Tags. Phase 2 weiter 10 Schritte (Plan 10; die Stufen 2.5a/2.5b zählen als ein Schritt). Größen: `project-context.md` 369 Zeilen, Logbuch unter 800 (vor diesem Eintrag 761 – Trigger bald erreicht).
+
+### 2026-10-19 02:41 (UTC) – [BEOBACHTUNG]
+
+- **Stufe 2.5a umgesetzt** (`07188d5`): Spielstand-Container im Kern, Tests `core/tests/savegame_roundtrip.rs` (10) und Unit-Tests der Invarianten (4) grün, Coverage Kern 98,49 % Lines. Alle Tests liefen beim ersten Versuch grün bis auf eine eigene Annahme im Unit-Test (geteilte Leer-Blöcke im offenen Saal – dort ist jeder Block bebaut; Prüfung auf eine leere Welt umgestellt) und einen clippy-Befund (`err().expect` → `expect_err`).
+- **Entwurfsentscheidungen im Rahmen des freigegebenen Plans:** Die „Bauänderungen seit der Revision“ (S-5) sind die Blöcke, die sich zwischen Eingabe der aktiven Wegweiser und aktuellem Raster unterscheiden; dafür behält `FieldSet` ihre Eingabe (geteilte Blöcke, zusätzlich nur die Tabelle der Zeiger). Das Tempo wird mitgespeichert, weil es Teil der Zustands-Prüfsumme ist. Befehle prüft der Kern jetzt gegen die Karte der Welt statt gegen die Einstellung, damit ein Spielstand mit anderer Kartengröße richtig geprüft wird.
+- **CI-Lauf 39188204304** (Vorlage, `a4ace0c`): 17 von 17 Jobs grün. Ubuntu-Jobs noch auf Ubuntu 24.04.5 (Image `ubuntu-24.04` 20261012): Umstellung auf Ubuntu 26 noch nicht erfolgt, Register-Eintrag ergänzt. Neu im Protokoll: `npm audit` mit 8 Befunden „moderate“ (sprintf-js über electron-builder, nur Bauwerkzeug) – in den Warnungs-Bestand (`project-context.md` Abschnitt 7) und nach Q.1 aufgenommen. Der Hinweis „install scripts not yet covered“ nennt nur noch electron-winstaller.
+- **Dauer der Tests:** `savegame_roundtrip` braucht im Debug-Build rund 22 s (300 zufällige Änderungen am Referenz-Terminal 256²); vertretbar, aber im Blick behalten.
+
+### 2026-10-19 02:10 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-027 `[OPERATIV]`:** Spielstand mit `postcard` 1.1.3, Deflate über `miniz_oxide` 0.9.1, Prüfsumme FNV-1a 64 aus dem Kern (Option A), freigegeben vom Projektinhaber per Auswahl.
+- **ADR-028 `[REAKTIV]`:** `saves.preview(id)` als additive S-6-Funktion; freigegeben mit dem Abgleich (1)–(9) und der Aufteilung in 2.5a/2.5b. Reaktiv-Quote 5 / 10 (ADR-019 bis ADR-028), Reflexion mit Maßnahme (8) im Fahrplan, Kenntnisnahme offen.
+- **Landeplätze nachgetragen:** Autosave-Einstellungen 2.6, `MAX_OBJECTS` 3.1, `MAX_VEHICLES` 3.4, Flughafenname und Spielmenü 5.1.
+- **Modell:** Entscheidungs-Klasse (`claude-opus-5-5`, `get_session` 01:54 UTC; Auslöser 1). 2.5a ist nach der Freigabe Routine-Arbeit: läuft oberhalb ihrer Empfehlung, Abgabe an einen Unteragenten nicht möglich (Probelauf offen).
+
+### 2026-10-19 02:05 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 2.5, Kategorie 3:** Serialisierungsformat, Kompression und Prüfsumme des Spielstands. Optionen A `postcard` + `miniz_oxide` + FNV-1a 64 aus dem Kern (Empfehlung), B wie A mit `zstd` (C), C nur `postcard` ohne Kompression. Belege, Messung und Abgleich mit S-5/S-6 (Maßnahme 7) im Fahrplan bei 2.5.
+- **Umgebung:** Container frisch: Node 26.11.1 über `/opt/nvm`, `npm ci`, `pre-commit install`, `cargo-deny` 0.20.2 aus dem GitHub-Release. Probeaufbau unter dem Scratchpad, nicht im Repository.
+- **Beobachtung:** `bincode` trägt seit 2025-12-16 das Advisory RUSTSEC-2025-0141 (nicht mehr gepflegt; 3.0.0 ist eine Abschluss-Version); `ruzstd` hatte vor 8 Tagen ein Advisory zur Dekompressionsbombe. Beides schließt sie für nicht vertrauenswürdige Spielstände aus.
+
+### 2026-10-19 01:54 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** 2.4 erledigt (2026-10-18), PR Paddel87/OpenAirside#21 gemergt (`eead91b`); kein `[IN ARBEIT]`-Schritt; nächster Schritt 2.5. Letzter `[SESSIONENDE]`: 2026-10-18 23:27 UTC, danach Beobachtungen 23:30 und 23:38 UTC.
+- **Branches:** Neuer Branch `feat/2-5-spielstand-mit-autosave` von `main` `eead91b` (Schema `CLAUDE.md` Abschnitt 11; das Werkzeug hat keinen Namen vergeben). Merge-Vermerk `b59a95f` von `scp/zealous-ride-mwvv5m` als `dae5b43` übernommen (`project-context.md` Abschnitt 10). `docs/branch-konvention` ist vollständig in `main`. Übrige ungemergte Branches unverändert wie im `[SESSIONENDE]` 23:27 genannt; Löschen nur auf Anweisung.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant für diese Session:** kein ausdrücklicher Auftrag („Neue Session“); nach Fahrplan 2.5 beginnen: Vertrag S-5 und S-6 vertiefen, Maßnahme (7) anwenden (Vertragssätze vor dem Code gegen den Plan prüfen), Freigabe von Serialisierungsformat, Prüfsumme und ggf. Kompression mit belegten Versionen vorlegen.
+- **Vorabprüfung:** keine aktiven Blocker; Eingangskriterien 2.5 (S-5, S-6 `[BELASTBAR]`) erfüllt; Reaktiv-Quote 5 / 10 über dem Schwellenwert, Reflexionen zu ADR-025 und ADR-026 zur Kenntnis genommen, kein neuer reaktiver ADR seitdem; Phase 2 bei 10 Schritten (Plan 10). Ablaufdaten: heute stellt GitHub `ubuntu-latest` auf Ubuntu 26 um – ersten CI-Lauf dieser Session darauf prüfen (Q.1); sonst kein Vorlauf erreicht.
+- **Modus/Werkzeug:** Claude Code, Cloud-Session (Start über die iOS-App).
+- **Modell:** eingestellt und bedient `claude-opus-5-5` laut `get_session` 01:54 UTC – Entscheidungs-Klasse (Pflicht für die Freigabe in 2.5, Auslöser 1). Kontingent: 5-Stunden-Fenster `allowed`, Zurücksetzen 2026-10-19 02:10 UTC.
+
+### 2026-10-18 23:38 (UTC) – [BEOBACHTUNG]
+
+- **PR Paddel87/OpenAirside#21 gemergt** (`eead91b`, Merge-Commit) auf Anweisung des Projektinhabers („merge wenn grün“); vorher alle 39 Prüfläufe auf `f52f469` grün (CI für Push und PR, CodeQL, wöchentliche Audits), PR konfliktfrei, keine Reviews oder Kommentare. Branch `scp/zealous-ride-mwvv5m` per Fast-Forward auf den neuen `main` gesetzt. Dieser Eintrag liegt nach `project-context.md` Abschnitt 10 nur auf dem Branch und geht mit dem PR des nächsten Schritts (2.5) nach `main`.
 
 ### 2026-10-18 23:30 (UTC) – [BEOBACHTUNG]
 

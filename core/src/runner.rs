@@ -2,7 +2,8 @@
 //! the game speed (ADR-020), reports lag (S-3), exchanges commands,
 //! acknowledgements and events with the caller and publishes a snapshot of
 //! the visible state after every work slice (S-1). The bridge connects it
-//! to the `MessagePort` (step 2.7).
+//! to the `MessagePort` (step 2.7). A [`SaveLink`] takes save snapshots
+//! and loads save games between two work slices (S-5, step 2.5).
 //!
 //! Snapshot and events are published together under one short lock, as a
 //! triple buffer (spike 1.3): the driver owns its back snapshot, the reader
@@ -21,8 +22,10 @@ use crate::datapack::Catalog;
 use crate::event::{EventRecord, MAX_IN_FLIGHT};
 use crate::frame::Snapshot;
 use crate::pacer::{LagMonitor, Pacer};
+use crate::savegame::{LoadedGame, SaveSnapshot};
 use crate::scenario::scenario_world;
 use crate::simulation::{CoreState, RecomputeStats, Simulation, SimulationConfig, SimulationError};
+use crate::text::Reason;
 use crate::time::{Speed, Tick};
 use crate::world::World;
 
@@ -47,7 +50,59 @@ enum Input {
     },
     Restart,
     Content(Arc<Catalog>),
+    Snapshot(Sender<SaveSnapshot>),
+    Load(Box<LoadedGame>, Sender<Result<(), Reason>>),
     Stop,
+}
+
+/// Longest wait of a [`SaveLink`] for the simulation thread; loading
+/// computes the flow fields in use and can take seconds on large maps.
+const LINK_TIMEOUT: Duration = Duration::from_secs(120);
+
+/// Code of a save or load that the simulation thread did not answer.
+pub const CORE_STOPPED: &str = "coreStopped";
+
+/// Handle for saving and loading from another thread (S-5, step 2.5):
+/// the bridge encodes and decodes files off the JavaScript thread and
+/// only needs the simulation thread for the snapshot and the swap.
+#[derive(Clone)]
+pub struct SaveLink {
+    input: Sender<Input>,
+}
+
+impl SaveLink {
+    /// Takes a snapshot of the running session between two work slices.
+    ///
+    /// # Errors
+    ///
+    /// `coreStopped` if the simulation thread does not answer.
+    pub fn snapshot(&self) -> Result<SaveSnapshot, Reason> {
+        let (reply, answer) = mpsc::channel();
+        self.input
+            .send(Input::Snapshot(reply))
+            .map_err(|_| stopped())?;
+        answer.recv_timeout(LINK_TIMEOUT).map_err(|_| stopped())
+    }
+
+    /// Replaces the session by `game` (S-5 "Laden ist atomar"): the state
+    /// reads `loading` meanwhile, commands that arrive then are rejected
+    /// with `notReady`; a failed load keeps the running session.
+    ///
+    /// # Errors
+    ///
+    /// The reason of the failed load, `coreStopped` if the simulation
+    /// thread does not answer.
+    pub fn load(&self, game: LoadedGame) -> Result<(), Reason> {
+        let (reply, answer) = mpsc::channel();
+        self.input
+            .send(Input::Load(Box::new(game), reply))
+            .map_err(|_| stopped())?;
+        answer.recv_timeout(LINK_TIMEOUT).map_err(|_| stopped())?
+    }
+}
+
+fn stopped() -> Reason {
+    crate::savegame::error(CORE_STOPPED)
 }
 
 /// Figures of the tick for the performance display and the measurement
@@ -283,6 +338,14 @@ impl Runner {
         let _ = self.input.send(Input::Content(content));
     }
 
+    /// Handle for saving and loading from another thread.
+    #[must_use]
+    pub fn save_link(&self) -> SaveLink {
+        SaveLink {
+            input: self.input.clone(),
+        }
+    }
+
     /// Takes the events published so far, of all sessions.
     #[must_use]
     pub fn take_events(&self) -> Vec<EventRecord> {
@@ -355,8 +418,15 @@ fn status_of(sim: &Simulation, measured: Measured) -> Status {
     }
 }
 
-/// Applies one input; returns `false` on stop.
-fn apply(sim: &mut Simulation, input: Input, shared: &Mutex<Shared>) -> bool {
+/// What the driver does after an input.
+enum Applied {
+    Continue,
+    Load(Box<LoadedGame>, Sender<Result<(), Reason>>),
+    Stop,
+}
+
+/// Applies one input; loading is left to the driver.
+fn apply(sim: &mut Simulation, input: Input, shared: &Mutex<Shared>) -> Applied {
     match input {
         Input::Command {
             session,
@@ -370,9 +440,82 @@ fn apply(sim: &mut Simulation, input: Input, shared: &Mutex<Shared>) -> bool {
             lock(shared).events.clear();
         }
         Input::Content(content) => sim.set_next_content(content),
-        Input::Stop => return false,
+        Input::Snapshot(reply) => {
+            let _ = reply.send(sim.save_snapshot());
+        }
+        Input::Load(game, reply) => return Applied::Load(game, reply),
+        Input::Stop => return Applied::Stop,
     }
-    true
+    Applied::Continue
+}
+
+/// Result of [`apply_all`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Flow {
+    /// Go on; `loaded` if a save game was loaded (successfully or not),
+    /// which took real time the pacer must not catch up on.
+    Run {
+        loaded: bool,
+    },
+    Stop,
+}
+
+/// Applies the inputs waiting in `inbox` after `first`.
+fn apply_all(
+    sim: &mut Simulation,
+    first: Input,
+    inbox: &Receiver<Input>,
+    back: &mut Snapshot,
+    shared: &Mutex<Shared>,
+) -> Flow {
+    let mut loaded = false;
+    let mut next = Some(first);
+    while let Some(input) = next.take().or_else(|| inbox.try_recv().ok()) {
+        match apply(sim, input, shared) {
+            Applied::Continue => {}
+            Applied::Stop => return Flow::Stop,
+            Applied::Load(game, reply) => {
+                loaded = true;
+                if !load_game(sim, *game, &reply, inbox, back, shared) {
+                    return Flow::Stop;
+                }
+            }
+        }
+    }
+    Flow::Run { loaded }
+}
+
+/// Loads a save game (S-5): the state reads `loading` while the flow
+/// fields in use are computed; inputs that arrived meanwhile are applied
+/// afterwards, their commands answered with `notReady` (a successful load
+/// discards them as commands of the old session). Returns `false` on stop.
+fn load_game(
+    sim: &mut Simulation,
+    game: LoadedGame,
+    reply: &Sender<Result<(), Reason>>,
+    inbox: &Receiver<Input>,
+    back: &mut Snapshot,
+    shared: &Mutex<Shared>,
+) -> bool {
+    sim.begin_loading();
+    lock(shared).status.state = CoreState::Loading;
+    let result = sim.load_game(game);
+    let mut running = true;
+    while let Ok(input) = inbox.try_recv() {
+        match apply(sim, input, shared) {
+            Applied::Continue => {}
+            Applied::Stop => running = false,
+            Applied::Load(_, other) => {
+                let _ = other.send(Err(crate::savegame::error("busy")));
+            }
+        }
+    }
+    sim.reject_waiting();
+    sim.end_loading();
+    // Published first: whoever gets the answer sees the new status.
+    publish(sim, back, shared, Measured::default());
+    let _ = reply.send(result);
+    running
 }
 
 fn drive(mut sim: Simulation, inbox: &Receiver<Input>, shared: &Arc<Mutex<Shared>>) {
@@ -390,16 +533,17 @@ fn drive(mut sim: Simulation, inbox: &Receiver<Input>, shared: &Arc<Mutex<Shared
     loop {
         let wait = pacer.until_next().unwrap_or(IDLE_WAIT).min(IDLE_WAIT);
         match inbox.recv_timeout(wait) {
-            Ok(input) => {
-                if !apply(&mut sim, input, shared) {
-                    return;
+            Ok(input) => match apply_all(&mut sim, input, inbox, &mut back, shared) {
+                Flow::Stop => return,
+                Flow::Run { loaded: true } => {
+                    // The load took real time; the loaded game starts afresh.
+                    paced = sim.speed();
+                    pacer = Pacer::new(paced);
+                    lag = LagMonitor::new();
+                    last = Instant::now();
                 }
-                while let Ok(input) = inbox.try_recv() {
-                    if !apply(&mut sim, input, shared) {
-                        return;
-                    }
-                }
-            }
+                Flow::Run { loaded: false } => {}
+            },
             Err(RecvTimeoutError::Timeout) => {}
             Err(RecvTimeoutError::Disconnected) => return,
         }
@@ -716,6 +860,99 @@ mod tests {
         );
         assert_eq!(runner.status().state, CoreState::Ready);
         runner.stop().unwrap();
+    }
+
+    fn save_request() -> crate::savegame::SaveRequest {
+        crate::savegame::SaveRequest {
+            name: "Test".into(),
+            kind: crate::savegame::SaveKind::Manual,
+            saved_at: "2026-10-19T12:00:00Z".into(),
+            preview: Vec::new(),
+        }
+    }
+
+    fn limits() -> crate::savegame::Limits {
+        crate::savegame::Limits { map_edges: &[64] }
+    }
+
+    #[test]
+    fn save_link_saves_and_loads_a_new_session() {
+        let runner = runner();
+        let link = runner.save_link();
+        let mut seen = Vec::new();
+        runner.command(1, 1, Command::SetSpeed { speed: Speed::X3 });
+        wait_for(&runner, &mut seen, |_, status| status.tick >= 20);
+        let snapshot = link.snapshot().unwrap();
+        assert!(snapshot.tick() >= 20);
+        let bytes = snapshot.encode(&save_request(), "", "0.0.0").unwrap();
+        let game = crate::savegame::decode(&bytes, &limits()).unwrap();
+        link.load(game).unwrap();
+        let status = runner.status();
+        assert_eq!((status.session, status.state), (2, CoreState::Ready));
+        // The saved speed goes on; the tick continues from the saved one.
+        assert_eq!(status.speed, Speed::X3);
+        assert!(status.tick >= snapshot.tick());
+        let mut fresh = Vec::new();
+        runner.command(
+            2,
+            1,
+            Command::SetSpeed {
+                speed: Speed::Paused,
+            },
+        );
+        wait_for(&runner, &mut fresh, answered(1));
+        runner.stop().unwrap();
+    }
+
+    #[test]
+    fn a_failed_load_keeps_the_session() {
+        let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../content/base");
+        let folders = crate::datapack::discover(Some(&base), None);
+        let loaded = crate::datapack::load(&folders, &[], &crate::datapack::game_version());
+        let config = SimulationConfig {
+            map: MapSize::new(64, 64).unwrap(),
+            threads: 1,
+            background_threads: 1,
+            adoption: AdoptionMode::WhenReady,
+            persons: 10,
+            seed: 3,
+            start_tick: 0,
+        };
+        let with_base = Runner::start_with_content(
+            config,
+            World::open_hall(config.map, 10, 3),
+            Arc::new(loaded.catalog),
+        )
+        .unwrap();
+        let bytes = with_base
+            .save_link()
+            .snapshot()
+            .unwrap()
+            .encode(&save_request(), "", "0.0.0")
+            .unwrap();
+        with_base.stop().unwrap();
+
+        // Without the base pack the game cannot be loaded (`packMissing`).
+        let runner = runner();
+        let game = crate::savegame::decode(&bytes, &limits()).unwrap();
+        let reason = runner.save_link().load(game).unwrap_err();
+        assert_eq!(reason.code, "packMissing");
+        let status = runner.status();
+        assert_eq!((status.session, status.state), (1, CoreState::Ready));
+        let mut seen = Vec::new();
+        runner.command(1, 1, Command::SetSpeed { speed: Speed::X1 });
+        wait_for(&runner, &mut seen, answered(1));
+        runner.stop().unwrap();
+    }
+
+    #[test]
+    fn a_stopped_runner_answers_the_link_with_core_stopped() {
+        let runner = runner();
+        let link = runner.save_link();
+        runner.stop().unwrap();
+        let reason = link.snapshot().err().unwrap();
+        assert_eq!(reason.code, CORE_STOPPED);
+        assert_eq!(reason.text_key, "save.error.coreStopped");
     }
 
     #[test]

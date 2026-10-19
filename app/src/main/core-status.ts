@@ -3,11 +3,16 @@
  *
  * The utility process (core-host.ts) reports once after start-up whether the
  * native bridge module could be loaded, together with the found data packs,
- * and answers requests to change the active packs (step 2.4). Messages cross
- * a process boundary and are therefore validated instead of trusted.
+ * and answers requests to change the active packs (step 2.4) and to save,
+ * load and read save games (step 2.5); it also says when an autosave is
+ * due. Messages cross a process boundary and are therefore validated
+ * instead of trusted.
  */
 import type { PackReport } from "../generated/PackReport.js";
+import type { Reason } from "../generated/Reason.js";
+import type { SaveKind } from "../generated/SaveKind.js";
 import { parseActiveIds, parsePackReports } from "./packs.js";
+import { parseReason } from "./platform-error.js";
 
 /** Identification of the loaded core (mirrors `CoreInfo` in bridge/src/lib.rs). */
 export interface CoreInfo {
@@ -20,14 +25,53 @@ export type CoreHostMessage =
   | { readonly type: "ready"; readonly info: CoreInfo; readonly packs: PackReport[] }
   | { readonly type: "error"; readonly message: string }
   | { readonly type: "packs"; readonly request: number; readonly packs: PackReport[] }
-  | { readonly type: "packsError"; readonly request: number; readonly message: string };
+  | { readonly type: "packsError"; readonly request: number; readonly message: string }
+  | SavesAnswer
+  | { readonly type: "autosave" };
+
+/** Answer of the core host to a {@link SavesRequest}; `value` is checked by the caller. */
+export type SavesAnswer =
+  | {
+      readonly type: "savesAnswer";
+      readonly request: number;
+      readonly ok: true;
+      readonly value: unknown;
+    }
+  | {
+      readonly type: "savesAnswer";
+      readonly request: number;
+      readonly ok: false;
+      readonly error: Reason;
+    };
+
+/** One file for the save game list: its start and its full length. */
+export interface InfoFile {
+  readonly prefix: Uint8Array;
+  readonly size: number;
+}
+
+/** Request of the main process to the core host for save games (S-6 `saves.*`). */
+export type SavesRequest =
+  | {
+      readonly type: "saves:save";
+      readonly request: number;
+      readonly name: string;
+      readonly kind: SaveKind;
+      readonly savedAt: string;
+      readonly preview: Uint8Array;
+    }
+  | { readonly type: "saves:load"; readonly request: number; readonly bytes: Uint8Array }
+  | { readonly type: "saves:info"; readonly request: number; readonly files: readonly InfoFile[] }
+  | { readonly type: "saves:checkPreview"; readonly request: number; readonly png: Uint8Array };
 
 /** Message as posted by the core host (reports straight from the bridge). */
 export type CoreHostOutgoing =
   | { readonly type: "ready"; readonly info: CoreInfo; readonly packs: unknown }
   | { readonly type: "error"; readonly message: string }
   | { readonly type: "packs"; readonly request: number; readonly packs: unknown }
-  | { readonly type: "packsError"; readonly request: number; readonly message: string };
+  | { readonly type: "packsError"; readonly request: number; readonly message: string }
+  | SavesAnswer
+  | { readonly type: "autosave" };
 
 /**
  * Request of the main process to the core host (S-6 `packs.setActive`).
@@ -88,7 +132,81 @@ export function parseCoreHostMessage(value: unknown): CoreHostMessage | undefine
   if (value.type === "error" && typeof value.message === "string") {
     return { type: "error", message: value.message };
   }
+  if (value.type === "autosave") {
+    return { type: "autosave" };
+  }
+  if (value.type === "savesAnswer" && isRequestNumber(value.request)) {
+    if (value.ok === true) {
+      return { type: "savesAnswer", request: value.request, ok: true, value: value.value };
+    }
+    const error = parseReason(value.error);
+    if (value.ok === false && error !== undefined) {
+      return { type: "savesAnswer", request: value.request, ok: false, error };
+    }
+  }
   return undefined;
+}
+
+function isBytes(value: unknown): value is Uint8Array {
+  return value instanceof Uint8Array;
+}
+
+/** Most files in one `saves:info` request. */
+export const MAX_INFO_FILES = 1000;
+
+/**
+ * Request number of a message that claims to be a save game request, even
+ * an invalid one: the core host answers it with `invalidArgument` instead
+ * of leaving the main process to its time limit.
+ */
+export function savesRequestNumber(value: unknown): number | undefined {
+  return isRecord(value) &&
+    typeof value.type === "string" &&
+    value.type.startsWith("saves:") &&
+    isRequestNumber(value.request)
+    ? value.request
+    : undefined;
+}
+
+/** Validates a save game request of the main process in the core host. */
+export function parseSavesRequest(value: unknown): SavesRequest | undefined {
+  if (!isRecord(value) || !isRequestNumber(value.request)) return undefined;
+  const request = value.request;
+  switch (value.type) {
+    case "saves:save":
+      return typeof value.name === "string" &&
+        (value.kind === "manual" || value.kind === "quick" || value.kind === "auto") &&
+        typeof value.savedAt === "string" &&
+        isBytes(value.preview)
+        ? {
+            type: "saves:save",
+            request,
+            name: value.name,
+            kind: value.kind,
+            savedAt: value.savedAt,
+            preview: value.preview,
+          }
+        : undefined;
+    case "saves:load":
+      return isBytes(value.bytes) ? { type: "saves:load", request, bytes: value.bytes } : undefined;
+    case "saves:checkPreview":
+      return isBytes(value.png)
+        ? { type: "saves:checkPreview", request, png: value.png }
+        : undefined;
+    case "saves:info": {
+      if (!Array.isArray(value.files) || value.files.length > MAX_INFO_FILES) return undefined;
+      const files: InfoFile[] = [];
+      for (const file of value.files as unknown[]) {
+        if (!isRecord(file) || !isBytes(file.prefix) || !isRequestNumber(file.size)) {
+          return undefined;
+        }
+        files.push({ prefix: file.prefix, size: file.size });
+      }
+      return { type: "saves:info", request, files };
+    }
+    default:
+      return undefined;
+  }
 }
 
 function isRequestNumber(value: unknown): value is number {
@@ -98,6 +216,11 @@ function isRequestNumber(value: unknown): value is number {
 /** Whether `value` claims to answer a pack request, valid or not. */
 export function isPackAnswer(value: unknown): boolean {
   return isRecord(value) && (value.type === "packs" || value.type === "packsError");
+}
+
+/** Whether `value` claims to answer a save game request, valid or not. */
+export function isSavesAnswer(value: unknown): boolean {
+  return isRecord(value) && value.type === "savesAnswer";
 }
 
 /** Validates a request of the main process in the core host. */
@@ -118,7 +241,7 @@ export function parsePackRequest(
  */
 export function nextCoreStatus(raw: unknown): CoreStatus {
   const message = parseCoreHostMessage(raw);
-  if (message === undefined || message.type === "packs" || message.type === "packsError") {
+  if (message === undefined || (message.type !== "ready" && message.type !== "error")) {
     return { state: "failed", reason: "unexpected message from core host" };
   }
   if (message.type === "ready") {

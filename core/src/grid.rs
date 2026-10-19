@@ -160,6 +160,30 @@ impl Block {
         usize::from(self.walkable)
     }
 
+    /// Block from the three cell fields of a save game; `None` if a cell
+    /// carries an unknown flag, an unknown zone or a cost out of range.
+    pub(crate) fn from_fields(
+        flags: [u8; BLOCK_CELLS],
+        zone: [u8; BLOCK_CELLS],
+        cost: [u8; BLOCK_CELLS],
+    ) -> Option<Self> {
+        let valid = (0..BLOCK_CELLS).all(|i| {
+            flags[i] & !(WALL | STAIRS) == 0
+                && zone[i] <= Zone::Exit as u8
+                && (1..=MAX_COST).contains(&cost[i])
+        });
+        if !valid {
+            return None;
+        }
+        let walkable = flags.iter().filter(|f| *f & WALL == 0).count();
+        Some(Self {
+            flags,
+            zone,
+            cost,
+            walkable: u16::try_from(walkable).ok()?,
+        })
+    }
+
     fn cell(&self, local: usize) -> Cell {
         Cell {
             flags: self.flags[local],
@@ -223,6 +247,33 @@ impl GridSnapshot {
     pub fn table_len(&self) -> usize {
         self.table.len()
     }
+
+    /// The shared blocks of the table, for save games (S-5).
+    pub(crate) fn entries(&self) -> &[Option<Arc<Block>>] {
+        &self.table
+    }
+
+    /// Snapshot of `map` from a block table of a save game; `None` if the
+    /// table length does not fit the map or a ground floor block is
+    /// missing.
+    pub(crate) fn from_entries(map: MapSize, table: Vec<Option<Arc<Block>>>) -> Option<Self> {
+        let blocks_x = usize::from(map.width).div_ceil(BLOCK);
+        let blocks_y = usize::from(map.height).div_ceil(BLOCK);
+        let per_floor = blocks_x * blocks_y;
+        if table.len() != per_floor * FLOORS {
+            return None;
+        }
+        let ground = &table[GROUND_INDEX * per_floor..(GROUND_INDEX + 1) * per_floor];
+        if ground.iter().any(Option::is_none) {
+            return None;
+        }
+        Some(Self {
+            map,
+            blocks_x,
+            blocks_y,
+            table,
+        })
+    }
 }
 
 /// The world grid with change counter.
@@ -253,6 +304,16 @@ impl Grid {
             },
             version: 0,
             stored: per_floor,
+        }
+    }
+
+    /// Grid of a save game with its change counter.
+    pub(crate) fn from_snapshot(snapshot: GridSnapshot, version: u32) -> Self {
+        let stored = snapshot.table.iter().filter(|b| b.is_some()).count();
+        Self {
+            snapshot,
+            version,
+            stored,
         }
     }
 

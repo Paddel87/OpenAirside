@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-18 (Session ab 22:09 UTC, Ende 23:27 UTC)
+- **Stand vom:** 2026-10-19 (Session ab 11:02 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (2.4 erledigt am 2026-10-18)
-- **Nächster Schritt:** 2.5 (Spielstand mit Autosave), zuerst Freigabe von Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3; Entscheidungs-Klasse), dabei Maßnahme (7): Vertragssätze S-5/S-6 vor dem Code gegen den Plan prüfen
-- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-026 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion" zu ADR-025 und ADR-026, beide vom Projektinhaber am 2026-10-18 zur Kenntnis genommen)
+- **Aktiver Schritt:** keiner; 2.5 (Spielstand mit Autosave) ERLEDIGT am 2026-10-19 (CI-Lauf 39253155836 grün), Branch `feat/2-5-spielstand-mit-autosave` gepusht, kein PR (PR nur auf Anweisung)
+- **Nächster Schritt:** PR für 2.5 nach `main` (auf Anweisung), danach 2.6 (Lokalisierung)
+- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-030 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion“; Kenntnisnahme zu ADR-029 und ADR-030 offen)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -268,7 +268,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.5: Spielstand mit Autosave
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT 2026-10-19 (ADR-027, ADR-028, ADR-029, ADR-030); CI-Lauf 39253155836 auf `a4fff12` grün auf drei Plattformen (17 Jobs)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.7, 2.9
 - **Freigabepflichtig:** ja, für Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3, ADR-021)
@@ -277,9 +277,24 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Anforderungen (ab Klasse M):** FR-004
 - **Zu tun:** Fehlerform aller S-6-Aufrufe nach Vertrag (`{ code, textKey, params }`; Electron überträgt bei abgewiesenen Aufrufen nur den Meldungstext), bestehende Aufrufe `measure.*` und `packs.*` nachziehen (Befund 9 der getrennten Prüfung 2.4); Spielstand-Container nach S-5 (ADR-021) mit Grenzen, Prüfreihenfolge und Fehlerkatalog; Höchstzahlen für Objekte, Personen und Fahrzeuge als Konstanten; Speichern und Laden über S-6 (`saves.*`); `logs.write` und `logs.openFolder` mit Rotation (S-6, aus 2.7); Schnellspeichern, Autosave mit Rotation (1–20), Vorschaubild; fehlendes Paket: Laden verweigern mit Liste; Laden validiert und meldet Fehler verständlich.
 - **Akzeptanzkriterien:** `core/tests/savegame_roundtrip.rs` grün: identische Prüfsumme nach Laden, auch während einer laufenden Neuberechnung der Wegweiser; manipulierter Spielstand führt zu einer Meldung statt zum Absturz.
-- **Betroffene Module:** Takt & Weltzustand, Plattform
+- **Betroffene Module:** Takt & Weltzustand, Plattform; in 2.5a zusätzlich Welt & Bau (Hilfen in `grid`/`network`), Wegfindung & Passagierführung (`FieldSet` behält ihre Eingabe) und Inhalte & Mods (aktive Pakete im Katalog) – nur interne Hilfen ohne neue Verantwortung, nachgetragen am 2026-10-19, Abweichung nach Stopp-Kriterium 5 vom Projektinhaber zur Kenntnis genommen; 2.5b zusätzlich Brücke, Oberfläche und Spielfeld (Konsole, Liste)
 - **Reifegrad-Wirkung:** S-5 durch Umsetzung bestätigt
 - **Artefakte:** Spielstand-Code, Tests
+- **Zwischenstand Stufe 2.5a (2026-10-19, Entscheidungs-Klasse; Routine-Arbeit oberhalb der Empfehlung):** Kern umgesetzt in `07188d5`: `core/src/savegame/` (Container, Grenzen, Prüfreihenfolge, Fehlerkatalog, `read_info` für die Liste), `Simulation::save_snapshot` und `Simulation::load_game` (Pakete gegen den Inhalt der nächsten Sitzung, aktive Wegweiser aus ihrer gespeicherten Eingabe, laufende Neuberechnung mit Revision und Übernahme-Tick), `FieldSet` behält ihre Eingabe, Katalog mit aktiven Paketen (`ActivePack`), Befehlsprüfung gegen die Karte der Welt statt der Einstellung (geladene Spielstände dürfen eine andere Kartengröße haben). Erzeugte Typen `SaveKind`, `SaveMeta`, `SavedPack`. Tests: `core/tests/savegame_roundtrip.rs` 10 Fälle (Zustands-Prüfsumme gleich nach Laden, auch während einer Neuberechnung im Prüfmodus mit bitgleicher Fortsetzung und im normalen Spiel; fehlgeschlagenes Laden lässt die Sitzung unverändert; `packMissing`, `packVersionMismatch`; Liste ohne Weltzustand; beschädigte und manipulierte Dateien in der Reihenfolge des Vertrags, 300 zufällige Byte-Änderungen ohne Absturz; Kartengrößen 1536/2048; Prüfung der Anfrage), 4 Unit-Tests der Invarianten in `core/src/savegame/state.rs`; Kern 128 Unit-Tests. Coverage Kern 98,49 % Lines (`savegame/container.rs` 93,8 %, `state.rs` 97,5 %, `mod.rs` 97,5 %). Gates lokal grün: rustfmt, clippy `-D warnings`, cargo-deny, `check:types`, `check:schema`, tsc, Pre-Commit-Hooks. Offen: 2.5b (Plattform).
+- **Abschluss (2026-10-19, Entscheidungs-Klasse):** Akzeptanzkriterien erfüllt – `core/tests/savegame_roundtrip.rs` grün (gleiche Zustands-Prüfsumme nach Laden, auch während einer Neuberechnung; manipulierte Spielstände führen zu einer Meldung statt zum Absturz). Getrennte Prüfung (Sonnet 5.5) mit 12 Befunden, keiner hoch; Erledigung in [`docs/research/2.5-getrennte-pruefung.md`](research/2.5-getrennte-pruefung.md) (`a6763e9`), Befund 5 per ADR-030 entschieden (Grenzen 512 MB, `ad16a93`). Nach den Korrekturen: TypeScript 300 Tests, Coverage 90,5 % Lines; Rauchtest zusätzlich mit Link auf `/dev/zero` und FIFO im Spielstand-Ordner (beide „beschädigt“, Laden abgewiesen). S-5 durch Umsetzung bestätigt, FR-004 erledigt. Landeplätze: Autosave-Intervall und -Zahl einstellbar 2.6; Flughafenname 5.1; Spielmenü 5.1; Nachmessung der Grenzen 4.1. Nicht Ende-zu-Ende belegt bleibt der 10-Minuten-Takt des Autosaves (Unit-Test).
+- **Zwischenstand Stufe 2.5b (2026-10-19, Entscheidungs-Klasse; Routine-Arbeit oberhalb der Empfehlung):** umgesetzt in `2997f0d` (Kern: `SaveLink` im Takt-Thread, `Simulation::reject_waiting`, Prüfung des Vorschaubilds öffentlich), `6c971c8` (Brücke: `saveGame`/`loadGame` als `AsyncTask`, `saveInfo`, `checkPreview`, `running` im Status), `a8e43b9` (Plattform: Fehlerform aller S-6-Aufrufe über die Antwort-Hülle, auch `measure.*` und `packs.*`; `saves.*` mit `saves.preview`; `logs.*`; Autosave; `onCoreExit` mit `restarting`, ADR-029), `cb6e554` (Konsole `saves`/`save`/`quicksave`/`load`/`delete`, F5, einfache Liste mit `blob:`-Vorschau, Hinweis nach Absturz, Rauchtest). Fund beim Testen und behoben: Die Antwort auf das Laden ging vor dem Veröffentlichen des neuen Status hinaus (Test `a_failed_load_keeps_the_session` rot in 3 von 15 Läufen, danach 25 von 25 grün). Tests: Kern 128 Unit-Tests (neu: 3 im Takt, 1 in `simulation`), `core/tests/savegame_roundtrip.rs` 10 Fälle; Coverage Kern 98,42 % Lines (`runner.rs` 97,8 %); TypeScript 293 Tests, Coverage 90,2 % Lines (`app/src/main/saves.ts` 100 %, `logs.ts` 100 %, `platform-error.ts` 100 %, `app/renderer/saves.ts` 100 %; `app/renderer/saves-panel.ts` nur über den Rauchtest, DOM ohne Unit-Test-Umgebung). Rauchtest (dreimal grün im Container): Speichern, F5, Autosave-Rotation über `kind: "auto"`, Liste mit Vorschau 480 px als `blob:`-URL, Laden in neue Sitzung, Löschen, Fehlercodes `unknownSave`/`invalidArgument`, Logdatei mit maskierten Zeilen; **erzwungener Absturz** (Kern-Prozess per `SIGKILL`): Angebot erscheint, „Load last autosave“ lädt `auto-1`; nach drei Neustarts in 60 s Hinweis auf die Logdatei, Logzeile „no further restart“. Nicht Ende-zu-Ende belegt: der 10-Minuten-Takt des Autosaves (Unit-Test `AutosaveClock`, im Rauchtest zu lang). Gates lokal grün: rustfmt, clippy `-D warnings`, cargo-deny, `check:types`, `check:schema`, ESLint, Prettier, tsc. Offen: getrennte Prüfung (Kategorie 6), CI-Lauf.
+- **Abgleich vor Stufe 2.5b (2026-10-19 11:06 UTC, Maßnahmen 7 und 8; Entscheidungs-Klasse):**
+  - **Freigabe (Projektinhaber 2026-10-19 per Auswahl):** Abweichung A (ADR-029), Festlegungen (a)–(l) ja.
+  - **Abweichung, vorgelegt:** S-6 „Absturz des Kerns“ verlangt das Angebot „letzten Autosave laden“ nach einem Neustart und nach dem dritten Absturz in 60 s stattdessen eine Fehlermeldung mit Verweis auf die Logdatei. `onCoreExit(callback)` liefert nur den Code; die Oberfläche kann beide Fälle nicht unterscheiden (Maßnahme 8: S-6 setzt eine Information voraus, die S-6 selbst nicht liefert). Optionen: A zweites Argument `restarting` (additiv, eigener ADR, nach der 14-Tage-Regel `[REAKTIV]`); B die Oberfläche zählt Abstürze selbst nach derselben Regel (`restartDecision`), ohne Vertragsänderung, ungenau nach Neuladen des Fensters.
+  - **Ohne Abweichung, zur Kenntnis:** (a) CSP enthält `img-src 'self' data: blob:` schon seit 2.7; 2.5b ändert sie nicht und belegt sie mit einem Test. (b) Autosave nach 10 Minuten Echtzeit bei laufendem Spiel (nicht pausiert), gezählt im Kern-Prozess, neu ab jeder Sitzung; fällig während einer anderen Operation → nach ihr. (c) Dateien `<ID>.oasave` im Ordner `saves` des Datenordners: Schnellspeichern ein Platz `quick` (Taste F5 und Konsole), Autosave Plätze `auto-1` … `auto-5` (überschreibt den ältesten), manuell `m-<Zufall>`; IDs vergibt der Hauptprozess. (d) Eintrag der Liste: ID mit Metadaten oder Zustand „beschädigt“ mit Fehler. (e) Unbekannte oder ungültige ID → `invalidArgument` (kein neuer Code) – korrigiert bei der Anlage von ADR-029: ADR-028 legt für gut geformte, unbekannte IDs schon `unknownSave` fest; es gilt ADR-028. (f) `busy` gilt für alle `saves.*` und `packs.setActive` gemeinsam, wörtlich nach S-6. (g) Fehler des Hauptprozesses mit Textschlüssel `platform.error.<code>`, Fehler des Kerns unverändert (`save.error.<code>`); `measure.*`: `alreadyRunning`, `notStarted`, `notAnObject`, `tooLarge`; fremder Absender `untrustedSender`. (h) Vorschaubild per `capturePage`, 480 Pixel breit, PNG; geprüft vom Kern wie beim Laden. (i) Laden liest höchstens 1 GB (Größe vor dem Lesen geprüft). (j) Befehle während des Ladens werden mit `notReady` abgelehnt (der Takt arbeitet die während des Ladens eingegangenen Befehle danach im Zustand `loading` ab; bei Erfolg gehören sie zur alten Sitzung und werden verworfen). (k) Logdatei `logs/openairside.log` im Datenordner, Rotation 5 × 10 MB, Stufen `debug`/`info`/`warn`/`error` (Releases ab `info`); Warnungen des Hauptprozesses gehen ebenfalls hinein, ohne Pfade. (l) Kodieren und Prüfen des Spielstands in der Brücke als napi `AsyncTask` außerhalb des JavaScript-Threads (in napi 3.12.7 enthalten, keine neue Abhängigkeit).
+  - **„Betroffene Module“ gegen den geplanten Code:** Takt & Weltzustand (`core/src/runner.rs`: Speichern und Laden im Takt-Thread; `core/src/savegame/`: Prüfung des Vorschaubilds öffentlich), Brücke (`bridge/src/lib.rs`), Plattform (`app/src/main/`: Hauptprozess, Preload, Kern-Prozess, neue Dateien für Spielstände und Logs), Spielfeld (Konsole in `app/renderer/console.ts`, `main.ts`), Oberfläche (einfache Liste, Angebot nach Absturz). Keine weiteren Module; `app/renderer/measure.ts` (Benchmark & Leistung) bleibt unberührt, die Fehleranzeige liegt in `main.ts`.
+- **Vorlage zur Freigabe (2026-10-19, Entscheidungs-Klasse; freigegeben: A, ADR-027; Abgleich (1)–(9) und Aufteilung ja, ADR-028):**
+  - Kategorie 3, Versionen belegt auf crates.io am 2026-10-19 (Regel-001), Probeaufbau in einer Kopie des Workspace mit `cargo deny check` grün: A `postcard =1.1.3` (ohne Standard-Features, `use-std`) für den Weltzustand, `miniz_oxide =0.9.1` (Deflate, `forbid(unsafe_code)`) für den Weltzustand-Abschnitt, Datei-Prüfsumme FNV-1a 64 aus `core/src/hash.rs` (keine Abhängigkeit); neu im Lockfile `postcard`, `cobs` 0.3.0, `miniz_oxide`, `adler2` (dazu `embedded-io` 0.4/0.6 nur als Lockfile-Eintrag, nicht gebaut); alle MIT oder Apache-2.0 bzw. Zlib/0BSD. B wie A mit `zstd =0.14.2` (libzstd 1.5.7 in C) statt `miniz_oxide`. C nur `postcard`, ohne Kompression. Empfehlung A.
+  - Nicht vorgeschlagen: `bincode` (RUSTSEC-2025-0141, nicht mehr gepflegt), `lz4_flex` (RUSTSEC-2026-0041 im Entpacker, März 2026), `ruzstd` (RUSTSEC-2026-0344 Dekompressionsbombe, behoben vor 8 Tagen), `rmp-serde` und `ciborium` (selbstbeschreibend und größer; `ciborium` zuletzt 2024-01), JSON für den Weltzustand (zu groß und langsam für das Raster).
+  - Messung im Container (4 vCPU, Release-Build), Raster des Referenz-Terminals 768² × 5 in Welt 2048²: 4.988 Blöcke, 15,4 MB als postcard, Schreiben 23 ms, Lesen 23 ms; Deflate Stufe 6: 59 KB, Packen 33 ms, Entpacken 19 ms; zstd Stufe 3: 24 KB, 6 ms / 10 ms; FNV-1a 64 über 15 MB 21 ms (über die gepackte Datei unter 1 ms). Das synthetische Terminal ist sehr gleichförmig; echte Flughäfen packen schlechter.
+  - Abgleich mit S-5/S-6 (Maßnahme 7): (1) Den Container (Kopf, Metadaten als JSON mit `serde_json`, Vorschaubild, Weltzustand, Prüfsumme) baut und prüft der Kern (`core/src/savegame/`); der Hauptprozess liefert das Vorschaubild, schreibt die Datei und reicht sie beim Laden und für die Liste (Kopf und Metadaten, höchstens 64 KB) an den Kern. (2) Neu und additiv: `saves.preview(id)` → PNG-Bytes für die `blob:`-URL der Liste (S-6 nennt nur `list`/`save`/`load`/`delete`, die Liste liefert keine Bilder). (3) „Flughafenname“ gibt es im Weltzustand noch nicht: Feld bleibt leer bis 5.1 (META-02). (4) Autosave-Intervall und -Anzahl („einstellbar“): in 2.5 feste Werte (alle 10 Minuten laufender Spielzeit, 5 Dateien), einstellbar mit `settings.*` in 2.6. (5) Ältere Spielstände vor 1.0 werden mit `migrationFailed` abgewiesen (kein eigener Code). (6) Die Liste prüft nur Kopf und Metadaten; Schäden im Rest meldet erst das Laden (`checksumMismatch`). (7) Höchstzahlen: Personen 200.000 (`MAX_PERSONS`), Objekte 1.000.000 (wirksam ab 3.1), Fahrzeuge 50.000 (wirksam ab 3.4). (8) Oberfläche in 2.5 minimal: Konsolenbefehle und eine einfache Spielstand-Liste mit Vorschau, Angebot „letzten Autosave laden“ nach Absturz des Kerns; das Spielmenü folgt in 5.1. (9) Fehlerform `{ code, textKey, params }` für alle S-6-Aufrufe über eine Antwort-Hülle im IPC, auch `measure.*` und `packs.*`.
+  - Aufteilung in zwei Stufen (zählt als ein Schritt): 2.5a Kern (Weltzustand, Container, Grenzen, Prüfreihenfolge, Fehlerkatalog, `core/tests/savegame_roundtrip.rs`); 2.5b Plattform (Fehlerform, `saves.*`, `logs.*`, Autosave, Schnellspeichern, Vorschaubild, CSP `img-src blob:`, Liste, Rauchtest). Getrennte Prüfung am Ende (Kategorie 6: CSP, `logs.openFolder`, nicht vertrauenswürdige Dateien).
+  - Klassifikation: ADR-027 (Bibliotheken) füllt den in ADR-021 offen gelassenen Punkt und ist `[OPERATIV]`; die Ergänzung (2) ändert S-6 aus ADR-021 (6 Tage alt) und wird vorsichtshalber als eigener ADR-028 `[REAKTIV]` geführt. Reaktiv-Quote danach 5 / 10 (ADR-019 bis ADR-028).
 
 #### 2.6: Lokalisierung
 
@@ -290,7 +305,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – klar spezifizierte Umsetzung; Entscheidung nur für eine neue Abhängigkeit.
 - **Eingangskriterien:** Oberfläche startet (2.7)
 - **Anforderungen (ab Klasse M):** FR-006
-- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7); Schema der Inhaltsart `lang/` in Datenpaketen nach S-4 (Landeplatz aus 2.4, ADR-025).
+- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7); Autosave-Intervall und Zahl der Autosave-Dateien 1–20 als Einstellungen (aus 2.5, dort feste Werte: 10 Minuten laufender Spielzeit, 5 Dateien; META-10); Schema der Inhaltsart `lang/` in Datenpaketen nach S-4 (Landeplatz aus 2.4, ADR-025).
 - **Akzeptanzkriterien:** `app/i18n.test.ts` grün; ein Sprachpaket aus dem Ordner wird erkannt.
 - **Betroffene Module:** Lokalisierung, Oberfläche
 - **Reifegrad-Wirkung:** Modul Lokalisierung → `[BELASTBAR]`
@@ -320,10 +335,10 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
 | 3.7 | **Vor 3.1:** Entwurfsschritt (Phasentyp-Kontext ERKUNDUNG) „Personengruppen, Begehbarkeit und Querungen“: Gruppen aus dem Inventar (PAX-*, PAX-09, STAFF-01, SHOP-03, BAU-03; offen: Crew, Einweiser) mit Begehbarkeit je Gruppe einschließlich Personalzonen (ZON-02); Personal auf dem Vorfeld (nur per Fahrzeug, Stellplatzfläche begehbar oder beides, jeweils mit Erklärung bei Unerreichbarkeit; TURN-03, GEP-06, GATE-06); Bauarbeiter und laufende Bahnen; Querungen und Sperrung von Betriebsstraßen beim Walk-out-Boarding (MOD-13); Messung, wie Personal neben den Wegweisern geführt wird; Ergebnis ADR in Ergänzung von ADR-020 (Kategorie 1 und 4) | FR-018 (vorbereitend) |
-| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7); Bewegung der Bauarbeiter nach 3.7 | FR-010, FR-011 |
+| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7); Bewegung der Bauarbeiter nach 3.7; Objekte im Weltzustand und Spielstand mit der Höchstzahl `MAX_OBJECTS` (aus 2.5) | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
 | 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
-| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); Schema der Inhaltsart `vehicles/` in Datenpaketen (aus 2.4, ADR-025); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
+| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); Fahrzeuge im Spielstand mit der Höchstzahl `MAX_VEHICLES` (aus 2.5); Schema der Inhaltsart `vehicles/` in Datenpaketen (aus 2.4, ADR-025); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
 | 3.5 | Abfertigung und Gepäck in Grundform; Wege des Vorfeldpersonals nach 3.7 | FR-025, FR-032 |
 | 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform; Schema der Inhaltsarten `aircraft/` und `airlines/` in Datenpaketen (aus 2.4, ADR-025) | FR-030, FR-036, FR-039, FR-044 (Airline und Flugzeugtyp aus dem Mod-Ordner) |
 
@@ -333,7 +348,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 4.1 | Referenzszenario baubar, Leistungstest als CI-Gate; Messung auf echter 8-Kern-Hardware (Auflage ADR-014) | FR-040 |
+| 4.1 | Referenzszenario baubar, Leistungstest als CI-Gate; Messung auf echter 8-Kern-Hardware (Auflage ADR-014); Größe des Weltzustands im Spielstand messen und die Grenzen von S-5 (512 MB, ADR-030) prüfen | FR-040 |
 | 4.2 | Coverage auf Mindestwerte, Langzeittest, erste Funktionsgleichheits-Prüfung der umgesetzten Inventar-IDs | – |
 
 ### Phase 5: Ausbau in die Breite – Typ: UMSETZUNG
@@ -342,7 +357,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 5.1 | Spielstart vollständig: Standort, Kartengröße, Sandbox, Einstellungen | FR-001, FR-002, FR-005 |
+| 5.1 | Spielstart vollständig: Standort, Kartengröße, Sandbox, Einstellungen; Flughafenname im Weltzustand und in den Spielstand-Metadaten (META-02, Feld leer seit 2.5); Spielmenü mit Speichern, Laden und Spielstand-Liste (ersetzt die einfache Liste aus 2.5) | FR-001, FR-002, FR-005 |
 | 5.2 | Etagen, Zonen (international), Bauen vollständig | FR-010, FR-012 |
 | 5.3 | Landseite: Parken, ÖPNV, Kreuzungen mit wählbarer Vorfahrt | FR-013, FR-015 |
 | 5.4 | Terminal vollständig: moderner Check-in, Kontrollspuren, Grenze, Läden, Info | FR-019 bis FR-024 |
@@ -385,7 +400,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Wahl neuer Linien ist eine Entscheidung über externe Abhängigkeiten.
 - **Eingangskriterien:** Vorlauf im Ablaufdaten-Register erreicht
 - **Anforderungen (ab Klasse M):** FR-045
-- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge, abgekündigte Unterpakete von electron-builder (Register-Eintrag vom 2026-10-13), benannte Ausnahme `syn@2.0.119` in `deny.toml` (ts-rs auf syn 3 umgestellt?, Warnungs-Bestand); Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
+- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge, abgekündigte Unterpakete von electron-builder (Register-Eintrag vom 2026-10-13), Audit-Befund „moderate“ sprintf-js über electron-builder (GHSA-hp3w-g68c-fv3c, Warnungs-Bestand seit 2026-10-19), benannte Ausnahme `syn@2.0.119` in `deny.toml` (ts-rs auf syn 3 umgestellt?, Warnungs-Bestand); Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
 - **Akzeptanzkriterien:** Keine fixierte Version ist über ihrem Lebensende; Register und `Verifiziert`-Vermerke aktuell; CI grün auf drei Plattformen.
 - **Betroffene Module:** Plattform, Build/CI
 - **Reifegrad-Wirkung:** keine
@@ -488,6 +503,41 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Maßnahme (7):** Vor der Umsetzung eines Schritts, der einen Vertrag umsetzt, listet die KI die Sätze des Vertrags zu den berührten Funktionen und prüft jeden gegen ihren Plan; eine Abweichung wird vor dem Code vorgelegt, nicht danach. Ergänzend zu Maßnahme (6): Eine Vertragsregel, die mehrere Arten von Objekten betrifft, nennt ihre Begründung je Art.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-027 bis ADR-028, 3 / 10 ab ADR-029, 2 / 10 (Schwellenwert eingehalten) ab ADR-030.
 - **Kenntnisnahme:** Projektinhaber am 2026-10-18: „Reflexionen zur Kenntnis genommen"; kein Umbau, Maßnahme (7) gilt.
+
+---
+
+### Ergänzung Reaktiv-Quote (2026-10-19, Anlass ADR-028)
+
+- **Befund:** 5 / 10 `[REAKTIV]` über ADR-019 bis ADR-028 (ADR-019, ADR-020, ADR-025, ADR-026, ADR-028), 50 %; gleichbleibend (ADR-017 fällt heraus, ADR-028 kommt hinzu; ADR-027 ist `[OPERATIV]`).
+- **Ursache von ADR-028:** formal die 14-Tage-Regel (ergänzt S-6 aus ADR-021 nach sechs Tagen); inhaltlich eine Lücke im Vertrag aus 2.9: S-5 verlangt Vorschaubilder in der Liste, S-6 enthält keinen Aufruf, der sie liefert. Gefunden vor dem Code durch Maßnahme (7) – die Maßnahme wirkt: Die Abweichung kam als Vorlage, nicht als Befund der getrennten Prüfung.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI). Eine additive Funktion nach dem bestehenden Muster; keine Modulgrenze, kein Datenformat.
+- **Muster:** Verträge aus 2.9 wurden je Schnittstelle geschrieben, aber nicht gegeneinander gelesen (S-5 setzt etwas voraus, das S-6 nicht anbietet).
+- **Maßnahme (8):** Beim Abgleich nach Maßnahme (7) prüft die KI zusätzlich jeden Satz eines Vertrags, der eine andere Schnittstelle voraussetzt, gegen deren Text.
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-029, 3 / 10 ab ADR-030, 2 / 10 (Schwellenwert eingehalten) ab ADR-035 (ADR-025 fällt erst mit ADR-035 aus dem Fenster).
+- **Kenntnisnahme:** Projektinhaber am 2026-10-19: „Zur Kenntnis genommen, Reflexion und Abweichung“; kein Umbau, Maßnahme (8) gilt.
+
+---
+
+### Ergänzung Reaktiv-Quote (2026-10-19, Anlass ADR-029)
+
+- **Befund:** 5 / 10 `[REAKTIV]` über ADR-020 bis ADR-029 (ADR-020, ADR-025, ADR-026, ADR-028, ADR-029), 50 %; gleichbleibend (ADR-019 fällt heraus, ADR-029 kommt hinzu).
+- **Ursache von ADR-029:** dasselbe Muster wie bei ADR-028 – ein Satz in S-6 („Absturz des Kerns“) setzt eine Angabe voraus, die die Funktionsliste von S-6 nicht liefert. Gefunden vor dem Code durch Maßnahme (8); die Maßnahme wirkt.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): ein zusätzliches Argument eines bestehenden Ereignisses, keine Modulgrenze, kein Datenformat.
+- **Eigener Fehler beim Abgleich:** Punkt (e) widersprach ADR-028 (`unknownSave`); bemerkt beim Schreiben von ADR-029, vor dem Code. Lehre: Beim Abgleich auch die ADRs desselben Schritts gegen die eigenen Festlegungen lesen.
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-030, 2 / 10 (Schwellenwert eingehalten) ab ADR-036.
+- **Kenntnisnahme:** offen.
+
+---
+
+### Ergänzung Reaktiv-Quote (2026-10-19, Anlass ADR-030)
+
+- **Befund:** 5 / 10 `[REAKTIV]` über ADR-021 bis ADR-030 (ADR-025, ADR-026, ADR-028, ADR-029, ADR-030), 50 %; gleichbleibend (ADR-020 fällt heraus).
+- **Ursache von ADR-030:** Die Grenzen von S-5 aus 2.9 waren ohne Messung der Größe echter Spielstände gewählt (1 GB Datei, 2 GB ausgepackt); erst die getrennte Prüfung zeigte die Speicherverstärkung durch eine kleine präparierte Datei. Kein Fehler der Architektur, sondern eine zu großzügig geschätzte Konstante im Vertrag.
+- **Muster:** Wie bei 2.4 (Befund 1, Dateizahl) findet die getrennte Prüfung Grenzen, die zwar vertragsgemäß, aber nicht an gemessene Größen angelehnt sind.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): zwei Konstanten, Nachmessung in 4.1 eingeplant.
+- **Maßnahme (9):** Neue Obergrenzen in Verträgen nennen künftig die Messung oder Schätzung, aus der sie stammen, und den Schritt, der sie nachmisst.
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs bleibt der Wert 5 / 10 bis ADR-034; 4 / 10 ab ADR-035, 3 / 10 ab ADR-036, 2 / 10 (Schwellenwert eingehalten) ab ADR-038. Der Ausblick zu ADR-029 ist damit überholt.
+- **Kenntnisnahme:** offen.
 
 ---
 

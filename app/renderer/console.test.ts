@@ -202,3 +202,26 @@ describe("packs", () => {
     expect(basePackLoaded([])).toBe(false);
   });
 });
+
+describe("save game commands (step 2.5)", () => {
+  it.each([
+    ["saves", { kind: "saves" }],
+    ["save", { kind: "save", name: "", saveKind: "manual" }],
+    ["save  Mein Flughafen ", { kind: "save", name: "Mein Flughafen", saveKind: "manual" }],
+    ["quicksave", { kind: "save", name: "", saveKind: "quick" }],
+    ["load auto-1", { kind: "load", id: "auto-1" }],
+    ["delete m-0011223344556677", { kind: "deleteSave", id: "m-0011223344556677" }],
+  ])("%s", (line, expected) => {
+    expect(parseConsoleLine(line)).toEqual(expected);
+  });
+
+  it.each([
+    ["saves x", "saves"],
+    [`save ${"x".repeat(65)}`, "save [name up to 64 characters]"],
+    ["load", "load <id>"],
+    ["load ../x", "load <id>"],
+    ["delete a b", "delete <id>"],
+  ])("refuses %s", (line, text) => {
+    expect(parseConsoleLine(line)).toEqual({ kind: "error", text });
+  });
+});

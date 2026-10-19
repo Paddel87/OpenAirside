@@ -1,4 +1,14 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { _electron as electron, expect, test } from "@playwright/test";
@@ -7,7 +17,8 @@ import { _electron as electron, expect, test } from "@playwright/test";
 // the utility process reports a loaded napi module (ADR-009, ADR-018). Since
 // step 2.7 also: handshake over the MessagePort, frames (S-1), commands (S-2)
 // with answers (S-3) and the platform API S-6; since step 2.4 the base data
-// pack (S-4) and `packs.*` (S-6).
+// pack (S-4) and `packs.*` (S-6); since step 2.5 save games (S-5, `saves.*`),
+// the log file (`logs.*`) and the error form `{ code, textKey, params }`.
 const packaged = process.env.OPENAIRSIDE_E2E_EXECUTABLE;
 // Linux runners and containers cannot start the Chromium OS sandbox without a
 // SUID helper; same pattern as the spike builds. Linux sandbox: roadmap step 7.2.
@@ -91,10 +102,15 @@ test("window opens and core reports ready", async () => {
         await api?.measure.report({});
         return "accepted";
       } catch (error) {
-        return String(error);
+        return error;
       }
     });
-    expect(refused).toContain("notStarted");
+    // Error form of S-6: a plain object with code, text key and parameters.
+    expect(refused).toEqual({
+      code: "notStarted",
+      textKey: "platform.error.notStarted",
+      params: {},
+    });
 
     // Data packs (step 2.4): the base pack is part of the build and loads.
     await expect(root).toHaveAttribute("data-base-pack", "loaded", { timeout: 20_000 });
@@ -111,16 +127,16 @@ test("window opens and core reports ready", async () => {
       ).openairside;
       if (api === undefined) return undefined;
       const list = await api.packs.list();
-      let refused = "accepted";
+      let refused: unknown = "accepted";
       try {
         await api.packs.setActive(["not-installed"]);
       } catch (error) {
-        refused = String(error);
+        refused = (error as { code?: unknown }).code;
       }
       return { base: list.find((p) => p.id === "base"), refused };
     });
     expect(packs?.base).toMatchObject({ state: "active", entries: 3 });
-    expect(packs?.refused).toContain("unknownPack");
+    expect(packs?.refused).toBe("unknownPack");
 
     // Console commands reach the core and take effect in the frames (S-2, S-3, FR-009).
     const input = window.locator("#console-input");
@@ -147,9 +163,146 @@ test("window opens and core reports ready", async () => {
     await input.press("Enter");
     await expect(window.locator("#log")).toContainText("speed paused|x1|x2|x3");
 
+    // Save games (S-5, step 2.5): save, list with preview, load into a new session.
+    const consoleLog = window.locator("#log");
+    await input.fill("save Rauchtest");
+    await input.press("Enter");
+    await expect(consoleLog).toContainText(/saved m-[0-9a-f]{16}/, { timeout: 20_000 });
+    await window.keyboard.press("F5");
+    await expect(consoleLog).toContainText("saved quick", { timeout: 20_000 });
+    const saves = await window.evaluate(async () => {
+      interface Entry {
+        id: string;
+        state: string;
+        meta?: { name: string; kind: string; tick: number };
+      }
+      const api = (
+        globalThis as {
+          openairside?: {
+            saves: {
+              list(): Promise<Entry[]>;
+              save(r: { name: string; kind: string }): Promise<{ id: string }>;
+              preview(id: string): Promise<ArrayBuffer>;
+              load(id: string): Promise<unknown>;
+              delete(id: string): Promise<null>;
+            };
+            logs: { write(level: string, message: string): Promise<null> };
+          };
+        }
+      ).openairside;
+      if (api === undefined) return undefined;
+      const auto = await api.saves.save({ name: "", kind: "auto" });
+      const list = await api.saves.list();
+      const manual = list.find((e) => e.meta?.name === "Rauchtest");
+      const png = new Uint8Array(await api.saves.preview(manual?.id ?? ""));
+      const codeOf = async (run: () => Promise<unknown>): Promise<unknown> => {
+        try {
+          await run();
+          return "accepted";
+        } catch (error) {
+          return (error as { code?: unknown }).code;
+        }
+      };
+      await api.logs.write("info", "smoke test\nsecond line");
+      return {
+        auto: auto.id,
+        ids: list.map((e) => e.id).sort(),
+        manual,
+        pngSignature: [...png.subarray(0, 4)],
+        unknown: await codeOf(() => api.saves.load("auto-9")),
+        invalid: await codeOf(() => api.saves.load("../x")),
+        badName: await codeOf(() => api.saves.save({ name: "a\u0000b", kind: "manual" })),
+        badLevel: await codeOf(() => api.logs.write("loud", "x")),
+      };
+    });
+    expect(saves?.auto).toBe("auto-1");
+    expect(saves?.ids).toEqual(["auto-1", saves?.manual?.id, "quick"].sort());
+    expect(saves?.manual).toMatchObject({ state: "ok", meta: { kind: "manual" } });
+    // PNG signature: the preview image was taken from the window.
+    expect(saves?.pngSignature).toEqual([0x89, 0x50, 0x4e, 0x47]);
+    expect(saves?.unknown).toBe("unknownSave");
+    expect(saves?.invalid).toBe("invalidArgument");
+    expect(saves?.badName).toBe("invalidArgument");
+    expect(saves?.badLevel).toBe("invalidArgument");
+    // The list with previews as blob: URLs (CSP img-src blob:).
+    await input.fill("saves");
+    await input.press("Enter");
+    await expect(consoleLog).toContainText("saves: 3");
+    const panel = window.locator("#saves");
+    await expect(panel).toBeVisible();
+    await expect(panel.locator(`li[data-id="${saves?.manual?.id ?? ""}"] img`)).toHaveAttribute(
+      "src",
+      /^blob:/,
+    );
+    const shown = await panel
+      .locator(`li[data-id="${saves?.manual?.id ?? ""}"] img`)
+      .evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth);
+    expect(shown).toBe(480);
+    await panel.getByRole("button", { name: "Close" }).click();
+    await expect(panel).toBeHidden();
+    // Loading starts a new session with the saved tick.
+    await input.fill(`load ${saves?.manual?.id ?? ""}`);
+    await input.press("Enter");
+    await expect(consoleLog).toContainText(`loaded ${saves?.manual?.id ?? ""}`, {
+      timeout: 30_000,
+    });
+    await expect(root).toHaveAttribute("data-session", "2", { timeout: 20_000 });
+    await input.fill(`delete ${saves?.manual?.id ?? ""}`);
+    await input.press("Enter");
+    await expect(consoleLog).toContainText(`deleted ${saves?.manual?.id ?? ""}`);
+    // Files: ids as names, no leftover temporary files; log lines stay single lines.
+    expect(readdirSync(path.join(userData, "saves")).sort()).toEqual([
+      "auto-1.oasave",
+      "quick.oasave",
+    ]);
+    const logText = readFileSync(path.join(userData, "logs", "openairside.log"), "utf8");
+    expect(logText).toContain("INFO renderer smoke test\\nsecond line");
+    expect(logText).toContain("saved manual game");
+    expect(existsSync(path.join(userData, "logs"))).toBe(true);
+    // Special files in the save game folder are refused, not read (separate
+    // review of 2.5b, finding 4): a link to /dev/zero and a FIFO.
+    if (process.platform !== "win32") {
+      const savesFolder = path.join(userData, "saves");
+      symlinkSync("/dev/zero", path.join(savesFolder, "auto-3.oasave"));
+      execFileSync("mkfifo", [path.join(savesFolder, "auto-4.oasave")]);
+      const special = await window.evaluate(async () => {
+        const api = (
+          globalThis as {
+            openairside?: {
+              saves: {
+                list(): Promise<{ id: string; state: string; error?: { code: string } }[]>;
+                load(id: string): Promise<unknown>;
+              };
+            };
+          }
+        ).openairside;
+        if (api === undefined) return undefined;
+        const list = await api.saves.list();
+        let load: unknown = "accepted";
+        try {
+          await api.saves.load("auto-3");
+        } catch (error) {
+          load = (error as { code?: unknown }).code;
+        }
+        return {
+          damaged: list
+            .filter((e) => e.state === "damaged")
+            .map((e) => `${e.id}:${e.error?.code ?? ""}`)
+            .sort(),
+          load,
+        };
+      });
+      expect(special).toEqual({
+        damaged: ["auto-3:invalidState", "auto-4:invalidState"],
+        load: "invalidState",
+      });
+      rmSync(path.join(savesFolder, "auto-3.oasave"));
+      rmSync(path.join(savesFolder, "auto-4.oasave"));
+    }
+
     // Reloading the page hands over a fresh port and starts a new session (S-6).
     await window.reload();
-    await expect(window.locator("#root")).toHaveAttribute("data-session", "2", { timeout: 20_000 });
+    await expect(window.locator("#root")).toHaveAttribute("data-session", "3", { timeout: 20_000 });
 
     // An object from the pack folder in the game (FR-044, step 2.4): unknown
     // until the pack is chosen, buildable from the next session on.
@@ -163,10 +316,51 @@ test("window opens and core reports ready", async () => {
     await expect(log).toContainText("active user kiosks 1.0.0 – 1 entries");
     await command.fill("scenario hall");
     await command.press("Enter");
-    await expect(root).toHaveAttribute("data-session", "3", { timeout: 20_000 });
+    await expect(root).toHaveAttribute("data-session", "4", { timeout: 20_000 });
     await command.fill("build kiosks:kiosk 10 10");
     await command.press("Enter");
     await expect(log).toContainText("#1 ok");
+
+    // Crash of the core (S-6, ADR-029), forced: the platform restarts it and
+    // the interface offers the last autosave; after the third restart within
+    // 60 s it points to the log file instead.
+    const killed = new Set<number>();
+    const killCore = async (): Promise<void> => {
+      // Waits for a started core process that was not killed yet.
+      let pid: number | undefined;
+      await expect
+        .poll(
+          async () => {
+            const found = await app.evaluate(({ app: electronApp }) => ({
+              state: globalThis.openairsideCoreStatus.state,
+              pid: electronApp
+                .getAppMetrics()
+                .find((m) => m.serviceName === "OpenAirside Core" || m.name === "OpenAirside Core")
+                ?.pid,
+            }));
+            pid = found.pid;
+            return found.state === "ready" && pid !== undefined && !killed.has(pid);
+          },
+          { timeout: 20_000 },
+        )
+        .toBe(true);
+      killed.add(pid ?? 0);
+      process.kill(pid ?? 0, "SIGKILL");
+    };
+    const notice = window.locator("#notice");
+    await killCore();
+    await expect(notice).toContainText("Load the last autosave?", { timeout: 20_000 });
+    await expect(root).toHaveAttribute("data-session", "1", { timeout: 20_000 });
+    await notice.getByRole("button", { name: "Load last autosave" }).click();
+    await expect(log).toContainText("loaded auto-1", { timeout: 30_000 });
+    await expect(root).toHaveAttribute("data-session", "2", { timeout: 20_000 });
+    for (let n = 0; n < 3; n += 1) await killCore();
+    await expect(notice).toContainText("not restarted. Details are in the log file", {
+      timeout: 20_000,
+    });
+    await expect(notice.getByRole("button", { name: "Open log folder" })).toBeVisible();
+    const crashLog = readFileSync(path.join(userData, "logs", "openairside.log"), "utf8");
+    expect(crashLog).toContain("no further restart");
   } finally {
     await app.close();
     rmSync(userData, { recursive: true, force: true });

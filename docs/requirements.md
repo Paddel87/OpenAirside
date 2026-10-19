@@ -119,7 +119,7 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | FR-001 | Neues Spiel mit Standort, Name/IATA/Logo, Kartengröße, Schwierigkeit | UC-001 | Muss | META-01 bis META-04 und META-06/07 abgebildet | 5.1 | `core/tests/new_game.rs` | OFFEN |
 | FR-002 | Sandbox-Modus mit Regel-Schaltern | UC-001 | Muss | META-05, META-12 abgebildet; Sandbox deaktiviert Erfolge | 5.1 | `core/tests/sandbox.rs` | OFFEN |
 | FR-003 | Zeitsteuerung mit Pause, 1×–3×, Nachtsprung und Kalender | UC-010 | Muss | META-08, META-09; bei 3× kein Simulationsrückstand im Referenzszenario | 2.2, 4.1 | `core/tests/time.rs` | OFFEN (Zeitsteuerung, Nachtsprung und Kalender seit 2.2 im Kern; Rückstand im Referenzszenario misst 4.1) |
-| FR-004 | Spielstände: manuell, Schnellspeichern, Autosave mit Rotation, Vorschaubild | UC-014 | Muss | META-10; Laden ergibt identischen Zustand (Prüfsumme) | 2.5 | `core/tests/savegame_roundtrip.rs` | OFFEN |
+| FR-004 | Spielstände: manuell, Schnellspeichern, Autosave mit Rotation, Vorschaubild | UC-014 | Muss | META-10; Laden ergibt identischen Zustand (Prüfsumme) | 2.5 | `core/tests/savegame_roundtrip.rs`, `e2e/smoke.spec.ts` | ERLEDIGT 2026-10-19 (Intervall und Zahl der Autosaves einstellbar mit 2.6) |
 | FR-005 | Einstellungen: Einheiten, Währung, Uhr, Passagieranteil, Steuerung | UC-001 | Muss | META-11 abgebildet | 5.1 | `app/settings.test.ts` | OFFEN |
 | FR-006 | Oberfläche Deutsch und Englisch, weitere über Sprachpakete | UC-016 | Muss | Sprachwechsel ohne Neustart; Sprachpaket aus Ordner wird erkannt | 2.6 | `app/i18n.test.ts` | OFFEN |
 | FR-007 | Tutorial als Aufgabenkette | UC-013 | Muss | META-13; Einsteiger-Szenario durchspielbar | 5.6 | `e2e/tutorial.spec.ts` | OFFEN |

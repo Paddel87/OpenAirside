@@ -15,11 +15,24 @@ pub struct ObjectType {
     pub placement: Placement,
 }
 
+/// A pack whose content is in the catalog.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ActivePack {
+    /// Pack id from the manifest.
+    pub id: String,
+    /// Version of the pack (Semantic Versioning).
+    pub version: String,
+    /// Version of the pack format.
+    pub format: u32,
+}
+
 /// Content of all active packs. Sorted maps keep every iteration
 /// deterministic.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Catalog {
     objects: BTreeMap<String, ObjectType>,
+    /// Active packs in load order (S-5: named in the save game metadata).
+    packs: Vec<ActivePack>,
     /// Replaced full id → full id of the replacing entry.
     replaced: BTreeMap<String, String>,
     base_failed: bool,
@@ -59,6 +72,12 @@ impl Catalog {
         self.objects.keys().map(String::as_str)
     }
 
+    /// Active packs in load order.
+    #[must_use]
+    pub fn packs(&self) -> &[ActivePack] {
+        &self.packs
+    }
+
     /// The base pack of the game could not be loaded.
     #[must_use]
     pub fn base_failed(&self) -> bool {
@@ -81,6 +100,10 @@ impl Catalog {
 
     pub(super) fn replace(&mut self, target: String, by: String) {
         self.replaced.insert(target, by);
+    }
+
+    pub(super) fn add_pack(&mut self, pack: ActivePack) {
+        self.packs.push(pack);
     }
 
     pub(super) fn set_base_failed(&mut self, failed: bool) {

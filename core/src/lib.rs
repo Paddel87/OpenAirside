@@ -21,6 +21,7 @@ pub mod pacer;
 pub mod port;
 pub mod query;
 pub mod runner;
+pub mod savegame;
 pub mod scenario;
 pub mod simulation;
 pub mod target;

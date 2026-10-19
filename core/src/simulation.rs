@@ -17,9 +17,11 @@ use crate::command::{
 };
 use crate::datapack::Catalog;
 use crate::event::{Event, EventQueue, EventRecord, MAX_IN_FLIGHT, SpeedChangeReason};
-use crate::flowfield::FieldSet;
+use crate::flowfield::{FieldInput, FieldSet};
 use crate::geometry::MapSize;
 use crate::hash::StateHasher;
+use crate::network::NetworkKind;
+use crate::savegame::{self, LoadedGame, SaveSnapshot, SavedPack};
 use crate::text::{Params, Reason, Severity};
 use crate::time::{GameTime, Speed, TICKS_PER_DAY, Tick, is_day_start, is_night, next_morning};
 use crate::world::World;
@@ -142,6 +144,8 @@ pub struct Simulation {
     fields: Adoption<FieldSet>,
     /// Revision and time of the newest recompute request.
     recompute_started: Option<(u32, Instant)>,
+    /// Input of the open recompute request, kept for save games (S-5).
+    pending_input: Option<FieldInput>,
     last_recompute: Option<RecomputeStats>,
     /// Content of the loaded data packs (S-4) for this session.
     content: Arc<Catalog>,
@@ -198,6 +202,7 @@ impl Simulation {
             world,
             fields: Adoption::new(config.adoption),
             recompute_started: None,
+            pending_input: None,
             last_recompute: None,
             content: Arc::new(Catalog::empty()),
             next_content: None,
@@ -237,6 +242,12 @@ impl Simulation {
     /// loaded save game).
     pub fn restart_with_world(&mut self, mut world: World) {
         world.rebuild_fields_now(&self.background);
+        self.restart_with_world_prepared(world);
+    }
+
+    /// Like [`Simulation::restart_with_world`] for a world whose flow
+    /// fields are computed already.
+    fn restart_with_world_prepared(&mut self, world: World) {
         self.session = self.session.wrapping_add(1).max(1);
         self.state = CoreState::Ready;
         self.tick = self.config.start_tick;
@@ -249,10 +260,79 @@ impl Simulation {
         self.world = world;
         self.fields = Adoption::new(self.config.adoption);
         self.recompute_started = None;
+        self.pending_input = None;
         self.last_recompute = None;
         if let Some(content) = self.next_content.take() {
             self.content = content;
         }
+    }
+
+    /// State of the session for a save game, taken between two ticks;
+    /// cheap, the encoding ([`SaveSnapshot::encode`]) can run elsewhere.
+    #[must_use]
+    pub fn save_snapshot(&self) -> SaveSnapshot {
+        let fields = self.world.fields();
+        let grid = self.world.grid();
+        SaveSnapshot {
+            tick: self.tick,
+            speed: self.speed,
+            grid: grid.snapshot(),
+            grid_version: grid.version(),
+            targets: self.world.targets().to_vec(),
+            networks: NetworkKind::ALL
+                .iter()
+                .map(|&kind| self.world.network(kind).clone())
+                .collect(),
+            persons: self.world.saved_persons(),
+            fields_revision: fields.revision(),
+            fields: fields.source().clone(),
+            next_revision: self.fields.next_revision(),
+            pending: self
+                .fields
+                .pending()
+                .zip(self.pending_input.clone())
+                .map(|((revision, due), input)| (revision, due, input)),
+            packs: self
+                .content
+                .packs()
+                .iter()
+                .map(|p| SavedPack {
+                    id: p.id.clone(),
+                    version: p.version.clone(),
+                    format: p.format,
+                })
+                .collect(),
+        }
+    }
+
+    /// Starts a new session with a loaded save game (S-5): checks the data
+    /// packs against the content of the next session, computes the flow
+    /// fields in use and only then replaces the running session, which
+    /// stays unchanged if anything fails. A recomputation that was running
+    /// when the game was saved starts again in the background with its
+    /// revision and adoption tick.
+    ///
+    /// # Errors
+    ///
+    /// `packMissing` or `packVersionMismatch` with the pack ids in
+    /// `packs`, `invalidState` for a world that breaks an invariant.
+    pub fn load_game(&mut self, game: LoadedGame) -> Result<(), Reason> {
+        let content = Arc::clone(self.next_content.as_ref().unwrap_or(&self.content));
+        check_packs(&game.meta.packs, &content)?;
+        let (world, rest) = game.restored.into_world(&self.background)?;
+        self.restart_with_world_prepared(world);
+        self.tick = rest.tick;
+        self.speed = rest.speed;
+        self.fields = Adoption::resumed(self.config.adoption, rest.next_revision);
+        if let Some((revision, due, input)) = rest.pending {
+            self.pending_input = Some(input.clone());
+            self.fields
+                .resume_request(&self.background, revision, due, move |revision| {
+                    FieldSet::compute(&input, revision)
+                });
+            self.recompute_started = Some((revision, Instant::now()));
+        }
+        Ok(())
     }
 
     /// Current session number.
@@ -320,6 +400,22 @@ impl Simulation {
         self.state = CoreState::Loading;
     }
 
+    /// Answers every waiting command with `notReady`; used for commands
+    /// that arrived while a game was being loaded and the load failed
+    /// (S-5 "Laden ist atomar"), without computing a tick.
+    pub fn reject_waiting(&mut self) {
+        for (id, _) in std::mem::take(&mut self.inbox) {
+            self.events.push(
+                self.tick,
+                Event::CommandRejected {
+                    id,
+                    tick: self.tick,
+                    reason: rejection(code::NOT_READY),
+                },
+            );
+        }
+    }
+
     /// Ends loading; the session continues as before when loading failed.
     pub fn end_loading(&mut self) {
         self.state = CoreState::Ready;
@@ -380,6 +476,7 @@ impl Simulation {
     /// triggers it after every change.
     pub fn request_recompute(&mut self) -> u32 {
         let input = self.world.field_input();
+        self.pending_input = Some(input.clone());
         let revision = self
             .fields
             .request(&self.background, self.tick, move |revision| {
@@ -447,6 +544,7 @@ impl Simulation {
         }
 
         if let Some((revision, fields)) = self.fields.poll(self.tick) {
+            self.pending_input = None;
             // The old set holds large buffers; freeing them is left to a
             // background thread so that the tick is not delayed.
             let old = self.world.adopt_fields(fields);
@@ -515,7 +613,7 @@ impl Simulation {
         if self.state == CoreState::Loading {
             return Err(rejection(code::NOT_READY));
         }
-        command::validate(command, self.config.map)?;
+        command::validate(command, self.world.map())?;
         match command {
             Command::SetSpeed { speed } => {
                 if *speed != self.speed {
@@ -612,6 +710,33 @@ fn tick_limit_notice() -> Event {
     }
 }
 
+/// The packs of a save game against the active content (S-5 "Fehlende
+/// Datenpakete"): a pack must be active with the same major version.
+fn check_packs(saved: &[SavedPack], content: &Catalog) -> Result<(), Reason> {
+    let major = |v: &str| semver::Version::parse(v).ok().map(|v| v.major);
+    let mut missing = Vec::new();
+    let mut mismatched = Vec::new();
+    for pack in saved {
+        match content.packs().iter().find(|p| p.id == pack.id) {
+            None => missing.push(pack.id.as_str()),
+            Some(active) if major(&active.version) != major(&pack.version) => {
+                mismatched.push(pack.id.as_str());
+            }
+            Some(_) => {}
+        }
+    }
+    if !missing.is_empty() {
+        return Err(
+            savegame::error(savegame::code::PACK_MISSING).with_text("packs", &missing.join(", "))
+        );
+    }
+    if !mismatched.is_empty() {
+        return Err(savegame::error(savegame::code::PACK_VERSION_MISMATCH)
+            .with_text("packs", &mismatched.join(", ")));
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -635,6 +760,27 @@ mod tests {
             sim.ack(sim.session(), last.seq);
         }
         records.into_iter().map(|r| r.event).collect()
+    }
+
+    #[test]
+    fn commands_waiting_after_a_failed_load_are_rejected_without_a_tick() {
+        let mut sim = Simulation::new(config(0)).unwrap();
+        sim.submit(1, 1, Command::SetSpeed { speed: Speed::X1 });
+        sim.step();
+        let _ = events(&mut sim);
+        sim.begin_loading();
+        assert_eq!(sim.state(), CoreState::Loading);
+        sim.submit(1, 2, Command::SetSpeed { speed: Speed::X3 });
+        let tick = sim.tick();
+        sim.reject_waiting();
+        sim.end_loading();
+        assert_eq!(
+            (sim.tick(), sim.state(), sim.speed()),
+            (tick, CoreState::Ready, Speed::X1)
+        );
+        assert!(!sim.has_pending_commands());
+        assert!(events(&mut sim).iter().any(|e| matches!(e,
+            Event::CommandRejected { id: 2, reason, .. } if reason.code == code::NOT_READY)));
     }
 
     #[test]

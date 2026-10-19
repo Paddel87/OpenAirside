@@ -18,6 +18,10 @@ export type ConsoleResult =
   | { readonly kind: "measure"; readonly minutes: number }
   | { readonly kind: "packs" }
   | { readonly kind: "setPacks"; readonly ids: readonly string[] }
+  | { readonly kind: "saves" }
+  | { readonly kind: "save"; readonly name: string; readonly saveKind: "manual" | "quick" }
+  | { readonly kind: "load"; readonly id: string }
+  | { readonly kind: "deleteSave"; readonly id: string }
   | { readonly kind: "help"; readonly text: string }
   | { readonly kind: "error"; readonly text: string };
 
@@ -34,7 +38,15 @@ export const HELP = [
   `measure [minutes 1–${String(MAX_MINUTES)}] – measurement series, result as JSON file (default 10)`,
   "packs – data packs with state and errors",
   "packs set [ids…] – choose the active user packs in load order (next session)",
+  "saves – list of save games with previews",
+  "save [name] – save the game (name up to 64 characters)",
+  "quicksave – quick save (also F5)",
+  "load <id> – load a save game (ids from saves)",
+  "delete <id> – delete a save game",
 ].join("\n");
+
+/** Form of a save game id (as `isSaveId` in app/src/main/saves.ts). */
+const SAVE_ID = /^[a-z0-9-]{1,40}$/;
 
 /** Panel id of the console's table query. */
 export const CONSOLE_PANEL = 1;
@@ -156,6 +168,22 @@ export function parseConsoleLine(line: string): ConsoleResult {
         return error("packs | packs set [ids…]");
       }
       return { kind: "setPacks", ids };
+    }
+    case "saves":
+      return args.length === 0 ? { kind: "saves" } : error("saves");
+    case "save": {
+      const name = line.trim().slice("save".length).trim();
+      return Array.from(name).length > 64
+        ? error("save [name up to 64 characters]")
+        : { kind: "save", name, saveKind: "manual" };
+    }
+    case "quicksave":
+      return { kind: "save", name: "", saveKind: "quick" };
+    case "load":
+    case "delete": {
+      const [id] = args;
+      if (args.length !== 1 || id === undefined || !SAVE_ID.test(id)) return error(`${name} <id>`);
+      return name === "load" ? { kind: "load", id } : { kind: "deleteSave", id };
     }
     case "measure": {
       const minutes = args[0] === undefined ? 10 : integer(args[0]);
