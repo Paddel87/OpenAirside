@@ -17,12 +17,46 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 erledigt (ADR-024, Messung auf Mac und Referenz-PC 2026-10-15); 2.4 erledigt (ADR-025, ADR-026, 2026-10-18); 2.5 in Arbeit (ADR-027, ADR-028), Stufe 2.5a (Kern) fertig, nächste Stufe 2.5b (Plattform). Neuer Entwurfsschritt 3.7 vor 3.1. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 erledigt (ADR-024, Messung auf Mac und Referenz-PC 2026-10-15); 2.4 erledigt (ADR-025, ADR-026, 2026-10-18); 2.5 erledigt (ADR-027 bis ADR-030, 2026-10-19). Neuer Entwurfsschritt 3.7 vor 3.1. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-19 12:48 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 1 Stunde 46 Minuten seit `[SESSIONSTART]` 11:02 UTC; Neustart des Arbeitsprozesses zwischen Frage und Antwort (11:06–11:37), ohne Verlust.
+- **Bearbeitet:** Abgleich vor 2.5b (Maßnahmen 7, 8) mit Vorlage; ADR-029; Stufe 2.5b umgesetzt; getrennte Prüfung (Kategorie 6); Befunde behoben; ADR-030; Abschluss von 2.5.
+- **Erreicht:** 2.5 `[ERLEDIGT]` (CI-Lauf 39253155836 auf `a4fff12` grün, 17 Jobs, drei Plattformen); FR-004 erledigt; S-5 durch Umsetzung bestätigt. Commits `4813e7e` … `a4fff12` plus dieser Sessionende-Commit; Branch gepusht, kein PR.
+- **Offen geblieben:** PR für 2.5 nach `main` (nur auf Anweisung); Kenntnisnahme der Reflexionen zu ADR-029 und ADR-030; ungemergte fremde Branches wie im `[SESSIONENDE]` 2026-10-18 23:27 (Löschen nur auf Anweisung).
+- **Nächster Schritt:** PR für 2.5, danach 2.6 (Lokalisierung) in einer neuen Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 11:01 und 12:46 UTC). Freigaben (Auslöser 1) auf der Pflicht-Klasse; 2.5b als Routine-Arbeit: 1 Stufe oberhalb der Empfehlung (Warnung zu Beginn). Abgegeben: keine Teilarbeit (Probelauf offen); die getrennte Prüfung lief bewusst auf einem anderen Modell (Sonnet 5.5) als Prüfinstanz, nicht als Abgabe.
+- **Kontextgröße:** 408.755 Token laut `get_session` 12:46 UTC – **über der Grenze von 400.000**: die nächste Arbeit (PR, 2.6) in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed`, Zurücksetzen 2026-10-19 15:50 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf; Runner weiter auf Ubuntu 24.04 (Hinweis zur Umstellung in jedem Lauf). Neuer CI-Hinweis „Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times“ (3 je Lauf), ohne Wirkung auf das Ergebnis, keine Frist.
+- **Archivierung:** Logbuch erreicht 800 Zeilen (Trigger > 800 mit diesem Eintrag überschritten). Alle Einträge stammen aus dem laufenden Monat Oktober 2026; eine vorletzte Monats-Scheibe nach `CLAUDE.md` Abschnitt 14 gibt es nicht, auszulagern ist nichts. Die Verdichtung folgt mit dem `[PHASEN-WECHSEL]` nach Phase 2 (2.6 und 2.10 offen). Lücke der Methodik festgehalten: Der Zeilen-Trigger kann innerhalb eines Monats nicht greifen.
+- **Drift-Prüfung:** README nachgezogen (Phase, Architektur-Reife, Verwendung, Nächste Schritte). ADR-029 und ADR-030 verweisen auf vorhandene Schritte (2.5, 4.1). Reifegrade S-5, S-6 passen zu ADR-027 bis ADR-030. Modul-Liste: 2.5b berührte Takt & Weltzustand, Brücke, Plattform, Spielfeld (Konsole) und Oberfläche (Liste) – wie in „Betroffene Module“ geplant, keine Abweichung. FR-004 nennt 2.5, Status erledigt. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 5 / 10 (ADR-021 bis ADR-030) stimmt mit den Tags. Phase 2 weiter 10 Schritte (Plan 10). Größen: `project-context.md` 369 Zeilen.
+
+### 2026-10-19 12:40 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-030 `[REAKTIV]` – Grenzen des Spielstands 512 MB (Option A, Freigabe per Auswahl); Anlass Befund 5 der getrennten Prüfung. Reaktiv-Quote 5 / 10 (ADR-021 bis ADR-030), Reflexion mit Maßnahme (9) im Fahrplan, Kenntnisnahme offen.
+
+### 2026-10-19 12:30 (UTC) – [BEOBACHTUNG]
+
+- **Getrennte Prüfung 2.5b (Kategorie 6):** 2026-10-19 ab etwa 12:16 UTC (nach dem Push um 12:15), Dauer 9,5 Minuten laut Laufzeitumgebung; Prüfinstanz Sonnet 5.5 (Unteragent ohne Gesprächsverlauf, nur Diff `c43998f..cb6e554`, S-5, S-6, Sicherheitsregeln, Bedrohungsmodell). Ergebnis „Freigabe mit Auflagen“, 12 Befunde (5 mittel, 7 niedrig, keiner hoch); Fuzzing ohne Panik. Erledigung in `docs/research/2.5-getrennte-pruefung.md`: 1–4, 6–8, 10, 12 behoben (`a6763e9`), 5 per ADR-030 (`ad16a93`), 9 und 11 teilweise mit begründetem Restrisiko. Befunde 2 und 4 vor der Korrektur selbst nachgestellt (`Array.from` über 2·10⁷ Zeichen 309 ms; Link auf `/dev/zero`: Größe 0, keine reguläre Datei).
+
+### 2026-10-19 11:58 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** neuer Test `runner::tests::a_failed_load_keeps_the_session`.
+- **Symptom:** rot in 3 von 15 Läufen: Status nach fehlgeschlagenem Laden noch `loading`.
+- **Ursache:** Der Takt-Thread schickte die Antwort vor dem Veröffentlichen des neuen Status; der Aufrufer las den alten.
+- **Lösung:** erst veröffentlichen, dann antworten (`core/src/runner.rs`, `load_game`); danach 25 von 25 Läufen grün.
+- **Lerneffekt:** Tests mit Thread-Übergaben mehrfach hintereinander laufen lassen, bevor sie als grün gelten.
+
+### 2026-10-19 11:50 (UTC) – [BEOBACHTUNG]
+
+- **Rauchtest:** F5 wirkte nicht, solange der Fokus im Konsolenfeld lag (der Tastatur-Handler übergeht Eingaben im Feld). F5 gilt jetzt überall. Der erzwungene Absturz brauchte eine eigene Wartebedingung: Der Status blieb kurz `ready`, nachdem der Prozess schon beendet war, und die Messwerte nannten noch die alte PID.
 
 ### 2026-10-19 11:40 (UTC) – [ADR-ANGELEGT]
 

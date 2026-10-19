@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-19 (Session ab 01:54 UTC, Ende 02:45 UTC)
+- **Stand vom:** 2026-10-19 (Session ab 11:02 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.5 `[IN ARBEIT]` (Spielstand mit Autosave): Stufe 2.5a (Kern) umgesetzt (`07188d5`, CI-Lauf 39191152964 grün), Stufe 2.5b (Plattform) offen; freigegeben am 2026-10-19: ADR-027 (postcard, miniz_oxide, FNV-1a 64), ADR-028 (`saves.preview`)
-- **Nächster Schritt:** 2.5b (Plattform) in einer neuen Session: Fehlerform aller S-6-Aufrufe, `saves.*` mit `saves.preview`, `logs.*`, Autosave und Schnellspeichern, Vorschaubild, CSP `img-src blob:`, einfache Liste, Angebot nach Absturz des Kerns, Rauchtest; danach getrennte Prüfung (Kategorie 6) und Abschluss von 2.5; danach 2.6
-- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-028 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion“, zu ADR-028 vom Projektinhaber am 2026-10-19 zur Kenntnis genommen)
+- **Aktiver Schritt:** keiner; 2.5 (Spielstand mit Autosave) ERLEDIGT am 2026-10-19 (CI-Lauf 39253155836 grün), Branch `feat/2-5-spielstand-mit-autosave` gepusht, kein PR (PR nur auf Anweisung)
+- **Nächster Schritt:** PR für 2.5 nach `main` (auf Anweisung), danach 2.6 (Lokalisierung)
+- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-030 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion“; Kenntnisnahme zu ADR-029 und ADR-030 offen)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -268,7 +268,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.5: Spielstand mit Autosave
 
-- **Status:** IN ARBEIT seit 2026-10-19 – Stufe 2.5a (Kern) fertig, Stufe 2.5b (Plattform) in Arbeit; freigegeben: A (ADR-027), Abgleich und Aufteilung (ADR-028), `onCoreExit` mit `restarting` (ADR-029)
+- **Status:** ERLEDIGT 2026-10-19 (ADR-027, ADR-028, ADR-029, ADR-030); CI-Lauf 39253155836 auf `a4fff12` grün auf drei Plattformen (17 Jobs)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.7, 2.9
 - **Freigabepflichtig:** ja, für Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3, ADR-021)
@@ -281,6 +281,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** S-5 durch Umsetzung bestätigt
 - **Artefakte:** Spielstand-Code, Tests
 - **Zwischenstand Stufe 2.5a (2026-10-19, Entscheidungs-Klasse; Routine-Arbeit oberhalb der Empfehlung):** Kern umgesetzt in `07188d5`: `core/src/savegame/` (Container, Grenzen, Prüfreihenfolge, Fehlerkatalog, `read_info` für die Liste), `Simulation::save_snapshot` und `Simulation::load_game` (Pakete gegen den Inhalt der nächsten Sitzung, aktive Wegweiser aus ihrer gespeicherten Eingabe, laufende Neuberechnung mit Revision und Übernahme-Tick), `FieldSet` behält ihre Eingabe, Katalog mit aktiven Paketen (`ActivePack`), Befehlsprüfung gegen die Karte der Welt statt der Einstellung (geladene Spielstände dürfen eine andere Kartengröße haben). Erzeugte Typen `SaveKind`, `SaveMeta`, `SavedPack`. Tests: `core/tests/savegame_roundtrip.rs` 10 Fälle (Zustands-Prüfsumme gleich nach Laden, auch während einer Neuberechnung im Prüfmodus mit bitgleicher Fortsetzung und im normalen Spiel; fehlgeschlagenes Laden lässt die Sitzung unverändert; `packMissing`, `packVersionMismatch`; Liste ohne Weltzustand; beschädigte und manipulierte Dateien in der Reihenfolge des Vertrags, 300 zufällige Byte-Änderungen ohne Absturz; Kartengrößen 1536/2048; Prüfung der Anfrage), 4 Unit-Tests der Invarianten in `core/src/savegame/state.rs`; Kern 128 Unit-Tests. Coverage Kern 98,49 % Lines (`savegame/container.rs` 93,8 %, `state.rs` 97,5 %, `mod.rs` 97,5 %). Gates lokal grün: rustfmt, clippy `-D warnings`, cargo-deny, `check:types`, `check:schema`, tsc, Pre-Commit-Hooks. Offen: 2.5b (Plattform).
+- **Abschluss (2026-10-19, Entscheidungs-Klasse):** Akzeptanzkriterien erfüllt – `core/tests/savegame_roundtrip.rs` grün (gleiche Zustands-Prüfsumme nach Laden, auch während einer Neuberechnung; manipulierte Spielstände führen zu einer Meldung statt zum Absturz). Getrennte Prüfung (Sonnet 5.5) mit 12 Befunden, keiner hoch; Erledigung in [`docs/research/2.5-getrennte-pruefung.md`](research/2.5-getrennte-pruefung.md) (`a6763e9`), Befund 5 per ADR-030 entschieden (Grenzen 512 MB, `ad16a93`). Nach den Korrekturen: TypeScript 300 Tests, Coverage 90,5 % Lines; Rauchtest zusätzlich mit Link auf `/dev/zero` und FIFO im Spielstand-Ordner (beide „beschädigt“, Laden abgewiesen). S-5 durch Umsetzung bestätigt, FR-004 erledigt. Landeplätze: Autosave-Intervall und -Zahl einstellbar 2.6; Flughafenname 5.1; Spielmenü 5.1; Nachmessung der Grenzen 4.1. Nicht Ende-zu-Ende belegt bleibt der 10-Minuten-Takt des Autosaves (Unit-Test).
 - **Zwischenstand Stufe 2.5b (2026-10-19, Entscheidungs-Klasse; Routine-Arbeit oberhalb der Empfehlung):** umgesetzt in `2997f0d` (Kern: `SaveLink` im Takt-Thread, `Simulation::reject_waiting`, Prüfung des Vorschaubilds öffentlich), `6c971c8` (Brücke: `saveGame`/`loadGame` als `AsyncTask`, `saveInfo`, `checkPreview`, `running` im Status), `a8e43b9` (Plattform: Fehlerform aller S-6-Aufrufe über die Antwort-Hülle, auch `measure.*` und `packs.*`; `saves.*` mit `saves.preview`; `logs.*`; Autosave; `onCoreExit` mit `restarting`, ADR-029), `cb6e554` (Konsole `saves`/`save`/`quicksave`/`load`/`delete`, F5, einfache Liste mit `blob:`-Vorschau, Hinweis nach Absturz, Rauchtest). Fund beim Testen und behoben: Die Antwort auf das Laden ging vor dem Veröffentlichen des neuen Status hinaus (Test `a_failed_load_keeps_the_session` rot in 3 von 15 Läufen, danach 25 von 25 grün). Tests: Kern 128 Unit-Tests (neu: 3 im Takt, 1 in `simulation`), `core/tests/savegame_roundtrip.rs` 10 Fälle; Coverage Kern 98,42 % Lines (`runner.rs` 97,8 %); TypeScript 293 Tests, Coverage 90,2 % Lines (`app/src/main/saves.ts` 100 %, `logs.ts` 100 %, `platform-error.ts` 100 %, `app/renderer/saves.ts` 100 %; `app/renderer/saves-panel.ts` nur über den Rauchtest, DOM ohne Unit-Test-Umgebung). Rauchtest (dreimal grün im Container): Speichern, F5, Autosave-Rotation über `kind: "auto"`, Liste mit Vorschau 480 px als `blob:`-URL, Laden in neue Sitzung, Löschen, Fehlercodes `unknownSave`/`invalidArgument`, Logdatei mit maskierten Zeilen; **erzwungener Absturz** (Kern-Prozess per `SIGKILL`): Angebot erscheint, „Load last autosave“ lädt `auto-1`; nach drei Neustarts in 60 s Hinweis auf die Logdatei, Logzeile „no further restart“. Nicht Ende-zu-Ende belegt: der 10-Minuten-Takt des Autosaves (Unit-Test `AutosaveClock`, im Rauchtest zu lang). Gates lokal grün: rustfmt, clippy `-D warnings`, cargo-deny, `check:types`, `check:schema`, ESLint, Prettier, tsc. Offen: getrennte Prüfung (Kategorie 6), CI-Lauf.
 - **Abgleich vor Stufe 2.5b (2026-10-19 11:06 UTC, Maßnahmen 7 und 8; Entscheidungs-Klasse):**
   - **Freigabe (Projektinhaber 2026-10-19 per Auswahl):** Abweichung A (ADR-029), Festlegungen (a)–(l) ja.
@@ -524,6 +525,18 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): ein zusätzliches Argument eines bestehenden Ereignisses, keine Modulgrenze, kein Datenformat.
 - **Eigener Fehler beim Abgleich:** Punkt (e) widersprach ADR-028 (`unknownSave`); bemerkt beim Schreiben von ADR-029, vor dem Code. Lehre: Beim Abgleich auch die ADRs desselben Schritts gegen die eigenen Festlegungen lesen.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-030, 2 / 10 (Schwellenwert eingehalten) ab ADR-036.
+- **Kenntnisnahme:** offen.
+
+---
+
+### Ergänzung Reaktiv-Quote (2026-10-19, Anlass ADR-030)
+
+- **Befund:** 5 / 10 `[REAKTIV]` über ADR-021 bis ADR-030 (ADR-025, ADR-026, ADR-028, ADR-029, ADR-030), 50 %; gleichbleibend (ADR-020 fällt heraus).
+- **Ursache von ADR-030:** Die Grenzen von S-5 aus 2.9 waren ohne Messung der Größe echter Spielstände gewählt (1 GB Datei, 2 GB ausgepackt); erst die getrennte Prüfung zeigte die Speicherverstärkung durch eine kleine präparierte Datei. Kein Fehler der Architektur, sondern eine zu großzügig geschätzte Konstante im Vertrag.
+- **Muster:** Wie bei 2.4 (Befund 1, Dateizahl) findet die getrennte Prüfung Grenzen, die zwar vertragsgemäß, aber nicht an gemessene Größen angelehnt sind.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): zwei Konstanten, Nachmessung in 4.1 eingeplant.
+- **Maßnahme (9):** Neue Obergrenzen in Verträgen nennen künftig die Messung oder Schätzung, aus der sie stammen, und den Schritt, der sie nachmisst.
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs bleibt der Wert 5 / 10 bis ADR-034; 4 / 10 ab ADR-035, 3 / 10 ab ADR-036, 2 / 10 (Schwellenwert eingehalten) ab ADR-038. Der Ausblick zu ADR-029 ist damit überholt.
 - **Kenntnisnahme:** offen.
 
 ---
