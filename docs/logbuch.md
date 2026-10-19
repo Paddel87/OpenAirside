@@ -24,6 +24,13 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 02:10 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-027 `[OPERATIV]`:** Spielstand mit `postcard` 1.1.3, Deflate über `miniz_oxide` 0.9.1, Prüfsumme FNV-1a 64 aus dem Kern (Option A), freigegeben vom Projektinhaber per Auswahl.
+- **ADR-028 `[REAKTIV]`:** `saves.preview(id)` als additive S-6-Funktion; freigegeben mit dem Abgleich (1)–(9) und der Aufteilung in 2.5a/2.5b. Reaktiv-Quote 5 / 10 (ADR-019 bis ADR-028), Reflexion mit Maßnahme (8) im Fahrplan, Kenntnisnahme offen.
+- **Landeplätze nachgetragen:** Autosave-Einstellungen 2.6, `MAX_OBJECTS` 3.1, `MAX_VEHICLES` 3.4, Flughafenname und Spielmenü 5.1.
+- **Modell:** Entscheidungs-Klasse (`claude-opus-5-5`, `get_session` 01:54 UTC; Auslöser 1). 2.5a ist nach der Freigabe Routine-Arbeit: läuft oberhalb ihrer Empfehlung, Abgabe an einen Unteragenten nicht möglich (Probelauf offen).
+
 ### 2026-10-19 02:05 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt 2.5, Kategorie 3:** Serialisierungsformat, Kompression und Prüfsumme des Spielstands. Optionen A `postcard` + `miniz_oxide` + FNV-1a 64 aus dem Kern (Empfehlung), B wie A mit `zstd` (C), C nur `postcard` ohne Kompression. Belege, Messung und Abgleich mit S-5/S-6 (Maßnahme 7) im Fahrplan bei 2.5.

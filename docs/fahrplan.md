@@ -11,9 +11,9 @@
 - **Stand vom:** 2026-10-19 (Session ab 01:54 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.5 `[WARTET-AUF-FREIGABE]` (Spielstand mit Autosave): Vorlage zu Serialisierungsformat, Prüfsumme, Kompression und zum Abgleich mit S-5/S-6 (Maßnahme 7) vom 2026-10-19
-- **Nächster Schritt:** nach der Freigabe ADR-027 (und ggf. ADR-028), dann 2.5a (Kern)
-- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-026 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion" zu ADR-025 und ADR-026, beide vom Projektinhaber am 2026-10-18 zur Kenntnis genommen)
+- **Aktiver Schritt:** 2.5 `[IN ARBEIT]` (Spielstand mit Autosave), Stufe 2.5a (Kern); freigegeben am 2026-10-19: ADR-027 (postcard, miniz_oxide, FNV-1a 64), ADR-028 (`saves.preview`)
+- **Nächster Schritt:** 2.5b (Plattform), danach 2.6
+- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-028 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion“; zu ADR-028 Kenntnisnahme des Projektinhabers offen)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -268,7 +268,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.5: Spielstand mit Autosave
 
-- **Status:** WARTET-AUF-FREIGABE (Vorlage vom 2026-10-19, siehe unten)
+- **Status:** IN ARBEIT seit 2026-10-19 – Stufe 2.5a (Kern); freigegeben: A (ADR-027), Abgleich und Aufteilung (ADR-028)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.3, 2.7, 2.9
 - **Freigabepflichtig:** ja, für Serialisierungsformat, Prüfsumme und ggf. Kompression (Kategorie 3, ADR-021)
@@ -280,7 +280,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Takt & Weltzustand, Plattform
 - **Reifegrad-Wirkung:** S-5 durch Umsetzung bestätigt
 - **Artefakte:** Spielstand-Code, Tests
-- **Vorlage zur Freigabe (2026-10-19, Entscheidungs-Klasse):**
+- **Vorlage zur Freigabe (2026-10-19, Entscheidungs-Klasse; freigegeben: A, ADR-027; Abgleich (1)–(9) und Aufteilung ja, ADR-028):**
   - Kategorie 3, Versionen belegt auf crates.io am 2026-10-19 (Regel-001), Probeaufbau in einer Kopie des Workspace mit `cargo deny check` grün: A `postcard =1.1.3` (ohne Standard-Features, `use-std`) für den Weltzustand, `miniz_oxide =0.9.1` (Deflate, `forbid(unsafe_code)`) für den Weltzustand-Abschnitt, Datei-Prüfsumme FNV-1a 64 aus `core/src/hash.rs` (keine Abhängigkeit); neu im Lockfile `postcard`, `cobs` 0.3.0, `miniz_oxide`, `adler2` (dazu `embedded-io` 0.4/0.6 nur als Lockfile-Eintrag, nicht gebaut); alle MIT oder Apache-2.0 bzw. Zlib/0BSD. B wie A mit `zstd =0.14.2` (libzstd 1.5.7 in C) statt `miniz_oxide`. C nur `postcard`, ohne Kompression. Empfehlung A.
   - Nicht vorgeschlagen: `bincode` (RUSTSEC-2025-0141, nicht mehr gepflegt), `lz4_flex` (RUSTSEC-2026-0041 im Entpacker, März 2026), `ruzstd` (RUSTSEC-2026-0344 Dekompressionsbombe, behoben vor 8 Tagen), `rmp-serde` und `ciborium` (selbstbeschreibend und größer; `ciborium` zuletzt 2024-01), JSON für den Weltzustand (zu groß und langsam für das Raster).
   - Messung im Container (4 vCPU, Release-Build), Raster des Referenz-Terminals 768² × 5 in Welt 2048²: 4.988 Blöcke, 15,4 MB als postcard, Schreiben 23 ms, Lesen 23 ms; Deflate Stufe 6: 59 KB, Packen 33 ms, Entpacken 19 ms; zstd Stufe 3: 24 KB, 6 ms / 10 ms; FNV-1a 64 über 15 MB 21 ms (über die gepackte Datei unter 1 ms). Das synthetische Terminal ist sehr gleichförmig; echte Flughäfen packen schlechter.
@@ -297,7 +297,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – klar spezifizierte Umsetzung; Entscheidung nur für eine neue Abhängigkeit.
 - **Eingangskriterien:** Oberfläche startet (2.7)
 - **Anforderungen (ab Klasse M):** FR-006
-- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7); Schema der Inhaltsart `lang/` in Datenpaketen nach S-4 (Landeplatz aus 2.4, ADR-025).
+- **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7); Autosave-Intervall und Zahl der Autosave-Dateien 1–20 als Einstellungen (aus 2.5, dort feste Werte: 10 Minuten laufender Spielzeit, 5 Dateien; META-10); Schema der Inhaltsart `lang/` in Datenpaketen nach S-4 (Landeplatz aus 2.4, ADR-025).
 - **Akzeptanzkriterien:** `app/i18n.test.ts` grün; ein Sprachpaket aus dem Ordner wird erkannt.
 - **Betroffene Module:** Lokalisierung, Oberfläche
 - **Reifegrad-Wirkung:** Modul Lokalisierung → `[BELASTBAR]`
@@ -327,10 +327,10 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
 | 3.7 | **Vor 3.1:** Entwurfsschritt (Phasentyp-Kontext ERKUNDUNG) „Personengruppen, Begehbarkeit und Querungen“: Gruppen aus dem Inventar (PAX-*, PAX-09, STAFF-01, SHOP-03, BAU-03; offen: Crew, Einweiser) mit Begehbarkeit je Gruppe einschließlich Personalzonen (ZON-02); Personal auf dem Vorfeld (nur per Fahrzeug, Stellplatzfläche begehbar oder beides, jeweils mit Erklärung bei Unerreichbarkeit; TURN-03, GEP-06, GATE-06); Bauarbeiter und laufende Bahnen; Querungen und Sperrung von Betriebsstraßen beim Walk-out-Boarding (MOD-13); Messung, wie Personal neben den Wegweisern geführt wird; Ergebnis ADR in Ergänzung von ADR-020 (Kategorie 1 und 4) | FR-018 (vorbereitend) |
-| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7); Bewegung der Bauarbeiter nach 3.7 | FR-010, FR-011 |
+| 3.1 | Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7); Bewegung der Bauarbeiter nach 3.7; Objekte im Weltzustand und Spielstand mit der Höchstzahl `MAX_OBJECTS` (aus 2.5) | FR-010, FR-011 |
 | 3.2 | Kleines Terminal: Check-in, Sicherheit, Gate, Boarding, Toiletten; Passagierablauf | FR-012, FR-016, FR-019, FR-020, FR-022 |
 | 3.3 | Passagierführung (Schilder, Markierungen) und erklärbare Wegprobleme; davor Erkundung „Suchen ohne Schilder" und Feinwege zum Einzelziel (aus 1.2) | FR-017, FR-018, FR-043 |
-| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); Schema der Inhaltsart `vehicles/` in Datenpaketen (aus 2.4, ADR-025); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
+| 3.4 | Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung, Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke (ADR-020), Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); Fahrzeuge im Spielstand mit der Höchstzahl `MAX_VEHICLES` (aus 2.5); Schema der Inhaltsart `vehicles/` in Datenpaketen (aus 2.4, ADR-025); davor Erkundung Blockadevermeidung (ADR-005) | FR-014, FR-027, FR-028 |
 | 3.5 | Abfertigung und Gepäck in Grundform; Wege des Vorfeldpersonals nach 3.7 | FR-025, FR-032 |
 | 3.6 | GA und kleine Linienflüge, Flugplaner (große Tabelle über S-7, Sortierung im Kern), Geld und Bewertung in Grundform; Schema der Inhaltsarten `aircraft/` und `airlines/` in Datenpaketen (aus 2.4, ADR-025) | FR-030, FR-036, FR-039, FR-044 (Airline und Flugzeugtyp aus dem Mod-Ordner) |
 
@@ -349,7 +349,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 5.1 | Spielstart vollständig: Standort, Kartengröße, Sandbox, Einstellungen | FR-001, FR-002, FR-005 |
+| 5.1 | Spielstart vollständig: Standort, Kartengröße, Sandbox, Einstellungen; Flughafenname im Weltzustand und in den Spielstand-Metadaten (META-02, Feld leer seit 2.5); Spielmenü mit Speichern, Laden und Spielstand-Liste (ersetzt die einfache Liste aus 2.5) | FR-001, FR-002, FR-005 |
 | 5.2 | Etagen, Zonen (international), Bauen vollständig | FR-010, FR-012 |
 | 5.3 | Landseite: Parken, ÖPNV, Kreuzungen mit wählbarer Vorfahrt | FR-013, FR-015 |
 | 5.4 | Terminal vollständig: moderner Check-in, Kontrollspuren, Grenze, Läden, Info | FR-019 bis FR-024 |
@@ -495,6 +495,18 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Maßnahme (7):** Vor der Umsetzung eines Schritts, der einen Vertrag umsetzt, listet die KI die Sätze des Vertrags zu den berührten Funktionen und prüft jeden gegen ihren Plan; eine Abweichung wird vor dem Code vorgelegt, nicht danach. Ergänzend zu Maßnahme (6): Eine Vertragsregel, die mehrere Arten von Objekten betrifft, nennt ihre Begründung je Art.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-027 bis ADR-028, 3 / 10 ab ADR-029, 2 / 10 (Schwellenwert eingehalten) ab ADR-030.
 - **Kenntnisnahme:** Projektinhaber am 2026-10-18: „Reflexionen zur Kenntnis genommen"; kein Umbau, Maßnahme (7) gilt.
+
+---
+
+### Ergänzung Reaktiv-Quote (2026-10-19, Anlass ADR-028)
+
+- **Befund:** 5 / 10 `[REAKTIV]` über ADR-019 bis ADR-028 (ADR-019, ADR-020, ADR-025, ADR-026, ADR-028), 50 %; gleichbleibend (ADR-017 fällt heraus, ADR-028 kommt hinzu; ADR-027 ist `[OPERATIV]`).
+- **Ursache von ADR-028:** formal die 14-Tage-Regel (ergänzt S-6 aus ADR-021 nach sechs Tagen); inhaltlich eine Lücke im Vertrag aus 2.9: S-5 verlangt Vorschaubilder in der Liste, S-6 enthält keinen Aufruf, der sie liefert. Gefunden vor dem Code durch Maßnahme (7) – die Maßnahme wirkt: Die Abweichung kam als Vorlage, nicht als Befund der getrennten Prüfung.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI). Eine additive Funktion nach dem bestehenden Muster; keine Modulgrenze, kein Datenformat.
+- **Muster:** Verträge aus 2.9 wurden je Schnittstelle geschrieben, aber nicht gegeneinander gelesen (S-5 setzt etwas voraus, das S-6 nicht anbietet).
+- **Maßnahme (8):** Beim Abgleich nach Maßnahme (7) prüft die KI zusätzlich jeden Satz eines Vertrags, der eine andere Schnittstelle voraussetzt, gegen deren Text.
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs 4 / 10 ab ADR-029, 3 / 10 ab ADR-030, 2 / 10 (Schwellenwert eingehalten) ab ADR-035 (ADR-025 fällt erst mit ADR-035 aus dem Fenster).
+- **Kenntnisnahme:** offen.
 
 ---
 

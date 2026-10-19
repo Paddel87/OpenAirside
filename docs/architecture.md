@@ -431,17 +431,17 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 - **Fehlercodes beim Laden:** `badMagic`, `truncated`, `checksumMismatch`, `versionTooNew`, `migrationFailed`, `packMissing`, `packVersionMismatch`, `limitExceeded`, `invalidState`; beim Speichern `ioError`, `diskFull`.
 - **Spielstand-Liste:** Die Metadaten werden getrennt und begrenzt gelesen; eine beschädigte Datei erscheint als „beschädigt" und bricht die Liste nicht ab. Das Vorschaubild zeigt die Oberfläche als `blob:`-URL (CSP in 2.5 anpassen und prüfen).
 - **Schreiben:** Die Plattform schreibt in eine temporäre Datei und benennt erst nach vollständigem Schreiben um; ein Absturz beim Speichern zerstört nie den vorigen Stand. Beim Start räumt die Plattform liegengebliebene temporäre Dateien auf. Autosave mit Rotation über eine einstellbare Zahl von 1 bis 20 Dateien.
-- **Abhängigkeiten:** Serialisierungsformat, Prüfsumme und ggf. Kompression werden in 2.5 nach Regel-001 zur Freigabe vorgelegt (Kategorie 3).
+- **Abhängigkeiten (ADR-027):** Weltzustand mit `postcard` 1.1.3, Abschnitt Weltzustand gepackt mit Deflate (`miniz_oxide` 0.9.1, Entpacken mit Obergrenze), Metadaten als JSON (`serde_json`), Datei-Prüfsumme FNV-1a 64 aus `core/src/hash.rs`. Den Container baut und prüft der Kern; der Hauptprozess liefert das Vorschaubild, schreibt die Datei und reicht sie beim Laden und für die Liste (Kopf und Metadaten) an den Kern.
 
 ### Schnittstelle: S-6 Plattform-API (Präsentation ↔ Plattform) [BELASTBAR]
 
-- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021; Bestätigung durch Umsetzung in 2.7, 2.4, 2.5
+- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021 (ergänzt durch ADR-026, ADR-028); Bestätigung durch Umsetzung in 2.7, 2.4, 2.5
 
 - **Anbieter:** Plattform (Hauptprozess, Preload). **Konsument:** Oberfläche.
 - **Form:** Der Preload stellt genau ein Objekt `window.openairside` bereit, nur mit benannten, asynchronen Funktionen (Promise). Kein generischer Dateizugriff, keine Pfade vom Renderer: Spielstände werden über undurchsichtige IDs angesprochen, die der Hauptprozess vergibt; Pakete über ihre Manifest-ID, die kein Pfad ist und gegen die Namensregel und die gefundenen Pakete geprüft wird (ADR-026).
 - **Funktionen in Phase 2:**
   - `app.info()` → Version, Plattform, Datenordner-Anzeige; `app.quit()`.
-  - `saves.list()` → Metadaten aller Spielstände (aus Abschnitt 2 der Datei, ohne Weltzustand); `saves.save({ name, kind })`; `saves.load(id)`; `saves.delete(id)`. **Dateinamen erzeugt der Hauptprozess aus einer eigenen ID, nie aus `name`**; `name` ist nur Metadatum (höchstens 64 Zeichen, keine Steuerzeichen).
+  - `saves.list()` → Metadaten aller Spielstände (aus Abschnitt 2 der Datei, ohne Weltzustand); `saves.save({ name, kind })`; `saves.load(id)`; `saves.delete(id)`; `saves.preview(id)` → PNG-Bytes des Vorschaubilds (`ArrayBuffer`, höchstens 2 MB) für die `blob:`-URL der Liste (additiv, ADR-028). **Dateinamen erzeugt der Hauptprozess aus einer eigenen ID, nie aus `name`**; `name` ist nur Metadatum (höchstens 64 Zeichen, keine Steuerzeichen).
   - `packs.list()` → gefundene Datenpakete mit Status und Fehlern (S-4); `packs.setActive(ids in Reihenfolge)`. Umsetzung 2.4: `list` liefert die Berichte (`PackReport`, erzeugter Typ) der Auswahl, die ab der nächsten Sitzung gilt; `setActive` nimmt höchstens 256 gültige, verschiedene IDs von gefundenen Paketen des Spielers (das Basispaket ist immer aktiv und zuerst), speichert die Auswahl in `packs-active.json` im Datenordner (Schreiben und Umbenennen) und weist ab mit `invalidArgument`, `unknownPack`, `busy`, `notReady`, `ioError`, `timeout` (60 s) oder `coreExited`. Die Pakete des Spielers liegen im Ordner `packs` des Datenordners; der Hauptprozess legt ihn beim Start an.
   - `settings.get()`, `settings.set(teilweise)` – Einstellungen als erzeugter Typ.
   - `logs.write(level, message)` (gedrosselt, höchstens 100 Einträge je Sekunde; Nachricht höchstens 2.000 Zeichen, Zeilenumbrüche und Steuerzeichen werden maskiert), `logs.openFolder()`. Logdatei mit Rotation (5 Dateien zu je 10 MB).

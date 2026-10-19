@@ -59,6 +59,7 @@ Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachwei
 - serde_json 1.0.151 in der Brücken-Crate über napi `serde-json` (ADR-024; bringt itoa 1.0.18 und zmij 1.0.23 mit, beide MIT) und seit ADR-025 im Kern für den Datenpaket-Lader — Verifiziert: 2026-10-14, Quelle: crates.io
 - serde_path_to_error 0.1.20 und semver 1.0.28 im Kern für den Datenpaket-Lader (ADR-025) — Verifiziert: 2026-10-18, Quelle: crates.io
 - schemars 1.2.2 nur hinter dem Kern-Feature `schema` für die JSON-Schema-Dateien der Datenpakete (ADR-025; bringt schemars_derive, serde_derive_internals, dyn-clone, ref-cast mit, alle MIT bzw. MIT OR Apache-2.0) — Verifiziert: 2026-10-18, Quelle: crates.io (1.2.3 bei der Prüfung 6 Tage alt)
+- postcard 1.1.3 (ohne Standard-Features, `use-std`; bringt cobs 0.3.0 mit) und miniz_oxide 0.9.1 (bringt adler2 2.0.1 mit) im Kern für den Spielstand (ADR-027; alle MIT bzw. MIT OR Apache-2.0, Zlib, 0BSD) — Verifiziert: 2026-10-19, Quelle: crates.io
 
 #### Persistenz und Paketverwaltung
 
