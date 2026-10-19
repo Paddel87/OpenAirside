@@ -17,12 +17,26 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 erledigt (ADR-024, Messung auf Mac und Referenz-PC 2026-10-15); 2.4 erledigt (ADR-025, ADR-026, 2026-10-18); nächster Schritt 2.5. Neuer Entwurfsschritt 3.7 vor 3.1. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) läuft: 2.1 erledigt (ADR-018, ADR-019) mit Nachlauf; 2.8 erledigt (ADR-020); 2.9 erledigt (ADR-021); 2.2 erledigt (ADR-022); 2.3 erledigt (ADR-023); 2.7 erledigt (ADR-024, Messung auf Mac und Referenz-PC 2026-10-15); 2.4 erledigt (ADR-025, ADR-026, 2026-10-18); 2.5 in Arbeit (ADR-027, ADR-028), Stufe 2.5a (Kern) fertig, nächste Stufe 2.5b (Plattform). Neuer Entwurfsschritt 3.7 vor 3.1. Reflexion Reaktiv-Quote (Anlass ADR-020) zur Kenntnis genommen.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-19 02:45 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 51 Minuten seit `[SESSIONSTART]` 01:54 UTC. Mini-Reibung: Die Uhrzeit des Eintrags war zuerst geschätzt (02:48) statt mit `date -u` abgefragt (02:42) – wie am 2026-10-18; vor dem Commit korrigiert.
+- **Bearbeitet:** Sessionstart mit Übernahme des Merge-Vermerks `b59a95f`; Vorlage 2.5 (Kategorie 3, Probeaufbau, Messung, Abgleich mit S-5/S-6 nach Maßnahme 7); Freigabe A und Plan durch den Projektinhaber; ADR-027, ADR-028 mit Reflexion; Stufe 2.5a (Kern) umgesetzt und getestet.
+- **Erreicht:** 2.5 `[IN ARBEIT]`, Stufe 2.5a fertig (`07188d5`); Tests und Gates lokal grün, Coverage Kern 98,49 % Lines. CI-Lauf 39188204304 (Vorlage) grün auf 17 Jobs; CI-Lauf 39191152964 auf `50176b1` (mit dem Kern-Commit `07188d5`) grün. Branch `feat/2-5-spielstand-mit-autosave` gepusht, kein PR (2.5 ist nicht abgeschlossen; PR nur auf Anweisung).
+- **Abweichung (Stopp-Kriterium 5):** 2.5a hat Module berührt, die nicht in „Betroffene Module“ von 2.5 standen: Welt & Bau (`Block::from_fields`, `GridSnapshot::entries`/`from_entries`, `Grid::from_snapshot`, `Network::nodes`/`edges`/`from_parts`), Wegfindung & Passagierführung (`FieldSet::source`) und Inhalte & Mods (`ActivePack` im Katalog). Es sind interne Hilfen ohne neue Verantwortung und ohne Änderung öffentlicher Verträge, aber nach `CLAUDE.md` Abschnitt 8 hätten sie vor dem Code vorgelegt werden müssen – derselbe Fehler wie bei 2.4 (dort Brücke, Plattform, Spielfeld). Nachgetragen im Fahrplan; Kenntnisnahme des Projektinhabers offen. Lehre: Beim Abgleich nach Maßnahme (7) auch die Liste „Betroffene Module“ gegen den geplanten Code prüfen.
+- **Offen geblieben:** 2.5b (Plattform); Kenntnisnahme der Reflexion zu ADR-028 und der Abweichung oben; ungemergte fremde Branches wie im `[SESSIONENDE]` 2026-10-18 23:27 (Löschen nur auf Anweisung).
+- **Nächster Schritt:** 2.5b in einer neuen Session (Fahrplan „Aktueller Stand“).
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 01:54 und 02:41 UTC). Freigabe (Auslöser 1), ADR-028 `[REAKTIV]` mit Reflexion auf der Pflicht-Klasse; 2.5a ist Routine-Arbeit: 1 Stufe oberhalb der Empfehlung (Warnung zu Beginn ausgesprochen). Abgegeben: keine Teilarbeit (Probelauf offen).
+- **Kontextgröße:** `get_session` meldet 0 (nicht aussagekräftig); nach dem Token-Zähler der Laufzeitumgebung rund 450.000 Token – **über der Grenze von 400.000**: 2.5b in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed`, Zurücksetzen 2026-10-19 07:10 UTC (`get_session` 02:41 UTC).
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf. Runner-Umstellung auf Ubuntu 26 noch nicht erfolgt (Register ergänzt). Neue Crates `postcard`, `cobs`, `miniz_oxide`, `adler2` fallen unter die Sammelzeile „Übrige npm-Werkzeuge und Crates“ (Nachprüfung 2027-04-13).
+- **Drift-Prüfung:** README nachgezogen (Letzte Änderung, Nächste Schritte; 2.5a ohne Wirkung für Spieler, Verwendung unverändert). ADR-027 und ADR-028 verweisen auf vorhandene Schritte (2.5, 2.6, 3.1, 3.4, 5.1). Reifegrade S-5, S-6 passen zu ADR-027/028 (unverändert `[BELASTBAR]`). Modul-Liste: „Betroffene Module“ von 2.5 ergänzt (siehe Abweichung). FR-004 nennt 2.5. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 5 / 10 (ADR-019 bis ADR-028) stimmt mit den Tags. Phase 2 weiter 10 Schritte (Plan 10; die Stufen 2.5a/2.5b zählen als ein Schritt). Größen: `project-context.md` 369 Zeilen, Logbuch unter 800 (vor diesem Eintrag 761 – Trigger bald erreicht).
 
 ### 2026-10-19 02:41 (UTC) – [BEOBACHTUNG]
 

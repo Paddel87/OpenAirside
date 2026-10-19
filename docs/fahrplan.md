@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-19 (Session ab 01:54 UTC)
+- **Stand vom:** 2026-10-19 (Session ab 01:54 UTC, Ende 02:45 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.5 `[IN ARBEIT]` (Spielstand mit Autosave), Stufe 2.5a (Kern); freigegeben am 2026-10-19: ADR-027 (postcard, miniz_oxide, FNV-1a 64), ADR-028 (`saves.preview`)
-- **Nächster Schritt:** 2.5b (Plattform), danach 2.6
+- **Aktiver Schritt:** 2.5 `[IN ARBEIT]` (Spielstand mit Autosave): Stufe 2.5a (Kern) umgesetzt (`07188d5`, CI-Lauf 39191152964 grün), Stufe 2.5b (Plattform) offen; freigegeben am 2026-10-19: ADR-027 (postcard, miniz_oxide, FNV-1a 64), ADR-028 (`saves.preview`)
+- **Nächster Schritt:** 2.5b (Plattform) in einer neuen Session: Fehlerform aller S-6-Aufrufe, `saves.*` mit `saves.preview`, `logs.*`, Autosave und Schnellspeichern, Vorschaubild, CSP `img-src blob:`, einfache Liste, Angebot nach Absturz des Kerns, Rauchtest; danach getrennte Prüfung (Kategorie 6) und Abschluss von 2.5; danach 2.6
 - **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-028 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion“; zu ADR-028 Kenntnisnahme des Projektinhabers offen)
 
 <!-- ANCHOR:phasen-typen -->
@@ -277,7 +277,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Anforderungen (ab Klasse M):** FR-004
 - **Zu tun:** Fehlerform aller S-6-Aufrufe nach Vertrag (`{ code, textKey, params }`; Electron überträgt bei abgewiesenen Aufrufen nur den Meldungstext), bestehende Aufrufe `measure.*` und `packs.*` nachziehen (Befund 9 der getrennten Prüfung 2.4); Spielstand-Container nach S-5 (ADR-021) mit Grenzen, Prüfreihenfolge und Fehlerkatalog; Höchstzahlen für Objekte, Personen und Fahrzeuge als Konstanten; Speichern und Laden über S-6 (`saves.*`); `logs.write` und `logs.openFolder` mit Rotation (S-6, aus 2.7); Schnellspeichern, Autosave mit Rotation (1–20), Vorschaubild; fehlendes Paket: Laden verweigern mit Liste; Laden validiert und meldet Fehler verständlich.
 - **Akzeptanzkriterien:** `core/tests/savegame_roundtrip.rs` grün: identische Prüfsumme nach Laden, auch während einer laufenden Neuberechnung der Wegweiser; manipulierter Spielstand führt zu einer Meldung statt zum Absturz.
-- **Betroffene Module:** Takt & Weltzustand, Plattform
+- **Betroffene Module:** Takt & Weltzustand, Plattform; in 2.5a zusätzlich Welt & Bau (Hilfen in `grid`/`network`), Wegfindung & Passagierführung (`FieldSet` behält ihre Eingabe) und Inhalte & Mods (aktive Pakete im Katalog) – nur interne Hilfen ohne neue Verantwortung, nachgetragen am 2026-10-19; 2.5b zusätzlich Brücke, Oberfläche und Spielfeld (Konsole, Liste)
 - **Reifegrad-Wirkung:** S-5 durch Umsetzung bestätigt
 - **Artefakte:** Spielstand-Code, Tests
 - **Zwischenstand Stufe 2.5a (2026-10-19, Entscheidungs-Klasse; Routine-Arbeit oberhalb der Empfehlung):** Kern umgesetzt in `07188d5`: `core/src/savegame/` (Container, Grenzen, Prüfreihenfolge, Fehlerkatalog, `read_info` für die Liste), `Simulation::save_snapshot` und `Simulation::load_game` (Pakete gegen den Inhalt der nächsten Sitzung, aktive Wegweiser aus ihrer gespeicherten Eingabe, laufende Neuberechnung mit Revision und Übernahme-Tick), `FieldSet` behält ihre Eingabe, Katalog mit aktiven Paketen (`ActivePack`), Befehlsprüfung gegen die Karte der Welt statt der Einstellung (geladene Spielstände dürfen eine andere Kartengröße haben). Erzeugte Typen `SaveKind`, `SaveMeta`, `SavedPack`. Tests: `core/tests/savegame_roundtrip.rs` 10 Fälle (Zustands-Prüfsumme gleich nach Laden, auch während einer Neuberechnung im Prüfmodus mit bitgleicher Fortsetzung und im normalen Spiel; fehlgeschlagenes Laden lässt die Sitzung unverändert; `packMissing`, `packVersionMismatch`; Liste ohne Weltzustand; beschädigte und manipulierte Dateien in der Reihenfolge des Vertrags, 300 zufällige Byte-Änderungen ohne Absturz; Kartengrößen 1536/2048; Prüfung der Anfrage), 4 Unit-Tests der Invarianten in `core/src/savegame/state.rs`; Kern 128 Unit-Tests. Coverage Kern 98,49 % Lines (`savegame/container.rs` 93,8 %, `state.rs` 97,5 %, `mod.rs` 97,5 %). Gates lokal grün: rustfmt, clippy `-D warnings`, cargo-deny, `check:types`, `check:schema`, tsc, Pre-Commit-Hooks. Offen: 2.5b (Plattform).
