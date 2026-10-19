@@ -1,0 +1,18 @@
+{
+  "outline": "#262a30",
+  "shadow": "#4a515c",
+  "metal": "#8a929e",
+  "metal_light": "#c4c9d0",
+  "white": "#eef0f2",
+  "asphalt": "#3b3f45",
+  "concrete_floor": "#b3b0a8",
+  "concrete_wall": "#7d7a74",
+  "wood": "#a8784a",
+  "wood_dark": "#7a5434",
+  "fabric_blue": "#3f6fa8",
+  "glass": "#9cc7e0",
+  "plant": "#5e9c4f",
+  "signal_yellow": "#e8b730",
+  "signal_red": "#c8433b",
+  "brand_blue": "#2a5b8c"
+}

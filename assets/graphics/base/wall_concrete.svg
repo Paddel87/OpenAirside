@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- base:wall_concrete, one cell, tiles seamlessly: full cell, edge shading inside; CC0. -->
+  <rect x="0" y="0" width="32" height="32" fill="#7d7a74" />
+  <rect x="4" y="4" width="24" height="24" fill="none" stroke="#4a515c" stroke-width="0.5" />
+</svg>
