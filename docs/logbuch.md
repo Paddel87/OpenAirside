@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 18:37 (UTC) – [BEOBACHTUNG]
+
+- **Messung 2.10, Mac-Lauf 1 (Standardaufteilung 2 + 8) eingegangen:** abgelegt als `docs/research/2.10-ergebnisse/mac-m3pro-standard.json`. 119,1–120,1 Bilder/s bei 120 Hz mit Szene (20.000 Objekte, 64 Zonen, 10.000 Personen); neu zwei lange Aufgaben im Renderer (131 und 83 ms); Schrittzeit-Ausreißer wie in 2.7 (bis 75 ms, 11 von 20 Fenstern über 4 ms), Minimum 180 Ticks/s in allen Fenstern. Auswertung in `docs/research/2.10-messung.md`. Ausstehend: Mac-Lauf 2 (`--background-threads=4`) und Referenz-PC.
+
 ### 2026-10-19 17:10 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** 52 Minuten seit `[SESSIONSTART]` 16:18 UTC.
