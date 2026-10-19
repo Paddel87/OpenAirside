@@ -24,6 +24,27 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 11:40 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-029 `[REAKTIV]` – `onCoreExit` meldet `restarting` (Option A, Freigabe per Auswahl); Festlegungen (a)–(l) zu 2.5b freigegeben.
+- **Korrektur:** Punkt (e) des Abgleichs widersprach ADR-028 (`unknownSave` für unbekannte IDs); es gilt ADR-028. Dem Projektinhaber gemeldet.
+- **Reaktiv-Quote:** 5 / 10 (ADR-020 bis ADR-029), Reflexion im Fahrplan, Kenntnisnahme offen.
+- **Mini-Reibung:** Der Arbeitsprozess der Session wurde zwischen Frage und Antwort neu gestartet; Arbeitsstand und Container blieben erhalten.
+
+### 2026-10-19 11:06 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Anlass:** Abgleich vor Stufe 2.5b nach Maßnahmen (7) und (8), Wortlaut im Fahrplan bei 2.5.
+- **Befund:** eine Abweichung – das Angebot nach Absturz des Kerns braucht die Angabe, ob die Plattform neu startet; `onCoreExit` liefert nur den Code. Optionen A (zweites Argument, ADR `[REAKTIV]`) und B (Oberfläche zählt selbst). Übrige Punkte (a)–(l) ohne Vertragsänderung; „Betroffene Module“ deckt den geplanten Code.
+- **Umgebung:** Container frisch: Node 26.11.1 über `/opt/nvm`, `npm ci`, Electron-Binärdatei per `install.js`, `pre-commit install`, `cargo fetch`.
+
+### 2026-10-19 11:02 (UTC) – [SESSIONSTART]
+
+- **Session:** `session_01WZthnhceTiMMFDi2Ways2p`, Fortsetzung von `session_01P9QoM7dmXTH6S8x8Uamvco` (dort Kontext über 400.000 Token).
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` (`get_session` 11:01 UTC) – Entscheidungs-Klasse.
+- **Wiedereinstieg:** Branch `feat/2-5-spielstand-mit-autosave` auf `c43998f`, gleich `origin`. Aktiver Schritt 2.5 `[IN ARBEIT]`, Stufe 2.5b (Plattform). Mindest-Lektüre nach `CLAUDE.md` Abschnitt 2 durchlaufen; keine aktiven Blocker.
+- **Warnung (Abschnitt 0):** 2.5b ist Routine-Arbeit (Umsetzung von S-5/S-6 nach Freigabe) und läuft oberhalb ihrer Empfehlung; Abgabe an Unteragenten nicht möglich (Probelauf offen).
+- **Vorgehen:** zuerst Maßnahmen (7) und (8): Vertragssätze S-5/S-6 und „Betroffene Module“ gegen den Plan von 2.5b prüfen, Abweichungen vor dem Code vorlegen.
+
 ### 2026-10-19 10:59 (UTC) – [BEOBACHTUNG]
 
 - **Nachtrag nach dem Sessionende:** Projektinhaber: „Zur Kenntnis genommen, Reflexion und Abweichung“. Kenntnisnahme der Reflexion zu ADR-028 (Maßnahme 8 gilt) und der Abweichung nach Stopp-Kriterium 5 in 2.5a im Fahrplan vermerkt; kein Umbau.

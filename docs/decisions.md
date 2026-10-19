@@ -33,7 +33,7 @@
 | 018 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, STACK | Build/Deploy, Externe Abhängigkeiten | Projektgerüst, CI-Gates und napi-Versionen für Phase 2 |
 | 019 | 2026-10-13 | Aktiv | REAKTIV | STACK | Lizenz/Compliance | Erlaubte Lizenzen um BlueOak-1.0.0, 0BSD, Python-2.0 und WTFPL erweitert |
 | 020 | 2026-10-13 | Aktiv | REAKTIV | DATENMODELL, PERFORMANCE | Datenmodell | Weltmaßstab 2 m je Zelle, Luftseite im Raster, Wegweiser in Blöcken, Zeitmodell |
-| 021 | 2026-10-13 | Aktiv (S-6 für Pakete geändert durch ADR-026, um `saves.preview` ergänzt durch ADR-028) | ERKENNTNIS | SCHNITTSTELLE, SECURITY | API-Verträge, Architektur, Sicherheit | Schnittstellenverträge S-2 bis S-7 |
+| 021 | 2026-10-13 | Aktiv (S-6 für Pakete geändert durch ADR-026, um `saves.preview` ergänzt durch ADR-028, `onCoreExit` durch ADR-029) | ERKENNTNIS | SCHNITTSTELLE, SECURITY | API-Verträge, Architektur, Sicherheit | Schnittstellenverträge S-2 bis S-7 |
 | 022 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Kern-Benchmark als CI-Gate und Prüfung der erzeugten TypeScript-Typen |
 | 023 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Wegweiser-Benchmark als Schritt im CI-Job „Kern-Benchmark“ |
 | 024 | 2026-10-14 | Aktiv (Einschränkung auf die Brücke aufgehoben durch ADR-025) | OPERATIV | STACK, SCHNITTSTELLE | Externe Abhängigkeiten | Umwandlung JS ↔ Rust in der Brücke mit napi `serde-json` |
@@ -41,10 +41,11 @@
 | 026 | 2026-10-18 | Aktiv | REAKTIV | SCHNITTSTELLE, SECURITY | API-Verträge | Pakete in S-6 über ihre Manifest-ID |
 | 027 | 2026-10-19 | Aktiv | OPERATIV | STACK, SCHNITTSTELLE | Externe Abhängigkeiten | Format, Kompression und Prüfsumme des Spielstands |
 | 028 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE | API-Verträge | Vorschaubilder der Spielstand-Liste über `saves.preview` |
+| 029 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE | API-Verträge | `onCoreExit` meldet, ob die Plattform den Kern neu startet |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 5 / 10 über die letzten 10 ADRs (ADR-019 bis ADR-028: ADR-019, ADR-020, ADR-025, ADR-026, ADR-028), 50 % – **über dem Schwellenwert**; gesamt 9 / 28. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-028, 2026-10-19)
+- **Aktueller Wert:** 5 / 10 über die letzten 10 ADRs (ADR-020 bis ADR-029: ADR-020, ADR-025, ADR-026, ADR-028, ADR-029), 50 % – **über dem Schwellenwert**; gesamt 10 / 29. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-029, 2026-10-19)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -122,6 +123,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-026: Pakete in S-6 über ihre Manifest-ID](decisions/ADR-026.md)
 - [ADR-027: Format, Kompression und Prüfsumme des Spielstands](decisions/ADR-027.md)
 - [ADR-028: Vorschaubilder der Spielstand-Liste über `saves.preview`](decisions/ADR-028.md)
+- [ADR-029: `onCoreExit` meldet, ob die Plattform den Kern neu startet](decisions/ADR-029.md)
 
 ---
 
