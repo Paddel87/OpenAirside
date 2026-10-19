@@ -45,10 +45,11 @@
 | 030 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE, SECURITY | API-Verträge, Sicherheit | Obergrenzen des Spielstands auf 512 MB gesenkt |
 | 031 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE, MODUL | API-Verträge, Architektur | Sprachpakete erreichen die Oberfläche über `lang.*` in S-6 |
 | 032 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE, MODUL | API-Verträge, Architektur | Funde der Sammelprüfung der Vertragssätze S-1 bis S-7 |
+| 033 | 2026-10-19 | Aktiv | OPERATIV | STACK, DEPLOYMENT | Externe Abhängigkeiten, Build/Deploy | SVG-Rasterer resvg im Werkzeug-Crate `tools/assets` |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 7 / 10 über die letzten 10 ADRs (ADR-023 bis ADR-032: ADR-025, ADR-026, ADR-028, ADR-029, ADR-030, ADR-031, ADR-032), 70 % – **über dem Schwellenwert**; gesamt 13 / 32. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-032, 2026-10-19, zur Kenntnis genommen)
+- **Aktueller Wert:** 7 / 10 über die letzten 10 ADRs (ADR-024 bis ADR-033: ADR-025, ADR-026, ADR-028, ADR-029, ADR-030, ADR-031, ADR-032), 70 % – **über dem Schwellenwert**; gesamt 13 / 33. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-032, 2026-10-19, zur Kenntnis genommen)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -130,6 +131,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-030: Obergrenzen des Spielstands auf 512 MB gesenkt](decisions/ADR-030.md)
 - [ADR-031: Sprachpakete erreichen die Oberfläche über `lang.*` in S-6](decisions/ADR-031.md)
 - [ADR-032: Funde der Sammelprüfung der Vertragssätze S-1 bis S-7](decisions/ADR-032.md)
+- [ADR-033: SVG-Rasterer resvg im Werkzeug-Crate `tools/assets`](decisions/ADR-033.md)
 
 ---
 

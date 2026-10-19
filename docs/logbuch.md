@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 16:29 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-033** `[OPERATIV]` „SVG-Rasterer resvg im Werkzeug-Crate `tools/assets`": freigegeben vom Projektinhaber per Auswahl A (resvg 0.48.1, Rust). Benannte Ausnahme `miniz_oxide@0.8.9` im Warnungs-Bestand. Reaktiv-Quote 7 / 10 über ADR-024 bis ADR-033, unverändert über dem Schwellenwert (kein neuer `[REAKTIV]`-ADR, Reflexion zu ADR-032 gilt).
+
 ### 2026-10-19 16:22 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt 2.10, SVG-Rasterer (Kategorie 3, mit Kategorie 7):** Optionen A resvg 0.48.1 als Rust-Werkzeug-Crate im Workspace, B @resvg/resvg-js 2.6.2 (npm), C Rasterung in Electron/Chromium; Empfehlung A. Belege aus crates.io und npm (Abruf 16:19–16:21 UTC) und einem Probe-Projekt im Scratchpad: 37 Crates ohne Standard-Features, alle Lizenzen erlaubt, `miniz_oxide` doppelt (0.8.9 über png 0.18.1, 0.9.1 über flate2) – benannte Ausnahme nötig. sharp verworfen (libvips-Binärdateien unter LGPL-3.0).

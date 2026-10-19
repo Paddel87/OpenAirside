@@ -61,6 +61,10 @@ Entschieden in **ADR-002** (2026-10-13) unter der Bedingung des Leistungsnachwei
 - schemars 1.2.2 nur hinter dem Kern-Feature `schema` für die JSON-Schema-Dateien der Datenpakete (ADR-025; bringt schemars_derive, serde_derive_internals, dyn-clone, ref-cast mit, alle MIT bzw. MIT OR Apache-2.0) — Verifiziert: 2026-10-18, Quelle: crates.io (1.2.3 bei der Prüfung 6 Tage alt)
 - postcard 1.1.3 (ohne Standard-Features, `use-std`; bringt cobs 0.3.0 mit) und miniz_oxide 0.9.1 (bringt adler2 2.0.1 mit) im Kern für den Spielstand (ADR-027; alle MIT bzw. MIT OR Apache-2.0, Zlib, 0BSD) — Verifiziert: 2026-10-19, Quelle: crates.io
 
+#### Werkzeuge im Build (nicht ausgeliefert)
+
+- resvg 0.48.1 ohne Standard-Features im Werkzeug-Crate `tools/assets` für die Rasterung der SVG-Grafiken zu Atlanten und Programmsymbol (ADR-033; bringt usvg 0.48.1, tiny-skia 0.12.0, png 0.18.1 und 31 weitere Crates mit, alle MIT, Apache-2.0, BSD-2/3-Clause, Zlib oder 0BSD) — Verifiziert: 2026-10-19, Quelle: crates.io
+
 #### Persistenz und Paketverwaltung
 
 - Persistenz: lokale Spielstand-Dateien, keine Datenbank
@@ -233,6 +237,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 | Quelle | Mittel des Werkzeugs | Obergrenze / benannte Ausnahme | Stand vom | Fahrplan-Schritt |
 |---|---|---|---|---|
 | cargo-deny `bans`, doppelte Crate-Versionen | `skip` in `deny.toml` | benannte Ausnahme: `syn@2.0.119` (nur über ts-rs-macros 12.0.1 hinter dem Feature `ts`; serde nutzt syn 3) | 2026-10-13 | Q.1 (prüfen, ob ts-rs auf syn 3 umgestellt hat) |
+| cargo-deny `bans`, doppelte Crate-Versionen | `skip` in `deny.toml` | benannte Ausnahme: `miniz_oxide@0.8.9` (nur über png 0.18.1 im Werkzeug-Crate `tools/assets`, ADR-033; der Spielstand nutzt 0.9.1) | 2026-10-19 | Q.1 (prüfen, ob png auf miniz_oxide 0.9 umgestellt hat) |
 
 **Warnungsquellen ohne Schalter:** Hinweise der CI-Plattform zu Action-Versionen und Runner-Images (Annotationen im Lauf); Bündelgrößen-Warnungen von Vite; Abkündigungshinweise von electron-builder und npm (`npm warn deprecated`, Ablaufdaten-Register, Q.1). Bekannter Bestand (Stand 2026-10-13, Release-Lauf 38440601610): npm „install scripts not yet covered by allowScripts" für electron-winstaller und fsevents (Skripte laufen nicht; Bau und Tests grün; Prüfung in Q.1); electron-builder „asar usage is disabled" (Muster aus den Spikes, Entscheidung mit der Signatur in 7.1) und „default Electron icon is used" (Symbol mit dem Stilleitfaden in 2.10). Neu seit 2026-10-19 (CI-Lauf 39188204304): `npm audit` meldet 8 Schwachstellen der Stufe „moderate“ (sprintf-js, GHSA-hp3w-g68c-fv3c, über electron-builder → app-builder-lib → @electron/get → global-agent → roarr); nur Bauwerkzeug, nicht im Programmpaket; unter der Gate-Schwelle „high“; die von npm angebotene Behebung wäre eine Rückstufung von electron-builder auf 26.5.0 (Prüfung in Q.1).
 
