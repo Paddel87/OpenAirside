@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-19 (Session ab 13:28 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner; 2.6 (Lokalisierung) ERLEDIGT am 2026-10-19 (CI-Lauf 39270974482 grün), Branch `feat/2-6-lokalisierung` gepusht, kein PR (PR nur auf Anweisung)
-- **Nächster Schritt:** PR für 2.6 nach `main` (auf Anweisung), danach 2.11 (Sammelprüfung der Vertragssätze), dann 2.10
+- **Aktiver Schritt:** keiner; 2.6 (Lokalisierung) ERLEDIGT am 2026-10-19, mit PR #23 nach `main` gemergt (`987c2ee`)
+- **Nächster Schritt:** 2.11 (Sammelprüfung der Vertragssätze) in einer neuen Session auf einem neuen Branch vom aktuellen `main` (Sessionende-Commits von `feat/2-6-lokalisierung` übernehmen), dann 2.10
 - **Offene STOPP-Situationen:** keine; Reaktiv-Quote 6 / 10 nach ADR-031 über dem Schwellenwert (Reflexion zu ADR-031 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, Maßnahme (10) als Schritt 2.11)
 
 <!-- ANCHOR:phasen-typen -->
