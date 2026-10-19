@@ -22,6 +22,9 @@ export type ConsoleResult =
   | { readonly kind: "save"; readonly name: string; readonly saveKind: "manual" | "quick" }
   | { readonly kind: "load"; readonly id: string }
   | { readonly kind: "deleteSave"; readonly id: string }
+  | { readonly kind: "languages" }
+  | { readonly kind: "setLanguage"; readonly code: string }
+  | { readonly kind: "settings" }
   | { readonly kind: "help"; readonly text: string }
   | { readonly kind: "error"; readonly text: string };
 
@@ -43,6 +46,8 @@ export const HELP = [
   "quicksave – quick save (also F5)",
   "load <id> – load a save game (ids from saves)",
   "delete <id> – delete a save game",
+  "lang [code] – languages of the loaded packs, or switch the language (no restart)",
+  "settings – language and autosave settings",
 ].join("\n");
 
 /** Form of a save game id (as `isSaveId` in app/src/main/saves.ts). */
@@ -185,6 +190,15 @@ export function parseConsoleLine(line: string): ConsoleResult {
       if (args.length !== 1 || id === undefined || !SAVE_ID.test(id)) return error(`${name} <id>`);
       return name === "load" ? { kind: "load", id } : { kind: "deleteSave", id };
     }
+    case "lang": {
+      const [code] = args;
+      if (args.length === 0) return { kind: "languages" };
+      return args.length === 1 && code !== undefined && /^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/.test(code)
+        ? { kind: "setLanguage", code }
+        : error("lang [code]");
+    }
+    case "settings":
+      return args.length === 0 ? { kind: "settings" } : error("settings");
     case "measure": {
       const minutes = args[0] === undefined ? 10 : integer(args[0]);
       if (minutes === undefined || minutes < 1 || minutes > MAX_MINUTES) {

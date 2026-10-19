@@ -3,19 +3,23 @@
  * platform (S-6), shows the playfield (PixiJS) and the debug panel with
  * console, performance display and measurement series (FR-009, step 2.7),
  * plus the simple save game list, quick save (F5) and the offer to load the
- * last autosave after a crash of the core (step 2.5).
+ * last autosave after a crash of the core (step 2.5), and since step 2.6
+ * the language of the interface (switched without restart) and the
+ * minimal settings panel. Console and performance display stay English.
  * The interface panels (React) follow from roadmap step 3.6 on.
  */
 import type { PackReport } from "../src/generated/PackReport.js";
 import type { TickStats } from "../src/generated/TickStats.js";
 import { type ClientHandlers, CoreClient } from "./core-client.js";
 import { basePackLoaded, formatPacks, parseConsoleLine, TABLE_COLUMNS } from "./console.js";
+import { FALLBACK_LANGUAGE, loadTexts, Localizer } from "./i18n.js";
 import { defaultConfig, MeasureSeries, type SeriesHost } from "./measure.js";
 import { PerfMeter } from "./perf.js";
 import { describeError, onCorePort } from "./platform.js";
 import { formatSaves, latestAutosave } from "./saves.js";
 import { loadSave, SavesPanel, showNotice } from "./saves-panel.js";
 import { Playfield } from "./playfield.js";
+import { SettingsPanel } from "./settings-panel.js";
 import { cell, readTable } from "./table-reader.js";
 
 const root = document.getElementById("root");
@@ -25,6 +29,8 @@ const form = document.getElementById("console");
 const input = document.getElementById("console-input");
 const savesBox = document.getElementById("saves");
 const noticeBox = document.getElementById("notice");
+const settingsBox = document.getElementById("settings");
+const settingsButton = document.getElementById("settings-button");
 
 function write(line: string): void {
   if (log === null) return;
@@ -88,6 +94,8 @@ async function start(): Promise<void> {
       root.dataset.session = String(session);
       write(`core ${core.name} ${core.version}, session ${String(session)}`);
       checkBasePack();
+      // The core is ready: texts of all loaded packs (S-6 `lang.texts`).
+      reloadLanguage();
     },
     incompatible: (protocol) => {
       write(`incompatible core (protocol ${String(protocol)}) – please reinstall the game`);
@@ -191,10 +199,52 @@ async function start(): Promise<void> {
   portArrived = connect;
   for (const port of ports.splice(0)) connect(port);
   const api = window.openairside;
+  // FR-006: English until the settings are read; texts of the packs once the core answers.
+  const i18n = new Localizer(FALLBACK_LANGUAGE, undefined, undefined, (key) => {
+    void api?.logs.write("debug", `missing text ${key}`).catch(() => undefined);
+  });
+  // Only the latest call applies: texts loading for an earlier language never win.
+  let wantedLanguage = FALLBACK_LANGUAGE;
+  let languageCall = 0;
+  const applyLanguage = async (code: string): Promise<void> => {
+    wantedLanguage = code;
+    languageCall += 1;
+    const call = languageCall;
+    const { primary, fallback } = await loadTexts(api?.lang, code);
+    if (call !== languageCall) return;
+    document.documentElement.lang = code;
+    root.dataset.language = code;
+    i18n.use(code, primary, fallback);
+  };
+  const reloadLanguage = (): void => {
+    void applyLanguage(wantedLanguage);
+  };
+  if (api !== undefined) {
+    api.settings.get().then(
+      (settings) => applyLanguage(settings.language),
+      (error: unknown) => {
+        write(`settings failed: ${describeError(error)}`);
+      },
+    );
+  }
   const panel =
     api === undefined || savesBox === null
       ? undefined
-      : new SavesPanel(document, savesBox, api, write);
+      : new SavesPanel(document, savesBox, api, write, i18n);
+  const settingsPanel =
+    api === undefined || settingsBox === null
+      ? undefined
+      : new SettingsPanel(document, settingsBox, api, i18n, applyLanguage);
+  if (settingsButton instanceof HTMLButtonElement) {
+    const label = (): void => {
+      settingsButton.textContent = i18n.t("ui.settings.open");
+    };
+    label();
+    i18n.onChange(label);
+    settingsButton.addEventListener("click", () => {
+      void settingsPanel?.open();
+    });
+  }
   const save = (name: string, kind: "manual" | "quick"): void => {
     if (api === undefined) {
       write("save: not connected");
@@ -226,27 +276,30 @@ async function start(): Promise<void> {
       .catch(() => undefined);
     if (noticeBox === null) return;
     // S-6 "Absturz des Kerns" (ADR-029): offer the last autosave, or point to the log file.
+    const t = i18n.t.bind(i18n);
     if (restarting) {
       showNotice(
         document,
         noticeBox,
-        "The game core stopped and is restarting. Load the last autosave?",
-        [{ label: "Load last autosave", run: () => void loadLastAutosave() }],
+        t("ui.notice.coreRestarting"),
+        [{ label: t("ui.notice.loadAutosave"), run: () => void loadLastAutosave() }],
+        t("ui.notice.dismiss"),
       );
     } else {
       showNotice(
         document,
         noticeBox,
-        "The game core stopped repeatedly and is not restarted. Details are in the log file.",
+        t("ui.notice.coreStopped"),
         [
           {
-            label: "Open log folder",
+            label: t("ui.notice.openLogFolder"),
             run: () =>
               void api.logs.openFolder().catch((error: unknown) => {
                 write(`log folder: ${describeError(error)}`);
               }),
           },
         ],
+        t("ui.notice.dismiss"),
       );
     }
   });
@@ -329,8 +382,11 @@ async function start(): Promise<void> {
       call
         .then((reports) => {
           showPacks(reports);
-          if (result.kind === "setPacks")
+          if (result.kind === "setPacks") {
             write("packs: chosen packs apply from the next session (e.g. scenario hall)");
+            // Languages and texts follow the newly loaded packs (ADR-031).
+            reloadLanguage();
+          }
         })
         .catch((error: unknown) => {
           write(`packs failed: ${describeError(error)}`);
@@ -363,6 +419,31 @@ async function start(): Promise<void> {
           write(`delete failed: ${describeError(error)}`);
         },
       );
+    } else if (result.kind === "languages") {
+      api?.lang.list().then(
+        (languages) => {
+          for (const l of languages) {
+            const current = l.code === i18n.code ? " (current)" : "";
+            write(`lang ${l.code} ${l.name} – ${String(l.keys)} texts${current}`);
+          }
+        },
+        (error: unknown) => {
+          write(`lang failed: ${describeError(error)}`);
+        },
+      );
+    } else if (result.kind === "setLanguage") {
+      api?.settings.set({ language: result.code }).then(
+        async (settings) => {
+          await applyLanguage(settings.language);
+          write(`language ${settings.language}`);
+        },
+        (error: unknown) => {
+          write(`lang failed: ${describeError(error)}`);
+        },
+      );
+    } else if (result.kind === "settings") {
+      if (settingsPanel === undefined) write("settings: not connected");
+      else void settingsPanel.open();
     } else if (result.kind === "command") {
       const id = client?.send(result.command) ?? 0;
       write(id === 0 ? "not connected" : `#${String(id)} ${line}`);
