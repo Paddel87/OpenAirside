@@ -11,9 +11,9 @@
 - **Stand vom:** 2026-10-19 (Session ab 13:28 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.6 (Lokalisierung) WARTET-AUF-FREIGABE – Vorlage vom 2026-10-19 (Lücken in S-6, Abweichung der betroffenen Module); Branch `feat/2-6-lokalisierung`
-- **Nächster Schritt:** nach Freigabe ADR-031, dann Stufe 2.6a (Kern)
-- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 5 / 10 nach ADR-030 über dem Schwellenwert (Reflexionen siehe „Iterations-Reflexion“, zu ADR-029 und ADR-030 vom Projektinhaber am 2026-10-19 zur Kenntnis genommen)
+- **Aktiver Schritt:** 2.6 (Lokalisierung) IN ARBEIT, Stufe 2.6a (Kern); freigegeben per ADR-031; Branch `feat/2-6-lokalisierung`
+- **Nächster Schritt:** Stufe 2.6b (Plattform und Oberfläche), getrennte Prüfung, Abschluss von 2.6
+- **Offene STOPP-Situationen:** keine; Reaktiv-Quote 6 / 10 nach ADR-031 über dem Schwellenwert (Reflexion zu ADR-031 siehe „Iterations-Reflexion“, Kenntnisnahme offen)
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -298,7 +298,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.6: Lokalisierung
 
-- **Status:** WARTET-AUF-FREIGABE (Vorlage 2026-10-19, siehe unten)
+- **Status:** IN ARBEIT seit 2026-10-19 (Freigabe A und alle Festlegungen, ADR-031); Stufe 2.6a
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.7
 - **Freigabepflichtig:** ja, falls eine Bibliothek für Lokalisierung eingeführt wird (Kategorie 3)
@@ -307,10 +307,10 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Anforderungen (ab Klasse M):** FR-006
 - **Zu tun:** Deutsch und Englisch, Sprachwechsel ohne Neustart, Sprachpakete aus einem Ordner; `settings.get`/`settings.set` über S-6 mit der Sprache als erster Einstellung (aus 2.7); Autosave-Intervall und Zahl der Autosave-Dateien 1–20 als Einstellungen (aus 2.5, dort feste Werte: 10 Minuten laufender Spielzeit, 5 Dateien; META-10); Schema der Inhaltsart `lang/` in Datenpaketen nach S-4 (Landeplatz aus 2.4, ADR-025).
 - **Akzeptanzkriterien:** `app/i18n.test.ts` grün; ein Sprachpaket aus dem Ordner wird erkannt.
-- **Betroffene Module:** Lokalisierung, Oberfläche
+- **Betroffene Module:** Lokalisierung, Oberfläche; zusätzlich Inhalte & Mods, Brücke, Plattform, Spielfeld (Konsole) – Abweichung vor dem Code vorgelegt und freigegeben am 2026-10-19 (ADR-031)
 - **Reifegrad-Wirkung:** Modul Lokalisierung → `[BELASTBAR]`
 - **Artefakte:** Lokalisierungs-Code, Sprachdateien, Tests
-- **Vorlage zur Freigabe (2026-10-19, Entscheidungs-Klasse; Abgleich nach Maßnahmen 7, 8, 9):**
+- **Vorlage zur Freigabe (2026-10-19, Entscheidungs-Klasse; Abgleich nach Maßnahmen 7, 8, 9; freigegeben: A und alle Festlegungen, ADR-031):**
   - **Keine Bibliothek:** eigenes Modul `app/renderer/i18n.ts` (Nachschlagen, Platzhalter `{name}` nur als Text eingesetzt, Zahlen über `Intl.NumberFormat` der gewählten Sprache, Rückfall gewählte Sprache → Englisch → Schlüssel); Kategorie 3 wird nicht berührt. Nicht vorgeschlagen: i18next und ähnliche (Funktionen wie Pluralformen und Namensräume werden in 2.6 nicht gebraucht; jede Bibliothek wäre eine Abhängigkeit mehr im Renderer).
   - **Lücke 1 (Maßnahme 8):** S-3 („Texte … auch für Texte aus Datenpaketen (`lang/`)“) und S-4 (`lang/` als Inhaltsart, Konsument Takt & Weltzustand) setzen voraus, dass Texte aus Paketen die Oberfläche erreichen. Weder S-6 noch der Port (S-1/S-2/S-3/S-7) bietet dafür einen Weg; die Modul-Karte kennt keine Beziehung Inhalte → Lokalisierung. Optionen: **A** neue Funktionen in S-6 (additiv): `lang.list()` → verfügbare Sprachen `{ code, name, keys }`, `lang.texts(code)` → Texte einer Sprache (zusammengeführt über die Pakete); der Hauptprozess holt sie vom Kern-Prozess wie `packs.*`; **B** neue Nachricht auf dem Port (Renderer ↔ Kern direkt), ändert die gemeinsamen Grundlagen von S-1 bis S-7; **C** nur Deutsch und Englisch beim Build eingebunden, keine Sprachpakete aus Ordnern – erfüllt FR-006 nicht (bräuchte Descope-ADR). Empfehlung A. Klassifikation: ändert S-6 und die Modul-Karte aus ADR-021 (6 Tage alt) → nach der 14-Tage-Regel `[REAKTIV]`, Reaktiv-Quote danach 6 / 10 (ADR-022 bis ADR-031).
   - **Lücke 2 (Maßnahme 8):** Meldungen müssen auch ohne laufenden Kern lesbar sein (S-6 „Absturz des Kerns“, Fehler beim Start). Festlegung: Die Sprachdateien des Basispakets werden zusätzlich beim Build in den Renderer eingebunden (dieselben Dateien, keine zweite Quelle); `lang.texts` ersetzt sie, sobald der Kern bereit ist.
@@ -367,7 +367,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 5.1 | Spielstart vollständig: Standort, Kartengröße, Sandbox, Einstellungen; Flughafenname im Weltzustand und in den Spielstand-Metadaten (META-02, Feld leer seit 2.5); Spielmenü mit Speichern, Laden und Spielstand-Liste (ersetzt die einfache Liste aus 2.5) | FR-001, FR-002, FR-005 |
+| 5.1 | Spielstart vollständig: Standort, Kartengröße, Sandbox, Einstellungen; Flughafenname im Weltzustand und in den Spielstand-Metadaten (META-02, Feld leer seit 2.5); Spielmenü mit Speichern, Laden und Spielstand-Liste (ersetzt die einfache Liste aus 2.5); Einstellungs-Menü (ersetzt das minimale Panel aus 2.6), dabei Obergrenze des Autosave-Intervalls (60 Minuten, Schätzung aus 2.6, ADR-031) überprüfen | FR-001, FR-002, FR-005 |
 | 5.2 | Etagen, Zonen (international), Bauen vollständig | FR-010, FR-012 |
 | 5.3 | Landseite: Parken, ÖPNV, Kreuzungen mit wählbarer Vorfahrt | FR-013, FR-015 |
 | 5.4 | Terminal vollständig: moderner Check-in, Kontrollspuren, Grenze, Läden, Info | FR-019 bis FR-024 |
@@ -382,7 +382,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11); Grafiken und Töne in Mods; Spielstände mit fehlenden Paketen laden unter Entfernen der betroffenen Objekte (ADR-021); aus der getrennten Prüfung 2.4: Pakete im Hintergrund laden statt auf dem JavaScript-Thread des Kern-Prozesses, neu abgelegte Pakete ohne Neustart erkennen (`docs/research/2.4-getrennte-pruefung.md`, Befunde 7 und 14) | FR-044 |
+| 6.1 | Mod-Verwaltung; davor Erkundung zu Code-Mods (`project-context.md` Abschnitt 11); Grafiken und Töne in Mods; Spielstände mit fehlenden Paketen laden unter Entfernen der betroffenen Objekte (ADR-021); aus der getrennten Prüfung 2.4: Pakete im Hintergrund laden statt auf dem JavaScript-Thread des Kern-Prozesses, neu abgelegte Pakete ohne Neustart erkennen (`docs/research/2.4-getrennte-pruefung.md`, Befunde 7 und 14); Überschreiben von Texten anderer Pakete in `lang/` (wie `replaces`, ADR-031) | FR-044 |
 | 6.2 | Audio, Durchsagen, Musik, ggf. Intro-Video | FR-047, FR-049 |
 | 6.3 | Abgleich der Funktionsgleichheit gegen das gesamte Inventar | – |
 
@@ -548,6 +548,18 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Maßnahme (9):** Neue Obergrenzen in Verträgen nennen künftig die Messung oder Schätzung, aus der sie stammen, und den Schritt, der sie nachmisst.
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs bleibt der Wert 5 / 10 bis ADR-034; 4 / 10 ab ADR-035, 3 / 10 ab ADR-036, 2 / 10 (Schwellenwert eingehalten) ab ADR-038. Der Ausblick zu ADR-029 ist damit überholt.
 - **Kenntnisnahme:** Projektinhaber am 2026-10-19: „Zur Kenntnis genommen, Reflexionen ADR-029 und ADR-030“; kein Umbau, Maßnahme (9) gilt.
+
+---
+
+### Ergänzung Reaktiv-Quote (2026-10-19, Anlass ADR-031)
+
+- **Befund:** 6 / 10 `[REAKTIV]` über ADR-022 bis ADR-031 (ADR-025, ADR-026, ADR-028, ADR-029, ADR-030, ADR-031), 60 %; steigend (ADR-021 `[ERKENNTNIS]` fällt heraus, ADR-031 kommt hinzu).
+- **Ursache von ADR-031:** dasselbe Muster wie bei ADR-028 und ADR-029 – S-3 und S-4 setzen voraus, dass Texte aus `lang/` die Oberfläche erreichen; S-6 bietet keinen Weg, die Modul-Karte keine Beziehung. Gefunden vor dem Code durch Maßnahme (8). Inhaltlich eine additive Funktion; reaktiv nur nach der 14-Tage-Regel, weil ADR-021 sechs Tage alt ist.
+- **Muster:** Dritte Lücke derselben Art in S-6 binnen eines Tages. Die Verträge aus 2.9 beschreiben je Schnittstelle, was sie liefert, aber nicht, welche Daten zwischen den Schnittstellen fließen müssen. Die übrigen offenen Sätze dieser Art lassen sich jetzt vollständig prüfen statt je Schritt.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): keine Modulgrenze ändert sich, der neue Weg folgt `packs.*`.
+- **Maßnahme (10), Vorschlag:** Vor 2.10 einmal alle Sätze in S-1 bis S-7, die Daten einer anderen Schnittstelle oder eines anderen Moduls voraussetzen, gegen die Funktionslisten und die Modul-Karte lesen und die Funde gesammelt in einem ADR vorlegen (statt einzeln je Schritt).
+- **Ausblick:** Mit nicht reaktiven Folge-ADRs 6 / 10 bis ADR-034; 5 / 10 ab ADR-035, 2 / 10 (Schwellenwert eingehalten) ab ADR-039.
+- **Kenntnisnahme:** offen.
 
 ---
 

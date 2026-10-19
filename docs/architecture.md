@@ -83,6 +83,7 @@ graph TB
   UI -->|Tabellen, Details| ABF
   ABF --> TAKT
   LOC --> UI
+  INH -->|Sprachpakete lang/, geprüft im Kern-Prozess, über Plattform lang.*, ADR-031| LOC
   UI -->|Preload-API| PLAT
   PLAT -->|Spielstand laden/speichern| TAKT
   INH --> TAKT
@@ -250,6 +251,9 @@ Die Kern-Module untereinander kommunizieren ausschließlich über den gemeinsame
 
 - **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13
 - **Verantwortung:** Deutsch und Englisch zum Start, weitere Sprachen als Sprachpakete; Texte der Simulation werden als Schlüssel übergeben, die Präsentation übersetzt.
+- **Nicht-Verantwortung:** kein Laden oder Prüfen von Dateien (das leisten Inhalte & Mods im Kern-Prozess, S-4); keine Spiellogik.
+- **Schnittstellen (ADR-031):** Sprachpakete sind die Inhaltsart `lang/` in Datenpaketen (S-4); der Renderer holt Sprachliste und Texte über S-6 `lang.list`/`lang.texts`, die gewählte Sprache über `settings.*`. Die Sprachdateien des Basispakets sind zusätzlich beim Build eingebunden, damit Meldungen ohne laufenden Kern lesbar sind.
+- **Technologie:** eigenes Modul ohne Bibliothek (ADR-031): Nachschlagen mit Rückfall gewählte Sprache → Englisch → Schlüssel, Platzhalter `{name}` nur als Text eingesetzt (S-3), Zahlen über `Intl.NumberFormat`.
 
 <!-- ANCHOR:schnittstellenvertraege -->
 ## 4. Schnittstellenverträge
@@ -409,6 +413,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
   - **Fehlercodes:** `limitExceeded`, `dependencyCycle`, `invalidPath`, `unexpectedEntry`, `kindNotSupported`, `manifestMissing`, `ioError`, `syntaxError`, `invalidStructure`, `invalidId`, `invalidVersion`, `formatTooNew`, `formatUnsupported`, `gameVersion`, `dependencyMissing`, `dependencyInactive`, `dependencyVersion`, `dependencyFailed`, `duplicatePack`, `duplicateId`, `replaceTarget`, `replaceConflict`, `invalidValue`; Textschlüssel `datapack.error.<code>`. Bei `syntaxError` und `invalidStructure` steht die Meldung des Parsers als Parameter `detail` (englisch, höchstens 512 Zeichen).
   - **Fehlerstellen:** Fehler der Stufe 1 und 2 nennen Datei, Zeile, Spalte und JSON-Pfad (Stufe 2 über einen zusätzlichen Lauf der Vorprüfung, nur für Dateien mit Fehlern); die Spalte zählt nach einem Byte-Order-Mark ab dem Zeichen danach. Fehler auf Paketebene (`duplicatePack`, `dependency*`, `limitExceeded` für Pakete) nennen nur Paket und ggf. `manifest.json`. Pfade und Versionsbereiche in Fehlern sind auf 512 Zeichen gekürzt.
   - **Harte Links und Schreibweise:** Unter Unix wird eine Datei mit weiteren harten Links abgewiesen (`invalidPath`); unter Windows bietet `std` keine Linkzahl (Restrisiko, `docs/research/2.4-getrennte-pruefung.md`). `manifest.json` und die Endung `.json` gelten nur in genau dieser Schreibweise, auf allen Plattformen; `.JSON` ist `unexpectedEntry`. Ordner mit mehr als 10.000 Einträgen werden nicht aufgezählt (`limitExceeded`). Die ID `base` ist dem Basispaket vorbehalten. Der Vergleich mit `game` nutzt die Spielversion ohne Vorabkennung.
+  - **Inhaltsart `lang/` (Schritt 2.6, ADR-031):** Datei `{ "$schema"?, "languages": [Einträge] }`; Eintrag `{ "id", "name"?, "texts": { Schlüssel: Text } }`. `id` ist der Sprachcode (`[a-z]{2,3}`, optional `-[a-z0-9]{2,8}`, z. B. `de`, `pt-br`); mehrere Pakete tragen zur selben Sprache bei, `name` muss die Sprache in mindestens einem Paket benennen. Schlüssel `[a-z0-9_.-]{1,128}`, Text höchstens 4.096 Zeichen; jeder Text zählt als Eintrag (Grenze 100.000 je Paket). Derselbe Schlüssel zweimal in einer Sprache ist `duplicateId` für das später geladene Paket; Überschreiben fremder Texte folgt in 6.1. Schema-Datei `content/schema/lang.schema.json`.
   - **Wann eine Auswahl gilt:** Der Kern lädt die Pakete beim Start des Kern-Prozesses. `packs.setActive` lädt neu; der neue Katalog gilt ab der nächsten Sitzung (neues Spiel, geladener Spielstand, Neuladen, Debug-Szenario), damit ein laufendes Spiel keine Objekte zu entfernten Einträgen behält.
 
 ### Schnittstelle: S-5 Spielstand-Format [BELASTBAR]
@@ -437,7 +442,7 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
 
 ### Schnittstelle: S-6 Plattform-API (Präsentation ↔ Plattform) [BELASTBAR]
 
-- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021 (ergänzt durch ADR-026, ADR-028, ADR-029); Bestätigung durch Umsetzung in 2.7, 2.4, 2.5
+- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, ADR-021 (ergänzt durch ADR-026, ADR-028, ADR-029, ADR-031); Bestätigung durch Umsetzung in 2.7, 2.4, 2.5
 
 - **Anbieter:** Plattform (Hauptprozess, Preload). **Konsument:** Oberfläche.
 - **Form:** Der Preload stellt genau ein Objekt `window.openairside` bereit, nur mit benannten, asynchronen Funktionen (Promise). Kein generischer Dateizugriff, keine Pfade vom Renderer: Spielstände werden über undurchsichtige IDs angesprochen, die der Hauptprozess vergibt; Pakete über ihre Manifest-ID, die kein Pfad ist und gegen die Namensregel und die gefundenen Pakete geprüft wird (ADR-026).
@@ -445,7 +450,8 @@ Positionen von Personen, Fahrzeugen und Flugzeugen innerhalb einer Zelle stehen 
   - `app.info()` → Version, Plattform, Datenordner-Anzeige; `app.quit()`.
   - `saves.list()` → Metadaten aller Spielstände (aus Abschnitt 2 der Datei, ohne Weltzustand); `saves.save({ name, kind })`; `saves.load(id)`; `saves.delete(id)`; `saves.preview(id)` → PNG-Bytes des Vorschaubilds (`ArrayBuffer`, höchstens 2 MB) für die `blob:`-URL der Liste (additiv, ADR-028). **Dateinamen erzeugt der Hauptprozess aus einer eigenen ID, nie aus `name`**; `name` ist nur Metadatum (höchstens 64 Zeichen, keine Steuerzeichen).
   - `packs.list()` → gefundene Datenpakete mit Status und Fehlern (S-4); `packs.setActive(ids in Reihenfolge)`. Umsetzung 2.4: `list` liefert die Berichte (`PackReport`, erzeugter Typ) der Auswahl, die ab der nächsten Sitzung gilt; `setActive` nimmt höchstens 256 gültige, verschiedene IDs von gefundenen Paketen des Spielers (das Basispaket ist immer aktiv und zuerst), speichert die Auswahl in `packs-active.json` im Datenordner (Schreiben und Umbenennen) und weist ab mit `invalidArgument`, `unknownPack`, `busy`, `notReady`, `ioError`, `timeout` (60 s) oder `coreExited`. Die Pakete des Spielers liegen im Ordner `packs` des Datenordners; der Hauptprozess legt ihn beim Start an.
-  - `settings.get()`, `settings.set(teilweise)` – Einstellungen als erzeugter Typ.
+  - `settings.get()`, `settings.set(teilweise)` – Einstellungen als erzeugter Typ. Umsetzung 2.6 (ADR-031): `Settings` mit `language` (Sprachcode aus `lang.list`), `autosaveMinutes` (1–60, Standard 10; 60 geschätzt, Überprüfung 5.1), `autosaveCount` (1–20, Standard 5); erster Start mit der Systemsprache (Deutsch → `de`, sonst `en`); Datei `settings.json` im Datenordner (Schreiben und Umbenennen), unlesbar oder ungültig → Standardwerte mit Warnung im Log; `set` prüft jedes Feld, liefert die vollständigen Einstellungen, weist ab mit `invalidArgument` oder `ioError`, ohne `busy`. Ein neues Intervall gilt sofort; bei kleinerer Zahl bleiben vorhandene Autosaves erhalten, die Rotation läuft über `auto-1` … `auto-N`.
+  - `lang.list()` → verfügbare Sprachen `{ code, name, keys }` nach Code sortiert; `lang.texts(code)` → Texte der Sprache, zusammengeführt über alle geladenen Pakete; unbekannter Code → `invalidArgument` (additiv, ADR-031). Beide folgen dem zuletzt geladenen Katalog wie `packs.list`.
   - `logs.write(level, message)` (gedrosselt, höchstens 100 Einträge je Sekunde; Nachricht höchstens 2.000 Zeichen, Zeilenumbrüche und Steuerzeichen werden maskiert), `logs.openFolder()`. Logdatei mit Rotation (5 Dateien zu je 10 MB).
   - Ereignisse: `onCorePort(callback)` (Übergabe des `MessagePort`, Abschnitt 0.1), `onCoreExit(callback)` (Kern-Prozess beendet, mit Code und `restarting`: `true`, wenn die Plattform einen neuen Kern-Prozess startet; additiv, ADR-029).
 - **Datenweg Spielstand:** Der Renderer löst nur aus. Der Hauptprozess holt die Bytes vom Kern-Prozess, erzeugt das Vorschaubild und schreibt die Datei; der Weltzustand läuft nie durch den Renderer. Laden umgekehrt.

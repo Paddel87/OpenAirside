@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 13:35 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-031** `[REAKTIV]`: Sprachpakete erreichen die Oberfläche über `lang.list`/`lang.texts` in S-6; Basis-Sprachdateien zusätzlich beim Build eingebunden; neue Beziehung Inhalte & Mods → Lokalisierung. Freigabe des Projektinhabers per Auswahl: „A: lang.* in S-6“ und „Ja, alle“ (Festlegungen). Architektur Abschnitt 2, 3 (Lokalisierung), 4 (S-4, S-6) nachgezogen; Landeplätze 5.1 (Einstellungs-Menü, Prüfung der 60 Minuten) und 6.1 (Überschreiben fremder Texte). Reaktiv-Quote 6 / 10, Reflexion mit Vorschlag Maßnahme (10) im Fahrplan.
+
 ### 2026-10-19 13:31 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt 2.6, Abgleich vor dem Code (Maßnahmen 7–9):** keine Bibliothek (Kategorie 3 nicht berührt). Zwei Lücken: S-3/S-4 setzen voraus, dass Texte aus `lang/` die Oberfläche erreichen, S-6 und der Port bieten keinen Weg (Empfehlung A: `lang.list`/`lang.texts` in S-6, `[REAKTIV]` nach der 14-Tage-Regel, Quote danach 6 / 10); Texte ohne laufenden Kern (Basis-Sprachdateien zusätzlich beim Build eingebunden). Abweichung „Betroffene Module“: zusätzlich Inhalte & Mods, Brücke, Plattform, Spielfeld. Einstellungen mit Grenzen und Herkunft (Maßnahme 9), Aufteilung 2.6a/2.6b. Volltext im Fahrplan bei 2.6.
