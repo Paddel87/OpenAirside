@@ -24,6 +24,20 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 15:30 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 16 Minuten seit `[SESSIONSTART]` 15:14 UTC.
+- **Bearbeitet:** Übernahme des Sessionende-Commits `1816efb` auf `erkundung/2-11-sammelpruefung-vertragssaetze`; Schritt 2.11 vollständig: Prüfliste (81 Sätze), Vorlage, Freigabe „Alle Empfehlungen“, ADR-032, Fortschreibung von `architecture.md` (Modul-Karte, Grundlagen, S-1 bis S-7, neu S-8), Landeplätze im Fahrplan, Reflexion Reaktiv-Quote mit Kenntnisnahme.
+- **Erreicht:** 2.11 `[ERLEDIGT]`; S-8 `[BELASTBAR]`; Weltdarstellung `[OFFEN]` mit Entwurfsschritt 3.8. Commits `aa0a7da`, `ae2f751`, `aca6ac5` plus dieser Sessionende-Commit; CI auf `ae2f751` grün (Lauf 39276970557), auf `aca6ac5` gestartet (Lauf 39278162416); PR nach Anweisung „Merge bei grün“.
+- **Offen geblieben:** ungemergte fremde Branches und die alten Branches `feat/2-5-spielstand-mit-autosave` und `feat/2-6-lokalisierung` (gemergt, nicht weiterverwendet; Löschen nur auf Anweisung). Die Mermaid-Modul-Karte wurde nur per markdownlint geprüft, nicht gerendert; Sichtprüfung auf GitHub empfohlen.
+- **Nächster Schritt:** 2.10 (Stilleitfaden, SVG-Pipeline und Messung der Darstellung; Bildname = Objekt-ID nach ADR-032) in einer neuen Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 15:13 und 15:29 UTC); 2.11 empfiehlt die Entscheidungs-Klasse, 0 Schritte oberhalb der Empfehlung (Logbuch- und README-Pflege als Routine-Teilarbeit nicht abgegeben, Probelauf offen).
+- **Kontextgröße:** über die Laufzeitumgebung nicht feststellbar (`get_session` meldet `used_tokens` 0); kein Hinweis möglich.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 15:29 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf.
+- **Archivierung:** Logbuch über 800 Zeilen, alle Einträge aus Oktober 2026 – nichts auszulagern (wie 2026-10-19 12:48); Verdichtung mit dem `[PHASEN-WECHSEL]` nach Phase 2.
+- **Drift-Prüfung:** README nachgezogen (Phase, Architektur-Reife, Skizze mit Plattform ↔ Kern, Nächste Schritte). ADR-032 verweist auf vorhandene Schritte (2.10, 2.11, 3.1, 3.6, 3.8, 5.1, 5.6, 6.1). Reifegrade S-8 und Weltdarstellung passen zu ADR-032. Modul-Liste unverändert (Benchmark & Leistung mit TypeScript-Teil ist dasselbe Modul). FR-010 (bei 3.8 vorbereitend) existiert. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 7 / 10 (ADR-023 bis ADR-032) stimmt mit den Tags. Phase 2: 11 Schritte bei Plan 10 (unter der Schwelle); Phase 3 noch ohne festgehaltenen Schrittplan (Verfeinerung vor Phasenbeginn). Größen: `project-context.md` 369 Zeilen.
+
 ### 2026-10-19 15:28 (UTC) – [BEOBACHTUNG]
 
 - **Uhrzeit geschätzt statt gemessen:** Die Vorlage von 2.11 stand zunächst mit 15:50 UTC in Logbuch, Fahrplan und ADR-032; tatsächlich 15:19 UTC (Commit `ae2f751`). Beim Fortschreiben bemerkt und korrigiert. Lehre: Zeitangaben in Einträgen immer mit `date -u` holen.

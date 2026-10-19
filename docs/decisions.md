@@ -48,7 +48,7 @@
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 7 / 10 über die letzten 10 ADRs (ADR-023 bis ADR-032: ADR-025, ADR-026, ADR-028, ADR-029, ADR-030, ADR-031, ADR-032), 70 % – **über dem Schwellenwert**; gesamt 13 / 32. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-032, 2026-10-19)
+- **Aktueller Wert:** 7 / 10 über die letzten 10 ADRs (ADR-023 bis ADR-032: ADR-025, ADR-026, ADR-028, ADR-029, ADR-030, ADR-031, ADR-032), 70 % – **über dem Schwellenwert**; gesamt 13 / 32. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-032, 2026-10-19, zur Kenntnis genommen)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 

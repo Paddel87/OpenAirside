@@ -12,8 +12,8 @@
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
 - **Aktiver Schritt:** keiner; 2.11 (Sammelprüfung der Vertragssätze) ERLEDIGT am 2026-10-19 (ADR-032), Branch `erkundung/2-11-sammelpruefung-vertragssaetze` gepusht, kein PR (PR nur auf Anweisung)
-- **Nächster Schritt:** PR für 2.11 nach `main` (auf Anweisung), danach 2.10 (Stilleitfaden, SVG-Pipeline, Messung)
-- **Offene STOPP-Situationen:** Reaktiv-Quote 7 / 10 nach ADR-032 über dem Schwellenwert – Reflexion zu ADR-032 siehe „Iterations-Reflexion“, **Kenntnisnahme durch den Projektinhaber ausstehend**
+- **Nächster Schritt:** PR für 2.11 nach `main` (Anweisung: Merge bei grün), danach 2.10 (Stilleitfaden, SVG-Pipeline, Messung) in einer neuen Session
+- **Offene STOPP-Situationen:** Reaktiv-Quote 7 / 10 nach ADR-032 über dem Schwellenwert – Reflexion zu ADR-032 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, kein Umbau
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -597,7 +597,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI): keine Modulgrenze verschoben, alle Ergänzungen additiv oder beschreibend; die einzige offene Grundsatzfrage (Weltdarstellung, L-1) hat mit 3.8 einen Entwurfsschritt vor ihrer ersten Umsetzung.
 - **Maßnahme:** keine neue; (7) bis (9) gelten weiter. Erwartung: Funde nach (7)/(8) in 2.10 und Phase 3 sollten jetzt selten werden – tritt dennoch eine Vertragslücke der Art „setzt voraus, was nirgends angeboten wird“ auf, ist das ein Hinweis, dass die Prüfliste 2.11 unvollständig war (dann Ergänzung der Prüfliste, nicht nur ADR).
 - **Ausblick:** Mit nicht reaktiven Folge-ADRs 7 / 10 bis ADR-034; 6 / 10 ab ADR-035, 5 / 10 ab ADR-036, 2 / 10 (Schwellenwert eingehalten) ab ADR-040.
-- **Kenntnisnahme:** ausstehend.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-19 per Auswahl „Kenntnis + PR bei grün“; kein Umbau, Maßnahmen (7)–(9) gelten.
 
 ---
 
