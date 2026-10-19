@@ -7,7 +7,10 @@
  * recomputation of the flow fields after a build action every 10 s
  * (`setWalls`), a table query 4 times per second (S-7) and long tasks of the
  * renderer. The camera alternates per window between the whole ground floor
- * and circling its densest spot. Unlike spike 1.5 (densest spot of the
+ * and circling its densest spot. Since step 2.10 the series also places
+ * object sprites from the atlases and translucent zone overlays over the
+ * ground floor of the terminal (`measureScene`): a stand-in load while the
+ * way of the world display is open (3.8, ADR-032), not that display. Unlike spike 1.5 (densest spot of the
  * floor above after an unthrottled fast-forward), the persons are still on
  * the ground floor after the warm-up at 3×, so the ground floor carries the
  * drawing load in both views.
@@ -42,9 +45,18 @@ export interface MeasureConfig {
   readonly tableRows: number;
   /** Longest wait for the scenario, milliseconds. */
   readonly loadTimeoutMs: number;
+  /** Object sprites of the scene (step 2.10). */
+  readonly objects: number;
+  /** Zone overlays of the scene (step 2.10). */
+  readonly zones: number;
 }
 
-/** Settings of spike 1.5 (fahrplan.md step 2.7). */
+/**
+ * Settings of spike 1.5 (fahrplan.md step 2.7) plus the scene of step 2.10:
+ * 20,000 objects (estimate: several thousand seats, counters, plants and
+ * signs in the reference scenario, doubled as headroom; re-measured in 4.1)
+ * and 64 zones.
+ */
 export function defaultConfig(minutes: number): MeasureConfig {
   return {
     minutes,
@@ -55,6 +67,8 @@ export function defaultConfig(minutes: number): MeasureConfig {
     queriesPerSecond: 4,
     tableRows: 1000,
     loadTimeoutMs: 180_000,
+    objects: 20_000,
+    zones: 64,
   };
 }
 
@@ -86,6 +100,49 @@ export interface SeriesHost {
   hotspot(): { readonly x: number; readonly y: number };
   /** Progress line for the player. */
   status(text: string): void;
+  /** Image names of the atlas without the fallback; empty without atlas. */
+  imageNames(): readonly string[];
+  /** Draws the scene over the playfield and reports what it drew. */
+  scene(scene: MeasureScene): SceneInfo;
+  /** Resolution of the atlas drawn with now in pixels per cell, 0 without atlas. */
+  tierPx(): number;
+}
+
+/** One object sprite of the scene, top left corner in cells. */
+export interface SceneObject {
+  readonly name: string;
+  readonly x: number;
+  readonly y: number;
+}
+
+/** A translucent zone overlay of the scene, in cells. */
+export interface SceneZone {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+  /** Index of the zone colour, 0 … 3. */
+  readonly colour: number;
+}
+
+/** The scene the series places (step 2.10). */
+export interface MeasureScene {
+  readonly objects: readonly SceneObject[];
+  readonly zones: readonly SceneZone[];
+}
+
+/** What the playfield drew of the scene, for the result. */
+export interface SceneInfo {
+  readonly objects: number;
+  /** Objects drawn with the fallback image. */
+  readonly fallbacks: number;
+  readonly zones: number;
+  /** Resolutions of the atlas in pixels per cell; empty without atlas. */
+  readonly tiers: readonly number[];
+  /** Atlas pages of all resolutions. */
+  readonly pages: number;
+  /** Texture memory of the largest resolution, MB. */
+  readonly textureMbMax: number;
 }
 
 /** Header values of a drawn frame the series needs. */
@@ -103,6 +160,8 @@ export interface WindowResult {
   readonly atS: number;
   readonly view: View["kind"];
   readonly seconds: number;
+  /** Atlas resolution drawn with at the end of the window, pixels per cell; 0 without atlas. */
+  readonly tierPx: number;
   readonly fps: number;
   readonly frameMsP50: number;
   readonly frameMsP99: number;
@@ -141,6 +200,7 @@ export interface SeriesResult {
   readonly threads: number;
   readonly backgroundThreads: number;
   readonly hotspot: { readonly x: number; readonly y: number };
+  readonly scene: SceneInfo;
   readonly windows: readonly WindowResult[];
   readonly summary: Summary;
 }
@@ -240,7 +300,7 @@ export class WindowRecorder {
    * counted in earlier windows; new ones are added to it.
    */
   summarize(
-    head: { window: number; atS: number; view: View["kind"]; seconds: number },
+    head: { window: number; atS: number; view: View["kind"]; seconds: number; tierPx: number },
     known: Set<number>,
   ): WindowResult {
     const frames = ascending(this.#frameTimes);
@@ -326,6 +386,54 @@ export function buildArea(
   const x0 = ox + Math.floor(edge / 8) + (next % Math.floor((edge * 3) / 4));
   const y0 = oy + edge / 2 + 15 + ((next >>> 12) % Math.floor(edge / 2 - 90));
   return { area: { floor: 0, x0, y0, x1: x0 + 3, y1: y0 + 3 }, seed: next };
+}
+
+/** Image name the scene uses for every 100th object, to draw the fallback (ADR-032, L-4). */
+export const MISSING_IMAGE = "base:measure_missing";
+
+/**
+ * The scene of the series: `objects` sprites on an even grid over the ground
+ * floor of the reference terminal (centred on the map like `buildArea`),
+ * cycling through `names`, every 100th with `MISSING_IMAGE`; and `zones`
+ * overlays tiling the terminal with a gap of 4 cells. Deterministic.
+ */
+export function measureScene(
+  objects: number,
+  zones: number,
+  mapWidth: number,
+  mapHeight: number,
+  names: readonly string[],
+): MeasureScene {
+  const edge = REFERENCE_EDGE;
+  const ox = Math.floor((mapWidth - edge) / 2);
+  const oy = Math.floor((mapHeight - edge) / 2);
+  const placed: SceneObject[] = [];
+  const columns = Math.max(1, Math.ceil(Math.sqrt(objects)));
+  const step = edge / columns;
+  for (let i = 0; i < objects; i += 1) {
+    const name =
+      i % 100 === 99 || names.length === 0
+        ? MISSING_IMAGE
+        : (names[i % names.length] ?? MISSING_IMAGE);
+    placed.push({
+      name,
+      x: Math.floor(ox + (i % columns) * step),
+      y: Math.floor(oy + Math.floor(i / columns) * step),
+    });
+  }
+  const tiles: SceneZone[] = [];
+  const side = Math.max(1, Math.ceil(Math.sqrt(zones)));
+  const size = edge / side;
+  for (let i = 0; i < zones; i += 1) {
+    tiles.push({
+      x: Math.floor(ox + (i % side) * size) + 2,
+      y: Math.floor(oy + Math.floor(i / side) * size) + 2,
+      w: Math.max(1, Math.floor(size) - 4),
+      h: Math.max(1, Math.floor(size) - 4),
+      colour: i % 4,
+    });
+  }
+  return { objects: placed, zones: tiles };
 }
 
 interface PendingBuild {
@@ -439,6 +547,10 @@ export class MeasureSeries {
       "scenario did not load",
     );
     const initMs = round(host.now() - t0, 0);
+    const map = this.#frame;
+    const scene = host.scene(
+      measureScene(c.objects, c.zones, map?.mapWidth ?? 0, map?.mapHeight ?? 0, host.imageNames()),
+    );
 
     this.#send({ kind: "setSpeed", speed: "x3" });
     this.#show({ kind: "overview", floor: 0 });
@@ -474,7 +586,13 @@ export class MeasureSeries {
       }
       const seconds = (host.now() - w0) / 1000;
       const result = this.#recorder.summarize(
-        { window: k, atS: Math.round((host.now() - started) / 1000), view: view.kind, seconds },
+        {
+          window: k,
+          atS: Math.round((host.now() - started) / 1000),
+          view: view.kind,
+          seconds,
+          tierPx: host.tierPx(),
+        },
         known,
       );
       windows.push(result);
@@ -484,6 +602,7 @@ export class MeasureSeries {
     }
     this.#send({ kind: "setSpeed", speed: "paused" });
     this.#show({ kind: "overview", floor: 0 });
+    host.scene({ objects: [], zones: [] });
     return {
       version: RESULT_VERSION,
       config: c,
@@ -491,6 +610,7 @@ export class MeasureSeries {
       threads: this.#stats?.threads ?? 0,
       backgroundThreads: this.#stats?.backgroundThreads ?? 0,
       hotspot,
+      scene,
       windows,
       summary: summarize(windows),
     };

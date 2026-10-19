@@ -57,6 +57,8 @@ async function start(): Promise<void> {
     return;
   }
   const playfield = await Playfield.create(root);
+  // Read by the smoke test: the atlas pages load under the CSP (step 2.10).
+  root.dataset.atlas = playfield.hasAtlas ? "loaded" : "missing";
   const perf = new PerfMeter();
   let requestedAt = 0;
   let tick = 0;
@@ -317,6 +319,9 @@ async function start(): Promise<void> {
     },
     hotspot: () => playfield.hotspot(),
     status: write,
+    imageNames: () => playfield.imageNames(),
+    scene: (scene) => playfield.scene(scene),
+    tierPx: () => playfield.tierPx(),
   };
   try {
     // Long tasks (> 50 ms) of the renderer's main thread, for the series.

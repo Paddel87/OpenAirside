@@ -162,6 +162,9 @@ test("window opens and core reports ready", async () => {
       params: {},
     });
 
+    // Graphics pipeline (step 2.10): the atlas pages of the build load under the CSP.
+    await expect(root).toHaveAttribute("data-atlas", "loaded");
+
     // Data packs (step 2.4): the base pack is part of the build and loads.
     await expect(root).toHaveAttribute("data-base-pack", "loaded", { timeout: 20_000 });
     const packs = await window.evaluate(async () => {
