@@ -14,7 +14,7 @@
   - **Kern:** ersetzt eine Original-Funktion durch die moderne Variante, Teil der Funktionsgleichheit.
   - **Kandidat:** sinnvolle Ergänzung, unverbindlich für nach der Funktionsgleichheit.
   - **Verwerfen:** realistisch, aber spielerisch zu wenig Gewinn oder zu viel Komplexität.
-- **Entscheidung:** am 2026-10-12 je Kategorie getroffen. Kategorie G (Abfertigung und Vorfeld) komplett als Kandidat, alle übrigen Kategorien gemäß Empfehlung.
+- **Entscheidung:** am 2026-10-12 je Kategorie getroffen. Kategorie G (Abfertigung und Vorfeld) komplett als Kandidat, alle übrigen Kategorien gemäß Empfehlung. Spätere Einzelentscheidung: MOD-13 Walk-out am 2026-10-19 in den Kern (ADR-036); damit 20 Modernisierungen „Kern“.
 - Bereits entschiedene Punkte aus dem Gespräch sind am Ende aufgeführt, damit nichts doppelt entschieden wird.
 
 ---
@@ -45,7 +45,7 @@
 | MOD-10 | SEC-03 | Passkontrolle manuell oder automatisch | Mischung aus Kiosken, biometrischen E-Gates und Schaltern mit Beamten. In der EU seit 2026 biometrische Erfassung von Nicht-EU-Reisenden (Erstregistrierung dauert mehrere Minuten, Wiederholung unter einer Minute) | Grenzkontrolle mit drei Stationstypen. Bearbeitungszeit hängt vom Anteil der Reisenden ab, die erstmals erfasst werden | Kern | Kern |
 | MOD-11 | EMG-05 | Nicht vorhanden | Neue Einreiseregeln führten 2026 zu Warteschlangen von mehreren Stunden | Ereignis „neue Einreiseregel": Bearbeitungszeit an der Grenze steigt für eine Weile | Kandidat | Kandidat |
 | MOD-12 | GATE-01 | Boarding-Schalter manuell oder automatisch | Mobile Bordkarten Standard, Self-Boarding-Gates verbreitet, biometrisches Boarding teilweise (Entwicklung uneinheitlich) | Boarding-Technikstufen: manuell, Self-Boarding, biometrisch, mit steigendem Tempo und Investitionsbedarf | Kern | Kern |
-| MOD-13 | GATE-06 | Außenpositionen mit Vorfeldbus | Weiterhin verbreitet, zusätzlich Walk-out-Positionen (zu Fuß übers Vorfeld zum Flugzeug) | Walk-out als dritte Gate-Art für kleine Flugzeuge, günstiger als Fluggastbrücke | Kandidat | Kandidat |
+| MOD-13 | GATE-06 | Außenpositionen mit Vorfeldbus | Weiterhin verbreitet, zusätzlich Walk-out-Positionen (zu Fuß übers Vorfeld zum Flugzeug) | Walk-out als dritte Gate-Art für kleine Flugzeuge, günstiger als Fluggastbrücke | Kandidat | Kern (2026-10-19, ADR-036; vorher Kandidat) |
 
 ## D. Passagierführung und Terminal
 

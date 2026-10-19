@@ -48,10 +48,11 @@
 | 033 | 2026-10-19 | Aktiv | OPERATIV | STACK, DEPLOYMENT | Externe Abhängigkeiten, Build/Deploy | SVG-Rasterer resvg im Werkzeug-Crate `tools/assets` |
 | 034 | 2026-10-19 | Aktiv | ERKENNTNIS | PERFORMANCE | Architektur | Darstellung mit echten Grafiken belastbar im gemessenen Umfang |
 | 035 | 2026-10-19 | Aktiv | OPERATIV | DEPLOYMENT | Build/Deploy | Toolchain in den Workflows mit `rustup toolchain install` |
+| 036 | 2026-10-19 | Aktiv | REAKTIV | MODUL, DATENMODELL, METHODIK | Architektur, Datenmodell, Methodik | Phasenabschluss 2 – gezielt umbauen vor dem vertikalen Schnitt |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 6 / 10 über die letzten 10 ADRs (ADR-026 bis ADR-035: ADR-026, ADR-028, ADR-029, ADR-030, ADR-031, ADR-032), 60 % – **über dem Schwellenwert**; gesamt 13 / 35. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-032, 2026-10-19, zur Kenntnis genommen)
+- **Aktueller Wert:** 6 / 10 über die letzten 10 ADRs (ADR-027 bis ADR-036: ADR-028, ADR-029, ADR-030, ADR-031, ADR-032, ADR-036), 60 % – **über dem Schwellenwert**; gesamt 14 / 36. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Phase 2, 2026-10-19, ADR-036); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -136,6 +137,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-033: SVG-Rasterer resvg im Werkzeug-Crate `tools/assets`](decisions/ADR-033.md)
 - [ADR-034: Darstellung mit echten Grafiken belastbar im gemessenen Umfang](decisions/ADR-034.md)
 - [ADR-035: Toolchain in den Workflows mit `rustup toolchain install`](decisions/ADR-035.md)
+- [ADR-036: Phasenabschluss 2 – gezielt umbauen vor dem vertikalen Schnitt](decisions/ADR-036.md)
 
 ---
 
@@ -211,6 +213,22 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - **Regel:** Vor dem Schritt müssen die **Grundsatzentscheidungen**, auf denen er aufbaut, `[BELASTBAR]` sein: Stack, Pattern, Datenmodell und jede Schnittstelle (S-n), die der Schritt nutzt oder umsetzt. **Module** dürfen `[VORLÄUFIG]` in ihre erste Umsetzung gehen; sie werden durch diese Umsetzung belastbar (Beförderungsregel). Ein `[OFFEN]`-Bestandteil, von dem der Schritt abhängt, ist immer ein Erkundungsgrund.
 - **Ausnahmen:** keine
 - **Gegenbeispiel:** Schritt 2.5 (Spielstand) beginnt, während S-5 noch `[OFFEN]` oder `[VORLÄUFIG]` ist; oder ein Modul wird zurückgestellt, weil es vor seiner ersten Umsetzung nicht `[BELASTBAR]` ist.
+
+#### Regel-008: Additive Vertragsergänzungen ohne ADR
+
+- **Herkunft:** ADR-036
+- **Gilt für:** Schnittstellen S-1 bis S-8 mit Reifegrad `[BELASTBAR]` (`docs/architecture-schnittstellen.md`)
+- **Regel:** Eine rein additive, rückwärtskompatible Ergänzung eines Vertrags gilt nicht als Änderung im Sinne von `architecture.md` Abschnitt 0 und braucht keinen ADR (`CLAUDE.md` Abschnitt 4 Nr. 5). Additiv sind etwa eine neue Funktion, ein neues optionales Feld oder ein neuer Fehlercode, den bestehende Aufrufer nicht auswerten müssen. Sie wird im Änderungsprotokoll der Schnittstelle mit Datum und Schritt eingetragen, im Logbuch vermerkt und dem Projektinhaber in der Vorlage des Schritts zur Kenntnis gegeben.
+- **Ausnahmen:** Ein ADR bleibt nötig, wenn die Ergänzung eine neue Beziehung in der Modul-Karte schafft (Kategorie 1), eine neue Abhängigkeit braucht (Kategorie 3), Sicherheit oder Datenschutz berührt (Kategorie 6) oder bestehende Bedeutung ändert, auch nur für einen Teil der Aufrufer.
+- **Gegenbeispiel:** ein neues Pflichtfeld in einer Antwort, das ältere Renderer nicht kennen, als „additiv“ ohne ADR eintragen.
+
+#### Regel-009: Eine Reflexion zur Reaktiv-Quote je Phase
+
+- **Herkunft:** ADR-036
+- **Gilt für:** Überschreitung des Reaktiv-Schwellenwerts (`decisions.md` Teil A, `CLAUDE.md` Abschnitt 0 Auslöser 5)
+- **Regel:** Solange die Quote aus einem schon reflektierten Muster kommt, gibt es je Phase eine Reflexion, beim Phasenabschluss. Ein reaktiver ADR mit diesem Muster wird im Logbuch mit Verweis auf die geltende Reflexion vermerkt. Eine neue Reflexion mit Stopp entsteht sofort, wenn ein reaktiver ADR ein neues Muster zeigt. Dazu zählt jeder reaktive ADR, der Code in Takt & Weltzustand, Welt & Bau, Wegfindung oder Brücke ändert oder eine Modulgrenze verschiebt.
+- **Ausnahmen:** keine
+- **Gegenbeispiel:** einen reaktiven ADR, der eine Modulgrenze verschiebt, nur mit Verweis auf die Phasen-Reflexion vermerken.
 
 <!-- ANCHOR:teil-d-geschaeftsentscheidungen -->
 ## Teil D: Geschäftsentscheidungen (BDR)

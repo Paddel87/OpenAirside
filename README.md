@@ -30,7 +30,7 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 2: Fundament (UMSETZUNG), Schritte 2.1 (Projektgerüst und CI), 2.8 (Weltmaßstab und Zeitmodell, ADR-020), 2.9 (Schnittstellenverträge, ADR-021), 2.2 (Takt, Zeitsteuerung, Befehle und Ereignisse im Kern, ADR-022) 2.3 (Raster in Blöcken und Wegweiser im Kern, ADR-023), 2.7 (Brücke und Plattformschicht, ADR-024) 2.4 (Datenpakete mit Lader und Schema, ADR-025, ADR-026) 2.5 (Spielstände mit Autosave, ADR-027 bis ADR-030) 2.6 (Lokalisierung und Einstellungen, ADR-031) und 2.11 (Sammelprüfung der Schnittstellenverträge, ADR-032) abgeschlossen; Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
+- **Projektphase:** Phase 3: Vertikaler Schnitt „Kleiner Flughafen“ (UMSETZUNG), noch kein Schritt begonnen; Phase 2 (Fundament: Projektgerüst und CI, Weltmaßstab, Schnittstellenverträge, Takt, Raster und Wegweiser, Brücke und Plattform, Datenpakete, Spielstände, Lokalisierung, Grafik-Pipeline) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036); Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-19
@@ -87,17 +87,17 @@ Noch nicht spielbar. `npm start` öffnet das Spielfenster mit leerer Karte; der 
 
 Grafiken sind eigene SVG-Dateien unter `assets/` (eine je Objekt in `assets/graphics/base/`, Regeln im [Stilleitfaden](docs/stilleitfaden.md)); `npm run build` rastert sie zu Atlanten und zum Programmsymbol, `npm run check:graphics` prüft sie gegen den Leitfaden.
 
-Inhalte kommen aus Datenpaketen: Das Basispaket liegt in `content/base/`, eigene Pakete gehören in den Ordner `packs` im Datenordner des Spiels (eins je Unterordner, Aufbau und Fehlercodes in [`docs/architecture.md`](docs/architecture.md) Abschnitt 4, S-4). Editoren prüfen die Dateien mit den Schemas aus `content/schema/`, wenn die Datei `"$schema"` setzt. In der Konsole zeigt `packs` alle gefundenen Pakete mit Fehlern, `packs set <id> …` wählt die aktiven Pakete ab der nächsten Sitzung (z. B. nach `scenario hall`), `build <paket:eintrag> <x> <y>` prüft eine Inhalts-ID im Kern.
+Inhalte kommen aus Datenpaketen: Das Basispaket liegt in `content/base/`, eigene Pakete gehören in den Ordner `packs` im Datenordner des Spiels (eins je Unterordner, Aufbau und Fehlercodes in [`docs/architecture-schnittstellen.md`](docs/architecture-schnittstellen.md), S-4). Editoren prüfen die Dateien mit den Schemas aus `content/schema/`, wenn die Datei `"$schema"` setzt. In der Konsole zeigt `packs` alle gefundenen Pakete mit Fehlern, `packs set <id> …` wählt die aktiven Pakete ab der nächsten Sitzung (z. B. nach `scenario hall`), `build <paket:eintrag> <x> <y>` prüft eine Inhalts-ID im Kern.
 
 Spielstände: `save [Name]` speichert, F5 oder `quicksave` speichert schnell, alle 10 Minuten laufender Spielzeit entsteht ein Autosave (5 Plätze im Wechsel; beides einstellbar, siehe unten). `saves` zeigt die Liste mit Vorschaubildern zum Laden und Löschen, `load <id>` und `delete <id>` gehen auch in der Konsole. Endet der Simulationskern unerwartet, startet das Spiel ihn neu und bietet an, den letzten Autosave zu laden. Spielstände liegen im Ordner `saves`, die Logdatei im Ordner `logs` des Datenordners.
 
-Sprache und Einstellungen: Die Oberfläche gibt es auf Deutsch und Englisch, beim ersten Start nach der Systemsprache. Der Knopf „Einstellungen“ unten links (oder `settings` in der Konsole) wechselt die Sprache ohne Neustart und stellt das Autosave-Intervall (1–60 Minuten) und die Zahl der Autosaves (1–20) ein; `lang` listet die Sprachen, `lang <Code>` wechselt direkt. Weitere Sprachen kommen als Datenpaket mit dem Ordner `lang/` (Aufbau in [`docs/architecture.md`](docs/architecture.md) Abschnitt 4, S-4; Schema `content/schema/lang.schema.json`); fehlende Texte erscheinen auf Englisch. Konsole und Leistungsanzeige bleiben englisch. Die Einstellungen liegen in `settings.json` im Datenordner.
+Sprache und Einstellungen: Die Oberfläche gibt es auf Deutsch und Englisch, beim ersten Start nach der Systemsprache. Der Knopf „Einstellungen“ unten links (oder `settings` in der Konsole) wechselt die Sprache ohne Neustart und stellt das Autosave-Intervall (1–60 Minuten) und die Zahl der Autosaves (1–20) ein; `lang` listet die Sprachen, `lang <Code>` wechselt direkt. Weitere Sprachen kommen als Datenpaket mit dem Ordner `lang/` (Aufbau in [`docs/architecture-schnittstellen.md`](docs/architecture-schnittstellen.md), S-4; Schema `content/schema/lang.schema.json`); fehlende Texte erscheinen auf Englisch. Konsole und Leistungsanzeige bleiben englisch. Die Einstellungen liegen in `settings.json` im Datenordner.
 
 ## Nächste Schritte
 
-- Abschluss von Phase 2: Vision-Abgleich und Bewertung „Weiterbauen, umbauen oder neu aufsetzen?“
-- Phase 3 beginnt mit den Entwurfsschritten 3.7 (Personengruppen) und 3.8 (Weltdarstellung im Spielfeld)
-- Phase 2 insgesamt: lauffähiger, leerer Spielrahmen mit grüner CI auf drei Plattformen
+- Phase 3 beginnt mit den Entwurfsschritten 3.7 (Personengruppen, Begehbarkeit und Walk-out) und 3.8 (Weltdarstellung im Spielfeld)
+- Danach Umbau vor dem ersten Bauen: 3.9 (Kernstruktur der Fachmodule) und 3.10 (Aufteilung der Plattform-Datei `main.ts`)
+- 3.1: Bauen im Raster mit sofort sichtbaren Bauaufträgen, auch bei schnellem Dauerbau
 
 → Vollständiger Fahrplan: [`docs/fahrplan.md`](docs/fahrplan.md)
 
@@ -120,6 +120,7 @@ Beiträge sind willkommen, sobald ein lauffähiger Stand existiert, insbesondere
 | [`docs/modernisierung.md`](docs/modernisierung.md) | Entschiedene Abweichungen vom Original |
 | [`docs/project-context.md`](docs/project-context.md) | Aktueller Stack, Constraints, Qualitätsziele |
 | [`docs/architecture.md`](docs/architecture.md) | Systemarchitektur, Module, Schnittstellen |
+| [`docs/architecture-schnittstellen.md`](docs/architecture-schnittstellen.md) | Schnittstellenverträge S-1 bis S-8 mit Änderungsprotokoll |
 | [`docs/fahrplan.md`](docs/fahrplan.md) | Entwicklungsplan und Fortschritt |
 | [`docs/decisions.md`](docs/decisions.md) | Architekturentscheidungen (ADRs) |
 | [`docs/blockers.md`](docs/blockers.md) | Aktive Blocker und gelöste Probleme |
