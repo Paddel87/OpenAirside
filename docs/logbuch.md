@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 19:11 (UTC) – [BEOBACHTUNG]
+
+- **Merge:** PR #25 (Schritt 2.10) auf Anweisung des Projektinhabers („PR eröffnen und bei grün mergen“) nach `main` gemergt, Merge-Commit `302e3ce`. Vorher CodeQL-Befund „Incomplete multi-character sanitization“ in `scripts/assets.mjs` behoben (`a493be2`, verschachtelte Kommentare, kein tatsächlicher Durchschlupf), Thread beantwortet und erledigt; grün auf `a493be2`: Push-Lauf 39307534813, PR-Läufe CI 39307541721 und Security 39307541814 (CodeQL ohne offene Meldung). Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf dem Arbeits-Branch und geht mit dem PR des nächsten Schritts nach `main`.
+
 ### 2026-10-19 18:53 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** 2 Stunden 35 Minuten seit `[SESSIONSTART]` 16:18 UTC (mit Wartezeit auf die Messung; Zwischenstand-Eintrag 17:10).
