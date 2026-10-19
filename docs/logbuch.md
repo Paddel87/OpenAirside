@@ -24,6 +24,17 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 13:58 (UTC) – [PROBLEM-GELÖST]
+
+- **Problem:** Nach dem Einbau von `lang/` scheiterten `core/tests/datapacks.rs::base_pack_of_the_repository_loads` und der Rauchtest an „3 Einträge“ des Basispakets (jetzt 111).
+- **Ursache:** gewollte Folge der Festlegung „jeder Text zählt als Eintrag“ (ADR-031); die Tests kannten nur die Objekte.
+- **Lösung:** Die Erwartung wird aus den Daten abgeleitet (Kern-Test aus `outcome.languages`, Rauchtest aus `content/base/lang/*.json`), nicht als neue feste Zahl eingetragen. Rauchtest danach grün im Container.
+
+### 2026-10-19 13:57 (UTC) – [BEOBACHTUNG]
+
+- **Stufe 2.6a umgesetzt** (Routine-Arbeit oberhalb der Empfehlung; Warnung zu Beginn): Format `lang/`, Basis-Sprachdateien `de`/`en` (54 Texte je Sprache), Schema, Brücke; 9 neue Integrationstests, Coverage Kern 98,33 % Lines. Fehler der eigenen Vorlage vor dem Code korrigiert: Schlüsselmuster `[A-Za-z0-9_.-]` statt `[a-z0-9_.-]` (vorhandene Schlüssel enthalten Großbuchstaben), in ADR-031 vermerkt, dem Projektinhaber zu melden.
+- **Für 2.6b festgestellt (Maßnahme 7, vor dem Code vorzulegen):** S-6 verlangt `Settings` als erzeugten Typ (ts-rs aus Rust). Der Kern liest keine Einstellungen; ein Rust-Typ dafür läge im Kern-Crate außerhalb der zugesagten Module (Takt & Weltzustand sollte unberührt bleiben).
+
 ### 2026-10-19 13:37 (UTC) – [BEOBACHTUNG]
 
 - **Kenntnisnahme:** Projektinhaber zur Reflexion ADR-031 per Auswahl „Kenntnis + Maßnahme (10)“. Schritt 2.11 (Sammelprüfung der Vertragssätze) vor 2.10 angelegt; Phase 2 damit 11 Schritte bei Plan 10 (Wucherungs-Schwelle: 20 und +5, nicht erreicht).

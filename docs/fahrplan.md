@@ -11,7 +11,7 @@
 - **Stand vom:** 2026-10-19 (Session ab 13:28 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.6 (Lokalisierung) IN ARBEIT, Stufe 2.6a (Kern); freigegeben per ADR-031; Branch `feat/2-6-lokalisierung`
+- **Aktiver Schritt:** 2.6 (Lokalisierung) IN ARBEIT, Stufe 2.6a (Kern) umgesetzt, Stufe 2.6b offen; freigegeben per ADR-031; Branch `feat/2-6-lokalisierung`
 - **Nächster Schritt:** Stufe 2.6b (Plattform und Oberfläche), getrennte Prüfung, Abschluss von 2.6
 - **Offene STOPP-Situationen:** keine; Reaktiv-Quote 6 / 10 nach ADR-031 über dem Schwellenwert (Reflexion zu ADR-031 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, Maßnahme (10) als Schritt 2.11)
 
@@ -298,7 +298,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.6: Lokalisierung
 
-- **Status:** IN ARBEIT seit 2026-10-19 (Freigabe A und alle Festlegungen, ADR-031); Stufe 2.6a
+- **Status:** IN ARBEIT seit 2026-10-19 (Freigabe A und alle Festlegungen, ADR-031); Stufe 2.6a umgesetzt, 2.6b offen
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 2.7
 - **Freigabepflichtig:** ja, falls eine Bibliothek für Lokalisierung eingeführt wird (Kategorie 3)
@@ -320,6 +320,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
   - **Gültigkeit nach `packs.setActive`:** Die Texte folgen dem zuletzt geladenen Katalog (wie `packs.list`). Objekte einer laufenden Sitzung aus einem abgewählten Paket zeigen bis zur nächsten Sitzung ihren Schlüssel.
   - **„Betroffene Module“ gegen den geplanten Code (Abweichung, Stopp-Kriterium 5):** geplant Lokalisierung, Oberfläche. Tatsächlich zusätzlich **Inhalte & Mods** (Format `lang/` im Lader `core/src/datapack/`, Schema, Basispaket), **Brücke** (Texte und Sprachliste aus dem Ladeergebnis, `bridge/src/lib.rs`), **Plattform** (`settings.*`, `lang.*`, `settings.json`, Autosave-Intervall an `core-host.ts`, Rotation in `saves.ts`, Preload) und **Spielfeld** (Konsole `lang`, Verdrahtung in `main.ts`). Takt & Weltzustand bleibt unberührt (die Texte gehen nicht in den Katalog der Simulation).
   - **Aufteilung in zwei Stufen (zählt als ein Schritt):** 2.6a Kern (Format `lang/`, Lader, Schema, Basispaket `de`/`en`, Brücke; Tests in `core/tests/datapacks.rs`); 2.6b Plattform und Oberfläche (`settings.*`, `lang.*`, `i18n.ts`, Panels, Rauchtest mit Sprachwechsel ohne Neustart und Sprachpaket aus dem Ordner `packs`). Getrennte Prüfung am Ende (Kategorie 6: neue IPC-Funktionen, `settings.json` als nicht vertrauenswürdige Eingabe, Texte aus Mods in der Oberfläche).
+
+- **Zwischenstand Stufe 2.6a (2026-10-19, Entscheidungs-Klasse; Routine-Arbeit oberhalb der Empfehlung):** Inhaltsart `lang/` im Lader (`core/src/datapack/languages.rs`, Stufe 2 in `load.rs`, `LangFile`/`LanguageEntry`/`Texts` in `model.rs`; `Texts` behält doppelte Schlüssel einer Datei, damit sie als `duplicateId` gemeldet werden), `LoadOutcome.languages`; Schema `content/schema/lang.schema.json`; Basispaket `content/base/lang/de.json` und `en.json` mit 54 Texten je Sprache (Objektnamen und alle Schlüssel des Kerns); `text::core_text_keys()` aus Listen `ALL` in den Code-Modulen von S-2, S-4, S-5, S-7; Brücke `Core.languages()`/`Core.texts(code)`; erzeugter Typ `LanguageInfo`. Jeder Text zählt als Eintrag des Pakets (Basispaket jetzt 111 Einträge). Tests: `core/tests/lang.rs` 9 Fälle (Abdeckung aller Kern-Schlüssel und Objektnamen in `de` und `en`, gleiche Schlüssel und Platzhalter, neue Sprache aus einem Paket, Texte zu vorhandener Sprache, Schlüssel eines anderen Pakets und doppelter Schlüssel in einer Datei → ganzes Paket aus, fehlerhafte Einträge mit Stelle, strenge Struktur), Unit-Tests in `languages.rs` und `model.rs`; Kern 133 Unit-Tests, Rust gesamt 198 Tests grün; Coverage Kern 98,33 % Lines (`languages.rs` 100 %, `load.rs` 96,5 %). Erwartungen „3 Einträge“ des Basispakets in `core/tests/datapacks.rs` und im Rauchtest auf die neue Zählung umgestellt (Rauchtest leitet sie aus den Sprachdateien ab, grün im Container). Gates lokal grün: rustfmt, clippy `-D warnings`, cargo-deny, ESLint, Prettier, tsc, Vitest (300 Tests). Offen: 2.6b.
 
 #### 2.11: Sammelprüfung der Vertragssätze S-1 bis S-7 (Maßnahme 10)
 
