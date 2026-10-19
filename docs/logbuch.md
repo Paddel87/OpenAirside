@@ -24,6 +24,34 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 14:44 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** ca. 1 Stunde 16 Minuten seit `[SESSIONSTART]` 13:28 UTC; Neustart des Arbeitsprozesses gegen 14:05 UTC (zwischen Frage und Antwort), ohne Verlust.
+- **Bearbeitet:** Übernahme der Sessionende-Commits auf `feat/2-6-lokalisierung`; Abgleich vor 2.6 (Maßnahmen 7–9) mit Vorlage; ADR-031; Reflexion Reaktiv-Quote, Schritt 2.11 (Maßnahme 10); Stufe 2.6a; Vorlage Ort von `Settings` (Option A); Stufe 2.6b; getrennte Prüfung (Kategorie 6) und Erledigung; Entscheidung zu Befund 2 (Landeplatz 6.1); Abschluss von 2.6.
+- **Erreicht:** 2.6 `[ERLEDIGT]` (CI-Lauf 39270974482 auf `ff53c01`); FR-006 erledigt; Modul Lokalisierung `[BELASTBAR]`. Commits `10d1965` … `ff53c01` plus dieser Sessionende-Commit; Branch gepusht, kein PR.
+- **Offen geblieben:** PR für 2.6 nach `main` (nur auf Anweisung); ungemergte fremde Branches wie im `[SESSIONENDE]` 2026-10-18 23:27 (Löschen nur auf Anweisung); der alte Branch `feat/2-5-spielstand-mit-autosave` (gemergt, nicht weiterverwendet; Löschen nur auf Anweisung).
+- **Nächster Schritt:** PR für 2.6, danach 2.11 (Sammelprüfung der Vertragssätze) in einer neuen Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 13:27 und 14:42 UTC). Freigaben (Auslöser 1) und Beförderung (Auslöser 4) auf der Pflicht-Klasse; 2.6a und 2.6b als Routine-Arbeit: 2 Stufen oberhalb der Empfehlung (Warnung zu Beginn). Abgegeben: keine Teilarbeit (Probelauf offen); die getrennte Prüfung lief bewusst auf Sonnet 5.5 als Prüfinstanz, nicht als Abgabe.
+- **Kontextgröße:** 472.458 Token laut `get_session` 14:42 UTC – **über der Grenze von 400.000**: die nächste Arbeit (PR, 2.11) in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed`, Zurücksetzen 2026-10-19 15:50 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf.
+- **Archivierung:** Logbuch 880+ Zeilen (Trigger > 800); alle Einträge aus Oktober 2026, keine vorletzte Monats-Scheibe – nichts auszulagern (Lücke der Methodik wie am 2026-10-19 12:48 festgehalten). Verdichtung mit dem `[PHASEN-WECHSEL]` nach Phase 2.
+- **Drift-Prüfung:** README nachgezogen (Phase, Architektur-Reife, Verwendung, Nächste Schritte). ADR-031 verweist auf vorhandene Schritte (2.6, 5.1, 6.1). Reifegrad Lokalisierung `[BELASTBAR]` passt zu ADR-031 und Umsetzung. Modul-Liste: 2.6 berührte Lokalisierung, Oberfläche, Inhalte & Mods, Brücke, Plattform, Spielfeld (Konsole) und mit `core/src/settings.rs` den Kern-Crate – alle vor dem Code vorgelegt und freigegeben. FR-006 nennt 2.6, Status erledigt. Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker. Reaktiv-Quote 6 / 10 (ADR-022 bis ADR-031) stimmt mit den Tags. Phase 2: 11 Schritte bei Plan 10 (unter der Schwelle). Größen: `project-context.md` 369 Zeilen.
+
+### 2026-10-19 14:43 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Modul Lokalisierung:** `[VORLÄUFIG]` → `[BELASTBAR]` durch Umsetzung in 2.6 (Regel-007, ADR-031); Beleg: `core/tests/lang.rs`, `app/renderer/i18n.test.ts`, Rauchtest mit Sprachwechsel ohne Neustart und Sprachpaket aus dem Ordner `packs`, getrennte Prüfung.
+
+### 2026-10-19 14:41 (UTC) – [BEOBACHTUNG]
+
+- **Getrennte Prüfung 2.6** (Sonnet 5.5, nur Diff und Bedrohungsbild): 7 Befunde, keiner hoch. Behoben 1 (quadratischer Aufwand, Sprach-Einträge zählen), 3 (Wettlauf `setSettings`), 4 (`settings.json` über Handle), 5 (Temp-Datei), 6 (`__proto__` als Schlüssel, Texte als Paare); 2 teilweise behoben, Gesamtgrenze per Entscheidung des Projektinhabers („Landeplatz 6.1“) in 6.1; 7 begründet nicht geändert. Liste: `docs/research/2.6-getrennte-pruefung.md`.
+
+### 2026-10-19 14:20 (UTC) – [PROBLEM-GELÖST]
+
+- **Problem:** Der erste Commit von 2.6b scheiterte am Pre-Commit-Hook „TypeScript type-check“: noch nicht vorgemerkte Renderer-Dateien nutzten Typen aus späteren Commits.
+- **Ursache:** Der Hook prüft den ganzen Arbeitsbaum; neue, nicht verfolgte Dateien stellt `pre-commit` nicht beiseite.
+- **Lösung:** Renderer und Rauchtest kurz mit `git stash push --include-untracked` beiseitegelegt, Kern und Plattform committet, zurückgeholt, Rest committet. Kein `--no-verify`.
+
 ### 2026-10-19 14:05 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Vor 2.6b (Maßnahme 7, Stopp-Kriterium 5):** Ort des erzeugten Typs `Settings` (S-6). Projektinhaber per Auswahl: „A: Rust im Kern-Crate“ – `core/src/settings.rs` nur mit Typ und Grenzen für ts-rs; berührt formal den Kern-Crate (Modul Takt & Weltzustand), entgegen der Ankündigung „unberührt“; Vertrag unverändert, kein ADR. Arbeitsprozess vor der Antwort neu gestartet, ohne Verlust (Stand `8753163` gepusht).
