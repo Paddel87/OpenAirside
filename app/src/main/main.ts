@@ -28,8 +28,11 @@ import {
 import { randomBytes } from "node:crypto";
 import {
   appendFileSync,
+  closeSync,
   constants as fsConstants,
+  fstatSync,
   mkdirSync,
+  openSync,
   readdirSync,
   readFileSync,
   renameSync,
@@ -208,7 +211,7 @@ function savedActivePacks(): string[] {
 let languageList: LanguageInfo[] = [];
 /** The player's settings (S-6 `settings.*`); read once the app is ready. */
 let settings: Settings = defaultSettings([]);
-/** Writes of `settings.json` one after the other, so the last call wins. */
+/** Changes of `settings.json` one after the other, each on the result of the previous one. */
 let settingsWrite: Promise<unknown> = Promise.resolve();
 
 function settingsPath(): string {
@@ -221,15 +224,27 @@ function settingsPath(): string {
  */
 function readSettings(): Settings {
   const defaults = defaultSettings(app.getPreferredSystemLanguages());
-  let text: string;
+  let fd: number;
   try {
-    if (statSync(settingsPath()).size > MAX_SETTINGS_BYTES) {
-      log("warn", "settings file too large; using the defaults");
-      return defaults;
-    }
-    text = readFileSync(settingsPath(), "utf8");
+    // One handle for check and read; never blocks on a FIFO (finding 4 of
+    // the separate review of 2.6).
+    fd = openSync(settingsPath(), OPEN_FLAGS);
   } catch {
     return defaults;
+  }
+  let text: string;
+  try {
+    const info = fstatSync(fd);
+    if (!info.isFile() || info.size > MAX_SETTINGS_BYTES) {
+      log("warn", "settings file not a regular file or too large; using the defaults");
+      return defaults;
+    }
+    text = readFileSync(fd, "utf8");
+  } catch {
+    log("warn", "settings file unreadable; using the defaults");
+    return defaults;
+  } finally {
+    closeSync(fd);
   }
   let parsed: unknown;
   try {
@@ -248,38 +263,62 @@ function sendAutosaveInterval(): void {
   core?.postMessage({ type: "autosave:interval", minutes: settings.autosaveMinutes });
 }
 
-/** S-6 `settings.set`: checks the update, writes the file, then applies it. */
-async function setSettings(patch: unknown): Promise<Settings> {
-  const next = applySettings(settings, patch, languageList) ?? fail("invalidArgument");
-  const write = settingsWrite.then(async () => {
+/**
+ * S-6 `settings.set`: checks the update, writes the file, then applies it.
+ * Calls run one after the other, each on the result of the previous one,
+ * so that overlapping calls lose no change (finding 3 of the separate
+ * review of 2.6).
+ */
+function setSettings(patch: unknown): Promise<Settings> {
+  const change = settingsWrite.then(async () => {
+    const next = applySettings(settings, patch, languageList) ?? fail("invalidArgument");
     // Write and rename: an interrupted write never leaves half a file.
     const file = settingsPath();
     const temp = `${file}.tmp`;
-    await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(temp, `${JSON.stringify(next, null, 2)}\n`);
-    await rename(temp, file);
+    try {
+      await mkdir(path.dirname(file), { recursive: true });
+      await writeFile(temp, `${JSON.stringify(next, null, 2)}\n`);
+      await rename(temp, file);
+    } catch (error) {
+      await rm(temp, { force: true }).catch(() => undefined);
+      log("warn", `cannot save the settings: ${errorCode(error)}`);
+      fail("ioError");
+    }
+    const intervalChanged = next.autosaveMinutes !== settings.autosaveMinutes;
+    settings = next;
+    if (intervalChanged) sendAutosaveInterval();
+    log("info", `settings changed: ${JSON.stringify(next)}`);
+    return next;
   });
-  settingsWrite = write.catch(() => undefined);
-  try {
-    await write;
-  } catch (error) {
-    log("warn", `cannot save the settings: ${errorCode(error)}`);
-    fail("ioError");
-  }
-  const intervalChanged = next.autosaveMinutes !== settings.autosaveMinutes;
-  settings = next;
-  if (intervalChanged) sendAutosaveInterval();
-  log("info", `settings changed: ${JSON.stringify(next)}`);
-  return next;
+  settingsWrite = change.catch(() => undefined);
+  return change;
 }
 
+/**
+ * Open `lang.texts` requests by language: a second call for the same
+ * language shares the first one (finding 2 of the separate review of 2.6),
+ * so at most one request per listed language is open.
+ */
+const textsPending = new Map<string, Promise<Record<string, string>>>();
+
 /** S-6 `lang.texts`: the texts of a listed language from the core process. */
-async function languageTexts(arg: unknown): Promise<Record<string, string>> {
+function languageTexts(arg: unknown): Promise<Record<string, string>> {
   if (!isLanguageCode(arg) || !languageList.some((l) => l.code === arg)) fail("invalidArgument");
-  const value = await requestSaves((request) => ({ type: "lang:texts", request, code: arg }));
-  // `null`: the language vanished with a pack change since the list.
-  if (value === null) fail("invalidArgument");
-  return parseTexts(value) ?? fail("invalidAnswer");
+  const open = textsPending.get(arg);
+  if (open !== undefined) return open;
+  const request = (async (): Promise<Record<string, string>> => {
+    const value = await requestSaves((n) => ({ type: "lang:texts", request: n, code: arg }));
+    // `null`: the language vanished with a pack change since the list.
+    if (value === null) fail("invalidArgument");
+    return parseTexts(value) ?? fail("invalidAnswer");
+  })();
+  textsPending.set(arg, request);
+  void request
+    .finally(() => {
+      textsPending.delete(arg);
+    })
+    .catch(() => undefined);
+  return request;
 }
 
 /** Settles the open `packs.setActive` call if `answer` belongs to it. */

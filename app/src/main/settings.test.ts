@@ -98,12 +98,22 @@ describe("settings", () => {
   });
 
   it("checks texts from the core", () => {
-    const texts = parseTexts({ "save.error.ioError": "Fehler", "ui.title": "{n} Spiele" });
+    const texts = parseTexts([
+      ["save.error.ioError", "Fehler"],
+      ["ui.title", "{n} Spiele"],
+      ["__proto__", "p"],
+      ["constructor", "c"],
+    ]);
     expect(texts?.["ui.title"]).toBe("{n} Spiele");
     expect(Object.getPrototypeOf(texts)).toBeNull();
-    expect(parseTexts({ "bad key": "x" })).toBeUndefined();
-    expect(parseTexts({ a: 1 })).toBeUndefined();
+    // Finding 6 of the separate review: plain keys, no prototype change.
+    expect(Object.keys(texts ?? {})).toContain("__proto__");
+    expect(texts?.constructor).toBe("c");
+    expect(parseTexts([["bad key", "x"]])).toBeUndefined();
+    expect(parseTexts([["a", 1]])).toBeUndefined();
+    expect(parseTexts([["a"]])).toBeUndefined();
     expect(parseTexts(["a"])).toBeUndefined();
+    expect(parseTexts({ a: "b" })).toBeUndefined();
     expect(parseTexts(null)).toBeUndefined();
   });
 });

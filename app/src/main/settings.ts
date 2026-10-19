@@ -139,12 +139,20 @@ export function parseLanguageList(value: unknown): LanguageInfo[] | undefined {
   return out;
 }
 
-/** Checks the texts of one language from the core process (S-6 `lang.texts`). */
+/**
+ * Checks the texts of one language from the core process (S-6
+ * `lang.texts`): `[key, text]` pairs, turned into an object without
+ * prototype, so that keys such as `__proto__` stay plain keys.
+ */
 export function parseTexts(value: unknown): Record<string, string> | undefined {
-  if (!isRecord(value)) return undefined;
+  if (!Array.isArray(value)) return undefined;
   const out: Record<string, string> = Object.create(null) as Record<string, string>;
-  for (const [key, text] of Object.entries(value)) {
-    if (!TEXT_KEY.test(key) || typeof text !== "string") return undefined;
+  for (const pair of value as unknown[]) {
+    if (!Array.isArray(pair) || pair.length !== 2) return undefined;
+    const [key, text] = pair as unknown[];
+    if (typeof key !== "string" || !TEXT_KEY.test(key) || typeof text !== "string") {
+      return undefined;
+    }
     out[key] = text;
   }
   return out;
