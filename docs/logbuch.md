@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 14:05 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Vor 2.6b (Maßnahme 7, Stopp-Kriterium 5):** Ort des erzeugten Typs `Settings` (S-6). Projektinhaber per Auswahl: „A: Rust im Kern-Crate“ – `core/src/settings.rs` nur mit Typ und Grenzen für ts-rs; berührt formal den Kern-Crate (Modul Takt & Weltzustand), entgegen der Ankündigung „unberührt“; Vertrag unverändert, kein ADR. Arbeitsprozess vor der Antwort neu gestartet, ohne Verlust (Stand `8753163` gepusht).
+
 ### 2026-10-19 14:01 (UTC) – [BEOBACHTUNG]
 
 - **Abweichung von der Commit-Konvention:** `fbf72e3` („core: …“) enthält zusätzlich die Brücke (`bridge/src/lib.rs`) und die Korrektur des Schlüsselmusters in `architecture.md`, `ADR-031.md` und `fahrplan.md`; Ursache: ein `git add -A` vor `check:types`, das alle Änderungen vormerkte. Nicht nachträglich aufgeteilt (Änderung der Historie, Stopp-Kriterium 6). Lehre: vor dem Prüflauf nur die erzeugten Dateien vormerken.
