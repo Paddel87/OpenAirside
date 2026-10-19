@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-19 (Session ab 13:28 UTC)
+- **Stand vom:** 2026-10-19 (Session ab 15:14 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner; 2.6 (Lokalisierung) ERLEDIGT am 2026-10-19, mit PR #23 nach `main` gemergt (`987c2ee`)
-- **Nächster Schritt:** 2.11 (Sammelprüfung der Vertragssätze) in einer neuen Session auf einem neuen Branch vom aktuellen `main` (Sessionende-Commits von `feat/2-6-lokalisierung` übernehmen), dann 2.10
+- **Aktiver Schritt:** 2.11 (Sammelprüfung der Vertragssätze) IN ARBEIT seit 2026-10-19 15:14 UTC auf `erkundung/2-11-sammelpruefung-vertragssaetze`; 2.6 ERLEDIGT und mit PR #23 gemergt (`987c2ee`)
+- **Nächster Schritt:** Prüfliste 2.11, Vorlage der Funde; danach 2.10
 - **Offene STOPP-Situationen:** keine; Reaktiv-Quote 6 / 10 nach ADR-031 über dem Schwellenwert (Reflexion zu ADR-031 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, Maßnahme (10) als Schritt 2.11)
 
 <!-- ANCHOR:phasen-typen -->
@@ -329,7 +329,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 2.11: Sammelprüfung der Vertragssätze S-1 bis S-7 (Maßnahme 10)
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT (seit 2026-10-19 15:14 UTC)
 - **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt in Phase 2, wie 2.9)
 - **Schritt-Art (nur ERKUNDUNG):** sonstiges (Prüfung von Verträgen)
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session
@@ -343,6 +343,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Brücke, Plattform, Oberfläche, Inhalte & Mods, Takt & Weltzustand (nur Verträge, kein Code)
 - **Reifegrad-Wirkung:** keine (S-1 bis S-7 bleiben `[BELASTBAR]`, ggf. per ADR fortgeschrieben)
 - **Artefakte:** Prüfliste in `docs/research/`, ggf. ADR
+- **Stand 2026-10-19 15:50 UTC:** Prüfliste `docs/research/2.11-sammelpruefung.md`: 81 Sätze geprüft, 41 ohne Fund; 10 Lücken (L-1 … L-10), 5 Kartenfunde (K-1 … K-5), 8 redaktionelle Funde (R-1 … R-8). Vorlage als `ENTSCHEIDUNG ERFORDERLICH` (Kategorie 5 und 1) mit Empfehlungen: L-1 Entwurfsschritt 3.8 vor 3.1 (Weltdarstellung), L-2 Katalog über S-7 (3.1), L-3 `game.new` in S-6 (Grundform 3.1, voll 5.1), L-4 Grafik über die volle Objekt-ID (2.10), L-5 Parameter `{ key }` (3.1), L-6 Wörterbuch aus Textschlüsseln und Tick im Detail (3.6), L-7 Debug-Vermerk in 5.6, L-8 Kanal als S-8 beschreiben, L-9 `sessionEnded` streichen, L-10 Texte der laufenden Sitzung (6.1); Modul-Karte nach K-1 … K-5; R-1 … R-8 mit dem ADR. Ein gemeinsamer ADR-032 wäre `[REAKTIV]` (ändert ADR-021 binnen 14 Tagen), Quote danach 7 / 10. Wartet auf Freigabe.
 
 #### 2.10: Stilleitfaden, SVG-Pipeline und Messung der Darstellung
 

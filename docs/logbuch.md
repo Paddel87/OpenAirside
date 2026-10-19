@@ -24,6 +24,19 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 15:50 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 2.11, Sammelprüfung:** Prüfliste `docs/research/2.11-sammelpruefung.md` (81 Sätze, 41 ohne Fund). Vorgelegt: 10 Lücken mit Optionen (Kategorie 5, für L-8 und die Modul-Karte Kategorie 1), 5 Kartenfunde, 8 redaktionelle Funde; Empfehlungen und Landeplätze im Fahrplan bei 2.11. Auffälligster Kartenfund K-1: die Mermaid-Kennung `ABF` steht doppelt, Abfrage und Abfertigung & Gepäck sind ein Knoten. Ein gemeinsamer ADR wäre `[REAKTIV]` (14-Tage-Regel gegenüber ADR-021), Quote 7 / 10.
+
+### 2026-10-19 15:14 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 14:44 UTC plus `[BEOBACHTUNG]` 14:51 (Merge PR #23, `987c2ee`). Der Sessionende-Commit `1816efb` nach `project-context.md` Abschnitt 10 auf den neuen Branch `erkundung/2-11-sammelpruefung-vertragssaetze` vom aktuellen `main` übernommen (`aa0a7da`); `feat/2-6-lokalisierung` wird nicht weiterverwendet.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 2, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht). Für 2.11 zusätzlich Architektur Abschnitte 3 und 4 vollständig (Vertiefung: Gegenstand der Prüfung).
+- **Geplant für diese Session:** Schritt 2.11 (Sammelprüfung der Vertragssätze S-1 bis S-7, Maßnahme 10): Prüfliste in `docs/research/2.11-sammelpruefung.md`, Lücken gesammelt als `ENTSCHEIDUNG ERFORDERLICH`; ADR und Doku erst nach Freigabe.
+- **Vorabprüfung:** S-1 bis S-7 `[BELASTBAR]`; 2.11 ist Entwurfsschritt (ERKUNDUNG-Kontext) ohne Code; Eingangskriterium 2.6 erledigt. Reaktiv-Quote 6 / 10, Maßnahmen (7)–(10) gelten. Befund 2 aus 2.6 (Gesamtgrenze über alle Pakete) hat den Landeplatz 6.1 und wird hier nicht gelöst.
+- **Modus/Werkzeug:** semi-autonom, Claude Code in einer Cloud-Session (Container ohne eingerichtete Werkzeuge; Einrichtung nur, falls Funde Code berühren).
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` laut `get_session` 15:13 UTC → **Entscheidungs-Klasse**; entspricht der Empfehlung für 2.11.
+
 ### 2026-10-19 14:51 (UTC) – [BEOBACHTUNG]
 
 - **Merge:** PR #23 (Schritt 2.6) auf Anweisung des Projektinhabers („Erstelle den PR für 2.6, merge bei grün“) nach `main` gemergt, Merge-Commit `987c2ee`; vorher grün: Push-Lauf 39271631746, PR-Läufe CI 39272068681 und Security 39272068679 auf `781b50d`. Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf dem Arbeits-Branch und geht mit dem PR des nächsten Schritts nach `main`.
