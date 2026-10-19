@@ -24,16 +24,17 @@ pub const MANIFEST: &str = "manifest.json";
 pub enum Kind {
     /// Object types (`objects/`).
     Objects,
+    /// Texts by language (`lang/`, step 2.6).
+    Lang,
 }
 
 /// Kind folders of S-4 whose format a later step defines (ADR-025), with
 /// that step.
-const LATER_KINDS: [(&str, &str); 5] = [
+const LATER_KINDS: [(&str, &str); 4] = [
     ("aircraft", "3.6"),
     ("airlines", "3.6"),
     ("vehicles", "3.4"),
     ("research", "5.6"),
-    ("lang", "2.6"),
 ];
 
 /// A content file read from a pack.
@@ -120,6 +121,7 @@ impl Folder {
             }
             let kind = match name.as_str() {
                 "objects" => Kind::Objects,
+                "lang" => Kind::Lang,
                 other => {
                     let reason = match LATER_KINDS.iter().find(|(k, _)| *k == other) {
                         Some((kind, step)) => error(code::KIND_NOT_SUPPORTED)

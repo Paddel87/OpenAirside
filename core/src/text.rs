@@ -18,6 +18,30 @@ pub enum ParamValue {
     Text(String),
 }
 
+/// Every localisation key the core produces (FR-006): rejections of S-2,
+/// the notice of S-3, query errors of S-7, pack errors of S-4 and save
+/// errors of S-5. The base pack has a text for each in every language it
+/// ships (`core/tests/lang.rs`).
+#[must_use]
+pub fn core_text_keys() -> Vec<String> {
+    let mut keys = Vec::new();
+    let mut add = |prefix: &str, codes: &[&str]| {
+        keys.extend(codes.iter().map(|code| format!("{prefix}.{code}")));
+    };
+    add(
+        crate::command::REJECT_TEXT_PREFIX,
+        crate::command::code::ALL,
+    );
+    add("notice", &[crate::simulation::TICK_LIMIT]);
+    add(crate::query::ERROR_TEXT_PREFIX, crate::query::code::ALL);
+    add(
+        crate::datapack::ERROR_TEXT_PREFIX,
+        crate::datapack::code::ALL,
+    );
+    add(crate::savegame::TEXT_PREFIX, crate::savegame::code::ALL);
+    keys
+}
+
 /// Parameters of a text, sorted by name for a deterministic order.
 pub type Params = BTreeMap<String, ParamValue>;
 

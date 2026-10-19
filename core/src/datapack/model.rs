@@ -6,7 +6,10 @@
 //! TypeScript types with ts-rs (feature `ts`). Unknown fields are an error.
 //! Stage 2 (values, ids, references) lives in `load.rs`.
 
-use serde::{Deserialize, Serialize};
+use std::fmt;
+
+use serde::de::{MapAccess, Visitor};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// `manifest.json` of a data pack.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -132,4 +135,110 @@ pub enum Placement {
         )]
         depth: u16,
     },
+}
+
+/// A content file in the folder `lang/` (step 2.6, ADR-031).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LangFile {
+    /// Path or URL of the JSON Schema for editors; ignored by the game.
+    #[serde(rename = "$schema", default, skip_serializing_if = "Option::is_none")]
+    pub schema: Option<String>,
+    /// Texts of one or more languages.
+    pub languages: Vec<LanguageEntry>,
+}
+
+/// Texts of one language. Several packs may add texts to the same language.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct LanguageEntry {
+    /// Language code: 2 or 3 letters `a-z`, optionally `-` and 2 to 8
+    /// characters `a-z`, `0-9` (e.g. `de`, `en`, `pt-br`).
+    #[cfg_attr(
+        feature = "schema",
+        schemars(pattern(r"^[a-z]{2,3}(-[a-z0-9]{2,8})?$"))
+    )]
+    pub id: String,
+    /// Name of the language in itself (e.g. `Deutsch`); required in the
+    /// first loaded pack that adds texts to this language.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schema", schemars(length(min = 1, max = 4096)))]
+    pub name: Option<String>,
+    /// Texts by localisation key (key: 1 to 128 characters `A-Z`, `a-z`,
+    /// `0-9`, `_`, `.`, `-`). Parameters are written as `{name}`.
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "std::collections::BTreeMap<String, String>")
+    )]
+    pub texts: Texts,
+}
+
+/// Texts of a [`LanguageEntry`] in the order of the file. Unlike a map,
+/// a key written twice is kept, so that stage 2 reports it
+/// (`duplicateId`) instead of the later text winning silently.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Texts(pub Vec<(String, String)>);
+
+impl Serialize for Texts {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_map(self.0.iter().map(|(k, v)| (k, v)))
+    }
+}
+
+impl<'de> Deserialize<'de> for Texts {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct TextsVisitor;
+
+        impl<'de> Visitor<'de> for TextsVisitor {
+            type Value = Texts;
+
+            fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.write_str("an object of texts by key")
+            }
+
+            fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Texts, A::Error> {
+                let mut out = Vec::new();
+                while let Some((key, value)) = map.next_entry::<String, String>()? {
+                    out.push((key, value));
+                }
+                Ok(Texts(out))
+            }
+        }
+
+        deserializer.deserialize_map(TextsVisitor)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn texts_keep_their_order_and_round_trip() {
+        let file: LangFile = serde_json::from_str(
+            r#"{"languages": [{"id": "de", "name": "Deutsch", "texts": {"b": "2", "a": "1", "b": "3"}}]}"#,
+        )
+        .expect("parse");
+        let texts = &file.languages[0].texts;
+        let keys: Vec<&str> = texts.0.iter().map(|(k, _)| k.as_str()).collect();
+        assert_eq!(keys, ["b", "a", "b"]);
+        let json = serde_json::to_string(&file).expect("serialise");
+        assert_eq!(
+            json,
+            r#"{"languages":[{"id":"de","name":"Deutsch","texts":{"b":"2","a":"1","b":"3"}}]}"#
+        );
+    }
+
+    #[test]
+    fn texts_must_be_an_object() {
+        let err =
+            serde_json::from_str::<LangFile>(r#"{"languages": [{"id": "de", "texts": ["x"]}]}"#)
+                .expect_err("a list is not an object");
+        assert!(
+            err.to_string().contains("an object of texts by key"),
+            "{err}"
+        );
+    }
 }

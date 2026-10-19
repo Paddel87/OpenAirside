@@ -6,11 +6,13 @@
 //! checks every file against fixed limits before parsing, checks structure
 //! (stage 1) and values, ids and references (stage 2), and loads a faulty
 //! pack not at all; the game starts with the other packs. The result is a
-//! [`Catalog`] for the simulation and one [`PackReport`] per found pack for
-//! the platform API S-6 (`packs.list`).
+//! [`Catalog`] for the simulation, the [`Languages`] for the presentation
+//! (S-6 `lang.*`, ADR-031) and one [`PackReport`] per found pack for the
+//! platform API S-6 (`packs.list`).
 
 mod catalog;
 mod files;
+mod languages;
 mod load;
 pub mod model;
 pub mod scan;
@@ -20,6 +22,7 @@ pub mod schema;
 use serde::Serialize;
 
 pub use catalog::{ActivePack, Catalog, ObjectType};
+pub use languages::{LanguageInfo, Languages, MAX_KEY_CHARS, is_language_code, is_text_key};
 pub use load::{LoadOutcome, PackFolder, discover, game_version, load};
 
 use crate::text::Reason;
@@ -102,6 +105,34 @@ pub mod code {
     pub const REPLACE_CONFLICT: &str = "replaceConflict";
     /// A value is outside its range.
     pub const INVALID_VALUE: &str = "invalidValue";
+
+    /// Every code above; the base pack has a text for each
+    /// (`core/tests/lang.rs`).
+    pub const ALL: &[&str] = &[
+        LIMIT_EXCEEDED,
+        DEPENDENCY_CYCLE,
+        INVALID_PATH,
+        UNEXPECTED_ENTRY,
+        KIND_NOT_SUPPORTED,
+        MANIFEST_MISSING,
+        IO_ERROR,
+        SYNTAX_ERROR,
+        INVALID_STRUCTURE,
+        INVALID_ID,
+        INVALID_VERSION,
+        FORMAT_TOO_NEW,
+        FORMAT_UNSUPPORTED,
+        GAME_VERSION,
+        DEPENDENCY_MISSING,
+        DEPENDENCY_INACTIVE,
+        DEPENDENCY_VERSION,
+        DEPENDENCY_FAILED,
+        DUPLICATE_PACK,
+        DUPLICATE_ID,
+        REPLACE_TARGET,
+        REPLACE_CONFLICT,
+        INVALID_VALUE,
+    ];
 }
 
 /// Where a pack comes from.

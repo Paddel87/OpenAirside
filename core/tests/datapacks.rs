@@ -114,7 +114,9 @@ fn base_pack_of_the_repository_loads() {
     assert_eq!(base.source, PackSource::Base);
     assert_eq!(base.id.as_deref(), Some(BASE_PACK_ID));
     assert_eq!(base.state, PackState::Active, "{:?}", base.errors);
-    assert_eq!(base.entries, 3);
+    // 3 objects plus the texts of `lang/` (each text is an entry, ADR-031).
+    let texts: u32 = outcome.languages.list().iter().map(|l| l.keys).sum();
+    assert_eq!(base.entries, 3 + texts);
     assert!(!outcome.catalog.base_failed());
     assert_eq!(
         ids(&outcome.catalog),

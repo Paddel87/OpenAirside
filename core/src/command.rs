@@ -138,6 +138,20 @@ pub mod code {
     pub const NIGHT_SKIP_BLOCKED: &str = "nightSkipBlocked";
     /// A quantity above its limit.
     pub const LIMIT_EXCEEDED: &str = "limitExceeded";
+
+    /// Every code above, plus `tickLimit` of the simulation; the base pack
+    /// has a text for each (`core/tests/lang.rs`).
+    pub const ALL: &[&str] = &[
+        INVALID_ARGUMENT,
+        OUT_OF_MAP,
+        UNKNOWN_CONTENT,
+        AREA_TOO_LARGE,
+        NOT_READY,
+        NOT_NIGHT,
+        NIGHT_SKIP_BLOCKED,
+        LIMIT_EXCEEDED,
+        crate::simulation::TICK_LIMIT,
+    ];
 }
 
 /// Builds the reason of a rejected command.

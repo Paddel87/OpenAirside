@@ -7,7 +7,7 @@
 use schemars::schema_for;
 use serde_json::Value;
 
-use super::model::{Manifest, ObjectsFile};
+use super::model::{LangFile, Manifest, ObjectsFile};
 
 /// File name and schema of every file of the pack format.
 #[must_use]
@@ -15,6 +15,7 @@ pub fn schemas() -> Vec<(&'static str, Value)> {
     vec![
         ("manifest.schema.json", Value::from(schema_for!(Manifest))),
         ("objects.schema.json", Value::from(schema_for!(ObjectsFile))),
+        ("lang.schema.json", Value::from(schema_for!(LangFile))),
     ]
 }
 
@@ -39,6 +40,13 @@ mod tests {
             manifest["properties"]["id"]["pattern"],
             "^[a-z0-9_-]{3,64}$"
         );
+        let lang = &schemas[2].1;
+        let entry = &lang["$defs"]["LanguageEntry"];
+        assert_eq!(
+            entry["properties"]["id"]["pattern"],
+            "^[a-z]{2,3}(-[a-z0-9]{2,8})?$"
+        );
+        assert_eq!(entry["properties"]["texts"]["type"], "object");
         if let Some(dir) = std::env::var_os("SCHEMA_EXPORT_DIR") {
             let dir = std::path::PathBuf::from(dir);
             std::fs::create_dir_all(&dir).expect("create export dir");
