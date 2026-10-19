@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-19 (Session ab 15:14 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner; 2.11 (Sammelprüfung der Vertragssätze) ERLEDIGT am 2026-10-19 (ADR-032), Branch `erkundung/2-11-sammelpruefung-vertragssaetze` gepusht, kein PR (PR nur auf Anweisung)
-- **Nächster Schritt:** PR für 2.11 nach `main` (Anweisung: Merge bei grün), danach 2.10 (Stilleitfaden, SVG-Pipeline, Messung) in einer neuen Session
+- **Aktiver Schritt:** keiner; 2.11 (Sammelprüfung der Vertragssätze) ERLEDIGT am 2026-10-19 (ADR-032), mit PR #24 nach `main` gemergt (`2a464bf`)
+- **Nächster Schritt:** 2.10 (Stilleitfaden, SVG-Pipeline, Messung) in einer neuen Session auf einem neuen Branch vom aktuellen `main` (Sessionende-Commit von `erkundung/2-11-sammelpruefung-vertragssaetze` übernehmen)
 - **Offene STOPP-Situationen:** Reaktiv-Quote 7 / 10 nach ADR-032 über dem Schwellenwert – Reflexion zu ADR-032 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, kein Umbau
 
 <!-- ANCHOR:phasen-typen -->
