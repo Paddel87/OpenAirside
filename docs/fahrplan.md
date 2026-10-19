@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-19 (Session ab 16:18 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 2.10 (Stilleitfaden, SVG-Pipeline, Messung) – IN ARBEIT, Rasterer freigegeben (ADR-033); zuvor 2.11 ERLEDIGT (ADR-032, PR #24, `2a464bf`)
-- **Nächster Schritt:** Pipeline, Stilleitfaden, Programmsymbol und Messwerkzeug für 2.10 auf `feat/2-10-stilleitfaden-svg-pipeline`
+- **Aktiver Schritt:** 2.10 (Stilleitfaden, SVG-Pipeline, Messung) – IN ARBEIT, Pipeline umgesetzt (ADR-033), wartet auf die Messung durch den Projektinhaber; zuvor 2.11 ERLEDIGT (ADR-032, PR #24, `2a464bf`)
+- **Nächster Schritt:** Messung 2.10 auf Referenz-PC und Mac durch den Projektinhaber (Anleitung `docs/research/2.10-messung.md`), dann Auswertung und ADR zur NFR Darstellung
 - **Offene STOPP-Situationen:** Reaktiv-Quote 7 / 10 nach ADR-032 über dem Schwellenwert – Reflexion zu ADR-032 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, kein Umbau
 
 <!-- ANCHOR:phasen-typen -->
@@ -356,12 +356,13 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Eingangskriterien:** Spielfeld-Grundgerüst (2.7)
 - **Anforderungen (ab Klasse M):** FR-050
 - **Zu tun:** Stilleitfaden (Palette, Strichstärken, Maßstab 2 m je Zelle nach ADR-020, Detailgrad); SVG-Quellen im Repository, Rasterung in mehreren Auflösungen im Build (ADR-008), Atlanten; Bildname im Atlas = volle Objekt-ID (`base:bench`), neutrale Ersatzgrafik für Objekte ohne Bild (ADR-032, L-4); für die Messung platziert das Messwerkzeug die Objekt-Sprites selbst, solange der Weg der Weltdarstellung offen ist (3.8); eigenes Programmsymbol für Fenster, Installer und Pakete (Befund 2.1-N2); Messung des Spielfelds mit Objekt-Sprites aus den Atlanten, Overlays und 10.000 Personen auf Referenz-PC und Mac; dabei auf dem Mac prüfen, ob die Aussetzer der Simulation bis 110 ms aus 2.7 wiederkehren, und bei Wiederholung die Ursache klären (Vermutung: Verteilung von Tick- und Hintergrund-Threads auf Leistungs- und Effizienzkerne), dazu ein Vergleichslauf mit weniger Hintergrund-Threads (z. B. `--background-threads=4`; auf dem Referenz-PC liefen die Schritte damit ruhiger, 2.7).
-- **Akzeptanzkriterien:** `scripts/assets.test.ts` grün; Messprotokoll zeigt, ob 60 Bilder/s mit echten Grafiken halten; Ergebnis per ADR (NFR Darstellung `[VORLÄUFIG]` → `[BELASTBAR]` oder Maßnahme).
+- **Akzeptanzkriterien:** `scripts/assets.test.ts` grün (umgesetzt als `scripts/assets.test.mjs` nach dem Muster der übrigen Skript-Tests, dazu cargo-Tests in `tools/assets`); Messprotokoll zeigt, ob 60 Bilder/s mit echten Grafiken halten; Ergebnis per ADR (NFR Darstellung `[VORLÄUFIG]` → `[BELASTBAR]` oder Maßnahme).
 - **Betroffene Module:** Spielfeld, Build/CI
 - **Reifegrad-Wirkung:** NFR Performance Darstellung mit echten Grafiken `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen
 - **Artefakte:** Stilleitfaden, Pipeline-Skript, Atlanten, Messprotokoll, ADR
 - **Stand 2026-10-19 16:22 UTC:** Vorlage als `ENTSCHEIDUNG ERFORDERLICH` (Kategorie 3, mit Kategorie 7 für den neuen Bauschritt): A resvg 0.48.1 (Rust, crates.io, Apache-2.0 OR MIT) in einem eigenen Werkzeug-Crate `tools/assets` im Cargo-Workspace, nur im Build, mit Atlas-Packer und Bildliste ohne weitere Abhängigkeit; B @resvg/resvg-js 2.6.2 (npm, MPL-2.0, vorgebaute native Pakete; letzte stabile Version 2024-03-26, seither nur Alpha-Versionen); C Rasterung in Electron/Chromium ohne neue Abhängigkeit. Verworfen ohne Option: sharp (vorgebaute libvips-Binärdateien unter LGPL-3.0, nicht erlaubt). Empfehlung A. Belege: Probe-Projekt mit `default-features = false` – 37 Crates, alle Lizenzen erlaubt, eine doppelte Version `miniz_oxide` 0.8.9 neben 0.9.1 (über png 0.18.1) als benannte Ausnahme in `deny.toml` nötig; Rasterung eines Test-SVG in 1× und 2× lief. Wartet auf Freigabe.
 - **Freigabe (2026-10-19 16:28 UTC):** Option A per Auswahl, ADR-033 `[OPERATIV]`.
+- **Stand 2026-10-19 17:02 UTC:** umgesetzt und lokal geprüft: Werkzeug-Crate `tools/assets` (Atlanten in 8/16/32 px je Zelle, Bildliste, Programmsymbol), Stilleitfaden `docs/stilleitfaden.md` mit Palette `assets/palette.json`, SVG-Quellen in `assets/` (außerhalb des Paketordners, S-4 unverändert), Prüfer `scripts/assets.mjs`, Atlanten im Spielfeld (`app/renderer/atlas.ts`, ohne `fetch`, CSP unverändert), Szene des Messwerkzeugs (20.000 Objekte, 64 Zonen), Fenstersymbol unter Linux, Rauchtest mit `data-atlas`. Onboarding im frischen Worktree validiert. Messanleitung `docs/research/2.10-messung.md`. **Offen:** Messung auf Referenz-PC und Mac durch den Projektinhaber (Hardware), danach Auswertung und ADR zur NFR Darstellung; bis dahin bleibt der Schritt `[IN ARBEIT]`.
 
 ### Phase 3: Vertikaler Schnitt „Kleiner Flughafen" – Typ: UMSETZUNG
 
@@ -438,7 +439,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Wahl neuer Linien ist eine Entscheidung über externe Abhängigkeiten.
 - **Eingangskriterien:** Vorlauf im Ablaufdaten-Register erreicht
 - **Anforderungen (ab Klasse M):** FR-045
-- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge, abgekündigte Unterpakete von electron-builder (Register-Eintrag vom 2026-10-13), Audit-Befund „moderate“ sprintf-js über electron-builder (GHSA-hp3w-g68c-fv3c, Warnungs-Bestand seit 2026-10-19), benannte Ausnahme `syn@2.0.119` in `deny.toml` (ts-rs auf syn 3 umgestellt?, Warnungs-Bestand); Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
+- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge, abgekündigte Unterpakete von electron-builder (Register-Eintrag vom 2026-10-13), Audit-Befund „moderate“ sprintf-js über electron-builder (GHSA-hp3w-g68c-fv3c, Warnungs-Bestand seit 2026-10-19), benannte Ausnahme `syn@2.0.119` in `deny.toml` (ts-rs auf syn 3 umgestellt?, Warnungs-Bestand), benannte Ausnahme `miniz_oxide@0.8.9` (png auf miniz_oxide 0.9 umgestellt?, ADR-033), abgekündigte automatische Toolchain-Installation durch `rustup show` in den Workflows (rustup#4836, gemeldet im CI-Protokoll seit 2026-10-19; Umstellung auf `rustup toolchain install` als CI-Änderung zur Freigabe vorlegen, Kategorie 7); Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
 - **Akzeptanzkriterien:** Keine fixierte Version ist über ihrem Lebensende; Register und `Verifiziert`-Vermerke aktuell; CI grün auf drei Plattformen.
 - **Betroffene Module:** Plattform, Build/CI
 - **Reifegrad-Wirkung:** keine

@@ -24,6 +24,26 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 17:04 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Grafik-Pipeline (SVG → Atlanten):** `[VORLÄUFIG]` (ADR-008) → `[BELASTBAR]` durch funktionierende Umsetzung in 2.10 (Beförderungsregel): Werkzeug und Prüfer mit Tests, CI-Lauf 39290398392 auf `5862b4e` grün auf drei Plattformen (17 Jobs), Rauchtest lädt die Atlanten unter der CSP. NFR Darstellung mit echten Grafiken bleibt `[VORLÄUFIG]` bis zur Messung.
+- **CI-Protokoll gelesen (Warnungsquellen ohne Schalter):** neu `rustup show` „auto-installation is deprecated“ (rustup#4836) – Ablaufdaten-Register und Q.1 ergänzt (Umstellung freigabepflichtig, Kategorie 7); bekannt: Hinweis Ubuntu 26, `npm warn deprecated` (electron-builder-Unterpakete), `install-scripts` electron-winstaller, 8 × moderate; neu, nur Hinweis der Plattform: Wartezeiten der macOS-arm64-Runner.
+
+### 2026-10-19 17:02 (UTC) – [ONBOARDING-VALIDATION]
+
+- **Anlass:** `package.json` (`build` mit neuem Schritt `build:assets`) und Runbook geändert – Quick-Start-relevant. Frischer Worktree von `5862b4e` im Scratchpad: `npm ci`, `npm run build` (Kern, Brücke, Atlanten, Hauptprozess, Renderer) und Rauchtest `xvfb-run -a npx playwright test` grün (1 passed); Atlanten und `build/icon.png` entstehen ohne weitere Voraussetzung. Worktree danach entfernt.
+
+### 2026-10-19 17:00 (UTC) – [PROBLEM-GELÖST]
+
+- **CI rot auf macOS und Windows (Lauf 39289876778, Job „Rust Tests"):** Der Test `reports_bad_inputs_with_their_file` legte `Bench.svg` neben `bench.svg` an; auf Dateisystemen ohne Unterscheidung von Groß- und Kleinschreibung ist das dieselbe Datei, das Werkzeug fand also keinen ungültigen Namen. Fehler im Test, nicht im Werkzeug. Behoben mit `bench.old.svg` (Commit `5862b4e`).
+- **Mini-Reibung, zwei Entwurfsfehler vor dem Commit bemerkt:** (1) Die SVG-Quellen lagen zuerst in `content/base/graphics/` – das hätte das Paketformat S-4 um einen Ordner erweitert und die Quellen ausgeliefert; verlegt nach `assets/graphics/base/`. (2) Die Bank war zuerst 4 × 2 Zellen groß gezeichnet; `width`/`depth` im Paket sind Meter (ADR-020), richtig sind 2 × 1 Zellen. Der Prüfer vergleicht seitdem die Größe mit der Grundfläche.
+- **Laden ohne CSP-Änderung:** PixiJS `Assets` lädt über `fetch`, die CSP hat `connect-src 'none'` (Kategorie 6). Stattdessen Bildliste per Vite-Import im Bündel, Seiten als `<img>` unter `img-src 'self'`.
+
+### 2026-10-19 16:59 (UTC) – [BEOBACHTUNG]
+
+- **Probelauf der Messung im Container:** `measure 1` mit Szene (20.000 Objekte, 200 mit Ersatzgrafik, 64 Zonen) läuft durch, Ergebnisdatei mit `series.scene` und `tierPx`; einmal über Canvas (ohne WebGL), einmal über WebGL2/SwiftShader. Bildraten ohne Aussage (Software-Grafik auf 4 vCPU), Tabelle in `docs/research/2.10-messung.md`.
+- **Uhrzeit wieder geschätzt:** Die Vorlage stand zunächst mit 16:31 UTC in Fahrplan und Logbuch, `date -u` meldete 16:22; vor dem Commit korrigiert. Die Lehre aus 15:28 wirkt noch nicht zuverlässig: Uhrzeit jetzt immer im selben Befehl wie die Änderung holen.
+
 ### 2026-10-19 16:29 (UTC) – [ADR-ANGELEGT]
 
 - **ADR-033** `[OPERATIV]` „SVG-Rasterer resvg im Werkzeug-Crate `tools/assets`": freigegeben vom Projektinhaber per Auswahl A (resvg 0.48.1, Rust). Benannte Ausnahme `miniz_oxide@0.8.9` im Warnungs-Bestand. Reaktiv-Quote 7 / 10 über ADR-024 bis ADR-033, unverändert über dem Schwellenwert (kein neuer `[REAKTIV]`-ADR, Reflexion zu ADR-032 gilt).

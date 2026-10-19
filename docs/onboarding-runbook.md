@@ -99,7 +99,7 @@ pre-commit run --all-files
 npm start
 ```
 
-**Erwartetes Ergebnis:** Der erste Lauf baut den Rust-Kern und die Brücke (`app/native/openairside-bridge.node`, einige Minuten), dann den Hauptprozess (`app/dist/main`) und die Oberfläche (`app/dist/renderer`). Es öffnet sich das Fenster „OpenAirside" mit leerer Karte und dem Debug-Panel oben links (Leistungsanzeige, Protokoll, Konsole; `help` zeigt die Befehle). Unter Linux als root oder in Containern ist `--no-sandbox` nötig (`npx electron . --no-sandbox`, Abschnitt 4).
+**Erwartetes Ergebnis:** Der erste Lauf baut den Rust-Kern und die Brücke (`app/native/openairside-bridge.node`, einige Minuten), dann die Grafik-Atlanten und das Programmsymbol (`npm run build:assets`: `app/renderer/public/atlas/`, `app/renderer/atlas/atlas.json`, `build/icon.png`), dann den Hauptprozess (`app/dist/main`) und die Oberfläche (`app/dist/renderer`). Es öffnet sich das Fenster „OpenAirside" mit leerer Karte und dem Debug-Panel oben links (Leistungsanzeige, Protokoll, Konsole; `help` zeigt die Befehle). Unter Linux als root oder in Containern ist `--no-sandbox` nötig (`npx electron . --no-sandbox`, Abschnitt 4).
 
 Mit dem Referenz-Terminal aus Spike 1.5 (768² × 5 in einer Karte 2048², 10.000 Personen) starten:
 
@@ -107,7 +107,7 @@ Mit dem Referenz-Terminal aus Spike 1.5 (768² × 5 in einer Karte 2048², 10.00
 npx electron . --scenario=referenceTerminal --persons=10000
 ```
 
-In der Konsole beschleunigt `speed x3` das Spiel; Mausrad zoomt, Ziehen verschiebt, Bild auf/ab wechselt die Etage. `measure [Minuten]` startet die Messreihe (Standard 10 Minuten) und meldet am Ende den Pfad der Ergebnisdatei im Download-Ordner; ohne Ordner „Downloads" (z. B. im Container) landet sie im Home-Ordner. `packs` listet die Datenpakete: das Basispaket aus `content/base/` (`active base base 0.0.0 – 3 entries`) und eigene Pakete aus dem Ordner `packs` im Datenordner des Spiels (`app.getPath("userData")`: im Entwicklungs-Build `<appData>/openairside`, im installierten Spiel `<appData>/OpenAirside`; `<appData>` ist unter Linux `~/.config`, unter Windows `%APPDATA%`, unter macOS `~/Library/Application Support`), jeweils mit Fehlern und Fundstelle. Ein Testpaket aktiviert `packs set <id>`; es gilt ab der nächsten Sitzung (`scenario hall`). In Containern ohne Grafikkarte zeichnet PixiJS auf der CPU (Anzeige „renderer canvas"); mit `--enable-unsafe-swiftshader` läuft WebGL2 über SwiftShader, die Bildraten sind dort ohne Aussage.
+In der Konsole beschleunigt `speed x3` das Spiel; Mausrad zoomt, Ziehen verschiebt, Bild auf/ab wechselt die Etage. `measure [Minuten]` startet die Messreihe (Standard 10 Minuten, mit 20.000 Objekt-Sprites aus den Atlanten seit 2.10) und meldet am Ende den Pfad der Ergebnisdatei im Download-Ordner; ohne Ordner „Downloads" (z. B. im Container) landet sie im Home-Ordner. `packs` listet die Datenpakete: das Basispaket aus `content/base/` (`active base base 0.0.0 – 3 entries`) und eigene Pakete aus dem Ordner `packs` im Datenordner des Spiels (`app.getPath("userData")`: im Entwicklungs-Build `<appData>/openairside`, im installierten Spiel `<appData>/OpenAirside`; `<appData>` ist unter Linux `~/.config`, unter Windows `%APPDATA%`, unter macOS `~/Library/Application Support`), jeweils mit Fehlern und Fundstelle. Ein Testpaket aktiviert `packs set <id>`; es gilt ab der nächsten Sitzung (`scenario hall`). In Containern ohne Grafikkarte zeichnet PixiJS auf der CPU (Anzeige „renderer canvas"); mit `--enable-unsafe-swiftshader` läuft WebGL2 über SwiftShader, die Bildraten sind dort ohne Aussage.
 
 ### Schritt 5: Verifikation (alle Pflicht-Gates wie in der CI)
 
@@ -123,6 +123,7 @@ npm test                              # Vitest mit Coverage ≥ 70 %
 npm run check:licenses
 npm run check:types                   # erzeugte TypeScript-Typen aktuell (nach Änderung an Kern-Typen: npm run gen:types)
 npm run check:schema                  # Schema-Dateien der Datenpakete aktuell (nach Änderung an core/src/datapack/model.rs: npm run gen:schema)
+npm run check:graphics                # SVG-Quellen nach docs/stilleitfaden.md (läuft auch in npm test)
 cargo bench -p openairside-core --bench tick        # Kern-Benchmark mit Grenzen aus ADR-022
 cargo bench -p openairside-core --bench flowfield   # Wegweiser-Benchmark: Neuberechnung und Schrittzeit (Schritt 2.3)
 npm run test:e2e                      # Linux ohne Desktop: xvfb-run -a npm run test:e2e
