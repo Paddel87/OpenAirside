@@ -47,3 +47,69 @@ body {
   font: inherit;
   padding: 2px 4px;
 }
+
+#saves,
+#notice {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 560px;
+  max-height: calc(100% - 16px);
+  overflow-y: auto;
+  font:
+    13px/1.4 system-ui,
+    sans-serif;
+  background: rgb(17 19 23 / 92%);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+#notice {
+  top: auto;
+  bottom: 8px;
+}
+
+#saves[hidden],
+#notice[hidden] {
+  display: none;
+}
+
+#saves h2 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+#saves ul {
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+#saves li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+#saves img {
+  width: 120px;
+  height: 75px;
+  object-fit: cover;
+  background: #0d0f12;
+}
+
+#saves span {
+  flex: 1;
+}
+
+#saves button,
+#notice button {
+  margin-right: 4px;
+  background: #2a3038;
+  color: inherit;
+  border: 1px solid #3a414b;
+  border-radius: 3px;
+  font: inherit;
+  padding: 2px 8px;
+}
