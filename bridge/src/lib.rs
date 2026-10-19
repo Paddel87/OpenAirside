@@ -427,15 +427,22 @@ impl Core {
         serde_json::to_value(self.languages.list()).map_err(napi_error)
     }
 
-    /// Texts of the language `code` by key (S-6 `lang.texts`, ADR-031), or
-    /// `null` if no loaded pack has this language.
+    /// Texts of the language `code` as `[key, text]` pairs sorted by key
+    /// (S-6 `lang.texts`, ADR-031), or `null` if no loaded pack has this
+    /// language. Pairs instead of an object: a key such as `__proto__`
+    /// would be lost when napi sets it as an object property (finding 6 of
+    /// the separate review of 2.6).
     ///
     /// # Errors
     ///
     /// Fails if the texts cannot be converted.
     #[napi]
     pub fn texts(&self, code: String) -> napi::Result<serde_json::Value> {
-        serde_json::to_value(self.languages.texts(&code)).map_err(napi_error)
+        let pairs = self
+            .languages
+            .texts(&code)
+            .map(|texts| texts.iter().collect::<Vec<_>>());
+        serde_json::to_value(pairs).map_err(napi_error)
     }
 
     /// Current status.
