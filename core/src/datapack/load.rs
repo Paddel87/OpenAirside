@@ -647,6 +647,7 @@ fn load_content(
         replaces: Vec::new(),
         texts: Vec::new(),
         text_keys: BTreeSet::new(),
+        named: BTreeSet::new(),
         entries: 0,
         errors,
     };
@@ -699,6 +700,9 @@ struct Stage<'a> {
     texts: Vec<CheckedLanguage>,
     /// Language code and key of every text of this pack so far.
     text_keys: BTreeSet<(String, String)>,
+    /// Languages named by an entry of this pack so far (finding 1 of the
+    /// separate review of 2.6: a set instead of a scan of `texts`).
+    named: BTreeSet<String>,
     entries: usize,
     errors: Vec<PackError>,
 }
@@ -732,7 +736,8 @@ impl Stage<'_> {
                     };
                     let from = self.errors.len();
                     for (i, entry) in parsed.languages.into_iter().enumerate() {
-                        self.entries += entry.texts.0.len();
+                        // The language entry and each of its texts count (S-4, ADR-031).
+                        self.entries += 1 + entry.texts.0.len();
                         if self.entries > MAX_ENTRIES {
                             let reason = limit_error("entries", as_u32(MAX_ENTRIES));
                             self.errors.push(PackError::file(&file.file, reason));
@@ -755,11 +760,7 @@ impl Stage<'_> {
             self.at(file, &format!("{path}.id"), error(code::INVALID_ID));
             return;
         }
-        let named_before = self.languages.is_named(&code)
-            || self
-                .texts
-                .iter()
-                .any(|checked| checked.code == code && checked.name.is_some());
+        let named_before = self.languages.is_named(&code) || self.named.contains(&code);
         match &entry.name {
             Some(name) if name.trim().is_empty() => {
                 self.at(file, &format!("{path}.name"), error(code::INVALID_VALUE));
@@ -789,6 +790,9 @@ impl Stage<'_> {
             }
         }
         if self.errors.len() == before {
+            if entry.name.is_some() {
+                self.named.insert(code.clone());
+            }
             self.texts.push(CheckedLanguage {
                 code,
                 name: entry.name,

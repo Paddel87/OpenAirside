@@ -108,8 +108,8 @@ fn the_base_pack_ships_german_and_english() {
         .collect();
     assert_eq!(names, vec![("de", "Deutsch"), ("en", "English")]);
     assert_eq!(list[0].keys, list[1].keys);
-    // Every text counts as an entry (S-4); the base pack has 3 objects.
-    assert_eq!(base.entries, 3 + list[0].keys + list[1].keys);
+    // Every language entry and every text count (S-4); 3 objects.
+    assert_eq!(base.entries, 3 + 2 + list[0].keys + list[1].keys);
 }
 
 #[test]
@@ -158,7 +158,7 @@ fn a_pack_adds_a_language_and_texts_to_existing_ones() {
     let outcome = load(&user, &["french"]);
     let french = report(&outcome, "french");
     assert_eq!(french.state, PackState::Active, "{:?}", french.errors);
-    assert_eq!(french.entries, 2);
+    assert_eq!(french.entries, 4);
     let list = outcome.languages.list();
     assert_eq!(
         list.iter().map(|l| l.code.as_str()).collect::<Vec<_>>(),
@@ -315,4 +315,49 @@ fn the_structure_of_language_files_is_strict() {
         let r = report(&outcome, id);
         assert_eq!(codes(r), vec![code::INVALID_STRUCTURE], "{id}");
     }
+}
+
+/// Finding 1 of the separate review of 2.6: language entries without texts
+/// count as entries, so a pack cannot list unbounded languages; the check
+/// stays linear.
+#[test]
+fn language_entries_count_against_the_entry_limit() {
+    let user = TempDir::new("many");
+    let entries: Vec<String> = (0..=100_000u32)
+        .map(|i| format!(r#"{{"id": "aa-{i:06}", "name": "x", "texts": {{}}}}"#))
+        .collect();
+    pack(
+        &user,
+        "many",
+        &[(
+            "lang/a.json",
+            &format!(r#"{{"languages": [{}]}}"#, entries.join(",")),
+        )],
+    );
+    let started = std::time::Instant::now();
+    let outcome = load(&user, &["many"]);
+    let many = report(&outcome, "many");
+    assert_eq!(codes(many), vec![code::LIMIT_EXCEEDED]);
+    assert!(started.elapsed().as_secs() < 30, "{:?}", started.elapsed());
+    assert_eq!(outcome.languages.list().len(), 2);
+}
+
+/// Finding 6 of the separate review of 2.6: keys such as `__proto__` are
+/// plain keys; the platform hands texts on without an object prototype.
+#[test]
+fn keys_named_like_object_properties_are_plain_texts() {
+    let user = TempDir::new("proto");
+    pack(
+        &user,
+        "proto",
+        &[(
+            "lang/a.json",
+            r#"{"languages": [{"id": "de", "texts": {"__proto__": "p", "constructor": "c"}}]}"#,
+        )],
+    );
+    let outcome = load(&user, &["proto"]);
+    assert_eq!(report(&outcome, "proto").state, PackState::Active);
+    let de = outcome.languages.texts("de").expect("de");
+    assert_eq!(de["__proto__"], "p");
+    assert_eq!(de["constructor"], "c");
 }
