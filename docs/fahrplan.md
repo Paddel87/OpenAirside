@@ -11,8 +11,8 @@
 - **Stand vom:** 2026-10-19 (Session 16:18–17:10 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** Q.3 (Toolchain mit `rustup toolchain install`, ADR-035) IN ARBEIT auf `ci/q-3-rustup-toolchain-install`; 2.10 ERLEDIGT am 2026-10-19 (ADR-033, ADR-034), mit PR #25 nach `main` gemergt (`302e3ce`) – damit sind alle 11 Schritte von Phase 2 erledigt
-- **Nächster Schritt:** Phasenabschluss Phase 2 in einer neuen Session auf einem neuen Branch vom aktuellen `main` (Merge-Vermerk von `feat/2-10-stilleitfaden-svg-pipeline` übernehmen): Vision-Abgleich gegen `docs/vision.md`, Pflichtfrage „Weiterbauen, umbauen oder neu aufsetzen?“ mit Bewertung durch eine getrennte Instanz (`CLAUDE.md` Abschnitt 12), Archivierung und Logbuch-Verdichtung beim `[PHASEN-WECHSEL]`
+- **Aktiver Schritt:** keiner; Q.3 ERLEDIGT am 2026-10-19 (ADR-035, PR #26, `d4e457f`); 2.10 ERLEDIGT am 2026-10-19 (ADR-033, ADR-034), mit PR #25 nach `main` gemergt (`302e3ce`) – damit sind alle 11 Schritte von Phase 2 erledigt
+- **Nächster Schritt:** Phasenabschluss Phase 2 in einer neuen Session auf einem neuen Branch vom aktuellen `main` (Merge-Vermerke von `ci/q-3-rustup-toolchain-install` übernehmen): Vision-Abgleich gegen `docs/vision.md`, Pflichtfrage „Weiterbauen, umbauen oder neu aufsetzen?“ mit Bewertung durch eine getrennte Instanz (`CLAUDE.md` Abschnitt 12), Archivierung und Logbuch-Verdichtung beim `[PHASEN-WECHSEL]`
 - **Offene STOPP-Situationen:** Reaktiv-Quote 7 / 10 nach ADR-032 über dem Schwellenwert – Reflexion zu ADR-032 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, kein Umbau
 
 <!-- ANCHOR:phasen-typen -->
@@ -450,7 +450,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### Q.3: Toolchain in den Workflows mit `rustup toolchain install`
 
-- **Status:** IN ARBEIT
+- **Status:** ERLEDIGT (2026-10-19)
 - **Phasentyp-Kontext:** STABILISIERUNG (Querschnitt)
 - **Abhängigkeiten:** keine
 - **Freigabepflichtig:** ja (Kategorie 7), freigegeben am 2026-10-19 (ADR-035)
@@ -462,6 +462,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Build/CI
 - **Reifegrad-Wirkung:** keine
 - **Artefakte:** Workflow-Dateien, ADR-035
+- **Ergebnis (2026-10-19):** 8 Stellen umgestellt (`0cf1724`); grün auf drei Plattformen: Push-Lauf 39311772065 (17 Jobs), PR-Läufe CI 39311921712 und Security 39311921810; im Protokoll (Job „Rust Lint & Format“) installiert `rustup toolchain install` 1.98.1 ohne den Hinweis „auto-installation is deprecated“. Mit PR #26 nach `main` gemergt (`d4e457f`). DoD für eine Workflow-Änderung ohne Code: Prettier und pre-commit grün, CI grün; Tests und Coverage nicht anwendbar.
 
 #### Q.2: Neubewertung WebAssembly mit Threads als Betriebsart
 
