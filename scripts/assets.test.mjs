@@ -42,6 +42,14 @@ describe("checkSvg", () => {
     );
   });
 
+  it("removes nested comments completely and reports what remains", () => {
+    expect(checkSvg(svg("<!<!-- a -->-- <text>A</text> -->"), PALETTE, ONE_CELL)).toEqual([]);
+    expect(checkSvg(svg("<!<!-- a -->- <text>A</text>"), PALETTE, ONE_CELL)).toEqual([
+      "no DOCTYPE, CDATA or processing instructions",
+      "element <text> is not allowed",
+    ]);
+  });
+
   it("checks the size against the footprint", () => {
     expect(checkSvg(svg("", 64, 32), PALETTE, { width: 2, depth: 1 })).toEqual([]);
     expect(checkSvg(svg("", 32, 32), PALETTE, { width: 2, depth: 1 })).toEqual([

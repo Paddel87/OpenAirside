@@ -72,7 +72,12 @@ const ATTRIBUTE = /([A-Za-z_:][\w:.-]*)\s*=\s*"([^"]*)"/g;
 export function checkSvg(text, palette, cells) {
   const problems = [];
   const colours = new Set(Object.values(palette));
-  const body = text.replace(/<!--[\s\S]*?-->/g, "");
+  // Repeated until stable: removing one comment must not join the rest into a new one.
+  let body = text;
+  for (let before = ""; before !== body;) {
+    before = body;
+    body = body.replace(/<!--[\s\S]*?-->/g, "");
+  }
   if (/<!|<\?(?!xml)/.test(body)) {
     problems.push("no DOCTYPE, CDATA or processing instructions");
   }
