@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge im Archiv `docs/archiv/logbuch
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-19 19:31 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-035** `[OPERATIV]` „Toolchain in den Workflows mit `rustup toolchain install`": freigegeben vom Projektinhaber; neuer Schritt Q.3 auf dem Branch `ci/q-3-rustup-toolchain-install` vom aktuellen `main` (Merge-Vermerk von PR #25 übernommen). 8 Stellen in drei Workflows umgestellt; lokal mit rustup 1.28.2 geprüft. Reaktiv-Quote 6 / 10 (ADR-026 bis ADR-035).
+
 ### 2026-10-19 19:11 (UTC) – [BEOBACHTUNG]
 
 - **Merge:** PR #25 (Schritt 2.10) auf Anweisung des Projektinhabers („PR eröffnen und bei grün mergen“) nach `main` gemergt, Merge-Commit `302e3ce`. Vorher CodeQL-Befund „Incomplete multi-character sanitization“ in `scripts/assets.mjs` behoben (`a493be2`, verschachtelte Kommentare, kein tatsächlicher Durchschlupf), Thread beantwortet und erledigt; grün auf `a493be2`: Push-Lauf 39307534813, PR-Läufe CI 39307541721 und Security 39307541814 (CodeQL ohne offene Meldung). Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf dem Arbeits-Branch und geht mit dem PR des nächsten Schritts nach `main`.

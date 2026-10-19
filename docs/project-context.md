@@ -311,7 +311,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 | Node 20 in GitHub Actions (abgekündigt) | behoben am 2026-10-13: pre-commit/action ersetzt | – | CI-Protokoll, GitHub-Changelog 2025-09-19 | – |
 | WebAssembly-Threads mit stabilem Rust (`atomics`, threadfähige Standardbibliothek ohne `build-std`) | Nachprüfung 2027-01-02, danach bei jedem Q.1 | – | rust-lang/rust RELEASES.md, wasm-bindgen-Doku | Q.2 |
 | Abgekündigte Unterpakete von electron-builder 26.16.1 (inflight 1.0.6, rimraf 2.6.3, glob 7.2.3, boolean 3.2.0; Hinweise bei `npm install`) | keine Frist, Nachprüfung bei jedem Q.1 | – | npm-Installationsprotokoll 2026-10-13 | Q.1 (electron-builder-Version prüfen, ob die Unterpakete ersetzt sind) |
-| Automatische Toolchain-Installation durch `rustup show` (abgekündigt; Schritt `run: rustup show` in `ci.yml` und `release.yml`) | keine Frist angekündigt; Umstellung spätestens mit Q.1 (Frist 2027-01-02) | – | CI-Protokoll Lauf 39290398392 („auto-installation is deprecated“), rust-lang/rustup#4836 | Q.1 |
+| Automatische Toolchain-Installation durch `rustup show` (abgekündigt) | behoben am 2026-10-19: `rustup toolchain install` in `ci.yml`, `release.yml`, `security.yml` (ADR-035) | – | CI-Protokoll Lauf 39290398392, rust-lang/rustup#4836 | Q.3 |
 | Claude-Kontingent | rollierendes 5-Stunden-Fenster („five_hour“) und 7-Tage-Fenster („seven_day“), Zurücksetz-Zeitpunkt je Session über `get_session`; am 2026-10-13 17:46 UTC 7-Tage-Fenster mit Status `allowed_warning`, Zurücksetzen 2026-10-18 08:00 UTC | – | Laufzeitumgebung, geprüft 2026-10-13 | – (kein Fristablauf) |
 
 ### Kosten

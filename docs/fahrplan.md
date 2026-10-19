@@ -11,7 +11,7 @@
 - **Stand vom:** 2026-10-19 (Session 16:18–17:10 UTC)
 - **Laufende Phase:** Phase 2 – Fundament
 - **Phasentyp:** UMSETZUNG (mit Entwurfsschritten 2.8 und 2.9, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner; 2.10 ERLEDIGT am 2026-10-19 (ADR-033, ADR-034), mit PR #25 nach `main` gemergt (`302e3ce`) – damit sind alle 11 Schritte von Phase 2 erledigt
+- **Aktiver Schritt:** Q.3 (Toolchain mit `rustup toolchain install`, ADR-035) IN ARBEIT auf `ci/q-3-rustup-toolchain-install`; 2.10 ERLEDIGT am 2026-10-19 (ADR-033, ADR-034), mit PR #25 nach `main` gemergt (`302e3ce`) – damit sind alle 11 Schritte von Phase 2 erledigt
 - **Nächster Schritt:** Phasenabschluss Phase 2 in einer neuen Session auf einem neuen Branch vom aktuellen `main` (Merge-Vermerk von `feat/2-10-stilleitfaden-svg-pipeline` übernehmen): Vision-Abgleich gegen `docs/vision.md`, Pflichtfrage „Weiterbauen, umbauen oder neu aufsetzen?“ mit Bewertung durch eine getrennte Instanz (`CLAUDE.md` Abschnitt 12), Archivierung und Logbuch-Verdichtung beim `[PHASEN-WECHSEL]`
 - **Offene STOPP-Situationen:** Reaktiv-Quote 7 / 10 nach ADR-032 über dem Schwellenwert – Reflexion zu ADR-032 siehe „Iterations-Reflexion“, zur Kenntnis genommen am 2026-10-19, kein Umbau
 
@@ -441,12 +441,27 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Wahl neuer Linien ist eine Entscheidung über externe Abhängigkeiten.
 - **Eingangskriterien:** Vorlauf im Ablaufdaten-Register erreicht
 - **Anforderungen (ab Klasse M):** FR-045
-- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge, abgekündigte Unterpakete von electron-builder (Register-Eintrag vom 2026-10-13), Audit-Befund „moderate“ sprintf-js über electron-builder (GHSA-hp3w-g68c-fv3c, Warnungs-Bestand seit 2026-10-19), benannte Ausnahme `syn@2.0.119` in `deny.toml` (ts-rs auf syn 3 umgestellt?, Warnungs-Bestand), benannte Ausnahme `miniz_oxide@0.8.9` (png auf miniz_oxide 0.9 umgestellt?, ADR-033), abgekündigte automatische Toolchain-Installation durch `rustup show` in den Workflows (rustup#4836, gemeldet im CI-Protokoll seit 2026-10-19; Umstellung auf `rustup toolchain install` als CI-Änderung zur Freigabe vorlegen, Kategorie 7); Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
+- **Zu tun:** Ablaufdaten-Register (`project-context.md` Abschnitt 8) abarbeiten: neue Electron-Linie, Rust-Toolchain, TypeScript 7 bei Unterstützung durch typescript-eslint, übrige Werkzeuge, abgekündigte Unterpakete von electron-builder (Register-Eintrag vom 2026-10-13), Audit-Befund „moderate“ sprintf-js über electron-builder (GHSA-hp3w-g68c-fv3c, Warnungs-Bestand seit 2026-10-19), benannte Ausnahme `syn@2.0.119` in `deny.toml` (ts-rs auf syn 3 umgestellt?, Warnungs-Bestand), benannte Ausnahme `miniz_oxide@0.8.9` (png auf miniz_oxide 0.9 umgestellt?, ADR-033); Tabelle zur Bestätigung vorlegen; ADR-002 per Folge-ADR fortschreiben.
 - **Akzeptanzkriterien:** Keine fixierte Version ist über ihrem Lebensende; Register und `Verifiziert`-Vermerke aktuell; CI grün auf drei Plattformen.
 - **Betroffene Module:** Plattform, Build/CI
 - **Reifegrad-Wirkung:** keine
 - **Artefakte:** Versions-Tabelle, Folge-ADR, aktualisierte Register
 - **Notizen:** Nach dem ersten Lauf wird ein neuer Q.1-Termin mit der nächsten Frist angelegt.
+
+#### Q.3: Toolchain in den Workflows mit `rustup toolchain install`
+
+- **Status:** IN ARBEIT
+- **Phasentyp-Kontext:** STABILISIERUNG (Querschnitt)
+- **Abhängigkeiten:** keine
+- **Freigabepflichtig:** ja (Kategorie 7), freigegeben am 2026-10-19 (ADR-035)
+- **Empfohlene Klasse:** Routine – klar spezifizierte Umstellung eines Befehls nach Freigabe.
+- **Eingangskriterien:** Freigabe
+- **Anforderungen (ab Klasse M):** – (Infrastruktur)
+- **Zu tun:** `run: rustup show` in `ci.yml` (6), `release.yml` (1) und `security.yml` (1) durch `run: rustup toolchain install` ersetzen (Abkündigung rustup#4836, Ablaufdaten-Register).
+- **Akzeptanzkriterien:** CI auf drei Plattformen grün ohne den Hinweis „auto-installation is deprecated" im Protokoll.
+- **Betroffene Module:** Build/CI
+- **Reifegrad-Wirkung:** keine
+- **Artefakte:** Workflow-Dateien, ADR-035
 
 #### Q.2: Neubewertung WebAssembly mit Threads als Betriebsart
 
