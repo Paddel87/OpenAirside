@@ -24,6 +24,14 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 16:48 (UTC) – [BEOBACHTUNG]
+
+- **Ergebnisse Mac W-A** (`docs/research/3.8-ergebnisse/mac-m3pro-wa-z1.json`, `mac-m3pro-wa-z2.json`; Vorlage Abschnitt 15):
+  - 119,8–120,0 Bilder/s, Bildabstand p99 bis 11,7 ms, Rundlauf p99 bis 2,5 ms.
+  - Erstübertragung ganz 123 bzw. 141 ms; Bauaktion bis zum Welt-Bild höchstens 32 ms.
+  - Speicher über der Schwelle, Z-1 Spitze +339 MB, Z-2 +620 MB gegenüber 2.10.
+- **Folgerung:** Die späten Bilder des Referenz-PCs sind dort an den Rechner gebunden, nicht an W-A. Der Engpass ist der Speicher. Z-2 scheidet aus.
+
 ### 2026-10-20 16:45 (UTC) – [BEOBACHTUNG]
 
 - **Schritt 3.8, Fehler im Prototyp (W-B):** Auf dem Mac blieb `world wb z1` ohne Welt. Ursache: Das erste Bild einer neuen Sitzung kommt vor `sessionStarted`; der Renderer fragte die angekündigten Blöcke noch mit der alten Sitzung ab, der Kern verwarf sie (Vertrag S-7), alle vier Abfrageplätze blieben belegt. Im Container lief es zufällig durch (Reihenfolge der Nachrichten). Behoben in `f23e154` (Abfrage erst mit der neuen Sitzung, hängende Abfragen neu stellen); Container-Probe danach: sichtbarer Ausschnitt 1,1 s, ganze Welt 1,6 s. Neuer Release-Lauf 39459607051. Lehre für den Vertrag: W-B müsste den Sitzungswechsel ausdrücklich regeln.
