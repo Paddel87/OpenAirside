@@ -33,7 +33,7 @@
 | 018 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, STACK | Build/Deploy, Externe Abhängigkeiten | Projektgerüst, CI-Gates und napi-Versionen für Phase 2 |
 | 019 | 2026-10-13 | Aktiv | REAKTIV | STACK | Lizenz/Compliance | Erlaubte Lizenzen um BlueOak-1.0.0, 0BSD, Python-2.0 und WTFPL erweitert |
 | 020 | 2026-10-13 | Aktiv (Begehbarkeit des Vorfelds je Personengruppe geändert durch ADR-037) | REAKTIV | DATENMODELL, PERFORMANCE | Datenmodell | Weltmaßstab 2 m je Zelle, Luftseite im Raster, Wegweiser in Blöcken, Zeitmodell |
-| 021 | 2026-10-13 | Aktiv (S-6 für Pakete geändert durch ADR-026, um `saves.preview` ergänzt durch ADR-028, `onCoreExit` durch ADR-029, `lang.*` und Modul-Karte durch ADR-031; S-5-Grenzen geändert durch ADR-030; fortgeschrieben und um S-8 ergänzt durch ADR-032) | ERKENNTNIS | SCHNITTSTELLE, SECURITY | API-Verträge, Architektur, Sicherheit | Schnittstellenverträge S-2 bis S-7 |
+| 021 | 2026-10-13 | Aktiv (S-6 für Pakete geändert durch ADR-026, um `saves.preview` ergänzt durch ADR-028, `onCoreExit` durch ADR-029, `lang.*` und Modul-Karte durch ADR-031; S-5-Grenzen geändert durch ADR-030; fortgeschrieben und um S-8 ergänzt durch ADR-032; S-1 fortgeschrieben durch ADR-038) | ERKENNTNIS | SCHNITTSTELLE, SECURITY | API-Verträge, Architektur, Sicherheit | Schnittstellenverträge S-2 bis S-7 |
 | 022 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Kern-Benchmark als CI-Gate und Prüfung der erzeugten TypeScript-Typen |
 | 023 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Wegweiser-Benchmark als Schritt im CI-Job „Kern-Benchmark“ |
 | 024 | 2026-10-14 | Aktiv (Einschränkung auf die Brücke aufgehoben durch ADR-025) | OPERATIV | STACK, SCHNITTSTELLE | Externe Abhängigkeiten | Umwandlung JS ↔ Rust in der Brücke mit napi `serde-json` |
@@ -44,16 +44,17 @@
 | 029 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE | API-Verträge | `onCoreExit` meldet, ob die Plattform den Kern neu startet |
 | 030 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE, SECURITY | API-Verträge, Sicherheit | Obergrenzen des Spielstands auf 512 MB gesenkt |
 | 031 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE, MODUL | API-Verträge, Architektur | Sprachpakete erreichen die Oberfläche über `lang.*` in S-6 |
-| 032 | 2026-10-19 | Aktiv | REAKTIV | SCHNITTSTELLE, MODUL | API-Verträge, Architektur | Funde der Sammelprüfung der Vertragssätze S-1 bis S-7 |
+| 032 | 2026-10-19 | Aktiv (L-1 entschieden durch ADR-038) | REAKTIV | SCHNITTSTELLE, MODUL | API-Verträge, Architektur | Funde der Sammelprüfung der Vertragssätze S-1 bis S-7 |
 | 033 | 2026-10-19 | Aktiv | OPERATIV | STACK, DEPLOYMENT | Externe Abhängigkeiten, Build/Deploy | SVG-Rasterer resvg im Werkzeug-Crate `tools/assets` |
 | 034 | 2026-10-19 | Aktiv | ERKENNTNIS | PERFORMANCE | Architektur | Darstellung mit echten Grafiken belastbar im gemessenen Umfang |
 | 035 | 2026-10-19 | Aktiv | OPERATIV | DEPLOYMENT | Build/Deploy | Toolchain in den Workflows mit `rustup toolchain install` |
 | 036 | 2026-10-19 | Aktiv | REAKTIV | MODUL, DATENMODELL, METHODIK | Architektur, Datenmodell, Methodik | Phasenabschluss 2 – gezielt umbauen vor dem vertikalen Schnitt |
 | 037 | 2026-10-20 | Aktiv | REAKTIV | DATENMODELL, MODUL | Datenmodell, Architektur | Personengruppen mit Zugangsprofilen, Flächenarten und Querungen |
+| 038 | 2026-10-20 | Aktiv | REAKTIV | SCHNITTSTELLE, MODUL, PERFORMANCE | API-Verträge, Architektur | Ruhende Welt als Blöcke im Bild, Zeichnung mit Datentextur, S-1 Layout 2 |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 7 / 10 über die letzten 10 ADRs (ADR-028 bis ADR-037: ADR-028, ADR-029, ADR-030, ADR-031, ADR-032, ADR-036, ADR-037), 70 % – **über dem Schwellenwert**; gesamt 15 / 37. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-037, 2026-10-20, neues Muster nach Regel-009); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
+- **Aktueller Wert:** 7 / 10 über die letzten 10 ADRs (ADR-029 bis ADR-038: ADR-029, ADR-030, ADR-031, ADR-032, ADR-036, ADR-037, ADR-038), 70 % – **über dem Schwellenwert**; gesamt 16 / 38. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-038, 2026-10-20, neues Muster nach Regel-009); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 

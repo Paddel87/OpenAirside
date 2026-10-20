@@ -24,6 +24,26 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 17:35 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** Weltdarstellung im Spielfeld. **Wechsel:** `[OFFEN]` → `[BELASTBAR]`. **Auslöser:** ADR-038 (Messung 3.8). Neu `[VORLÄUFIG]`: Speicher der Weltdarstellung (3.1). NFR Darstellung geteilt: macOS mit Weltdarstellung, Stufen 16/32 und 512 Grafiken `[BELASTBAR]`, Windows `[VORLÄUFIG]` (3.14). Eingetragen in `architecture.md` Abschnitt 9.
+
+### 2026-10-20 17:35 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-038** `[REAKTIV]` „Ruhende Welt als Blöcke im Bild, Zeichnung mit Datentextur, S-1 Layout 2“: freigegeben vom Projektinhaber per Auswahl, alle Empfehlungen:
+  - Frage 1: W-A + Z-1.
+  - Frage 2: Speicher in 3.1 nachmessen.
+  - Frage 3: neue Erkundung 3.14.
+  - Frage 4: Kenntnis der Reflexion und Maßnahme (11).
+- **Klassifikation:** reaktiv nach der 14-Tage-Regel (S-1 aus ADR-021 und ADR-032). Reaktiv-Quote 7 / 10 (ADR-029 bis ADR-038). Neues Muster nach Regel-009 (Code in der Brücke): Reflexion mit Stopp in `fahrplan.md`, zur Kenntnis genommen.
+- **Nachgezogen:**
+  - `decisions.md` (Teil A, Status ADR-021 und ADR-032, Quote).
+  - `architecture-schnittstellen.md`: S-1 Layout 2 und ruhende Welt, Grundlagen `protocol` 2, S-7 Katalog-Index; Änderungsprotokoll mit der ersten Ergänzung nach Regel-008.
+  - `architecture.md`: Modul Spielfeld, Abschnitt 6 und 9.
+  - Fahrplan: 3.8 erledigt, neuer Schritt 3.14, Landeplätze in 3.1, 3.2, 3.4, 3.5, 4.1, 5.1; Reflexion, Replanning.
+  - README, Aufzeichnung `spikes/3.8-weltdarstellung/README.md`.
+- **Schritt 3.8:** erledigt (Phasentyp-Kontext ERKUNDUNG, Akzeptanz wissensbasiert; zwei Sessions Zeitbox, eine gebraucht). Phase 3: 14 Schritte bei Plan 13.
+
 ### 2026-10-20 17:22 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt 3.8, Messung abgeschlossen:** sechs Läufe (Referenz-PC und Mac je W-A + Z-1, W-A + Z-2, W-B + Z-1), Dateien in `docs/research/3.8-ergebnisse/`, Auswertung in der Vorlage Abschnitte 14–17.
