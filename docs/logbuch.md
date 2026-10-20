@@ -24,6 +24,13 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 22:31 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Fund:** Das Messwerkzeug auf `main` zählt keine späten Antworten; die Zählung (`late`, `latency`) gab es nur im Spike `erkundung/3-14-messaufbau`. Das Akzeptanzkriterium „unter 0,1 % späte Antworten“ aus 3.15 war damit nicht prüfbar (Rundlauf p99 ≤ 3 ms belegt nur „unter 1 %“). Beim Anlegen von 3.15 übersehen.
+- **Vorgelegt:** Zähler ergänzen (empfohlen) oder Kriterium auf die vorhandenen Werte abschwächen. **Antwort:** „Zähler ergänzen“.
+- **Umgesetzt:** `dea2e1f`, je Fenster `answers` und `rttLate` (Rundlauf länger als Bildabstand p50), additiv im Messbericht; zwei Unit-Tests. Der Release-Lauf 39508278718 auf `7ef3673` wurde abgebrochen, weil sein Paket den Zähler nicht hätte.
+- **Weitere synchrone WebGL-Abfragen:** im eigenen Code keine außer dem GPU-Namen (Suche nach `getParameter`, `getExtension`, `getError`, `readPixels`, `getContextAttributes`, `toDataURL`, `extract` in `app/`). PixiJS 8.20.1 fragt nur beim Anlegen von Kontext, Shader-Programmen und Texturen (`GlContextSystem`, `generateProgram`, `applyStyleParams`); `readPixels` nur über `extract`, vom Spielfeld nicht genutzt.
+
 ### 2026-10-20 22:24 (UTC) – [SESSIONSTART]
 
 - **Letzter Stand:** `[SESSIONENDE]` 2026-10-20 21:40 UTC (Session zu 3.14, Kontext 408.994 Token über der Grenze von 400.000; neue Session vom Projektinhaber gewählt: „Weiter mit 3.15 in neuer Session“). Merge-Vermerk `33d8a19` nach `project-context.md` Abschnitt 10 von `erkundung/3-14-spaete-bilder-referenz-pc` auf den Branch dieser Session `fix/3-15-gpu-name-einmal-lesen` vom aktuellen `main` (`fddad76`) übernommen (`1e68f1b`); der alte Branch wird nicht weiterverwendet.

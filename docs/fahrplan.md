@@ -174,6 +174,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Spielfeld, Benchmark & Leistung
 - **Reifegrad-Wirkung:** NFR Darstellung unter Windows `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen
 - **Artefakte:** Spielfeld-Code, Test, Messdatei
+- **Ergänzung (2026-10-20, Antwort des Projektinhabers „Zähler ergänzen“):** Das Messwerkzeug auf `main` zählte keine späten Antworten (nur im Spike, `latency.ts`). `app/renderer/measure.ts` meldet je Fenster `answers` und `rttLate` (Rundlauf länger als ein Bildtakt = Bildabstand p50), rein additiv im Messbericht, mit Unit-Test; damit ist das Kriterium „unter 0,1 % späte Antworten“ prüfbar.
 
 #### 3.9: Kernstruktur der Fachmodule
 
