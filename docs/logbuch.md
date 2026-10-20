@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 19:17 (UTC) – [BEOBACHTUNG]
+
+- **Sichtbeobachtung des Projektinhabers, 3.14 Lauf 2 (ohne Weltdarstellung, `measure 6`):** „wieder das gleiche Ruckeln“, angezeigtes Fenster 10 (Index 9, Kreisen). In 2.10 trat auf demselben Rechner ohne Welt kein Ruckeln auf. Hinweis darauf, dass die Ursache nicht an der Weltdarstellung hängt, sondern am heutigen Stand von Rechner, Treiber oder Paket. Bestätigung steht mit der Messdatei aus.
+
 ### 2026-10-20 18:05 (UTC) – [BEOBACHTUNG]
 
 - **Messprototyp 3.14:** `erkundung/3-14-messaufbau` (`6808a35`, von `f23e154`), Release-Lauf 39471593590 per „Run workflow“ gestartet. Prüfung nach Maßnahme (11) im Container bestanden: drei Sitzungswechsel in einem Programmstart, Zeitstempel beider Seiten in allen drei Messdateien, vier Zeitspuren zu 1,9–3,0 MB, Auswertung mit `analyze.py` gelesen. Einzelheiten und Messanleitung: `docs/research/3.14-spaete-bilder.md` Abschnitte 10 und 11.
