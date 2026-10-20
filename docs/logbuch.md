@@ -24,6 +24,23 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 14:31 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 3.7:** Messung `spikes/3.7-personengruppen/` (Produktions-Kern als Pfad-Abhängigkeit, Referenz-Terminal 768² × 5 in Welt 2048² mit Vorfeld, 17 Stellplätzen, 6 Walk-out-Gehwegen und 4 Personalräumen; Container, 4 vCPU). Herleitung und Vorlage: `docs/research/3.7-personengruppen.md`.
+- **Ergebnisse:**
+  - Begehbarkeit für Vorplatz, Gehwege und Stellplätze kostet 10 % mehr Zellen (1,50 → 1,65 Mio.). Ein gemeinsamer Feldsatz für Fluggäste und Personal mit 79 Zielen braucht 130 MB und 2,6 s (heute 36 Ziele: 54 MB, 1,0 s). Getrennte Sätze kosten dasselbe.
+  - Bauarbeiter über das ganze Erdgeschoss: 5,1 MB je Feld. Ein Satz für alle Gruppen bräuchte 444 MB und 9–11 s. Zwei Felder (Anlieferstelle, alle Baustellen) kosten 10 MB und 0,6 s.
+  - Einzelweg-Suche je Fahrt (A*, gleiche Kosten wie die Wegweiser, 1.000 von 1.000 gleich): im Terminal Median 18–61 ms, p99 170–272 ms; Bauarbeiter p99 1,3–1,7 s. Für Personal ungeeignet.
+- **Vorgelegt:** vier Fragen (Personal und Kontrolle, Vorfeldpersonal, Walk-out-Querung, Bauarbeiter und Bahnen) und der technische Entwurf (Flächenart und Personalzone je Zelle, Profil je Ziel, ein Feldsatz für Fluggäste und Personal, einer für Bauarbeiter). Klassifikation `[REAKTIV]` (ändert ADR-020 nach 7 Tagen); nach Regel-009 neue Reflexion mit Stopp, Entwurf in der Vorlage Abschnitt 8.
+- **Orientierung am Original:** Wechsel in den Sicherheitsbereich nur über eine Kontrolle, Sicherheitsbeamte und Vertragskräfte ausgenommen (airportceo.wiki.gg/wiki/Security); Vorfeldagenten über Gehwege und Zebrastreifen (forum.apoglabs.com).
+
+### 2026-10-20 14:10 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** Sessionstart in einem frischen Cloud-Container.
+- **Symptom:** `.git/hooks/pre-commit` fehlte, `pre-commit` war nicht installiert. Der Commit `aad31a3` (Sessionstart, nur Markdown) lief deshalb ohne Hooks.
+- **Lösung:** `pip install --user pre-commit`, `pre-commit install` nach Runbook Schritt 3. Die Hooks liefen danach über die beiden Dateien des Commits, alle grün. `node_modules` fehlt im Container und Node ist 22.22.0 statt 26.11.1; für Markdown und Rust in 3.7 nicht nötig, vor TypeScript-Änderungen `npm ci` mit Node 26.
+- **Wiederkehrgefahr:** hoch bei jeder neuen Cloud-Session. Vor dem ersten Commit `ls .git/hooks` prüfen.
+
 ### 2026-10-20 14:02 (UTC) – [SESSIONSTART]
 
 - **Letzter Stand:** `[SESSIONENDE]` 2026-10-19 20:03 UTC, danach Merge PR #27 (`119d2b1`) mit Vermerk `d2e6c70` auf `docs/phasenabschluss-2`. Der Vermerk ist nach `project-context.md` Abschnitt 10 auf den Branch dieser Session vom aktuellen `main` übernommen (`0162671`); `docs/phasenabschluss-2` wird nicht weiterverwendet. Die Session „Phasenabschluss Phase 2“ erhielt am 2026-10-20 13:50 UTC „Weiter mit 3.7“ und wurde 11 Sekunden später versehentlich archiviert, ohne dass etwas ausgeführt wurde (Transkript über `list_events` geprüft); 3.7 beginnt hier.
