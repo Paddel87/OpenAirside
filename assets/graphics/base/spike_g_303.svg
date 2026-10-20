@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- spike 3.8 test graphic 303, 4 × 4 cells; CC0. -->
+  <rect x="1" y="1" width="126" height="126" fill="#eef0f2" stroke="#262a30" stroke-width="1" />
+  <rect x="99" y="111" width="42.666666666666664" height="32" fill="#7a5434" stroke="#262a30" stroke-width="0.5" />
+  <circle cx="12" cy="18" r="21.333333333333332" fill="#5e9c4f" stroke="#262a30" stroke-width="1" />
+  <rect x="37" y="37" width="42.666666666666664" height="32" fill="#2a5b8c" stroke="#262a30" stroke-width="0.5" />
+  <circle cx="70" cy="64" r="21.333333333333332" fill="#8a929e" stroke="#262a30" stroke-width="1" />
+  <rect x="95" y="83" width="42.666666666666664" height="32" fill="#3b3f45" stroke="#262a30" stroke-width="0.5" />
+  <circle cx="8" cy="110" r="21.333333333333332" fill="#a8784a" stroke="#262a30" stroke-width="1" />
+</svg>
