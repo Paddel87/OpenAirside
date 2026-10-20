@@ -12,7 +12,7 @@
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
 - **Aktiver Schritt:** keiner (3.7 erledigt am 2026-10-20, ADR-037)
-- **Nächster Schritt:** 3.8 Weltdarstellung im Spielfeld und S-1 Layout 2 (Entwurf mit Messung auf Referenz-PC und Mac)
+- **Nächster Schritt:** 3.8 Weltdarstellung im Spielfeld und S-1 Layout 2 (Entwurf mit Messung auf Referenz-PC und Mac), in einer neuen Session auf einem neuen Branch vom aktuellen `main` (die Session zu 3.7 endete über der Grenze der Sessiongröße)
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 7 / 10 (ADR-028 bis ADR-037) über dem Schwellenwert; Reflexion zu ADR-037 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->

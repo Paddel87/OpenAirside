@@ -24,6 +24,35 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 14:52 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 50 Minuten seit `[SESSIONSTART]` 14:02 UTC.
+- **Bearbeitet:**
+  - Archivierte Session geprüft: „Weiter mit 3.7“ kam an, die Session wurde 11 Sekunden später archiviert, ohne Ausführung.
+  - Schritt 3.7: Messung `spikes/3.7-personengruppen/`, Vorlage, Einwand des Projektinhabers zu Frage 1, ADR-037, Reflexion nach Regel-009.
+  - PR #28 eröffnet und nach grüner CI gemergt (`b8b3106`).
+- **Erreicht:**
+  - 3.7 erledigt.
+  - Personengruppen, Flächenarten, Zugangsprofile und Querungen entschieden; Landeplätze in 3.1, 3.2, 3.3, 3.4, 3.5, 3.11, 3.12, 4.1 und 5.6.
+  - Maßnahme (10) gilt.
+- **Offen geblieben:** Merge-Vermerk `8adb074` und dieser Eintrag liegen auf `scp/compassionate-shannon-wz4apd` (`project-context.md` Abschnitt 10). Die nächste Session übernimmt sie auf ihren Branch vom aktuellen `main`.
+- **Nächster Schritt:** 3.8 Weltdarstellung im Spielfeld und S-1 Layout 2, in einer neuen Session; der Projektinhaber hat die neue Session gewählt.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 14:50 UTC). 0 Schritte oberhalb der Empfehlung (3.7: Entscheidung). Abgegeben: keine Teilarbeiten; der Probelauf für Routine und Mechanik bleibt offen.
+- **Kontextgröße:** 492.293 Token laut `get_session` 14:50 UTC, **über der Grenze von 400.000**. Empfehlung: die nächste Arbeit in einer neuen Session beginnen; so umgesetzt.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 14:50 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt. Electron 44: Vorlauf ab 2027-01-02, Q.1. Runner-Image Ubuntu 26: Q.1.
+- **Archivierung und Größen:** keine Trigger. Logbuch rund 200 Zeilen (Grenze 800), `project-context.md` 375 Zeilen (Budget 600), `architecture.md` 467 Zeilen (eigene Schwelle 500). Phase 3 läuft noch.
+- **Drift-Prüfung:**
+  - README nachgezogen (Phase, Architektur-Reife, Nächste Schritte, Datum).
+  - ADR-037 verweist auf vorhandene Schritte (3.1–3.5, 3.11, 3.12, 4.1, 5.6).
+  - Reifegrade passen zu ADR-037 (Datenmodell fortgeschrieben, neue Zeile Aufgabenfelder `[VORLÄUFIG]`).
+  - Modulnamen in 3.7 stimmen mit der Modul-Karte überein.
+  - FR-052 → 3.7, 3.4.
+  - Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker.
+  - Reaktiv-Quote 7 / 10 (ADR-028 bis ADR-037) stimmt mit den Tags, gesamt 15 / 37.
+  - Phase 3: 13 Schritte bei Plan 13.
+- **Beobachtung:** Der Einwand des Projektinhabers (Henne-Ei bei den Sicherheitsbeamten) fand einen Fehler in der ersten Empfehlung, den weder Messung noch Inventar gezeigt hätten. Fragen mit Vision-Bezug lohnen sich auch dann, wenn die Empfehlung klar wirkt.
+
 ### 2026-10-20 14:49 (UTC) – [BEOBACHTUNG]
 
 - **Merge:** PR #28 (Schritt 3.7, ADR-037) nach Anweisung des Projektinhabers gemergt („PR eröffnen und bei grün mergen“), Merge-Commit `b8b3106`. Vorher grün auf `49312e5`: Push-Lauf 39441426518 und die PR-Läufe CI 39441613876 und Security 39441613790 (39 Prüfungen, CodeQL ohne Meldung). Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf `scp/compassionate-shannon-wz4apd` und geht mit dem PR des nächsten Schritts nach `main`.
