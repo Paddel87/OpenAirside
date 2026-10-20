@@ -24,6 +24,11 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 18:05 (UTC) – [BEOBACHTUNG]
+
+- **Messprototyp 3.14:** `erkundung/3-14-messaufbau` (`6808a35`, von `f23e154`), Release-Lauf 39471593590 per „Run workflow“ gestartet. Prüfung nach Maßnahme (11) im Container bestanden: drei Sitzungswechsel in einem Programmstart, Zeitstempel beider Seiten in allen drei Messdateien, vier Zeitspuren zu 1,9–3,0 MB, Auswertung mit `analyze.py` gelesen. Einzelheiten und Messanleitung: `docs/research/3.14-spaete-bilder.md` Abschnitte 10 und 11.
+- **Mini-Reibungen:** (1) Unter Linux gibt es im Container keinen Ordner „Downloads“; Electron legt die Dateien dann im Heimatordner ab, das `ls` im Probelauf schlug fehl (nur Prüfbefehl). (2) Mit `--use-angle=gl` fällt PixiJS im Container ohne Meldung auf Canvas zurück und die Weltdarstellung wirft einen Fehler; im Prototyp nun Abbruch mit Meldung. (3) Die Liste der späten Antworten ist auf 400 begrenzt; die erste Auswertung rechnete den Anteil aus der Liste statt aus den Fenstern (behoben). (4) `scripts/assets.test.mjs` schlägt auf dem Spike-Branch fehl (512 Testgrafiken aus 3.8 ohne Objekt), wie schon in 3.8; ohne Bedeutung für die Messung.
+
 ### 2026-10-20 17:44 (UTC) – [BEOBACHTUNG]
 
 - **Antworten zur Vorlage 3.14:** Frage 1 A (fünf Läufe), Frage 2 A (Dateien im Chat). Festgehalten in `docs/research/3.14-spaete-bilder.md` Abschnitt 9. Weiter mit dem Messprototyp auf `erkundung/3-14-messaufbau`.
