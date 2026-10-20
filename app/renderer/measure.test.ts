@@ -45,6 +45,29 @@ describe("quantile", () => {
 });
 
 describe("WindowRecorder", () => {
+  it("counts answers that took longer than one display tick as late", () => {
+    const rec = new WindowRecorder();
+    // 60 frames 16.7 ms apart; three answers miss the next tick, one by two ticks.
+    for (let i = 0; i < 60; i += 1) {
+      rec.frame(i * 16.7, i === 10 || i === 20 ? 17 : i === 30 ? 34 : 1);
+    }
+    const w = rec.summarize(
+      { window: 0, atS: 0, view: "overview", seconds: 1, tierPx: 8 },
+      new Set(),
+    );
+    expect([w.answers, w.rttLate]).toEqual([60, 3]);
+  });
+
+  it("counts no late answers without frame intervals", () => {
+    const rec = new WindowRecorder();
+    rec.frame(0, 50);
+    const w = rec.summarize(
+      { window: 0, atS: 0, view: "overview", seconds: 1, tierPx: 8 },
+      new Set(),
+    );
+    expect([w.answers, w.rttLate]).toEqual([1, 0]);
+  });
+
   it("summarizes frames, tick figures, builds and queries", () => {
     const rec = new WindowRecorder();
     for (let i = 0; i <= 60; i += 1) rec.frame(i * 16, 2 + (i % 3));
@@ -64,6 +87,7 @@ describe("WindowRecorder", () => {
     expect(w.frameMsP50).toBe(16);
     expect(w.frameMsMax).toBe(16);
     expect(w.rttMsMax).toBe(4);
+    expect([w.answers, w.rttLate]).toEqual([61, 0]);
     expect(w.longTasks).toBe(1);
     expect(w.ticksPerSecMin).toBe(170);
     expect(w.ticksPerSecMean).toBe(176.7);
