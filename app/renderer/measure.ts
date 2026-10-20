@@ -169,6 +169,13 @@ export interface WindowResult {
   readonly rttMsP50: number;
   readonly rttMsP99: number;
   readonly rttMsMax: number;
+  /** Answers to frame requests drawn in the window. */
+  readonly answers: number;
+  /**
+   * Late answers: round trip longer than one display tick (`frameMsP50`), so
+   * the answer missed the next tick (step 3.15, as "late" in spike 3.14).
+   */
+  readonly rttLate: number;
   readonly longTasks: number;
   readonly longTaskMsMax: number;
   readonly ticksPerSecMean: number;
@@ -305,6 +312,8 @@ export class WindowRecorder {
   ): WindowResult {
     const frames = ascending(this.#frameTimes);
     const rtts = ascending(this.#rtts);
+    // One display tick: the median interval between drawn frames.
+    const tick = quantile(frames, 0.5);
     const builds = ascending(this.#builds.map((b) => b.ms));
     const queries = ascending(this.#queries);
     const tps = this.#stats.map((s) => s.ticksPerSecond);
@@ -319,12 +328,14 @@ export class WindowRecorder {
       ...head,
       seconds: round(head.seconds),
       fps: round(this.#rtts.length / Math.max(head.seconds, 1e-9), 1),
-      frameMsP50: round(quantile(frames, 0.5)),
+      frameMsP50: round(tick),
       frameMsP99: round(quantile(frames, 0.99)),
       frameMsMax: round(max(frames)),
       rttMsP50: round(quantile(rtts, 0.5)),
       rttMsP99: round(quantile(rtts, 0.99)),
       rttMsMax: round(max(rtts)),
+      answers: rtts.length,
+      rttLate: frames.length === 0 ? 0 : rtts.filter((ms) => ms > tick).length,
       longTasks: this.#longTasks.length,
       longTaskMsMax: round(max(this.#longTasks)),
       ticksPerSecMean: round(mean(tps), 1),

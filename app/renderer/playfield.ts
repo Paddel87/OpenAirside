@@ -7,6 +7,11 @@
  * tool places (ADR-032: the way of the world display is open until 3.8).
  * Display only (rule 002).
  *
+ * Synchronous WebGL queries (`getParameter`, `getExtension`, `getError`,
+ * `readPixels` and the like) only at start, never per frame or from a timer:
+ * each blocks the main thread until the GPU process answers (step 3.14/3.15,
+ * gpu-name.ts).
+ *
  * The grid itself (floors, walls, zones) is not drawn yet.
  * TODO(fahrplan-ref: 3.1): draw the grid with building in the grid.
  */
@@ -33,6 +38,7 @@ import {
 } from "./atlas.js";
 import { type Camera, centerCamera, fitCamera, pan, visibleRect, zoomAt } from "./camera.js";
 import { type Frame, type PersonRecord, readPerson } from "./frame-reader.js";
+import { GpuName } from "./gpu-name.js";
 import { densestSpot } from "./hotspot.js";
 import type { MeasureScene, SceneInfo, View } from "./measure.js";
 
@@ -111,10 +117,17 @@ export class Playfield {
   #floor = 0;
   #map = { width: 0, height: 0 };
   #shown = 0;
+  readonly #gpu: GpuName;
 
   private constructor(app: Application, atlas: Atlas | undefined) {
     this.#app = app;
     this.#atlas = atlas;
+    const canvas = app.canvas;
+    this.#gpu = new GpuName({
+      webgl2: () => canvas.getContext("webgl2"),
+      webgl: () => canvas.getContext("webgl"),
+      rendererName: app.renderer.name,
+    });
     this.#texture = dotTexture();
     this.#persons = new ParticleContainer({
       texture: this.#texture,
@@ -144,18 +157,12 @@ export class Playfield {
     return field;
   }
 
-  /** Name of the GPU, for the measurement protocol. */
+  /**
+   * Name of the GPU, for the performance display and the measurement protocol.
+   * Read once at start: no synchronous WebGL queries while the game runs (step 3.15, see gpu-name.ts).
+   */
   get gpu(): string {
-    // Returns the context PixiJS created on this canvas (same type), not a new one.
-    const canvas = this.#app.canvas;
-    const gl2 = canvas.getContext("webgl2");
-    const gl = gl2 ?? canvas.getContext("webgl");
-    if (gl === null) {
-      return `renderer ${this.#app.renderer.name}`;
-    }
-    const ext = gl.getExtension("WEBGL_debug_renderer_info");
-    const name = String(gl.getParameter(ext === null ? gl.RENDERER : ext.UNMASKED_RENDERER_WEBGL));
-    return `${gl2 === null ? "WebGL1" : "WebGL2"} ${name}`;
+    return this.#gpu.value;
   }
 
   /** `true` if the atlas of the build was loaded. */

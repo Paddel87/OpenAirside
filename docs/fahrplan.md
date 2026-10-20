@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-20 (Session ab 17:37 UTC, Schritt 3.14 erledigt)
+- **Stand vom:** 2026-10-20 (Session ab 22:24 UTC, Schritt 3.15 erledigt)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (3.14 erledigt am 2026-10-20, Ursache belegt, Maßnahme in 3.15)
-- **Nächster Schritt:** 3.15 GPU-Namen nur einmal lesen (Korrektur auf `main`), danach 3.9 Kernstruktur der Fachmodule, in einer neuen Session (die Session zu 3.14 endete über der Grenze der Sessiongröße)
+- **Aktiver Schritt:** keiner (3.15 erledigt am 2026-10-20, Reifegrad NFR Performance unter Windows `[BELASTBAR]` mit Auflage 3.1)
+- **Nächster Schritt:** 3.9 Kernstruktur der Fachmodule (Entwurf als `ENTSCHEIDUNG ERFORDERLICH` vor dem Code)
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 7 / 10 (ADR-029 bis ADR-038) über dem Schwellenwert; Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
@@ -92,7 +92,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 **Abschlusskriterium:** Szenario 2 der Vision („Der Einsteiger") ist spielbar.
 
-**Reifegrad-Erwartung am Phasenende:** Weltdarstellung im Spielfeld per ADR in 3.8 `[BELASTBAR]` (erreicht, ADR-038); Speicher der Weltdarstellung nach Nachmessung in 3.1; NFR Darstellung unter Windows nach 3.14; Module Personen, Wegfindung & Passagierführung, Verkehr & Verkehrssteuerung, Flugbetrieb, Abfertigung & Gepäck, Spielfeld und Oberfläche durch Umsetzung `[BELASTBAR]` im umgesetzten Umfang; NFR „Bauaktion im nächsten Bild" gemessen (3.1); Verkehr/Blockadevermeidung per ADR aus 3.12.
+**Reifegrad-Erwartung am Phasenende:** Weltdarstellung im Spielfeld per ADR in 3.8 `[BELASTBAR]` (erreicht, ADR-038); Speicher der Weltdarstellung nach Nachmessung in 3.1; NFR Darstellung unter Windows nach 3.15 (erreicht 2026-10-20, Auflage 3.1); Module Personen, Wegfindung & Passagierführung, Verkehr & Verkehrssteuerung, Flugbetrieb, Abfertigung & Gepäck, Spielfeld und Oberfläche durch Umsetzung `[BELASTBAR]` im umgesetzten Umfang; NFR „Bauaktion im nächsten Bild" gemessen (3.1); Verkehr/Blockadevermeidung per ADR aus 3.12.
 
 **Ursprünglicher Schrittplan:** 13 Schritte, festgehalten am 2026-10-19 beim Phasenabschluss 2 (ADR-036): 3.1–3.13. Seit 2026-10-20 (ADR-038) 14 Schritte mit 3.14, seit 2026-10-20 (Ergebnis 3.14, Antwort des Projektinhabers) 15 mit 3.15; Wucherungs-Schwelle (Faktor 2 und mindestens 5 zusätzliche, also 26) nicht erreicht.
 
@@ -162,7 +162,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.15: GPU-Namen nur einmal lesen (Korrektur aus 3.14)
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT (2026-10-20, ohne ADR)
 - **Phasentyp-Kontext:** UMSETZUNG (Fehlerbehebung innerhalb des Moduls)
 - **Abhängigkeiten:** 3.14; vor 3.1 (dessen Messungen sonst die späten Bilder enthalten)
 - **Freigabepflichtig:** nein (Fehlerbehebung im Spielfeld ohne Schnittstellenänderung; Antwort des Projektinhabers vom 2026-10-20: eigener Schritt)
@@ -174,6 +174,10 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Spielfeld, Benchmark & Leistung
 - **Reifegrad-Wirkung:** NFR Darstellung unter Windows `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen
 - **Artefakte:** Spielfeld-Code, Test, Messdatei
+- **Ergänzung (2026-10-20, Antwort des Projektinhabers „Zähler ergänzen“):** Das Messwerkzeug auf `main` zählte keine späten Antworten (nur im Spike, `latency.ts`). `app/renderer/measure.ts` meldet je Fenster `answers` und `rttLate` (Rundlauf länger als ein Bildtakt = Bildabstand p50), rein additiv im Messbericht, mit Unit-Test; damit ist das Kriterium „unter 0,1 % späte Antworten“ prüfbar.
+- **Ergebnis:** Der GPU-Name wird beim Anlegen des Spielfelds einmal gelesen (`app/renderer/gpu-name.ts`, Klasse `GpuName`); die Leistungsanzeige liest nur noch den gespeicherten Wert. Weitere synchrone WebGL-Abfragen im laufenden Betrieb: keine im eigenen Code; PixiJS 8.20.1 fragt nur beim Anlegen von Kontext, Shader-Programmen und Texturen. Regel „synchrone WebGL-Abfragen nur beim Start“ im Kopf von `app/renderer/playfield.ts` und in `docs/architecture.md` (Modul Spielfeld). Reifegrad „NFR Performance: dasselbe unter Windows“ `[VORLÄUFIG]` → `[BELASTBAR]` nach Antwort des Projektinhabers („Befördern“), Auflage Nachmessung in 3.1.
+- **Belege:** Unit-Tests `app/renderer/gpu-name.test.ts` (4, darunter „zweiter Zugriff fragt nicht erneut“) und zwei Tests zu `rttLate` in `measure.test.ts`; `gpu-name.ts` 100 % Lines, Vitest gesamt 86,58 % Lines (362 Tests); CI-Lauf 39508710449 grün (17 Jobs, Rauchtest auf drei Plattformen); Release-Lauf 39508715951 grün. Messung auf dem Referenz-PC (`measure 6`, Paket `41786ec`): 0 von 21.668 Antworten spät, Bildabstand p99 17,3–17,5 ms, 59,9–60,0 Bilder/s, Rundlauf p99 0,7–1,0 ms, keine langen Aufgaben (`docs/research/3.15-messung.md`, Datei `docs/research/3.15-ergebnisse/referenz-pc-measure.json`).
+- **Landeplätze:** 3.1 (Nachmessung der Weltdarstellung auf `main` auf dem Referenz-PC gegen die Schwellen aus 3.15, sonst Rückstufung)
 
 #### 3.9: Kernstruktur der Fachmodule
 
@@ -215,9 +219,9 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Eingangskriterien:** Weltdarstellung `[BELASTBAR]` (3.8); Kernstruktur umgebaut (3.9)
 - **Anforderungen (ab Klasse M):** FR-010, FR-011
 - **Zu tun:** Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7) auf dem Weg aus 3.8 (ADR-038): S-1 Layout 2 mit `protocol` 2, Welt-Abschnitt im Bild (Blöcke gegen den übergebenen Stand, höchstens 1 MB je Bild), Personen-Abschnitt mit Gruppe (0 bis 3.2) und leeren Abschnitten für Fahrzeuge, Flugzeuge und Gepäck, Zeichnung mit Datentextur und Shader (Z-1), Objekte je Block mit Zuschnitt, vereinfachte Übersicht unter 4 Bildpunkten je Zelle, Katalog mit fester Reihenfolge als Index für S-1 (S-7, additiv), Vertragsabgleich S-1 und S-7 nach Maßnahme (7) und (8), Messprototyp-Prüfung nach Maßnahme (11); Katalog der Sitzung über S-7 `catalog` für Bau-Werkzeug und Vorschau, `game.new({ map })` in S-6 und S-8 (Grundform), Parameter `{ key }` in `ParamValue` (ADR-032, L-2, L-3, L-5); Bewegung der Bauarbeiter nach 3.7 (ADR-037: eigener Feldsatz über dem Erdgeschoss, je Anlieferstelle ein Feld und ein Feld zu allen Baustellen; Bauarbeiter überall außer auf Bahnen in Betrieb); Flächenart und Personalzone im Raster, Zugangsprofil am Ziel und Regeln der Wegweiser-Berechnung (ADR-037), neue Format-Version des Spielstands mit Vertragsabgleich S-5 nach Maßnahme (7) und (8); Objekte im Weltzustand und Spielstand mit der Höchstzahl `MAX_OBJECTS` (aus 2.5). **Dauerbau (ADR-036):** überholte Wegweiser-Anfragen zusammenfassen bzw. nicht weiterrechnen (`core/src/adoption.rs`), Benchmark mit einer Bauaktion alle 0,25–0,5 s.
-- **Akzeptanzkriterien:** `core/tests/build.rs` und `core/tests/construction.rs` grün; Bauaktion bis zum Bild mit vorläufigem Zeichnen auf Referenz-PC und Mac gemessen (Ziel nächstes Bild, FR-011 < 100 ms); Dauerbau-Benchmark: Wegweiser werden während Dauerbau innerhalb einer festgelegten Frist übernommen, Speicherspitze unter einer festgelegten Grenze (Frist und Grenze in der Vorlage vor dem Code); Speicher der Weltdarstellung mit Referenz-Terminal in Welt 2048² und 20.000 Objekten höchstens 256 MB über 2.10 auf Referenz-PC und Mac (ADR-038); Coverage Kern ≥ 85 %.
+- **Akzeptanzkriterien:** `core/tests/build.rs` und `core/tests/construction.rs` grün; Bauaktion bis zum Bild mit vorläufigem Zeichnen auf Referenz-PC und Mac gemessen (Ziel nächstes Bild, FR-011 < 100 ms); Dauerbau-Benchmark: Wegweiser werden während Dauerbau innerhalb einer festgelegten Frist übernommen, Speicherspitze unter einer festgelegten Grenze (Frist und Grenze in der Vorlage vor dem Code); Speicher der Weltdarstellung mit Referenz-Terminal in Welt 2048² und 20.000 Objekten höchstens 256 MB über 2.10 auf Referenz-PC und Mac (ADR-038); Weltdarstellung auf dem Referenz-PC mit Bildabstand p99 ≤ 19,7 ms, unter 0,1 % späten Antworten (`rttLate`) und ≥ 59,5 Bildern/s (Auflage aus 3.15); Coverage Kern ≥ 85 %.
 - **Betroffene Module:** Welt & Bau, Takt & Weltzustand, Personen (Bauarbeiter), Brücke, Spielfeld, Oberfläche, Plattform
-- **Reifegrad-Wirkung:** Welt & Bau (Bauen) durch Umsetzung; NFR Bauaktion im nächsten Bild `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen; Speicher der Weltdarstellung `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen (ADR-038)
+- **Reifegrad-Wirkung:** Welt & Bau (Bauen) durch Umsetzung; NFR Bauaktion im nächsten Bild `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen; Speicher der Weltdarstellung `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen (ADR-038); NFR Performance unter Windows bleibt `[BELASTBAR]` nur bei Bestehen der Auflage aus 3.15, sonst `[VORLÄUFIG]`
 - **Artefakte:** Kern-Code, Spielfeld, Bau-Werkzeug, Benchmark, Messprotokoll
 
 #### 3.2: Kleines Terminal und Passagierablauf
