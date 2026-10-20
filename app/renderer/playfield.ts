@@ -160,6 +160,16 @@ export class Playfield {
 
   /** Name of the GPU, for the measurement protocol. */
   get gpu(): string {
+    // Spike 3.14: read once. `getParameter` is a synchronous round trip to the GPU
+    // process; called by the HUD every 250 ms it blocked the main thread for one or
+    // two display ticks whenever the GPU process was busy (late frames on Windows).
+    this.#gpuName ??= this.#readGpu();
+    return this.#gpuName;
+  }
+
+  #gpuName: string | undefined;
+
+  #readGpu(): string {
     // Returns the context PixiJS created on this canvas (same type), not a new one.
     const canvas = this.#app.canvas;
     const gl2 = canvas.getContext("webgl2");
