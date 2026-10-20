@@ -24,6 +24,39 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 23:15 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** rund 50 Minuten seit `[SESSIONSTART]` 22:24 UTC, davon etwa 10 Minuten Messlauf des Projektinhabers.
+- **Bearbeitet:**
+  - Schritt 3.15: Code, Unit-Tests, Regel in Code und Architektur.
+  - Zähler später Antworten im Messwerkzeug, nach Vorlage und Antwort „Zähler ergänzen“.
+  - Release-Lauf 39508715951 (der erste, 39508278718, wurde abgebrochen) und Messung auf dem Referenz-PC.
+  - Beförderung nach Vorlage und Antwort „Befördern“.
+  - PR #31 nach Anweisung („PR eröffnen und bei grün mergen“) eröffnet und gemergt, Merge-Commit `421781b`, 39 Prüfungen grün auf `1826398`.
+- **Erreicht:**
+  - 3.15 erledigt ohne ADR: 0 von 21.668 Antworten spät, Bildabstand p99 17,3–17,5 ms.
+  - „NFR Performance: dasselbe unter Windows“ ist `[BELASTBAR]`, Auflage Nachmessung in 3.1.
+- **Offen geblieben:**
+  - Warum der GPU-Prozess unter D3D11 zeitweise einen Takt im Flush wartet, bleibt ungeklärt. Ohne synchrone Abfragen ist das nicht sichtbar.
+  - Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf `fix/3-15-gpu-name-einmal-lesen` und geht mit dem PR des nächsten Schritts nach `main`.
+- **Nächster Schritt:** 3.9 Kernstruktur der Fachmodule, Entwurf als `ENTSCHEIDUNG ERFORDERLICH` vor dem Code (Entscheidungs-Klasse).
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 23:14 UTC). Ein Schritt oberhalb seiner Empfehlung (3.15: Routine; die Beförderung selbst ist Entscheidung, Auslöser 4). Abgegeben: keine Teilarbeiten, kein bestandener Probelauf.
+- **Kontextgröße:** 291.608 Token laut `get_session` 23:14 UTC, unter der Grenze von 400.000.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 23:14 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt (Electron 44: Vorlauf ab 2027-01-02).
+- **Archivierung und Größen:** keine Trigger. Logbuch rund 460 Zeilen (Grenze 800), `project-context.md` 375 Zeilen (Budget 600).
+- **Drift-Prüfung:**
+  - README nachgezogen (Phase, Architektur-Reife, Nächste Schritte).
+  - Reifegrad in `architecture.md` Abschnitt 9 passt zum Ergebnis 3.15.
+  - Kein neuer ADR; Reaktiv-Quote unverändert 7 / 10.
+  - Modulnamen in 3.15 (Spielfeld, Benchmark & Leistung) stimmen mit der Modul-Karte überein.
+  - Keine Anforderung neu oder geändert; keine Blocker, kein `[BLOCKIERT]`-Schritt.
+  - Phase 3: 15 Schritte bei Plan 13, unter der Wucherungs-Schwelle von 26. Der Zähler in 3.15 ist kein eigener Schritt.
+- **Mini-Reibungen:**
+  - Prettier formatierte die Messdatei beim Commit um. Inhalt per JSON-Vergleich gleich; der erste Commit-Versuch schlug wie in 3.14 fehl.
+  - Ein Heredoc im selben Befehl wie eine Pipe brach den Commit ab; Commit-Text danach aus einer Datei.
+- **Beobachtung:** Beim Anlegen eines Schritts mit Messkriterium prüfen, ob das Werkzeug auf `main` die Größe überhaupt misst. Das Kriterium aus 3.15 stammte aus dem Spike-Prototyp.
+
 ### 2026-10-20 23:05 (UTC) – [REIFEGRAD-WECHSEL]
 
 - **Bestandteil:** NFR Performance: Weltdarstellung mit Atlas-Stufen 16/32 px und großen Atlanten unter Windows („dasselbe unter Windows“), `[VORLÄUFIG]` → `[BELASTBAR]`.
