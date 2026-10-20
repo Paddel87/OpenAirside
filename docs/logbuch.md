@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 21:46 (UTC) – [BEOBACHTUNG]
+
+- **Merge:** PR #30 (Schritt 3.14) nach Anweisung des Projektinhabers gemergt („PR eröffnen und bei grün mergen“), Merge-Commit `fddad76`. Vorher grün auf `e908c87`: 39 Prüfungen ohne Fehler. Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf `erkundung/3-14-spaete-bilder-referenz-pc` und geht mit dem PR des nächsten Schritts nach `main`.
+
 ### 2026-10-20 21:40 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** rund 4 Stunden seit `[SESSIONSTART]` 17:37 UTC, davon gut 3 Stunden Messläufe des Projektinhabers.
