@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-20 (Session ab 17:37 UTC, Schritt 3.14 erledigt)
+- **Stand vom:** 2026-10-20 (Session ab 22:24 UTC, Schritt 3.15 in Arbeit)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (3.14 erledigt am 2026-10-20, Ursache belegt, Maßnahme in 3.15)
-- **Nächster Schritt:** 3.15 GPU-Namen nur einmal lesen (Korrektur auf `main`), danach 3.9 Kernstruktur der Fachmodule, in einer neuen Session (die Session zu 3.14 endete über der Grenze der Sessiongröße)
+- **Aktiver Schritt:** 3.15 GPU-Namen nur einmal lesen – Code, Test und Regel auf `fix/3-15-gpu-name-einmal-lesen`; Messung `measure 6` auf dem Referenz-PC ausstehend
+- **Nächster Schritt:** Abschluss 3.15 nach der Messung, danach 3.9 Kernstruktur der Fachmodule
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 7 / 10 (ADR-029 bis ADR-038) über dem Schwellenwert; Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
@@ -162,7 +162,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.15: GPU-Namen nur einmal lesen (Korrektur aus 3.14)
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT (seit 2026-10-20 22:24 UTC; Code, Test und Regel fertig, Messung auf dem Referenz-PC ausstehend)
 - **Phasentyp-Kontext:** UMSETZUNG (Fehlerbehebung innerhalb des Moduls)
 - **Abhängigkeiten:** 3.14; vor 3.1 (dessen Messungen sonst die späten Bilder enthalten)
 - **Freigabepflichtig:** nein (Fehlerbehebung im Spielfeld ohne Schnittstellenänderung; Antwort des Projektinhabers vom 2026-10-20: eigener Schritt)
