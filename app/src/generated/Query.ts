@@ -48,4 +48,11 @@ export type Query =
        * The object.
        */
       about: Handle;
+    }
+  | {
+      kind: "blocks";
+      /**
+       * Table indices, at most `display::MAX_QUERY_BLOCKS`.
+       */
+      blocks: number[];
     };

@@ -83,6 +83,10 @@ pub struct FrameFilter {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub view: Option<ViewRect>,
+    /// Spike 3.8: way of the resting world; no world section if absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub world: Option<crate::display::WorldMode>,
 }
 
 impl FrameFilter {
@@ -126,7 +130,30 @@ pub struct Snapshot {
     height: u16,
     fields_revision: u32,
     persons: Vec<Packed>,
+    grid: GridView,
 }
+
+/// Spike 3.8: grid of the snapshot, taken again only when it changed.
+#[derive(Clone, Default)]
+pub struct GridView {
+    session: u32,
+    version: u32,
+    grid: Option<crate::grid::GridSnapshot>,
+}
+
+impl std::fmt::Debug for GridView {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("GridView")
+    }
+}
+
+impl PartialEq for GridView {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
+}
+
+impl Eq for GridView {}
 
 fn fixed(cells: f32, limit: u16) -> u16 {
     let max = f32::from(limit) * SUBCELL - 1.0;
@@ -146,6 +173,15 @@ impl Snapshot {
         self.width = map.width;
         self.height = map.height;
         self.fields_revision = world.fields_revision();
+        let version = world.grid().version();
+        if self.grid.grid.is_none() || self.grid.session != session || self.grid.version != version
+        {
+            self.grid = GridView {
+                session,
+                version,
+                grid: Some(world.grid().snapshot()),
+            };
+        }
         self.persons.clear();
         self.persons.reserve(world.persons());
         let persons = &mut self.persons;
@@ -192,6 +228,12 @@ impl Snapshot {
             floor: p.floor,
             heading: p.heading,
         })
+    }
+
+    /// Spike 3.8: grid of the snapshot.
+    #[must_use]
+    pub fn grid(&self) -> Option<&crate::grid::GridSnapshot> {
+        self.grid.grid.as_ref()
     }
 
     /// Largest frame this snapshot can produce, in bytes.
@@ -353,6 +395,7 @@ mod tests {
         };
         snap.encode(
             &FrameFilter {
+                world: None,
                 floor: Some(0),
                 view: Some(view),
             },
@@ -363,6 +406,7 @@ mod tests {
         assert_eq!(out[24], 0);
         snap.encode(
             &FrameFilter {
+                world: None,
                 floor: Some(1),
                 view: None,
             },
@@ -379,10 +423,12 @@ mod tests {
         let mut out = Vec::new();
         for filter in [
             FrameFilter {
+                world: None,
                 floor: Some(3),
                 view: None,
             },
             FrameFilter {
+                world: None,
                 floor: None,
                 view: Some(ViewRect {
                     x0: 1.0,
@@ -392,6 +438,7 @@ mod tests {
                 }),
             },
             FrameFilter {
+                world: None,
                 floor: None,
                 view: Some(ViewRect {
                     x0: f32::NAN,

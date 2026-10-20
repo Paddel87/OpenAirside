@@ -193,6 +193,11 @@ pub enum Query {
         /// The object.
         about: Handle,
     },
+    /// Spike 3.8 (W-B): display data of blocks by table index.
+    Blocks {
+        /// Table indices, at most `display::MAX_QUERY_BLOCKS`.
+        blocks: Vec<u32>,
+    },
 }
 
 /// Texts of a table's text columns with their version.
@@ -376,6 +381,13 @@ pub fn answer(query: &Query, snapshot: &Snapshot) -> Result<Answer, &'static str
                 floor: p.floor,
                 state: state.to_owned(),
             }))
+        }
+        Query::Blocks { blocks } => {
+            if blocks.len() > crate::display::MAX_QUERY_BLOCKS {
+                return Err(code::LIMIT_EXCEEDED);
+            }
+            let grid = snapshot.grid().ok_or(code::UNKNOWN_TABLE)?;
+            Ok(Answer::Table(crate::display::answer_blocks(grid, blocks)))
         }
     }
 }

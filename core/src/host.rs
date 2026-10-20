@@ -37,6 +37,8 @@ pub enum Outgoing {
 pub struct PortHost {
     port: Port,
     front: Snapshot,
+    /// Spike 3.8: blocks handed out on this port.
+    world: crate::display::WorldSender,
     /// Session last announced on this port.
     announced: u32,
     last_delivery: Instant,
@@ -50,6 +52,7 @@ impl PortHost {
         Self {
             port: Port::new(),
             front: Snapshot::default(),
+            world: crate::display::WorldSender::default(),
             announced: 0,
             last_delivery: now,
             last_stats: now,
@@ -207,6 +210,18 @@ impl PortHost {
         if let Some(filter) = filter {
             let mut buf = Vec::with_capacity(self.front.max_frame_bytes());
             self.front.encode(&filter, &mut buf);
+            if let (Some(mode), Some(grid)) = (filter.world, self.front.grid())
+                && self.world.write(
+                    frame_session,
+                    grid,
+                    mode,
+                    filter.floor,
+                    filter.view,
+                    &mut buf,
+                )
+            {
+                buf[26] = 1;
+            }
             out.push(Outgoing::Binary {
                 message: ServerMessage::Frame {
                     session: frame_session,
