@@ -1,0 +1,2451 @@
+{
+  "tool": "openairside-measure",
+  "system": {
+    "appVersion": "0.0.0",
+    "packaged": true,
+    "platform": "win32",
+    "arch": "x64",
+    "osRelease": "10.0.26200",
+    "electron": "44.7.0",
+    "chrome": "152.0.7977.130",
+    "cpus": 24,
+    "cpuModel": "AMD Ryzen 9 3900X 12-Core Processor            ",
+    "memGb": 32,
+    "gpuFeatureStatus": {
+      "2d_canvas": "enabled",
+      "direct_rendering_display_compositor": "disabled_off_ok",
+      "gpu_compositing": "enabled",
+      "multiple_raster_threads": "enabled_on",
+      "opengl": "enabled_on",
+      "rasterization": "enabled",
+      "raw_draw": "disabled_off_ok",
+      "skia_graphite": "disabled_off",
+      "trees_in_viz": "disabled_off",
+      "video_decode": "enabled",
+      "video_encode": "enabled",
+      "webgl": "enabled",
+      "webgpu": "enabled",
+      "webnn": "disabled_off"
+    },
+    "coreOptions": {},
+    "finishedAt": "2026-10-20T16:39:22.426Z"
+  },
+  "series": {
+    "version": 1,
+    "config": {
+      "minutes": 10,
+      "persons": 10000,
+      "windowSeconds": 30,
+      "warmupSeconds": 10,
+      "buildEverySeconds": 10,
+      "queriesPerSecond": 4,
+      "tableRows": 1000,
+      "loadTimeoutMs": 180000,
+      "objects": 20000,
+      "zones": 64,
+      "world": {
+        "mode": "inline",
+        "draw": "z2"
+      }
+    },
+    "initMs": 575,
+    "threads": 4,
+    "backgroundThreads": 19,
+    "hotspot": {
+      "x": 1224,
+      "y": 1256
+    },
+    "scene": {
+      "objects": 0,
+      "fallbacks": 0,
+      "zones": 0,
+      "tiers": [8, 16, 32],
+      "pages": 3,
+      "textureMbMax": 14.09
+    },
+    "windows": [
+      {
+        "window": 0,
+        "atS": 30,
+        "view": "overview",
+        "seconds": 30.11,
+        "tierPx": 8,
+        "fps": 60,
+        "frameMsP50": 16.7,
+        "frameMsP99": 17.5,
+        "frameMsMax": 31.1,
+        "rttMsP50": 0.7,
+        "rttMsP99": 1.3,
+        "rttMsMax": 6.1,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.4,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 162.9,
+        "stepUsP99Max": 1702,
+        "stepUsMax": 4104,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 351.7,
+        "recomputeMsMax": 355,
+        "builds": 3,
+        "buildMsP50": 34.8,
+        "buildMsMax": 40.8,
+        "buildFramesMax": 2,
+        "adoptMsMax": 383.1,
+        "queries": 119,
+        "queryMsP50": 2,
+        "queryMsMax": 3.6,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 34.8,
+        "worldBuildMsMax": 40.8,
+        "worldBuildFramesMax": 2,
+        "label": "overview",
+        "world": {
+          "blocks": 4988,
+          "bytes": 2937160,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 27.3,
+          "cpuMb": 52,
+          "z2Cached": 0
+        }
+      },
+      {
+        "window": 1,
+        "atS": 60,
+        "view": "overview",
+        "seconds": 30.1,
+        "tierPx": 8,
+        "fps": 59.9,
+        "frameMsP50": 16.7,
+        "frameMsP99": 17.6,
+        "frameMsMax": 52.3,
+        "rttMsP50": 0.5,
+        "rttMsP99": 1.3,
+        "rttMsMax": 34.8,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.3,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 175.7,
+        "stepUsP99Max": 1050,
+        "stepUsMax": 8395,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 353.7,
+        "recomputeMsMax": 358,
+        "builds": 3,
+        "buildMsP50": 27.7,
+        "buildMsMax": 28.3,
+        "buildFramesMax": 2,
+        "adoptMsMax": 371.6,
+        "queries": 119,
+        "queryMsP50": 1.8,
+        "queryMsMax": 2.9,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 27.7,
+        "worldBuildMsMax": 28.3,
+        "worldBuildFramesMax": 2,
+        "label": "overviewAll",
+        "world": {
+          "blocks": 4988,
+          "bytes": 2969064,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 27.3,
+          "cpuMb": 52,
+          "z2Cached": 0
+        }
+      },
+      {
+        "window": 2,
+        "atS": 90,
+        "view": "circle",
+        "seconds": 30.12,
+        "tierPx": 16,
+        "fps": 58.9,
+        "frameMsP50": 16.6,
+        "frameMsP99": 47.3,
+        "frameMsMax": 67.6,
+        "rttMsP50": 0.5,
+        "rttMsP99": 31,
+        "rttMsMax": 34.6,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.8,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 173.4,
+        "stepUsP99Max": 2247,
+        "stepUsMax": 4415,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 366.3,
+        "recomputeMsMax": 376,
+        "builds": 3,
+        "buildMsP50": 44.9,
+        "buildMsMax": 46.5,
+        "buildFramesMax": 3,
+        "adoptMsMax": 400.7,
+        "queries": 118,
+        "queryMsP50": 1.8,
+        "queryMsMax": 35,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 44.9,
+        "worldBuildMsMax": 46.5,
+        "worldBuildFramesMax": 3,
+        "label": "mid",
+        "world": {
+          "blocks": 4988,
+          "bytes": 2999752,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 112.3,
+          "cpuMb": 52,
+          "z2Cached": 85
+        }
+      },
+      {
+        "window": 3,
+        "atS": 120,
+        "view": "circle",
+        "seconds": 30.04,
+        "tierPx": 32,
+        "fps": 60,
+        "frameMsP50": 16.6,
+        "frameMsP99": 30.6,
+        "frameMsMax": 41.7,
+        "rttMsP50": 0.5,
+        "rttMsP99": 14.3,
+        "rttMsMax": 23.1,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 181,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 177.3,
+        "stepUsP99Max": 1335,
+        "stepUsMax": 2256,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 356.7,
+        "recomputeMsMax": 365,
+        "builds": 3,
+        "buildMsP50": 35,
+        "buildMsMax": 44.3,
+        "buildFramesMax": 3,
+        "adoptMsMax": 386,
+        "queries": 118,
+        "queryMsP50": 1.8,
+        "queryMsMax": 30.6,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 35,
+        "worldBuildMsMax": 44.3,
+        "worldBuildFramesMax": 3,
+        "label": "near",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3030872,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 139.3,
+          "cpuMb": 52,
+          "z2Cached": 28
+        }
+      },
+      {
+        "window": 4,
+        "atS": 151,
+        "view": "overview",
+        "seconds": 30.12,
+        "tierPx": 8,
+        "fps": 60,
+        "frameMsP50": 16.6,
+        "frameMsP99": 33,
+        "frameMsMax": 33.6,
+        "rttMsP50": 0.6,
+        "rttMsP99": 17,
+        "rttMsMax": 17.5,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.8,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 185.8,
+        "stepUsP99Max": 1224,
+        "stepUsMax": 3481,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 357.7,
+        "recomputeMsMax": 365,
+        "builds": 3,
+        "buildMsP50": 27,
+        "buildMsMax": 32.9,
+        "buildFramesMax": 2,
+        "adoptMsMax": 385.7,
+        "queries": 119,
+        "queryMsP50": 1.8,
+        "queryMsMax": 3.4,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 27,
+        "worldBuildMsMax": 32.9,
+        "worldBuildFramesMax": 2,
+        "label": "overview",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3062184,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 27.3,
+          "cpuMb": 52,
+          "z2Cached": 0
+        }
+      },
+      {
+        "window": 5,
+        "atS": 181,
+        "view": "overview",
+        "seconds": 30.18,
+        "tierPx": 8,
+        "fps": 60,
+        "frameMsP50": 16.7,
+        "frameMsP99": 33.1,
+        "frameMsMax": 33.4,
+        "rttMsP50": 0.7,
+        "rttMsP99": 17.1,
+        "rttMsMax": 17.6,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.6,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 193.7,
+        "stepUsP99Max": 1617,
+        "stepUsMax": 3399,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 374.3,
+        "recomputeMsMax": 402,
+        "builds": 3,
+        "buildMsP50": 26.9,
+        "buildMsMax": 42.2,
+        "buildFramesMax": 3,
+        "adoptMsMax": 417.3,
+        "queries": 119,
+        "queryMsP50": 1.8,
+        "queryMsMax": 11.2,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 26.9,
+        "worldBuildMsMax": 42.2,
+        "worldBuildFramesMax": 3,
+        "label": "overviewAll",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3093512,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 27.3,
+          "cpuMb": 52,
+          "z2Cached": 0
+        }
+      },
+      {
+        "window": 6,
+        "atS": 211,
+        "view": "circle",
+        "seconds": 30.04,
+        "tierPx": 16,
+        "fps": 60,
+        "frameMsP50": 16.7,
+        "frameMsP99": 18,
+        "frameMsMax": 32.4,
+        "rttMsP50": 0.5,
+        "rttMsP99": 1.1,
+        "rttMsMax": 36.2,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.9,
+        "ticksPerSecMin": 179,
+        "stepUsMean": 180.8,
+        "stepUsP99Max": 1510,
+        "stepUsMax": 1672,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 353,
+        "recomputeMsMax": 358,
+        "builds": 3,
+        "buildMsP50": 33,
+        "buildMsMax": 35.2,
+        "buildFramesMax": 2,
+        "adoptMsMax": 372.2,
+        "queries": 118,
+        "queryMsP50": 1.8,
+        "queryMsMax": 32.1,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 33,
+        "worldBuildMsMax": 35.2,
+        "worldBuildFramesMax": 2,
+        "label": "mid",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3124664,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 112.3,
+          "cpuMb": 52,
+          "z2Cached": 85
+        }
+      },
+      {
+        "window": 7,
+        "atS": 241,
+        "view": "circle",
+        "seconds": 30.02,
+        "tierPx": 32,
+        "fps": 59.9,
+        "frameMsP50": 16.6,
+        "frameMsP99": 46.9,
+        "frameMsMax": 47.6,
+        "rttMsP50": 0.5,
+        "rttMsP99": 30.7,
+        "rttMsMax": 31.3,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.9,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 174.5,
+        "stepUsP99Max": 959,
+        "stepUsMax": 2399,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 353,
+        "recomputeMsMax": 355,
+        "builds": 3,
+        "buildMsP50": 23.2,
+        "buildMsMax": 31.1,
+        "buildFramesMax": 3,
+        "adoptMsMax": 384,
+        "queries": 118,
+        "queryMsP50": 1.8,
+        "queryMsMax": 31.5,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 23.2,
+        "worldBuildMsMax": 31.1,
+        "worldBuildFramesMax": 3,
+        "label": "near",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3155744,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 139.3,
+          "cpuMb": 52,
+          "z2Cached": 28
+        }
+      },
+      {
+        "window": 8,
+        "atS": 271,
+        "view": "overview",
+        "seconds": 30.18,
+        "tierPx": 8,
+        "fps": 59.9,
+        "frameMsP50": 16.7,
+        "frameMsP99": 33.2,
+        "frameMsMax": 49.7,
+        "rttMsP50": 0.6,
+        "rttMsP99": 17,
+        "rttMsMax": 33.4,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.5,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 172.6,
+        "stepUsP99Max": 586,
+        "stepUsMax": 1600,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 344.3,
+        "recomputeMsMax": 349,
+        "builds": 3,
+        "buildMsP50": 37.3,
+        "buildMsMax": 41,
+        "buildFramesMax": 3,
+        "adoptMsMax": 367.4,
+        "queries": 119,
+        "queryMsP50": 1.8,
+        "queryMsMax": 18.8,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 37.3,
+        "worldBuildMsMax": 41,
+        "worldBuildFramesMax": 3,
+        "label": "overview",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3187016,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 27.3,
+          "cpuMb": 52,
+          "z2Cached": 0
+        }
+      },
+      {
+        "window": 9,
+        "atS": 301,
+        "view": "overview",
+        "seconds": 30.18,
+        "tierPx": 8,
+        "fps": 60,
+        "frameMsP50": 16.7,
+        "frameMsP99": 33.1,
+        "frameMsMax": 49.6,
+        "rttMsP50": 0.6,
+        "rttMsP99": 17,
+        "rttMsMax": 33.5,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.4,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 172.8,
+        "stepUsP99Max": 697,
+        "stepUsMax": 995,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 349.3,
+        "recomputeMsMax": 353,
+        "builds": 3,
+        "buildMsP50": 40.2,
+        "buildMsMax": 40.6,
+        "buildFramesMax": 3,
+        "adoptMsMax": 383.7,
+        "queries": 119,
+        "queryMsP50": 1.8,
+        "queryMsMax": 18.5,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 40.2,
+        "worldBuildMsMax": 40.6,
+        "worldBuildFramesMax": 3,
+        "label": "overviewAll",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3218288,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 27.3,
+          "cpuMb": 52,
+          "z2Cached": 0
+        }
+      },
+      {
+        "window": 10,
+        "atS": 331,
+        "view": "circle",
+        "seconds": 30.05,
+        "tierPx": 16,
+        "fps": 59.8,
+        "frameMsP50": 16.6,
+        "frameMsP99": 46.8,
+        "frameMsMax": 47.6,
+        "rttMsP50": 0.5,
+        "rttMsP99": 30.5,
+        "rttMsMax": 31.2,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.8,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 174.3,
+        "stepUsP99Max": 761,
+        "stepUsMax": 2697,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 353.3,
+        "recomputeMsMax": 361,
+        "builds": 3,
+        "buildMsP50": 31.2,
+        "buildMsMax": 31.7,
+        "buildFramesMax": 3,
+        "adoptMsMax": 384.4,
+        "queries": 118,
+        "queryMsP50": 1.7,
+        "queryMsMax": 23.4,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 31.2,
+        "worldBuildMsMax": 31.7,
+        "worldBuildFramesMax": 3,
+        "label": "mid",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3249344,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 112.3,
+          "cpuMb": 52,
+          "z2Cached": 85
+        }
+      },
+      {
+        "window": 11,
+        "atS": 362,
+        "view": "circle",
+        "seconds": 30.19,
+        "tierPx": 32,
+        "fps": 60,
+        "frameMsP50": 16.7,
+        "frameMsP99": 30.3,
+        "frameMsMax": 33.9,
+        "rttMsP50": 0.5,
+        "rttMsP99": 14.1,
+        "rttMsMax": 25.2,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.5,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 174.3,
+        "stepUsP99Max": 1105,
+        "stepUsMax": 1222,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 351.3,
+        "recomputeMsMax": 357,
+        "builds": 3,
+        "buildMsP50": 31.6,
+        "buildMsMax": 34.1,
+        "buildFramesMax": 2,
+        "adoptMsMax": 369,
+        "queries": 119,
+        "queryMsP50": 1.7,
+        "queryMsMax": 32.6,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 31.6,
+        "worldBuildMsMax": 34.1,
+        "worldBuildFramesMax": 2,
+        "label": "near",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3280632,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 139.3,
+          "cpuMb": 52,
+          "z2Cached": 28
+        }
+      },
+      {
+        "window": 12,
+        "atS": 392,
+        "view": "overview",
+        "seconds": 30.12,
+        "tierPx": 8,
+        "fps": 60,
+        "frameMsP50": 16.7,
+        "frameMsP99": 33.1,
+        "frameMsMax": 33.8,
+        "rttMsP50": 0.6,
+        "rttMsP99": 17,
+        "rttMsMax": 17.4,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.6,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 176,
+        "stepUsP99Max": 1167,
+        "stepUsMax": 1229,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 354.3,
+        "recomputeMsMax": 358,
+        "builds": 3,
+        "buildMsP50": 29.2,
+        "buildMsMax": 31.7,
+        "buildFramesMax": 2,
+        "adoptMsMax": 383.2,
+        "queries": 119,
+        "queryMsP50": 1.8,
+        "queryMsMax": 18.1,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 29.2,
+        "worldBuildMsMax": 31.7,
+        "worldBuildFramesMax": 2,
+        "label": "overview",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3311864,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 27.3,
+          "cpuMb": 52,
+          "z2Cached": 0
+        }
+      },
+      {
+        "window": 13,
+        "atS": 422,
+        "view": "overview",
+        "seconds": 30.11,
+        "tierPx": 8,
+        "fps": 60,
+        "frameMsP50": 16.7,
+        "frameMsP99": 33.1,
+        "frameMsMax": 33.4,
+        "rttMsP50": 0.6,
+        "rttMsP99": 17,
+        "rttMsMax": 17.4,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.4,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 179.4,
+        "stepUsP99Max": 1988,
+        "stepUsMax": 4688,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 364.3,
+        "recomputeMsMax": 368,
+        "builds": 3,
+        "buildMsP50": 26.4,
+        "buildMsMax": 43.3,
+        "buildFramesMax": 3,
+        "adoptMsMax": 400,
+        "queries": 119,
+        "queryMsP50": 1.8,
+        "queryMsMax": 17.9,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 26.4,
+        "worldBuildMsMax": 43.3,
+        "worldBuildFramesMax": 3,
+        "label": "overviewAll",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3343072,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 27.3,
+          "cpuMb": 52,
+          "z2Cached": 0
+        }
+      },
+      {
+        "window": 14,
+        "atS": 452,
+        "view": "circle",
+        "seconds": 30.18,
+        "tierPx": 16,
+        "fps": 59.5,
+        "frameMsP50": 16.6,
+        "frameMsP99": 46.9,
+        "frameMsMax": 102.4,
+        "rttMsP50": 0.5,
+        "rttMsP99": 30.6,
+        "rttMsMax": 31.1,
+        "longTasks": 1,
+        "longTaskMsMax": 95,
+        "ticksPerSecMean": 180.7,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 178.4,
+        "stepUsP99Max": 709,
+        "stepUsMax": 953,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 356,
+        "recomputeMsMax": 370,
+        "builds": 3,
+        "buildMsP50": 20.6,
+        "buildMsMax": 28.9,
+        "buildFramesMax": 2,
+        "adoptMsMax": 419.8,
+        "queries": 118,
+        "queryMsP50": 1.8,
+        "queryMsMax": 35.3,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 20.6,
+        "worldBuildMsMax": 28.9,
+        "worldBuildFramesMax": 2,
+        "label": "mid",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3374120,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 112.3,
+          "cpuMb": 52,
+          "z2Cached": 85
+        }
+      },
+      {
+        "window": 15,
+        "atS": 482,
+        "view": "circle",
+        "seconds": 30.04,
+        "tierPx": 32,
+        "fps": 59.9,
+        "frameMsP50": 16.6,
+        "frameMsP99": 30.3,
+        "frameMsMax": 31,
+        "rttMsP50": 0.5,
+        "rttMsP99": 14.1,
+        "rttMsMax": 14.7,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.9,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 175.3,
+        "stepUsP99Max": 1066,
+        "stepUsMax": 1774,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 355,
+        "recomputeMsMax": 358,
+        "builds": 3,
+        "buildMsP50": 30.1,
+        "buildMsMax": 33.8,
+        "buildFramesMax": 2,
+        "adoptMsMax": 372.6,
+        "queries": 118,
+        "queryMsP50": 1.8,
+        "queryMsMax": 30.2,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 30.1,
+        "worldBuildMsMax": 33.8,
+        "worldBuildFramesMax": 2,
+        "label": "near",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3405232,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 139.3,
+          "cpuMb": 52,
+          "z2Cached": 28
+        }
+      },
+      {
+        "window": 16,
+        "atS": 512,
+        "view": "overview",
+        "seconds": 30.14,
+        "tierPx": 8,
+        "fps": 59.8,
+        "frameMsP50": 16.7,
+        "frameMsP99": 19.8,
+        "frameMsMax": 66.8,
+        "rttMsP50": 0.6,
+        "rttMsP99": 1.5,
+        "rttMsMax": 17.2,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.5,
+        "ticksPerSecMin": 178,
+        "stepUsMean": 190.1,
+        "stepUsP99Max": 18462,
+        "stepUsMax": 31334,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 365,
+        "recomputeMsMax": 384,
+        "builds": 3,
+        "buildMsP50": 22.6,
+        "buildMsMax": 26.8,
+        "buildFramesMax": 2,
+        "adoptMsMax": 388.9,
+        "queries": 120,
+        "queryMsP50": 1.9,
+        "queryMsMax": 2.9,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 22.6,
+        "worldBuildMsMax": 26.8,
+        "worldBuildFramesMax": 2,
+        "label": "overview",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3436488,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 27.3,
+          "cpuMb": 52,
+          "z2Cached": 0
+        }
+      },
+      {
+        "window": 17,
+        "atS": 542,
+        "view": "overview",
+        "seconds": 30.14,
+        "tierPx": 8,
+        "fps": 59.9,
+        "frameMsP50": 16.7,
+        "frameMsP99": 18.2,
+        "frameMsMax": 33.3,
+        "rttMsP50": 0.7,
+        "rttMsP99": 1.6,
+        "rttMsMax": 17.3,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.4,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 164.8,
+        "stepUsP99Max": 1635,
+        "stepUsMax": 3643,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 354,
+        "recomputeMsMax": 356,
+        "builds": 4,
+        "buildMsP50": 28.1,
+        "buildMsMax": 51.4,
+        "buildFramesMax": 2,
+        "adoptMsMax": 371.6,
+        "queries": 120,
+        "queryMsP50": 1.8,
+        "queryMsMax": 2.7,
+        "worldBuilds": 4,
+        "worldBuildMsP50": 28.1,
+        "worldBuildMsMax": 51.4,
+        "worldBuildFramesMax": 2,
+        "label": "overviewAll",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3468496,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 27.3,
+          "cpuMb": 52,
+          "z2Cached": 0
+        }
+      },
+      {
+        "window": 18,
+        "atS": 572,
+        "view": "circle",
+        "seconds": 30.04,
+        "tierPx": 16,
+        "fps": 59.9,
+        "frameMsP50": 16.7,
+        "frameMsP99": 18.2,
+        "frameMsMax": 34.7,
+        "rttMsP50": 0.5,
+        "rttMsP99": 1,
+        "rttMsMax": 50.2,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.5,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 178.4,
+        "stepUsP99Max": 958,
+        "stepUsMax": 1142,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 358.3,
+        "recomputeMsMax": 364,
+        "builds": 3,
+        "buildMsP50": 29.8,
+        "buildMsMax": 33.1,
+        "buildFramesMax": 2,
+        "adoptMsMax": 386.9,
+        "queries": 118,
+        "queryMsP50": 1.8,
+        "queryMsMax": 43.2,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 29.8,
+        "worldBuildMsMax": 33.1,
+        "worldBuildFramesMax": 2,
+        "label": "mid",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3499608,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 112.3,
+          "cpuMb": 52,
+          "z2Cached": 85
+        }
+      },
+      {
+        "window": 19,
+        "atS": 602,
+        "view": "circle",
+        "seconds": 30.07,
+        "tierPx": 32,
+        "fps": 59.9,
+        "frameMsP50": 16.7,
+        "frameMsP99": 18.3,
+        "frameMsMax": 60.3,
+        "rttMsP50": 0.5,
+        "rttMsP99": 1.1,
+        "rttMsMax": 31.2,
+        "longTasks": 0,
+        "longTaskMsMax": 0,
+        "ticksPerSecMean": 180.6,
+        "ticksPerSecMin": 180,
+        "stepUsMean": 188,
+        "stepUsP99Max": 7369,
+        "stepUsMax": 8566,
+        "behindTicksMax": 0,
+        "lagEvents": 0,
+        "lagBehindMax": 0,
+        "recomputes": 3,
+        "recomputeMsMean": 362.7,
+        "recomputeMsMax": 369,
+        "builds": 3,
+        "buildMsP50": 37.3,
+        "buildMsMax": 42.2,
+        "buildFramesMax": 2,
+        "adoptMsMax": 383.7,
+        "queries": 118,
+        "queryMsP50": 1.8,
+        "queryMsMax": 59.3,
+        "worldBuilds": 3,
+        "worldBuildMsP50": 37.3,
+        "worldBuildMsMax": 42.2,
+        "worldBuildFramesMax": 2,
+        "label": "near",
+        "world": {
+          "blocks": 4988,
+          "bytes": 3530776,
+          "pending": 0,
+          "objects": 20160,
+          "textureMb": 135.3,
+          "cpuMb": 52,
+          "z2Cached": 27
+        }
+      }
+    ],
+    "summary": {
+      "fpsMin": 58.9,
+      "fpsMean": 59.9,
+      "frameMsP99Max": 47.3,
+      "ticksPerSecMin": 178,
+      "stepUsP99Max": 18462,
+      "behindTicksMax": 0,
+      "lagEvents": 0,
+      "recomputes": 60,
+      "recomputeMsMax": 402,
+      "buildMsMax": 51.4,
+      "queryMsMax": 59.3
+    },
+    "world": {
+      "mode": "inline",
+      "draw": "z2",
+      "visibleMs": 0,
+      "allMs": 272,
+      "figures": {
+        "blocks": 4988,
+        "bytes": 2894784,
+        "pending": 0,
+        "objects": 20160,
+        "textureMb": 39.3,
+        "cpuMb": 52,
+        "z2Cached": 12
+      }
+    }
+  },
+  "renderer": {
+    "gpu": "WebGL2 ANGLE (AMD, AMD Radeon RX 7700 XT (0x0000747E) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "screenWidth": 3440,
+    "screenHeight": 1440,
+    "devicePixelRatio": 1,
+    "windowWidth": 1264,
+    "windowHeight": 761
+  },
+  "memory": [
+    {
+      "s": 0,
+      "totalMb": 623,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 139,
+        "Utility": 45,
+        "Tab": 186,
+        "core": 148
+      }
+    },
+    {
+      "s": 5,
+      "totalMb": 745,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 161,
+        "Utility": 45,
+        "Tab": 267,
+        "core": 167
+      }
+    },
+    {
+      "s": 10,
+      "totalMb": 785,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 161,
+        "Utility": 45,
+        "Tab": 303,
+        "core": 172
+      }
+    },
+    {
+      "s": 15,
+      "totalMb": 683,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 161,
+        "Utility": 45,
+        "Tab": 203,
+        "core": 169
+      }
+    },
+    {
+      "s": 20,
+      "totalMb": 668,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 161,
+        "Utility": 45,
+        "Tab": 199,
+        "core": 158
+      }
+    },
+    {
+      "s": 25,
+      "totalMb": 643,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 161,
+        "Utility": 45,
+        "Tab": 196,
+        "core": 136
+      }
+    },
+    {
+      "s": 30,
+      "totalMb": 671,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 161,
+        "Utility": 45,
+        "Tab": 196,
+        "core": 165
+      }
+    },
+    {
+      "s": 35,
+      "totalMb": 657,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 161,
+        "Utility": 45,
+        "Tab": 201,
+        "core": 145
+      }
+    },
+    {
+      "s": 40,
+      "totalMb": 650,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 161,
+        "Utility": 45,
+        "Tab": 199,
+        "core": 139
+      }
+    },
+    {
+      "s": 45,
+      "totalMb": 665,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 166,
+        "Utility": 45,
+        "Tab": 209,
+        "core": 140
+      }
+    },
+    {
+      "s": 50,
+      "totalMb": 666,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 163,
+        "Utility": 45,
+        "Tab": 206,
+        "core": 146
+      }
+    },
+    {
+      "s": 55,
+      "totalMb": 660,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 163,
+        "Utility": 45,
+        "Tab": 206,
+        "core": 140
+      }
+    },
+    {
+      "s": 60,
+      "totalMb": 665,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 163,
+        "Utility": 45,
+        "Tab": 214,
+        "core": 138
+      }
+    },
+    {
+      "s": 65,
+      "totalMb": 661,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 161,
+        "Utility": 45,
+        "Tab": 202,
+        "core": 148
+      }
+    },
+    {
+      "s": 70,
+      "totalMb": 662,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 160,
+        "Utility": 45,
+        "Tab": 207,
+        "core": 145
+      }
+    },
+    {
+      "s": 75,
+      "totalMb": 710,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 169,
+        "Utility": 45,
+        "Tab": 251,
+        "core": 140
+      }
+    },
+    {
+      "s": 80,
+      "totalMb": 757,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 171,
+        "Utility": 45,
+        "Tab": 296,
+        "core": 140
+      }
+    },
+    {
+      "s": 85,
+      "totalMb": 754,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 171,
+        "Utility": 45,
+        "Tab": 297,
+        "core": 135
+      }
+    },
+    {
+      "s": 90,
+      "totalMb": 767,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 179,
+        "Utility": 45,
+        "Tab": 301,
+        "core": 136
+      }
+    },
+    {
+      "s": 95,
+      "totalMb": 771,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 179,
+        "Utility": 45,
+        "Tab": 301,
+        "core": 140
+      }
+    },
+    {
+      "s": 100,
+      "totalMb": 695,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 179,
+        "Utility": 45,
+        "Tab": 226,
+        "core": 140
+      }
+    },
+    {
+      "s": 105,
+      "totalMb": 741,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 195,
+        "Utility": 45,
+        "Tab": 257,
+        "core": 140
+      }
+    },
+    {
+      "s": 110,
+      "totalMb": 750,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 277,
+        "core": 140
+      }
+    },
+    {
+      "s": 115,
+      "totalMb": 747,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 278,
+        "core": 136
+      }
+    },
+    {
+      "s": 120,
+      "totalMb": 710,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 243,
+        "core": 135
+      }
+    },
+    {
+      "s": 125,
+      "totalMb": 717,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 245,
+        "core": 139
+      }
+    },
+    {
+      "s": 130,
+      "totalMb": 718,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 246,
+        "core": 140
+      }
+    },
+    {
+      "s": 135,
+      "totalMb": 727,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 253,
+        "core": 142
+      }
+    },
+    {
+      "s": 140,
+      "totalMb": 729,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 255,
+        "core": 142
+      }
+    },
+    {
+      "s": 145,
+      "totalMb": 727,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 259,
+        "core": 136
+      }
+    },
+    {
+      "s": 150,
+      "totalMb": 732,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 248,
+        "core": 152
+      }
+    },
+    {
+      "s": 155,
+      "totalMb": 727,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 174,
+        "Utility": 45,
+        "Tab": 252,
+        "core": 151
+      }
+    },
+    {
+      "s": 160,
+      "totalMb": 722,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 173,
+        "Utility": 45,
+        "Tab": 252,
+        "core": 147
+      }
+    },
+    {
+      "s": 165,
+      "totalMb": 716,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 174,
+        "Utility": 45,
+        "Tab": 253,
+        "core": 139
+      }
+    },
+    {
+      "s": 170,
+      "totalMb": 729,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 173,
+        "Utility": 45,
+        "Tab": 253,
+        "core": 153
+      }
+    },
+    {
+      "s": 175,
+      "totalMb": 725,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 172,
+        "Utility": 45,
+        "Tab": 251,
+        "core": 151
+      }
+    },
+    {
+      "s": 180,
+      "totalMb": 720,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 172,
+        "Utility": 45,
+        "Tab": 250,
+        "core": 147
+      }
+    },
+    {
+      "s": 185,
+      "totalMb": 715,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 170,
+        "Utility": 45,
+        "Tab": 250,
+        "core": 145
+      }
+    },
+    {
+      "s": 190,
+      "totalMb": 711,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 169,
+        "Utility": 45,
+        "Tab": 251,
+        "core": 141
+      }
+    },
+    {
+      "s": 195,
+      "totalMb": 766,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 177,
+        "Utility": 45,
+        "Tab": 298,
+        "core": 141
+      }
+    },
+    {
+      "s": 200,
+      "totalMb": 814,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 178,
+        "Utility": 45,
+        "Tab": 349,
+        "core": 136
+      }
+    },
+    {
+      "s": 205,
+      "totalMb": 820,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 179,
+        "Utility": 45,
+        "Tab": 351,
+        "core": 140
+      }
+    },
+    {
+      "s": 210,
+      "totalMb": 821,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 179,
+        "Utility": 45,
+        "Tab": 352,
+        "core": 140
+      }
+    },
+    {
+      "s": 215,
+      "totalMb": 821,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 179,
+        "Utility": 45,
+        "Tab": 352,
+        "core": 140
+      }
+    },
+    {
+      "s": 220,
+      "totalMb": 745,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 180,
+        "Utility": 45,
+        "Tab": 274,
+        "core": 141
+      }
+    },
+    {
+      "s": 225,
+      "totalMb": 779,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 195,
+        "Utility": 45,
+        "Tab": 298,
+        "core": 136
+      }
+    },
+    {
+      "s": 230,
+      "totalMb": 795,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 190,
+        "Utility": 45,
+        "Tab": 320,
+        "core": 136
+      }
+    },
+    {
+      "s": 235,
+      "totalMb": 810,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 190,
+        "Utility": 45,
+        "Tab": 330,
+        "core": 140
+      }
+    },
+    {
+      "s": 240,
+      "totalMb": 759,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 190,
+        "Utility": 45,
+        "Tab": 281,
+        "core": 138
+      }
+    },
+    {
+      "s": 245,
+      "totalMb": 762,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 190,
+        "Utility": 45,
+        "Tab": 282,
+        "core": 140
+      }
+    },
+    {
+      "s": 250,
+      "totalMb": 763,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 190,
+        "Utility": 45,
+        "Tab": 283,
+        "core": 140
+      }
+    },
+    {
+      "s": 255,
+      "totalMb": 770,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 186,
+        "Utility": 45,
+        "Tab": 285,
+        "core": 148
+      }
+    },
+    {
+      "s": 260,
+      "totalMb": 791,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 301,
+        "core": 157
+      }
+    },
+    {
+      "s": 265,
+      "totalMb": 791,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 186,
+        "Utility": 45,
+        "Tab": 300,
+        "core": 155
+      }
+    },
+    {
+      "s": 270,
+      "totalMb": 778,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 297,
+        "core": 148
+      }
+    },
+    {
+      "s": 275,
+      "totalMb": 764,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 174,
+        "Utility": 45,
+        "Tab": 296,
+        "core": 144
+      }
+    },
+    {
+      "s": 281,
+      "totalMb": 755,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 173,
+        "Utility": 45,
+        "Tab": 292,
+        "core": 140
+      }
+    },
+    {
+      "s": 286,
+      "totalMb": 777,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 177,
+        "Utility": 45,
+        "Tab": 295,
+        "core": 155
+      }
+    },
+    {
+      "s": 291,
+      "totalMb": 768,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 173,
+        "Utility": 45,
+        "Tab": 294,
+        "core": 150
+      }
+    },
+    {
+      "s": 296,
+      "totalMb": 765,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 177,
+        "Utility": 45,
+        "Tab": 292,
+        "core": 146
+      }
+    },
+    {
+      "s": 301,
+      "totalMb": 752,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 173,
+        "Utility": 45,
+        "Tab": 288,
+        "core": 141
+      }
+    },
+    {
+      "s": 306,
+      "totalMb": 783,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 174,
+        "Utility": 45,
+        "Tab": 303,
+        "core": 156
+      }
+    },
+    {
+      "s": 311,
+      "totalMb": 771,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 169,
+        "Utility": 45,
+        "Tab": 300,
+        "core": 151
+      }
+    },
+    {
+      "s": 316,
+      "totalMb": 805,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 184,
+        "Utility": 45,
+        "Tab": 330,
+        "core": 141
+      }
+    },
+    {
+      "s": 321,
+      "totalMb": 868,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 189,
+        "Utility": 45,
+        "Tab": 387,
+        "core": 141
+      }
+    },
+    {
+      "s": 326,
+      "totalMb": 870,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 190,
+        "Utility": 45,
+        "Tab": 388,
+        "core": 142
+      }
+    },
+    {
+      "s": 331,
+      "totalMb": 794,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 190,
+        "Utility": 45,
+        "Tab": 312,
+        "core": 141
+      }
+    },
+    {
+      "s": 336,
+      "totalMb": 795,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 190,
+        "Utility": 45,
+        "Tab": 313,
+        "core": 141
+      }
+    },
+    {
+      "s": 341,
+      "totalMb": 798,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 190,
+        "Utility": 45,
+        "Tab": 317,
+        "core": 141
+      }
+    },
+    {
+      "s": 346,
+      "totalMb": 821,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 195,
+        "Utility": 45,
+        "Tab": 334,
+        "core": 141
+      }
+    },
+    {
+      "s": 351,
+      "totalMb": 831,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 357,
+        "core": 141
+      }
+    },
+    {
+      "s": 356,
+      "totalMb": 841,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 367,
+        "core": 141
+      }
+    },
+    {
+      "s": 361,
+      "totalMb": 794,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 320,
+        "core": 141
+      }
+    },
+    {
+      "s": 366,
+      "totalMb": 796,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 322,
+        "core": 141
+      }
+    },
+    {
+      "s": 371,
+      "totalMb": 796,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 322,
+        "core": 141
+      }
+    },
+    {
+      "s": 376,
+      "totalMb": 818,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 336,
+        "core": 150
+      }
+    },
+    {
+      "s": 381,
+      "totalMb": 824,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 334,
+        "core": 157
+      }
+    },
+    {
+      "s": 386,
+      "totalMb": 816,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 327,
+        "core": 156
+      }
+    },
+    {
+      "s": 391,
+      "totalMb": 808,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 326,
+        "core": 149
+      }
+    },
+    {
+      "s": 396,
+      "totalMb": 812,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 174,
+        "Utility": 45,
+        "Tab": 342,
+        "core": 145
+      }
+    },
+    {
+      "s": 401,
+      "totalMb": 820,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 173,
+        "Utility": 45,
+        "Tab": 336,
+        "core": 160
+      }
+    },
+    {
+      "s": 406,
+      "totalMb": 813,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 174,
+        "Utility": 45,
+        "Tab": 332,
+        "core": 156
+      }
+    },
+    {
+      "s": 411,
+      "totalMb": 803,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 173,
+        "Utility": 45,
+        "Tab": 326,
+        "core": 153
+      }
+    },
+    {
+      "s": 416,
+      "totalMb": 808,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 173,
+        "Utility": 45,
+        "Tab": 342,
+        "core": 142
+      }
+    },
+    {
+      "s": 421,
+      "totalMb": 796,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 173,
+        "Utility": 45,
+        "Tab": 335,
+        "core": 138
+      }
+    },
+    {
+      "s": 426,
+      "totalMb": 807,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 170,
+        "Utility": 45,
+        "Tab": 331,
+        "core": 156
+      }
+    },
+    {
+      "s": 431,
+      "totalMb": 816,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 169,
+        "Utility": 45,
+        "Tab": 345,
+        "core": 152
+      }
+    },
+    {
+      "s": 436,
+      "totalMb": 838,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 177,
+        "Utility": 45,
+        "Tab": 370,
+        "core": 140
+      }
+    },
+    {
+      "s": 441,
+      "totalMb": 889,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 185,
+        "Utility": 45,
+        "Tab": 413,
+        "core": 140
+      }
+    },
+    {
+      "s": 446,
+      "totalMb": 843,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 187,
+        "Utility": 45,
+        "Tab": 370,
+        "core": 135
+      }
+    },
+    {
+      "s": 451,
+      "totalMb": 845,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 187,
+        "Utility": 45,
+        "Tab": 371,
+        "core": 136
+      }
+    },
+    {
+      "s": 456,
+      "totalMb": 826,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 187,
+        "Utility": 45,
+        "Tab": 349,
+        "core": 140
+      }
+    },
+    {
+      "s": 461,
+      "totalMb": 828,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 187,
+        "Utility": 45,
+        "Tab": 350,
+        "core": 140
+      }
+    },
+    {
+      "s": 466,
+      "totalMb": 858,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 199,
+        "Utility": 45,
+        "Tab": 369,
+        "core": 140
+      }
+    },
+    {
+      "s": 471,
+      "totalMb": 864,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 391,
+        "core": 141
+      }
+    },
+    {
+      "s": 476,
+      "totalMb": 879,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 183,
+        "Utility": 45,
+        "Tab": 409,
+        "core": 137
+      }
+    },
+    {
+      "s": 481,
+      "totalMb": 878,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 408,
+        "core": 137
+      }
+    },
+    {
+      "s": 486,
+      "totalMb": 882,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 409,
+        "core": 140
+      }
+    },
+    {
+      "s": 491,
+      "totalMb": 882,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 410,
+        "core": 139
+      }
+    },
+    {
+      "s": 496,
+      "totalMb": 903,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 182,
+        "Utility": 45,
+        "Tab": 432,
+        "core": 137
+      }
+    },
+    {
+      "s": 501,
+      "totalMb": 906,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 186,
+        "Utility": 45,
+        "Tab": 425,
+        "core": 144
+      }
+    },
+    {
+      "s": 506,
+      "totalMb": 923,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 186,
+        "Utility": 45,
+        "Tab": 442,
+        "core": 144
+      }
+    },
+    {
+      "s": 511,
+      "totalMb": 842,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 186,
+        "Utility": 45,
+        "Tab": 367,
+        "core": 138
+      }
+    },
+    {
+      "s": 516,
+      "totalMb": 845,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 178,
+        "Utility": 45,
+        "Tab": 358,
+        "core": 158
+      }
+    },
+    {
+      "s": 521,
+      "totalMb": 830,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 163,
+        "Utility": 45,
+        "Tab": 362,
+        "core": 154
+      }
+    },
+    {
+      "s": 526,
+      "totalMb": 819,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 166,
+        "Utility": 45,
+        "Tab": 353,
+        "core": 149
+      }
+    },
+    {
+      "s": 531,
+      "totalMb": 823,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 162,
+        "Utility": 45,
+        "Tab": 366,
+        "core": 144
+      }
+    },
+    {
+      "s": 536,
+      "totalMb": 807,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 162,
+        "Utility": 45,
+        "Tab": 359,
+        "core": 135
+      }
+    },
+    {
+      "s": 541,
+      "totalMb": 835,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 162,
+        "Utility": 45,
+        "Tab": 372,
+        "core": 150
+      }
+    },
+    {
+      "s": 546,
+      "totalMb": 819,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 159,
+        "Utility": 45,
+        "Tab": 358,
+        "core": 151
+      }
+    },
+    {
+      "s": 551,
+      "totalMb": 809,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 159,
+        "Utility": 45,
+        "Tab": 353,
+        "core": 146
+      }
+    },
+    {
+      "s": 556,
+      "totalMb": 848,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 166,
+        "Utility": 45,
+        "Tab": 392,
+        "core": 140
+      }
+    },
+    {
+      "s": 561,
+      "totalMb": 912,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 167,
+        "Utility": 45,
+        "Tab": 454,
+        "core": 141
+      }
+    },
+    {
+      "s": 566,
+      "totalMb": 869,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 169,
+        "Utility": 45,
+        "Tab": 413,
+        "core": 137
+      }
+    },
+    {
+      "s": 571,
+      "totalMb": 870,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 169,
+        "Utility": 45,
+        "Tab": 414,
+        "core": 136
+      }
+    },
+    {
+      "s": 576,
+      "totalMb": 873,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 169,
+        "Utility": 45,
+        "Tab": 413,
+        "core": 140
+      }
+    },
+    {
+      "s": 581,
+      "totalMb": 875,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 169,
+        "Utility": 45,
+        "Tab": 415,
+        "core": 141
+      }
+    },
+    {
+      "s": 586,
+      "totalMb": 924,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 194,
+        "Utility": 45,
+        "Tab": 439,
+        "core": 141
+      }
+    },
+    {
+      "s": 591,
+      "totalMb": 911,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 181,
+        "Utility": 45,
+        "Tab": 439,
+        "core": 140
+      }
+    },
+    {
+      "s": 596,
+      "totalMb": 906,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 181,
+        "Utility": 45,
+        "Tab": 438,
+        "core": 136
+      }
+    },
+    {
+      "s": 601,
+      "totalMb": 861,
+      "byTypeMb": {
+        "Browser": 106,
+        "GPU": 181,
+        "Utility": 45,
+        "Tab": 393,
+        "core": 136
+      }
+    },
+    {
+      "s": 606,
+      "totalMb": 873,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 185,
+        "Utility": 45,
+        "Tab": 395,
+        "core": 143
+      }
+    },
+    {
+      "s": 611,
+      "totalMb": 868,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 181,
+        "Utility": 45,
+        "Tab": 395,
+        "core": 141
+      }
+    },
+    {
+      "s": 613,
+      "totalMb": 1054,
+      "byTypeMb": {
+        "Browser": 105,
+        "GPU": 181,
+        "Utility": 45,
+        "Tab": 398,
+        "core": 325
+      }
+    }
+  ]
+}

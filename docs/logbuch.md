@@ -24,6 +24,15 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 16:45 (UTC) – [BEOBACHTUNG]
+
+- **Schritt 3.8, Fehler im Prototyp (W-B):** Auf dem Mac blieb `world wb z1` ohne Welt. Ursache: Das erste Bild einer neuen Sitzung kommt vor `sessionStarted`; der Renderer fragte die angekündigten Blöcke noch mit der alten Sitzung ab, der Kern verwarf sie (Vertrag S-7), alle vier Abfrageplätze blieben belegt. Im Container lief es zufällig durch (Reihenfolge der Nachrichten). Behoben in `f23e154` (Abfrage erst mit der neuen Sitzung, hängende Abfragen neu stellen); Container-Probe danach: sichtbarer Ausschnitt 1,1 s, ganze Welt 1,6 s. Neuer Release-Lauf 39459607051. Lehre für den Vertrag: W-B müsste den Sitzungswechsel ausdrücklich regeln.
+- **Ergebnisse Referenz-PC W-A** (`docs/research/3.8-ergebnisse/referenz-pc-wa-z1.json`, `referenz-pc-wa-z2.json`; Auswertung in der Vorlage Abschnitt 14):
+  - Erstübertragung: sichtbar 0,14 s bzw. im ersten Bild, ganz 0,23 bzw. 0,27 s.
+  - Bauaktion bis zum Welt-Bild höchstens 57 ms, in allen 122 Bauaktionen im selben Bild wie der Tick.
+  - Bildrate 58,1–60,0 bzw. 58,9–60,0 Bilder/s, Bildabstand p99 bis 47 ms (2.10: 17,3–19,7 ms). Ursache: Rundlauf der Bildanforderung p99 14–31 ms statt 1–3 ms. Herkunft offen, Kern-Prozess oder Renderer.
+  - Speicher: Z-1 +90 bis +161 MB, Z-2 bis +369 MB gegenüber 2.10.
+
 ### 2026-10-20 15:32 (UTC) – [BEOBACHTUNG]
 
 - **Schritt 3.8, Prototyp:** auf dem nicht gemergten Spike-Branch `erkundung/3-8-messaufbau` (`257a498`, `8f557d2`, `74ceec9`). Kern allein: 4.988 Blöcke des Referenz-Terminals auf Karte 2048² = 2,76 MB, Kodierung 100 ms; W-A in 3 Bildern (langsamstes 47 ms im Kern-Prozess). Container-Probelauf aller drei Kombinationen über SwiftShader: ganze Welt nach 0,74–0,96 s, Bauaktion bis zum Welt-Bild mit W-B 1–2 Bilder später als mit W-A. Bildraten ohne Aussage.
