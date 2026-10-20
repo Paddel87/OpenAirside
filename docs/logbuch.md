@@ -17,12 +17,25 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8 und 3.14 sind erledigt, nächster Schritt 3.15.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14 und 3.15 sind erledigt, nächster Schritt 3.9.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-20 23:05 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** NFR Performance: Weltdarstellung mit Atlas-Stufen 16/32 px und großen Atlanten unter Windows („dasselbe unter Windows“), `[VORLÄUFIG]` → `[BELASTBAR]`.
+- **Grundlage:** Welt-Nachmessung am Prototyp mit der Korrektur (3.14, `9d01469`) und Messung auf dem Stand für `main` (3.15, `41786ec`, ohne Welt). Vorgelegt mit der Einschränkung, dass `main` noch keine Weltdarstellung hat; Antwort des Projektinhabers: „Befördern“. Gleicher Maßstab wie macOS in ADR-038.
+- **Auflage:** 3.1 misst die Weltdarstellung auf `main` auf dem Referenz-PC gegen die Schwellen aus 3.15 (Akzeptanzkriterium dort ergänzt); sonst zurück auf `[VORLÄUFIG]`.
+- **Modellklasse:** Entscheidungs-Klasse (`claude-opus-5-5`, Auslöser 4 erfüllt). Kein ADR: keine Kategorie aus `CLAUDE.md` Abschnitt 4, Beförderung durch Messung belegt (`CLAUDE.md` Abschnitt 6, Validierung).
+
+### 2026-10-20 23:04 (UTC) – [BEOBACHTUNG]
+
+- **Messung 3.15 auf dem Referenz-PC:** `measure 6`, Paket aus Release-Lauf 39508715951 (`41786ec`), fertig 22:57 UTC. 0 von 21.668 Antworten spät, Bildabstand p99 17,3–17,5 ms, 59,9–60,0 Bilder/s, Rundlauf p99 0,7–1,0 ms, keine langen Aufgaben; Speicher ab 40 s 507–540 MB. Alle Schwellen erfüllt. Datei `docs/research/3.15-ergebnisse/referenz-pc-measure.json`, Notiz `docs/research/3.15-messung.md`.
+- **CI:** Lauf 39508710449 auf `41786ec` grün (17 Jobs). Der Release-Lauf brauchte dank Cache nur 4 Minuten; Jobs und Artefakte geprüft, Rauchtest des Pakets auf drei Plattformen grün.
+- **Frage des Projektinhabers „beide Betriebssysteme?“:** nur Windows; macOS ist seit ADR-038 belastbar, die Änderung entfernt nur Arbeit.
 
 ### 2026-10-20 22:31 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 

@@ -418,7 +418,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 - **Kern als WebAssembly mit mehreren Threads:** derzeit nur mit Nightly-Rust baubar, 1,37–1,50 × langsamer als nativ; nicht endgültig verworfen, sondern zurückgestellt: Neubewertung in Fahrplan-Schritt Q.2 – siehe ADR-009
 
 <!-- ANCHOR:reifegrad-uebersicht -->
-## 9. Reifegrad-Übersicht (Stand vom 2026-10-20, ADR-038)
+## 9. Reifegrad-Übersicht (Stand vom 2026-10-20, Schritt 3.15)
 
 | Bestandteil | Reifegrad | Seit | Validiert durch / wartet auf |
 |---|---|---|---|
@@ -452,7 +452,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | NFR Performance: Simulationsschritt, Wegweiser, Übergabe S-1, Langzeit | BELASTBAR | 2026-10-13 | Leistungsnachweis 1.5, ADR-014, Grenze nach ADR-017; Linux 7.2, echte 8-Kern-Hardware spätestens 4.1 |
 | NFR Performance: Darstellung statischer Objekt-Sprites (Atlas-Stufe 8 px je Zelle) mit Zonen und 10.000 Personen, Windows und macOS | BELASTBAR | 2026-10-19 | ADR-034: Messung 2.10 auf Referenz-PC (59,9–60,0 Bilder/s bei 60 Hz) und Mac M3 Pro (119,1–120,1 Bilder/s bei 120 Hz) mit 20.000 Sprites, `docs/research/2.10-messung.md`; Schrittzeit-Spitzen auf Apple-Chips in 3.13 (vorgezogen aus 4.3, ADR-036) |
 | NFR Performance: Weltdarstellung mit Atlas-Stufen 16/32 px je Zelle und Atlanten mit 512 Grafiken, 20.000 Objekten und 10.000 Personen, macOS | BELASTBAR | 2026-10-20 | ADR-038: Messung 3.8 auf Mac M3 Pro, 119,8–120,0 Bilder/s, Bildabstand p99 ≤ 11,7 ms in allen Ansichten (`docs/research/3.8-ergebnisse/`) |
-| NFR Performance: dasselbe unter Windows | VORLÄUFIG | 2026-10-20 | ADR-038: Referenz-PC zeitweise späte Bilder (p99 bis 49 ms), unabhängig vom Weg. Ursache in 3.14 belegt: synchrone Abfrage des GPU-Namens alle 250 ms (`docs/research/3.14-spaete-bilder.md`); mit Korrektur im Spike Bildabstand p99 17,3–18,1 ms. Beförderung nach Korrektur auf `main` und Messung in 3.15 |
+| NFR Performance: dasselbe unter Windows | BELASTBAR | 2026-10-20 | Schritt 3.15 nach Antwort des Projektinhabers: Ursache der späten Bilder in 3.14 belegt (synchrone Abfrage des GPU-Namens alle 250 ms, `docs/research/3.14-spaete-bilder.md`), GPU-Name einmal gelesen; Welt-Nachmessung am Prototyp mit Korrektur 0,01 % späte Antworten, Bildabstand p99 17,3–18,1 ms; Messung auf dem Stand für `main` (`41786ec`) 0 späte Antworten, p99 17,3–17,5 ms, 59,9–60,0 Bilder/s (`docs/research/3.15-messung.md`). Auflage: Nachmessung mit der Weltdarstellung auf `main` in 3.1, sonst zurück auf `[VORLÄUFIG]`; vorher `[VORLÄUFIG]` seit 2026-10-20 (ADR-038) |
 | NFR Performance: bewegte Sprites und Last durch Fahrzeuge, Flugzeuge, Gepäck, Personal; Linux; integrierte Grafik | VORLÄUFIG | 2026-10-13 | ADR-017, geteilt durch ADR-034 und ADR-038; Verkehr vor 3.4 und 5.5, Referenzszenario 4.1, Linux 7.2, integrierte Grafik 5.8 |
 | NFR Bauaktion im nächsten Bild | VORLÄUFIG | 2026-10-13 | in 1.5 nicht erreicht (2–6 Bilder); in 2.7 1–3 Bilder (Mac 120 Hz) bzw. 1–2 Bilder (Referenz-PC 60 Hz), weiter nicht im nächsten Bild; Vertrag S-2 mit vorläufigem Zeichnen (ADR-021), Umsetzung 3.1 (ADR-016) |
 
