@@ -30,7 +30,7 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
   - 119,8–120,0 Bilder/s, Bildabstand p99 bis 11,7 ms, Rundlauf p99 bis 2,5 ms.
   - Erstübertragung ganz 123 bzw. 141 ms; Bauaktion bis zum Welt-Bild höchstens 32 ms.
   - Speicher über der Schwelle, Z-1 Spitze +339 MB, Z-2 +620 MB gegenüber 2.10.
-- **Sichtbeobachtung Projektinhaber, Lauf `world wb z1` (Referenz-PC, neues Paket, noch laufend):** kein Ruckeln erkennbar. Frage, ob Personen über Möbel laufen dürfen: im Prototyp ja, weil die 20.160 Objekte nur Darstellungsdaten sind und der Kern sie nicht kennt (Objekte im Weltzustand und ihre Wirkung auf die Begehbarkeit kommen mit 3.1).
+- **Sichtbeobachtung Projektinhaber, Lauf `world wb z1` (Referenz-PC, neues Paket, noch laufend):** bis Fenster 11 kein Ruckeln erkennbar, in Fenster 12 (13. Fenster, Übersicht vereinfacht) Ruckeln. Frage, ob Personen über Möbel laufen dürfen: im Prototyp ja, weil die 20.160 Objekte nur Darstellungsdaten sind und der Kern sie nicht kennt (Objekte im Weltzustand und ihre Wirkung auf die Begehbarkeit kommen mit 3.1).
 - **Sichtbeobachtung Projektinhaber (Referenz-PC):** Ruckeln vor allem in der Nahansicht beim Kreisen; deckt sich mit Bildabstand p99 bis 47 ms in den kreisenden Ansichten.
 - **Folgerung:** Die späten Bilder des Referenz-PCs sind dort an den Rechner gebunden, nicht an W-A. Der Engpass ist der Speicher. Z-2 scheidet aus.
 
