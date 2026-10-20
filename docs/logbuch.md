@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 17:44 (UTC) – [BEOBACHTUNG]
+
+- **Antworten zur Vorlage 3.14:** Frage 1 A (fünf Läufe), Frage 2 A (Dateien im Chat). Festgehalten in `docs/research/3.14-spaete-bilder.md` Abschnitt 9. Weiter mit dem Messprototyp auf `erkundung/3-14-messaufbau`.
+
 ### 2026-10-20 17:41 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt 3.14, Vorlage vor der Messung:** `docs/research/3.14-spaete-bilder.md`.
