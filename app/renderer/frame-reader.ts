@@ -33,6 +33,10 @@ export interface Frame {
   readonly header: FrameHeader;
   /** Person records, `PERSON_BYTES` each. */
   readonly data: DataView;
+  /** Spike 3.8: offset of the world section in `buf`, if any. */
+  readonly worldAt?: number;
+  /** Spike 3.8: the whole frame buffer. */
+  readonly buf?: ArrayBuffer;
 }
 
 /** Why a frame was rejected. */
@@ -58,7 +62,12 @@ export function readFrame(buf: ArrayBuffer): FrameResult {
     return { ok: false, error: "personSize" };
   }
   const persons = view.getUint32(20, true);
-  if (buf.byteLength !== HEADER_BYTES + persons * PERSON_BYTES) {
+  const end = HEADER_BYTES + persons * PERSON_BYTES;
+  // Spike 3.8: header byte 26 = 1 marks a world section after the persons.
+  const world = view.getUint8(26) === 1;
+  const worldBytes =
+    world && buf.byteLength >= end + 4 ? new DataView(buf, end, 4).getUint32(0, true) : 0;
+  if (buf.byteLength !== end + worldBytes || (world && worldBytes === 0)) {
     return { ok: false, error: "length" };
   }
   const floor = view.getInt8(24);
@@ -76,6 +85,7 @@ export function readFrame(buf: ArrayBuffer): FrameResult {
         fieldsRevision: view.getUint32(28, true),
       },
       data: new DataView(buf, HEADER_BYTES, persons * PERSON_BYTES),
+      ...(world ? { worldAt: end, buf } : {}),
     },
   };
 }

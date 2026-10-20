@@ -16,6 +16,12 @@ export type ConsoleResult =
   | { readonly kind: "command"; readonly command: Command }
   | { readonly kind: "query"; readonly query: Query }
   | { readonly kind: "measure"; readonly minutes: number }
+  | {
+      readonly kind: "measureWorld";
+      readonly mode: "inline" | "announce";
+      readonly draw: "z1" | "z2";
+      readonly minutes: number;
+    }
   | { readonly kind: "packs" }
   | { readonly kind: "setPacks"; readonly ids: readonly string[] }
   | { readonly kind: "saves" }
@@ -199,6 +205,22 @@ export function parseConsoleLine(line: string): ConsoleResult {
     }
     case "settings":
       return args.length === 0 ? { kind: "settings" } : error("settings");
+    case "world": {
+      // Spike 3.8: world wa|wb z1|z2 [minutes]
+      const mode = args[0] === "wa" ? "inline" : args[0] === "wb" ? "announce" : undefined;
+      const draw = args[1] === "z1" || args[1] === "z2" ? args[1] : undefined;
+      const minutes = args[2] === undefined ? 10 : integer(args[2]);
+      if (
+        mode === undefined ||
+        draw === undefined ||
+        minutes === undefined ||
+        minutes < 1 ||
+        minutes > MAX_MINUTES
+      ) {
+        return error("world wa|wb z1|z2 [minutes]");
+      }
+      return { kind: "measureWorld", mode, draw, minutes };
+    }
     case "measure": {
       const minutes = args[0] === undefined ? 10 : integer(args[0]);
       if (minutes === undefined || minutes < 1 || minutes > MAX_MINUTES) {

@@ -35,6 +35,8 @@ import { type Camera, centerCamera, fitCamera, pan, visibleRect, zoomAt } from "
 import { type Frame, type PersonRecord, readPerson } from "./frame-reader.js";
 import { densestSpot } from "./hotspot.js";
 import type { MeasureScene, SceneInfo, View } from "./measure.js";
+import type { WorldMode } from "../src/generated/WorldMode.js";
+import { type WorldCamera, WorldView } from "./world-view.js";
 
 /** Lowest and highest floor (BAU-07). */
 const MIN_FLOOR = -2;
@@ -111,6 +113,10 @@ export class Playfield {
   #floor = 0;
   #map = { width: 0, height: 0 };
   #shown = 0;
+  #session = 0;
+  /** Spike 3.8: resting world, sent with the frames once `worldMode` is set. */
+  readonly world: WorldView;
+  worldMode: WorldMode | undefined;
 
   private constructor(app: Application, atlas: Atlas | undefined) {
     this.#app = app;
@@ -123,7 +129,8 @@ export class Playfield {
     // Static layer under a moving camera: its own render group keeps the
     // transforms of the sprites when only the camera changes.
     this.#objects.isRenderGroup = true;
-    this.#world.addChild(this.#bounds, this.#objects, this.#zones, this.#persons);
+    this.world = new WorldView(app.renderer, (name) => this.#objectTexture(name));
+    this.#world.addChild(this.#bounds, this.world.layer, this.#objects, this.#zones, this.#persons);
     app.stage.addChild(this.#world);
   }
 
@@ -228,7 +235,22 @@ export class Playfield {
   /** Filter of the next frame request: shown floor and visible rectangle. */
   filter(): FrameFilter {
     const { width, height } = this.#app.screen;
-    return { floor: this.#floor, view: visibleRect(this.#camera, width, height) };
+    const view = visibleRect(this.#camera, width, height);
+    return this.worldMode === undefined
+      ? { floor: this.#floor, view }
+      : { floor: this.#floor, view, world: this.worldMode };
+  }
+
+  /** Spike 3.8: camera as the world view needs it. */
+  worldCamera(): WorldCamera {
+    const { width, height } = this.#app.screen;
+    const v = visibleRect(this.#camera, width, height);
+    return {
+      floor: this.#floor,
+      ...v,
+      px: this.#camera.zoom * this.#app.renderer.resolution,
+      tierPx: this.tierPx(),
+    };
   }
 
   /** Shows the floor above (`+1`) or below (`-1`). */
@@ -261,6 +283,13 @@ export class Playfield {
   /** Draws the persons of `frame`. */
   show(frame: Frame): void {
     const { mapWidth, mapHeight, persons } = frame.header;
+    if (frame.header.session !== this.#session) {
+      this.#session = frame.header.session;
+      this.world.reset(mapWidth, mapHeight);
+    }
+    if (frame.worldAt !== undefined && frame.buf !== undefined) {
+      this.world.applySection(frame.buf, frame.worldAt, performance.now());
+    }
     if (mapWidth !== this.#map.width || mapHeight !== this.#map.height) {
       this.#map = { width: mapWidth, height: mapHeight };
       this.#bounds.clear().rect(0, 0, mapWidth, mapHeight).fill(0x1d232b);
@@ -293,6 +322,7 @@ export class Playfield {
       this.#persons.update();
       this.#shown = persons;
     }
+    this.world.update(this.worldCamera());
   }
 
   /** Scale of the particle texture for the current zoom. */
@@ -371,6 +401,7 @@ export class Playfield {
       // Scale is a static property of the container; upload it again.
       this.#persons.update();
     }
+    this.world.update(this.worldCamera());
   }
 
   #bindInput(canvas: HTMLCanvasElement): void {

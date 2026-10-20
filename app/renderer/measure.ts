@@ -24,6 +24,8 @@ import type { Command } from "../src/generated/Command.js";
 import type { EventRecord } from "../src/generated/EventRecord.js";
 import type { Query } from "../src/generated/Query.js";
 import type { TickStats } from "../src/generated/TickStats.js";
+import type { WorldMode } from "../src/generated/WorldMode.js";
+import type { DrawWay, WorldFigures } from "./world-view.js";
 
 /** Version of the result format; raised by every non-additive change. */
 export const RESULT_VERSION = 1;
@@ -49,6 +51,19 @@ export interface MeasureConfig {
   readonly objects: number;
   /** Zone overlays of the scene (step 2.10). */
   readonly zones: number;
+  /** Spike 3.8: way and drawing of the resting world; the scene is not placed then. */
+  readonly world?: { readonly mode: WorldMode; readonly draw: DrawWay };
+}
+
+/** Spike 3.8: what the series needs from the world view. */
+export interface WorldHost {
+  setup(mode: WorldMode, draw: DrawWay): void;
+  showAll(on: boolean): void;
+  figures(): WorldFigures;
+  visibleComplete(): boolean;
+  complete(): boolean;
+  updatedAt(floor: number, x: number, y: number): number | undefined;
+  pixelRatio(): number;
 }
 
 /**
@@ -106,6 +121,8 @@ export interface SeriesHost {
   scene(scene: MeasureScene): SceneInfo;
   /** Resolution of the atlas drawn with now in pixels per cell, 0 without atlas. */
   tierPx(): number;
+  /** Spike 3.8. */
+  world?: WorldHost;
 }
 
 /** One object sprite of the scene, top left corner in cells. */
@@ -190,6 +207,13 @@ export interface WindowResult {
   readonly queries: number;
   readonly queryMsP50: number;
   readonly queryMsMax: number;
+  /** Spike 3.8: name of the view (overview, overviewAll, mid, near). */
+  readonly label?: string;
+  readonly worldBuilds?: number;
+  readonly worldBuildMsP50?: number;
+  readonly worldBuildMsMax?: number;
+  readonly worldBuildFramesMax?: number;
+  readonly world?: WorldFigures;
 }
 
 /** Result of a run, before the main process adds system and memory. */
@@ -203,6 +227,14 @@ export interface SeriesResult {
   readonly scene: SceneInfo;
   readonly windows: readonly WindowResult[];
   readonly summary: Summary;
+  /** Spike 3.8: first transfer of the world after the session start. */
+  readonly world?: {
+    readonly mode: WorldMode;
+    readonly draw: DrawWay;
+    readonly visibleMs: number;
+    readonly allMs: number;
+    readonly figures: WorldFigures;
+  };
 }
 
 /** Worst and mean values over all windows. */
@@ -255,6 +287,7 @@ export class WindowRecorder {
   readonly #lags: number[] = [];
   readonly #recomputes = new Map<number, number>();
   readonly #builds: { ms: number; frames: number }[] = [];
+  readonly #worldBuilds: { ms: number; frames: number }[] = [];
   readonly #adopts: number[] = [];
   readonly #queries: number[] = [];
   #lastFrame: number | undefined;
@@ -285,6 +318,10 @@ export class WindowRecorder {
 
   build(ms: number, frames: number): void {
     this.#builds.push({ ms, frames });
+  }
+
+  worldBuild(ms: number, frames: number): void {
+    this.#worldBuilds.push({ ms, frames });
   }
 
   adopt(ms: number): void {
@@ -346,6 +383,14 @@ export class WindowRecorder {
       queries: queries.length,
       queryMsP50: round(quantile(queries, 0.5)),
       queryMsMax: round(max(queries)),
+      ...(this.#worldBuilds.length === 0
+        ? {}
+        : {
+            worldBuilds: this.#worldBuilds.length,
+            worldBuildMsP50: round(quantile(ascending(this.#worldBuilds.map((b) => b.ms)), 0.5)),
+            worldBuildMsMax: round(max(this.#worldBuilds.map((b) => b.ms))),
+            worldBuildFramesMax: max(this.#worldBuilds.map((b) => b.frames)),
+          }),
     };
   }
 }
@@ -441,6 +486,9 @@ interface PendingBuild {
   readonly sentAt: number;
   acceptedTick?: number;
   frames: number;
+  tickDone?: boolean;
+  /** Spike 3.8: cell whose block must arrive; undefined without world. */
+  cell?: { x: number; y: number } | undefined;
 }
 
 /** One run of the measurement series. */
@@ -478,10 +526,19 @@ export class MeasureSeries {
     const build = this.#build;
     if (build !== undefined && info.session === this.#session) {
       build.frames += 1;
-      if (build.acceptedTick !== undefined && info.tick >= build.acceptedTick) {
+      if (!build.tickDone && build.acceptedTick !== undefined && info.tick >= build.acceptedTick) {
         this.#recorder.build(now - build.sentAt, build.frames);
-        this.#build = undefined;
+        build.tickDone = true;
       }
+      const at =
+        build.cell === undefined
+          ? undefined
+          : this.#host.world?.updatedAt(0, build.cell.x, build.cell.y);
+      if (at !== undefined && at >= build.sentAt) {
+        this.#recorder.worldBuild(now - build.sentAt, build.frames);
+        build.cell = undefined;
+      }
+      if (build.tickDone && build.cell === undefined) this.#build = undefined;
     }
     if (this.#view.kind === "circle") {
       const angle = ((now - this.#circleStart) / 1000) * 0.6;
@@ -533,6 +590,11 @@ export class MeasureSeries {
     const c = this.#config;
     const t0 = host.now();
     const startSession = this.#session;
+    const world = c.world === undefined ? undefined : host.world;
+    if (c.world !== undefined && world !== undefined) {
+      world.setup(c.world.mode, c.world.draw);
+      this.#show(this.#worldView(2, { x: 1024, y: 1024 }));
+    }
     host.status(`measure: loading reference terminal with ${String(c.persons)} persons`);
     this.#send({
       kind: "debug",
@@ -548,9 +610,34 @@ export class MeasureSeries {
     );
     const initMs = round(host.now() - t0, 0);
     const map = this.#frame;
-    const scene = host.scene(
-      measureScene(c.objects, c.zones, map?.mapWidth ?? 0, map?.mapHeight ?? 0, host.imageNames()),
-    );
+    let firstTransfer: SeriesResult["world"];
+    if (c.world !== undefined && world !== undefined) {
+      const s0 = host.now();
+      let visibleMs = -1;
+      const deadline = s0 + c.loadTimeoutMs;
+      while (!world.complete() && host.now() < deadline) {
+        if (visibleMs < 0 && world.visibleComplete()) visibleMs = round(host.now() - s0, 0);
+        await host.sleep(5);
+      }
+      if (visibleMs < 0 && world.visibleComplete()) visibleMs = round(host.now() - s0, 0);
+      const allMs = world.complete() ? round(host.now() - s0, 0) : -1;
+      firstTransfer = { ...c.world, visibleMs, allMs, figures: world.figures() };
+      host.status(
+        `measure: world visible after ${String(visibleMs)} ms, complete after ${String(allMs)} ms`,
+      );
+    }
+    const scene =
+      c.world === undefined
+        ? host.scene(
+            measureScene(
+              c.objects,
+              c.zones,
+              map?.mapWidth ?? 0,
+              map?.mapHeight ?? 0,
+              host.imageNames(),
+            ),
+          )
+        : host.scene({ objects: [], zones: [] });
 
     this.#send({ kind: "setSpeed", speed: "x3" });
     this.#show({ kind: "overview", floor: 0 });
@@ -564,10 +651,17 @@ export class MeasureSeries {
     const end = started + c.minutes * 60_000;
     let nextBuild = started + 2000;
     for (let k = 0; host.now() < end; k += 1) {
+      const label =
+        world === undefined
+          ? undefined
+          : (["overview", "overviewAll", "mid", "near"] as const)[k % 4];
+      world?.showAll(label === "overviewAll");
       const view: View =
-        k % 2 === 0
-          ? { kind: "overview", floor: 0 }
-          : { kind: "circle", floor: 0, ...hotspot, radius: 115, zoom: 4, angle: 0 };
+        world !== undefined
+          ? this.#worldView(k % 4, hotspot)
+          : k % 2 === 0
+            ? { kind: "overview", floor: 0 }
+            : { kind: "circle", floor: 0, ...hotspot, radius: 115, zoom: 4, angle: 0 };
       this.#show(view);
       const left = Math.max(0, Math.round((end - host.now()) / 60_000));
       host.status(
@@ -595,7 +689,11 @@ export class MeasureSeries {
         },
         known,
       );
-      windows.push(result);
+      windows.push(
+        world === undefined || label === undefined
+          ? result
+          : { ...result, label, world: world.figures() },
+      );
     }
     if (this.#walls !== undefined) {
       this.#toggleWalls(host.now());
@@ -613,6 +711,22 @@ export class MeasureSeries {
       scene,
       windows,
       summary: summarize(windows),
+      ...(firstTransfer === undefined ? {} : { world: firstTransfer }),
+    };
+  }
+
+  /** Spike 3.8: view `n` of the world series (0/1 overview, 2 mid 16 px, 3 near 32 px per cell). */
+  #worldView(n: number, at: { x: number; y: number }): View {
+    if (n < 2) return { kind: "overview", floor: 0 };
+    const ratio = this.#host.world?.pixelRatio() ?? 1;
+    const px = n === 2 ? 16 : 32;
+    return {
+      kind: "circle",
+      floor: 0,
+      ...at,
+      radius: n === 2 ? 115 : 60,
+      zoom: px / ratio,
+      angle: 0,
     };
   }
 
@@ -644,7 +758,12 @@ export class MeasureSeries {
     }
     this.#walls = wall ? area : undefined;
     const id = this.#send({ kind: "debug", action: { kind: "setWalls", area, wall } });
-    this.#build = { id, sentAt: now, frames: 0 };
+    this.#build = {
+      id,
+      sentAt: now,
+      frames: 0,
+      ...(this.#config.world === undefined ? {} : { cell: { x: area.x0, y: area.y0 } }),
+    };
     this.#lastBuildAt = now;
   }
 

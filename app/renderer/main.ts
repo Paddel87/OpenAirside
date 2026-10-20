@@ -136,6 +136,11 @@ async function start(): Promise<void> {
       personsTotal = frame.header.personsTotal;
       root.dataset.tick = String(tick);
       playfield.show(frame);
+      if (playfield.worldMode === "announce") {
+        playfield.world.fetch(playfield.worldCamera(), (blocks) =>
+          client === undefined ? 0 : client.query({ kind: "blocks", blocks }),
+        );
+      }
       const now = performance.now();
       const rtt = now - requestedAt;
       perf.frame(now, rtt);
@@ -147,6 +152,10 @@ async function start(): Promise<void> {
     },
     queryResult: (id, answer) => {
       const now = performance.now();
+      if (playfield.world.ownsQuery(id)) {
+        if (answer.buf !== undefined) playfield.world.applyAnswer(id, answer.buf, now);
+        return;
+      }
       if (answer.dictionary !== undefined) {
         states = answer.dictionary.entries;
         return;
@@ -322,6 +331,20 @@ async function start(): Promise<void> {
     imageNames: () => playfield.imageNames(),
     scene: (scene) => playfield.scene(scene),
     tierPx: () => playfield.tierPx(),
+    world: {
+      setup: (mode, draw) => {
+        playfield.worldMode = mode;
+        playfield.world.draw = draw;
+      },
+      showAll: (on) => {
+        playfield.world.showAll = on;
+      },
+      figures: () => playfield.world.figures(),
+      visibleComplete: () => playfield.world.visibleComplete(playfield.worldCamera()),
+      complete: () => playfield.world.complete(),
+      updatedAt: (floor, x, y) => playfield.world.updatedAt(floor, x, y),
+      pixelRatio: () => window.devicePixelRatio,
+    },
   };
   try {
     // Long tasks (> 50 ms) of the renderer's main thread, for the series.
@@ -332,14 +355,20 @@ async function start(): Promise<void> {
     write("long task observer not available");
   }
 
-  const measure = async (minutes: number): Promise<void> => {
+  const measure = async (
+    minutes: number,
+    world?: { mode: "inline" | "announce"; draw: "z1" | "z2" },
+  ): Promise<void> => {
     const api = window.openairside;
     if (api === undefined || client === undefined) {
       write("measure: not connected");
       return;
     }
     await api.measure.start();
-    const run = new MeasureSeries(host, defaultConfig(minutes));
+    const run = new MeasureSeries(
+      host,
+      world === undefined ? defaultConfig(minutes) : { ...defaultConfig(minutes), world },
+    );
     run.onSession(client.session);
     series = run;
     try {
@@ -371,7 +400,15 @@ async function start(): Promise<void> {
       write("measurement running – please wait");
       return;
     }
-    if (result.kind === "measure") {
+    if (result.kind === "measureWorld") {
+      write(
+        `world ${result.mode} ${result.draw}: ${String(result.minutes)} min – do not touch, keep the window visible`,
+      );
+      measure(result.minutes, { mode: result.mode, draw: result.draw }).catch((error: unknown) => {
+        write(`measure failed: ${describeError(error)}`);
+        root.dataset.measure = "failed";
+      });
+    } else if (result.kind === "measure") {
       write(`measure: ${String(result.minutes)} min – do not touch, keep the window visible`);
       measure(result.minutes).catch((error: unknown) => {
         write(`measure failed: ${describeError(error)}`);
