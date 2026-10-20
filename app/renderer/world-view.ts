@@ -197,7 +197,7 @@ export class WorldView {
   readonly #received = new Set<number>();
   readonly #updatedAt = new Map<number, number>();
   readonly #queue = new Set<number>();
-  readonly #inFlight = new Map<number, number>();
+  readonly #inFlight = new Map<number, readonly number[]>();
   readonly #z2 = new Map<number, CachedBlock>();
   readonly #objectLayer = new Container();
   readonly #tileLayer = new Container();
@@ -275,6 +275,15 @@ export class WorldView {
     this.#readRecords(view, SECTION_HEADER, bytes, blocks, now);
   }
 
+  /**
+   * The port switched to a new session: queries sent before were sent with
+   * the old session and are dropped by the core; ask again for their blocks.
+   */
+  requeueInFlight(): void {
+    for (const chunk of this.#inFlight.values()) for (const b of chunk) this.#queue.add(b);
+    this.#inFlight.clear();
+  }
+
   /** `true` if `id` is one of the `blocks` queries in flight. */
   ownsQuery(id: number): boolean {
     return this.#inFlight.has(id);
@@ -299,7 +308,7 @@ export class WorldView {
       const id = query(chunk);
       if (id === 0) return;
       for (const b of chunk) this.#queue.delete(b);
-      this.#inFlight.set(id, chunk.length);
+      this.#inFlight.set(id, chunk);
     }
   }
 

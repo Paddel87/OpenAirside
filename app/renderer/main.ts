@@ -105,6 +105,7 @@ async function start(): Promise<void> {
     sessionStarted: (session, at) => {
       root.dataset.session = String(session);
       write(`session ${String(session)} at tick ${String(at)}`);
+      playfield.world.requeueInFlight();
       series?.onSession(session);
     },
     events: (session, events) => {
@@ -136,7 +137,9 @@ async function start(): Promise<void> {
       personsTotal = frame.header.personsTotal;
       root.dataset.tick = String(tick);
       playfield.show(frame);
-      if (playfield.worldMode === "announce") {
+      // The frame of a new session comes before `sessionStarted`; a query sent
+      // now would carry the old session and be dropped by the core.
+      if (playfield.worldMode === "announce" && frame.header.session === client?.session) {
         playfield.world.fetch(playfield.worldCamera(), (blocks) =>
           client === undefined ? 0 : client.query({ kind: "blocks", blocks }),
         );
