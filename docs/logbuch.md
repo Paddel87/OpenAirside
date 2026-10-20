@@ -24,6 +24,11 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 19:26 (UTC) – [PROBLEM-GELÖST]
+
+- **3.14, Ursache der späten Bilder (vorbehaltlich Nachmessung):** Lauf 2 (ohne Welt) und die Zeitspuren aus Lauf 1 und 2 zeigen bei jeder späten Antwort denselben Ablauf. Der Hauptthread des Renderers wartet in einem Zeitgeber auf `GLES2::GetString` → `CommandBufferHelper::Finish`, also auf den GPU-Prozess. Dessen WebGL-Flush dauert in diesen Phasen rund einen Bildtakt. Die späten Antworten folgen im 250-ms-Raster. Auslöser ist die Leistungsanzeige: Sie liest alle 250 ms `playfield.gpu`, und der Getter ruft `getParameter(UNMASKED_RENDERER_WEBGL)` synchron auf. Dieser Getter steht auch auf `main`. Kern-Prozess (H3) und Zeichnen (PixiJS-Ticker p99 unter 1 ms) sind ausgeschlossen. Einzelheiten: `docs/research/3.14-spaete-bilder.md` Abschnitt 12, Messdatei `docs/research/3.14-ergebnisse/`.
+- **Nachmessung:** Spike-Commit `9d01469` liest den Namen nur einmal; Probelauf im Container mit drei Sitzungswechseln fehlerfrei; Release-Lauf gestartet.
+
 ### 2026-10-20 19:17 (UTC) – [BEOBACHTUNG]
 
 - **Sichtbeobachtung des Projektinhabers, 3.14 Lauf 2 (ohne Weltdarstellung, `measure 6`):** „wieder das gleiche Ruckeln“, angezeigtes Fenster 10 (Index 9, Kreisen). In 2.10 trat auf demselben Rechner ohne Welt kein Ruckeln auf. Hinweis darauf, dass die Ursache nicht an der Weltdarstellung hängt, sondern am heutigen Stand von Rechner, Treiber oder Paket. Bestätigung steht mit der Messdatei aus.
