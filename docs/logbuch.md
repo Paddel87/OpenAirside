@@ -24,6 +24,22 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 17:41 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 3.14, Vorlage vor der Messung:** `docs/research/3.14-spaete-bilder.md`.
+- **Neuer Befund aus den Dateien von 3.8:** Die späten Antworten liegen in der Übersicht bei genau einem oder zwei Bildtakten (16,8–18,1 bzw. 32,4–33,9 ms), beim Kreisen 2,3 ms darunter (14,0–14,4 bzw. 30,4–31,2 ms), weil die Anforderung dort später nach dem Takt hinausgeht. Die Antwort wartet also auf den Takt des Renderers; das spricht gegen den Kern-Prozess (H3) und gegen das Zeitgeber-Raster von Windows (15,6 ms) und für Renderer bzw. Grafikweg (H1, H2, H4).
+- **Messaufbau:** Spike-Branch `erkundung/3-14-messaufbau` vom Stand `f23e154`; Zeitstempel je Bild auf beiden Seiten, Selbst-Nachricht im Renderer, Zeitspur über Electron `contentTracing`, Umschalter `--use-angle` nur im Prototyp; keine neue Abhängigkeit, keine Änderung an `main`.
+- **Vorgelegt:** zwei Fragen (Umfang der Messung: 5 Läufe empfohlen; Rückgabe der Dateien).
+
+### 2026-10-20 17:37 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 2026-10-20 17:25 UTC (Session zu 3.8, Kontext 605.223 Token über der Grenze von 400.000; neue Session vom Projektinhaber gewählt: „Weiter mit 3.14 in neuer Session“). Merge-Vermerk `7cd0d3e` nach `project-context.md` Abschnitt 10 von `erkundung/3-8-weltdarstellung-spielfeld` auf den Branch dieser Session `erkundung/3-14-spaete-bilder-referenz-pc` vom aktuellen `main` (`4b8a679`) übernommen (`0ed265d`); der alte Branch wird nicht weiterverwendet. Branch und Übernahme liefen vor diesem Eintrag, damit er auf dem Arbeits-Branch steht.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 3, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant:** Schritt 3.14 (ERKUNDUNG, Messung): Vorlage vor der Messung, Messaufbau mit Zeitstempeln auf beiden Seiten, Prüfung nach Maßnahme (11) im Container, Pakete an den Projektinhaber.
+- **Vorabprüfung:** 3.14 hat keine Eingangskriterien außer dem Referenz-PC; NFR Darstellung unter Windows `[VORLÄUFIG]` ist der Erkundungsgrund. Reaktiv-Quote 7 / 10 über dem Schwellenwert, Maßnahmen (5) bis (11) gelten.
+- **Modus/Werkzeug:** Claude Code in der Cloud (Container), Rechte-Modus „auto“; Pre-Commit-Hook installiert (`pre-commit` 4.x per pip, `.git/hooks/pre-commit` vorhanden). Node im Container 22.22.0, Node 26.11.1 bei TypeScript-Arbeit nachzuholen.
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` (Quelle: `get_session` 17:36 UTC) – Entscheidungs-Klasse; 3.14 empfiehlt Entscheidung.
+
 ### 2026-10-20 17:34 (UTC) – [BEOBACHTUNG]
 
 - **Merge:** PR #29 (Schritt 3.8, ADR-038) nach Anweisung des Projektinhabers gemergt („PR eröffnen und bei grün mergen“), Merge-Commit `4b8a679`. Vorher grün auf `ac00324`: Push-Lauf 39466020245 und die PR-Läufe CI 39466633289 und Security 39466633371 (39 Prüfungen). Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf `erkundung/3-8-weltdarstellung-spielfeld` und geht mit dem PR des nächsten Schritts nach `main`.

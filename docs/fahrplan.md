@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-20 (Session ab 14:53 UTC, Schritt 3.8 erledigt)
+- **Stand vom:** 2026-10-20 (Session ab 17:37 UTC, Schritt 3.14 in Arbeit)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (3.8 erledigt am 2026-10-20, ADR-038)
-- **Nächster Schritt:** 3.14 Späte Bilder auf dem Referenz-PC (Messung durch den Projektinhaber), danach 3.9 Kernstruktur der Fachmodule, in einer neuen Session auf einem neuen Branch vom aktuellen `main` (die Session zu 3.7 endete über der Grenze der Sessiongröße)
+- **Aktiver Schritt:** 3.14 Späte Bilder auf dem Referenz-PC – Vorlage vor der Messung vorgelegt (`docs/research/3.14-spaete-bilder.md`)
+- **Nächster Schritt:** nach den Antworten zur Vorlage Messprototyp auf `erkundung/3-14-messaufbau`, Prüfung nach Maßnahme (11), Messläufe des Projektinhabers; danach 3.9 Kernstruktur der Fachmodule
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 7 / 10 (ADR-029 bis ADR-038) über dem Schwellenwert; Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
@@ -142,7 +142,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.14: Späte Bilder auf dem Referenz-PC (Windows)
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT (seit 2026-10-20; Vorlage vor der Messung `docs/research/3.14-spaete-bilder.md`)
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session (Messläufe auf dem Referenz-PC durch den Projektinhaber)
