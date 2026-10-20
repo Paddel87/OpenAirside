@@ -24,6 +24,23 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 14:40 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-037** `[REAKTIV]` „Personengruppen mit Zugangsprofilen, Flächenarten und Querungen“: freigegeben vom Projektinhaber per Auswahl.
+  - Frage 1: zuerst Einwand gegen A. Wenn auch Sicherheitsbeamte durch die Kontrolle müssen, kommt der erste Beamte einer Schicht nie an seinen Arbeitsplatz (Henne-Ei-Problem). Danach A2: Kontrolle für alle außer Sicherheitsbeamten und Bauarbeitern.
+  - Frage 2 A: Vorfeldpersonal zu Fuß und per Fahrzeug.
+  - Frage 3 A: Walk-out-Querungen geregelt im Wechsel.
+  - Frage 4 A: Bauarbeiter überall außer auf Bahnen in Betrieb.
+  - Technischer Entwurf wie vorgelegt, mit fünftem Profil für Sicherheitsbeamte.
+- **Klassifikation:** reaktiv nach der 14-Tage-Regel (ändert ADR-020 nach 7 Tagen). Reaktiv-Quote 7 / 10 (ADR-028 bis ADR-037). Nach Regel-009 neues Muster: Reflexion mit Stopp in `fahrplan.md` („Ergänzung Reaktiv-Quote, Anlass ADR-037“), zur Kenntnis genommen; Maßnahme (10).
+- **Nachgezogen:**
+  - `decisions.md` (Teil A, Reaktiv-Quote, Liste) und Status von ADR-020.
+  - `architecture.md`: Module Welt & Bau, Wegfindung, Verkehr, Personen; Datenmodell; verworfene Alternativen; Reifegrade. Neue Zeile „Aufgabenfelder“ `[VORLÄUFIG]` (5.6); Datenmodell bleibt `[BELASTBAR]`, fortgeschrieben.
+  - `requirements.md` FR-052.
+  - Fahrplan: 3.7 erledigt; Landeplätze in 3.1, 3.2, 3.3, 3.4, 3.5, 3.11, 3.12, 4.1, 5.6.
+  - README; Vorlage um die Antworten ergänzt.
+- **Schritt 3.7:** erledigt (Phasentyp-Kontext ERKUNDUNG, Akzeptanz wissensbasiert). Phase 3 weiter 13 Schritte bei Plan 13; die Landeplätze ergänzen bestehende Schritte und legen keine neuen an.
+
 ### 2026-10-20 14:31 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt 3.7:** Messung `spikes/3.7-personengruppen/` (Produktions-Kern als Pfad-Abhängigkeit, Referenz-Terminal 768² × 5 in Welt 2048² mit Vorfeld, 17 Stellplätzen, 6 Walk-out-Gehwegen und 4 Personalräumen; Container, 4 vCPU). Herleitung und Vorlage: `docs/research/3.7-personengruppen.md`.
