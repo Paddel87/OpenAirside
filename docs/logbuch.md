@@ -24,6 +24,22 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 15:01 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 3.8, Vorlage vor der Messung:** `docs/research/3.8-weltdarstellung.md`. Kandidaten für den Weg der ruhenden Welt (W-A Blöcke im Bild gegen den quittierten Stand, W-B Abruf über S-7) und für das Zeichnen (Z-1 Datentextur mit Shader, Z-2 vorgerenderte Blöcke; Z-3 Sprite je Zelle ohne Messung verworfen: 6,55 Mio. Zellen). Entwurf S-1 Layout 2 (Kopf 48 Byte; Personen 8 Byte mit Gruppe nach ADR-037, Fahrzeuge 12, Flugzeuge 16, Gepäck 8; Welt-Abschnitt nur bei W-A).
+- **Vertragsabgleich (Maßnahmen 7–9):** 12 Sätze geprüft. Funde: V-1 Layout 2 erhöht `protocol` auf 2; V-4 W-B bräche „Wirkung im Bild von `tick`“ und das vorläufige Zeichnen; V-5 (Maßnahme 8) der Katalog in S-7 nennt keine feste Reihenfolge, auf die S-1 per Index verweisen kann; V-7 W-B bräuchte eigene Grenzen mit Herkunft.
+- **Frage 3 (neue Wegweiser):** im Entwurf beantwortet – die Darstellung zeigt keine Wegweiser und erhält nach `waypointsAdopted` nichts neu; die Messung prüft es mit.
+- **Vorgelegt:** drei Fragen (Einzelheiten in der weiten Übersicht, Wartezeit der Erstübertragung, Umfang des Messplans). Messaufbau: Prototyp auf dem nicht gemergten Spike-Branch `erkundung/3-8-messaufbau`, Pakete aus dem bestehenden Release-Workflow.
+
+### 2026-10-20 14:53 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 2026-10-20 14:52 UTC (Session zu 3.7, Kontext 492.293 Token über der Grenze von 400.000; neue Session vom Projektinhaber gewählt). Merge-Vermerk `8adb074` und Sessionende `3f813e3` nach `project-context.md` Abschnitt 10 von `scp/compassionate-shannon-wz4apd` auf den Branch dieser Session vom aktuellen `main` (`b8b3106`) übernommen (`b23c396`, `6b56ab1`); der alte Branch wird nicht weiterverwendet.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 3, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` laut `get_session` 14:53 UTC → Entscheidungs-Klasse.
+- **Werkzeug:** Claude Code in der Cloud; Branch `erkundung/3-8-weltdarstellung-spielfeld` nach `CLAUDE.md` Abschnitt 11.
+- **Vorhaben:** Schritt 3.8 Weltdarstellung im Spielfeld und S-1 Layout 2 (Vergleichsstudie mit Messung, Zeitbox zwei Sessions). Empfohlene Klasse: Entscheidung (Auslöser 1, Kategorie 5) – aktive Klasse passt.
+- **Vorabprüfung:** Eingangskriterium „3.7 entschieden“ erfüllt (ADR-037); Abhängigkeit 3.7 erledigt. Reaktiv-Quote 7 / 10 über dem Schwellenwert, Reflexion zu ADR-037 liegt vor (Regel-009). Vor dem Vertrag: Vertragsabgleich nach Maßnahmen (7) bis (9).
+
 ### 2026-10-20 14:52 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** 50 Minuten seit `[SESSIONSTART]` 14:02 UTC.
