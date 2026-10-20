@@ -1,0 +1,8 @@
+{"mode":"fields","profile":"base","targets":36,"blocks":1468,"cells":1503232,"mb":54.1,"mb_per_target":1.50,"s_median":1.177,"s_all":[1.297, 0.948, 1.177],"unreachable_cells":0,"peak_mb":145}
+{"mode":"fields","profile":"pax","targets":42,"blocks":1576,"cells":1613824,"mb":67.8,"mb_per_target":1.61,"s_median":1.368,"s_all":[1.368, 1.279, 1.462],"unreachable_cells":0,"peak_mb":199}
+{"mode":"fields","profile":"staff","targets":16,"blocks":1576,"cells":1613824,"mb":25.8,"mb_per_target":1.61,"s_median":0.559,"s_all":[0.559, 0.607, 0.514],"unreachable_cells":0,"peak_mb":199}
+{"mode":"fields","profile":"ramp","targets":21,"blocks":1612,"cells":1650688,"mb":34.7,"mb_per_target":1.65,"s_median":0.670,"s_all":[0.774, 0.631, 0.67],"unreachable_cells":0,"peak_mb":199}
+{"mode":"fields","profile":"build","targets":8,"blocks":4988,"cells":5107712,"mb":40.9,"mb_per_target":5.11,"s_median":0.886,"s_all":[0.886, 1.03, 0.847],"unreachable_cells":0,"peak_mb":230}
+{"mode":"fields","profile":"union","targets":87,"blocks":4988,"cells":5107712,"mb":444.4,"mb_per_target":5.11,"s_median":11.152,"s_all":[11.152, 11.549, 9.017],"unreachable_cells":0,"peak_mb":1013}
+{"mode":"fields","profile":"people","targets":79,"blocks":1612,"cells":1650688,"mb":130.4,"mb_per_target":1.65,"s_median":2.586,"s_all":[2.586, 2.493, 2.959],"unreachable_cells":0,"peak_mb":1013}
+{"mode":"fields","profile":"build2","targets":2,"blocks":4988,"cells":5107712,"mb":10.2,"mb_per_target":5.11,"s_median":0.571,"s_all":[0.571, 0.573, 0.469],"unreachable_cells":0,"peak_mb":1013}

@@ -1,0 +1,8 @@
+{"mode":"astar","case":"ramp_rooms_stands","heuristic":"admissible","trips":1000,"found":1000,"ms_median":4.871,"ms_p90":62.881,"ms_p99":297.736,"ms_max":426.056,"ms_mean":22.403,"expanded_mean":71824,"expanded_max":924754,"path_cells_mean":302}
+{"mode":"astar","case":"ramp_rooms_stands","heuristic":"normal_cost","trips":1000,"found":1000,"ms_median":0.072,"ms_p90":6.752,"ms_p99":18.954,"ms_max":24.497,"ms_mean":1.869,"expanded_mean":7647,"expanded_max":89385,"path_cells_mean":302}
+{"mode":"astar_check","case":"ramp_rooms_stands","trips":1000,"cost_mismatches_vs_flow_field":0}
+{"mode":"astar","case":"staff_terminal_random","heuristic":"admissible","trips":1000,"found":1000,"ms_median":60.535,"ms_p90":166.574,"ms_p99":271.908,"ms_max":332.339,"ms_mean":76.016,"expanded_mean":270524,"expanded_max":1043001,"path_cells_mean":424}
+{"mode":"astar","case":"staff_terminal_random","heuristic":"normal_cost","trips":1000,"found":1000,"ms_median":18.186,"ms_p90":61.716,"ms_p99":169.745,"ms_max":666.743,"ms_mean":27.978,"expanded_mean":111009,"expanded_max":2926581,"path_cells_mean":421}
+{"mode":"astar","case":"build_delivery_to_site","heuristic":"admissible","trips":1000,"found":1000,"ms_median":145.721,"ms_p90":1161.770,"ms_p99":1717.678,"ms_max":2354.516,"ms_mean":403.648,"expanded_mean":1104594,"expanded_max":4519903,"path_cells_mean":918}
+{"mode":"astar","case":"build_delivery_to_site","heuristic":"normal_cost","trips":1000,"found":1000,"ms_median":21.226,"ms_p90":895.952,"ms_p99":1309.287,"ms_max":1594.088,"ms_mean":202.053,"expanded_mean":622916,"expanded_max":3567785,"path_cells_mean":918}
+{"mode":"astar_memory","peak_mb":364}
