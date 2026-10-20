@@ -24,13 +24,21 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 17:20 (UTC) – [BEOBACHTUNG]
+
+- **Ergebnis Referenz-PC W-B + Z-1** (`docs/research/3.8-ergebnisse/referenz-pc-wb-z1.json`; Vorlage Abschnitt 16):
+  - Erstübertragung: sichtbar 74 ms, ganz 348 ms.
+  - Bauaktion bis zum Welt-Bild: Median 40 ms, höchstens 73 ms, 3–4 Bilder; rund ein Bild nach dem Tick der Annahme (W-A: dasselbe Bild).
+  - Speicher wie W-A.
+- **Späte Bilder auch bei W-B** ab Fenster 8 (Rundlauf p99 14–31 ms), vorher nicht. Der Welt-Abschnitt im Bild ist als Ursache widerlegt. Ursache auf dem Referenz-PC weiter offen, vermutlich Renderer unter Windows.
+
 ### 2026-10-20 16:48 (UTC) – [BEOBACHTUNG]
 
 - **Ergebnisse Mac W-A** (`docs/research/3.8-ergebnisse/mac-m3pro-wa-z1.json`, `mac-m3pro-wa-z2.json`; Vorlage Abschnitt 15):
   - 119,8–120,0 Bilder/s, Bildabstand p99 bis 11,7 ms, Rundlauf p99 bis 2,5 ms.
   - Erstübertragung ganz 123 bzw. 141 ms; Bauaktion bis zum Welt-Bild höchstens 32 ms.
   - Speicher über der Schwelle, Z-1 Spitze +339 MB, Z-2 +620 MB gegenüber 2.10.
-- **Sichtbeobachtung Projektinhaber, Lauf `world wb z1` (Referenz-PC, neues Paket, noch laufend):** bis Fenster 11 kein Ruckeln erkennbar, in Fenster 12 (13. Fenster, Übersicht vereinfacht) Ruckeln. Frage, ob Personen über Möbel laufen dürfen: im Prototyp ja, weil die 20.160 Objekte nur Darstellungsdaten sind und der Kern sie nicht kennt (Objekte im Weltzustand und ihre Wirkung auf die Begehbarkeit kommen mit 3.1).
+- **Sichtbeobachtung Projektinhaber, Lauf `world wb z1` (Referenz-PC, neues Paket, noch laufend):** bis Fenster 11 kein Ruckeln erkennbar, ab Fenster 12 der Anzeige (Index 11, Nahansicht) Ruckeln. Frage, ob Personen über Möbel laufen dürfen: im Prototyp ja, weil die 20.160 Objekte nur Darstellungsdaten sind und der Kern sie nicht kennt (Objekte im Weltzustand und ihre Wirkung auf die Begehbarkeit kommen mit 3.1).
 - **Sichtbeobachtung Projektinhaber (Referenz-PC):** Ruckeln vor allem in der Nahansicht beim Kreisen; deckt sich mit Bildabstand p99 bis 47 ms in den kreisenden Ansichten.
 - **Folgerung:** Die späten Bilder des Referenz-PCs sind dort an den Rechner gebunden, nicht an W-A. Der Engpass ist der Speicher. Z-2 scheidet aus.
 
