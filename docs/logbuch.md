@@ -28,7 +28,7 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 
 - **Schritt 3.8, Prototyp:** auf dem nicht gemergten Spike-Branch `erkundung/3-8-messaufbau` (`257a498`, `8f557d2`, `74ceec9`). Kern allein: 4.988 Blöcke des Referenz-Terminals auf Karte 2048² = 2,76 MB, Kodierung 100 ms; W-A in 3 Bildern (langsamstes 47 ms im Kern-Prozess). Container-Probelauf aller drei Kombinationen über SwiftShader: ganze Welt nach 0,74–0,96 s, Bauaktion bis zum Welt-Bild mit W-B 1–2 Bilder später als mit W-A. Bildraten ohne Aussage.
 - **Antworten zum Messplan (15:05 UTC, per Auswahl):** Übersicht als Einstellung im Grafikmenü mit Voreinstellung „vereinfacht“; ganze Welt nach höchstens 3 s, sichtbarer Ausschnitt nach höchstens 1 s; drei Läufe je Rechner. Festgehalten in der Vorlage Abschnitt 11.
-- **Release-Lauf** 39449159828 auf dem Spike-Branch gestartet; Messanleitung in `docs/research/3.8-weltdarstellung.md` Abschnitt 13.
+- **Release-Lauf** 39449159828 auf dem Spike-Branch grün auf drei Plattformen (Bau und Rauchtest der Pakete; Artefakte openairside-Windows, -macOS, -Linux); Messanleitung in `docs/research/3.8-weltdarstellung.md` Abschnitt 13.
 - **Reibungen:** (1) PixiJS 8.20.1 setzt `#version 300 es` bei eigenem `GlProgram` nicht selbst; ohne die Zeile scheitert `texelFetch` beim Übersetzen. (2) Ein Block ohne zweiten Halter wird von `Arc::make_mut` an Ort und Stelle geändert; die Erkennung geänderter Blöcke über die Identität braucht deshalb, dass der Sender die übergebenen Blöcke selbst hält. (3) Der Grafik-Prüfer meldet die 512 Testgrafiken (kein Objekt im Basispaket); betrifft nur den Spike-Branch, der Release-Workflow prüft das nicht.
 
 ### 2026-10-20 15:01 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
