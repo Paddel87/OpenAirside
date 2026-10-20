@@ -24,6 +24,12 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 17:22 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 3.8, Messung abgeschlossen:** sechs Läufe (Referenz-PC und Mac je W-A + Z-1, W-A + Z-2, W-B + Z-1), Dateien in `docs/research/3.8-ergebnisse/`, Auswertung in der Vorlage Abschnitte 14–17.
+- **Mac W-B + Z-1:** sichtbar 32 ms, ganz 174 ms; Bauaktion rund ein Bild nach dem Tick; 120 Bilder/s; Speicher 913–1.257 MB (mehr als W-A).
+- **Vorgelegt** (Vorlage Abschnitt 18): W-A + Z-1 mit Layout 2, Katalog-Index additiv in S-7, Reifegrade; offene Punkte späte Bilder Referenz-PC und Speicher Mac; Klassifikation `[REAKTIV]` (14-Tage-Regel, Quote 7 / 10), neues Muster nach Regel-009 (Code in der Brücke) mit Reflexion und Vorschlag Maßnahme (11).
+
 ### 2026-10-20 17:20 (UTC) – [BEOBACHTUNG]
 
 - **Ergebnis Referenz-PC W-B + Z-1** (`docs/research/3.8-ergebnisse/referenz-pc-wb-z1.json`; Vorlage Abschnitt 16):

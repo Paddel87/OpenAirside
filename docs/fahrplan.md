@@ -11,7 +11,7 @@
 - **Stand vom:** 2026-10-20 (Session ab 14:53 UTC, Schritt 3.8)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 3.8 – Messläufe auf Referenz-PC und Mac durch den Projektinhaber (Anleitung `docs/research/3.8-weltdarstellung.md` Abschnitt 13)
+- **Aktiver Schritt:** 3.8 – wartet auf Freigabe des ADR (W-A + Z-1, Layout 2) und Kenntnisnahme der Reflexion nach Regel-009
 - **Nächster Schritt:** 3.8 Weltdarstellung im Spielfeld und S-1 Layout 2 (Entwurf mit Messung auf Referenz-PC und Mac), in einer neuen Session auf einem neuen Branch vom aktuellen `main` (die Session zu 3.7 endete über der Grenze der Sessiongröße)
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 7 / 10 (ADR-028 bis ADR-037) über dem Schwellenwert; Reflexion zu ADR-037 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
@@ -122,7 +122,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.8: Weltdarstellung im Spielfeld und S-1 Layout 2
 
-- **Status:** IN ARBEIT (Messplan freigegeben am 2026-10-20; Prototyp auf `erkundung/3-8-messaufbau`, Messung auf Referenz-PC und Mac ausstehend)
+- **Status:** WARTET-AUF-FREIGABE (Messung abgeschlossen am 2026-10-20, Vorlage zum ADR in `docs/research/3.8-weltdarstellung.md` Abschnitt 18)
 - **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt)
 - **Schritt-Art (nur ERKUNDUNG):** Vergleichsstudie mit Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal zwei Sessions (Messung auf Referenz-PC und Mac durch den Projektinhaber)
