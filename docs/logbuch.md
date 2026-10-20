@@ -17,12 +17,46 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) ausgeplant mit 13 Schritten, nächster Schritt 3.7.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8 und 3.14 sind erledigt, nächster Schritt 3.15.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-20 21:40 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** rund 4 Stunden seit `[SESSIONSTART]` 17:37 UTC, davon gut 3 Stunden Messläufe des Projektinhabers.
+- **Bearbeitet:**
+  - Schritt 3.14: Vorlage vor der Messung mit zwei Antworten (5 Läufe, Rückgabe im Chat).
+  - Messprototyp `erkundung/3-14-messaufbau` (`6808a35`, `9d01469`), geprüft nach Maßnahme (11); Release-Läufe 39471593590 und 39483411097.
+  - Lauf 2 und drei Zeitspuren ausgewertet: Ursache gefunden. Nachmessung beider Läufe mit der Korrektur.
+- **Erreicht:**
+  - 3.14 erledigt ohne ADR. Ursache: synchrone Abfrage des GPU-Namens alle 250 ms in der Leistungsanzeige.
+  - Mit der Korrektur 0–0,01 % späte Antworten und Bildabstand p99 17,3–18,1 ms.
+  - Neuer Schritt 3.15 (Korrektur auf `main`) nach Antwort des Projektinhabers.
+  - Reifegrad „NFR Darstellung unter Windows“ bleibt `[VORLÄUFIG]` bis 3.15.
+- **Offen geblieben:**
+  - PR für `erkundung/3-14-spaete-bilder-referenz-pc` nach `main`, nur auf Anweisung.
+  - Der Spike-Branch `erkundung/3-14-messaufbau` bleibt als Aufzeichnung und wird nicht gemergt.
+  - Ungeklärt bleibt, warum der GPU-Prozess unter D3D11 zeitweise einen Takt im Flush wartet. Ohne synchrone Abfragen ist das nicht sichtbar.
+  - AMD-Treiberversion und Update-Verlauf hat der Projektinhaber nicht nachgereicht; für das Ergebnis nicht mehr nötig.
+- **Nächster Schritt:** 3.15 GPU-Namen nur einmal lesen, in einer neuen Session; danach 3.9.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 21:37 UTC). 0 Schritte oberhalb der Empfehlung (3.14: Entscheidung). Abgegeben: keine Teilarbeiten.
+- **Kontextgröße:** 408.994 Token laut `get_session` 21:37 UTC, **über der Grenze von 400.000**. Empfehlung: die nächste Arbeit in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 21:37 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt.
+- **Archivierung und Größen:** keine Trigger. Logbuch rund 400 Zeilen (Grenze 800), `project-context.md` 375 Zeilen (Budget 600), `architecture.md` 470 Zeilen.
+- **Drift-Prüfung:**
+  - README nachgezogen (Phase, Architektur-Reife, Nächste Schritte); „Aktueller Stand“ im Logbuch berichtigt (nannte noch 3.7).
+  - Kein neuer ADR; Reaktiv-Quote unverändert 7 / 10.
+  - Reifegrad passt zum Ergebnis 3.14.
+  - Modulnamen in 3.14 und 3.15 stimmen mit der Modul-Karte überein.
+  - Keine Anforderung neu oder geändert; keine Blocker.
+  - Phase 3: 15 Schritte bei Plan 13, unter der Wucherungs-Schwelle von 26.
+- **Mini-Reibungen:**
+  - Prettier formatiert die Messdateien beim Commit um. Der Inhalt wurde jeweils per Vergleich als gleich belegt; der erste Commit-Versuch schlägt dadurch jedes Mal fehl.
+- **Beobachtung:** Die Selbst-Nachricht und die Zeitspur hätten die Ursache schon in 3.8 sichtbar gemacht. Bei späten Bildern zuerst den Hauptthread in der Zeitspur prüfen, bevor man Grafikwege vergleicht.
 
 ### 2026-10-20 21:37 (UTC) – [BEOBACHTUNG]
 
