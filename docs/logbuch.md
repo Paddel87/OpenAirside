@@ -24,6 +24,12 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 21:37 (UTC) – [BEOBACHTUNG]
+
+- **3.14, Nachmessung Lauf 2 (ohne Welt, Paket `9d01469`):** 0 späte von 21.691 Antworten, Rundlauf p99 0,7–1,1 ms, Bildabstand p99 17,3–18,1 ms, 59,8–60,0 Bilder/s. Zusammen mit Lauf 1 ist die Ursache belegt, alle Schwellen sind erfüllt. Die Läufe 3–5 entfallen. Ergebnis: `docs/research/3.14-spaete-bilder.md` Abschnitt 14.
+- **Mini-Reibung:** Der erste Versuch von Lauf 2 (21:28 UTC) lieferte keine Messdatei, vermutlich zu früh nachgesehen. Der Lauf wurde neu gestartet.
+- **Kontextgröße:** 408.994 Token laut `get_session` 21:37 UTC, über der Grenze von 400.000.
+
 ### 2026-10-20 21:25 (UTC) – [BEOBACHTUNG]
 
 - **3.14, Nachmessung Lauf 1 (mit Welt, Paket `9d01469`):** 2 späte von 21.636 Antworten (0,01 %), Rundlauf p99 0,8–1,1 ms, Bildabstand p99 17,4–18,1 ms, 59,8–60,0 Bilder/s, keine langen Aufgaben. Alle Schwellen der Vorlage sind erfüllt; der Projektinhaber sah es flüssig. Die Ursache aus Abschnitt 12 (synchrone Abfrage des GPU-Namens alle 250 ms) ist damit für die Weltdarstellung belegt. Lauf 2 (ohne Welt) folgt. `docs/research/3.14-spaete-bilder.md` Abschnitt 13.
