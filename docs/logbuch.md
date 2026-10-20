@@ -24,6 +24,15 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 22:24 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 2026-10-20 21:40 UTC (Session zu 3.14, Kontext 408.994 Token über der Grenze von 400.000; neue Session vom Projektinhaber gewählt: „Weiter mit 3.15 in neuer Session“). Merge-Vermerk `33d8a19` nach `project-context.md` Abschnitt 10 von `erkundung/3-14-spaete-bilder-referenz-pc` auf den Branch dieser Session `fix/3-15-gpu-name-einmal-lesen` vom aktuellen `main` (`fddad76`) übernommen (`1e68f1b`); der alte Branch wird nicht weiterverwendet.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 3, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant:** Schritt 3.15 (UMSETZUNG, Fehlerbehebung im Spielfeld): Getter `gpu` liest einmal, Suche nach weiteren synchronen WebGL-Abfragen im laufenden Betrieb, Regel als Kommentar und in `architecture.md`, Unit-Test; Paket aus dem Release-Workflow für die Messung `measure 6` auf dem Referenz-PC.
+- **Vorabprüfung:** keine Grundsatzentscheidung berührt; Spielfeld ist `[BELASTBAR]` im umgesetzten Umfang; NFR Darstellung unter Windows `[VORLÄUFIG]`, Beförderung nach Messung (Auslöser 4, Entscheidungs-Klasse). Reaktiv-Quote 7 / 10, Maßnahmen (5) bis (11) gelten.
+- **Modus/Werkzeug:** Claude Code in der Cloud (Container), Rechte-Modus „auto“; Pre-Commit-Hook installiert (`pre-commit` per pip, `.git/hooks/pre-commit` vorhanden). Node 26.11.1 nach `~/node26` geholt, Prüfsumme gegen `SHASUMS256.txt` bestätigt.
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` (Quelle: `get_session` 22:23 UTC) – Entscheidungs-Klasse. 3.15 empfiehlt Routine: der Schritt läuft oberhalb seiner Empfehlung; keine Abgabe, weil kein Probelauf bestanden ist.
+
 ### 2026-10-20 21:46 (UTC) – [BEOBACHTUNG]
 
 - **Merge:** PR #30 (Schritt 3.14) nach Anweisung des Projektinhabers gemergt („PR eröffnen und bei grün mergen“), Merge-Commit `fddad76`. Vorher grün auf `e908c87`: 39 Prüfungen ohne Fehler. Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf `erkundung/3-14-spaete-bilder-referenz-pc` und geht mit dem PR des nächsten Schritts nach `main`.
