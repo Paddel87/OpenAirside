@@ -14,7 +14,7 @@
 - **Ein `MessagePort` je Fenster** zwischen Renderer und Kern-Prozess (Electron-Utility-Prozess, ADR-009) trägt S-1, S-2, S-3 und S-7. Der Hauptprozess vermittelt nur die Port-Übergabe (`MessageChannelMain`), er liest keine Nachrichten mit.
 - **Handshake mit Bestätigung** (Lehre aus Spike 1.5): Renderer sendet `hello { protocol }`, der Kern antwortet `welcome { protocol, core: CoreInfo, session }` oder `incompatible { protocol }`. Erst nach `welcome` gehen andere Nachrichten über den Port.
 - **Nachrichtenhülle:** JavaScript-Objekt `{ type, ... }` über Structured Clone; Binärdaten (Bild S-1, Tabellen S-7) als `ArrayBuffer`. Keine Funktionen, keine Klassen.
-- **Protokollversion:** eine ganze Zahl `protocol` für den Port; jede nicht additive Änderung an S-1, S-2, S-3 oder S-7 erhöht sie. Renderer und Kern stammen immer aus demselben Build; ein Unterschied ist ein Programmfehler und führt zu einer Fehlermeldung statt zum Weiterlaufen.
+- **Protokollversion:** eine ganze Zahl `protocol` für den Port; jede nicht additive Änderung an S-1, S-2, S-3 oder S-7 erhöht sie (`protocol` 2 mit S-1 Layout 2, ADR-038, ab 3.1). Renderer und Kern stammen immer aus demselben Build; ein Unterschied ist ein Programmfehler und führt zu einer Fehlermeldung statt zum Weiterlaufen.
 - **Kennzahlen des Takts (Schritt 2.7, additiv):** Der Kern schickt etwa einmal je Sekunde `coreStats { session, tick, stats }` mit `TickStats` (`core/src/runner.rs`): Ticks der letzten vollen Sekunde, Schrittzeit Mittel, p99 und Maximum in µs, Ticks im Rückstand nach der letzten Arbeitsscheibe, laufende Neuberechnung, letzte übernommene Neuberechnung `{ revision, millis }` (Anforderung bis Übernahme), Zahl der Tick- und Hintergrund-Threads. Nur Wanduhr-Werte, ohne Wirkung auf den simulierten Zustand. Nutzer: Leistungsanzeige und Messwerkzeug. Neue Nachrichtenart, `protocol` bleibt 1.
 - **Renderer gilt als nicht vertrauenswürdig** (Hauptangriffsweg wäre eingeschleuster Inhalt im Fenster): Der Kern prüft jede Nachricht streng (Typ, Wertebereiche, Längen) und lehnt mit festgelegtem Code ab; unbekannte `type` oder `kind` werden verworfen und gezählt, nie mit Absturz beantwortet. Eine Nachricht an den Kern ist höchstens 1 MB groß.
 
@@ -70,7 +70,7 @@ Befehle und Abfragen adressieren Zellen, Rechtecke oder Handles. Positionen von 
 <!-- ANCHOR:s-1-zustandspuffer -->
 ## Schnittstelle: S-1 Zustandspuffer (Kern → Präsentation) [BELASTBAR]
 
-- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, validiert durch Spike 1.3 auf Referenz-PC (Windows) und Mac M3 Pro: Dreifachpuffer im Kern-Prozess, kompaktes Format mit Filter auf Etage und Ausschnitt, Rundlauf 0,6–2,8 ms je Bild, Bildrate an der Displaygrenze (60 bzw. 120 Bilder/s); Linux nach ADR-011 in 7.2
+- **Reifegrad:** `[BELASTBAR]`, seit 2026-10-13, validiert durch Spike 1.3 auf Referenz-PC (Windows) und Mac M3 Pro: Dreifachpuffer im Kern-Prozess, kompaktes Format mit Filter auf Etage und Ausschnitt, Rundlauf 0,6–2,8 ms je Bild, Bildrate an der Displaygrenze (60 bzw. 120 Bilder/s); Linux nach ADR-011 in 7.2. Fortgeschrieben durch ADR-038 (Layout 2 mit ruhender Welt, Messung 3.8 auf Referenz-PC und Mac, `docs/research/3.8-weltdarstellung.md`)
 - **Typ:** Puffer im Kern-Prozess, je Bild als Kopie per `MessagePort` an den Renderer übertragen (ADR-009); im Spike 160 KB bei 10.000 Personen, 1,1 ms Übertragung im Mittel
 - **Anbieter:** Takt & Weltzustand
 - **Konsument:** Spielfeld, Oberfläche
@@ -81,7 +81,22 @@ Befehle und Abfragen adressieren Zellen, Rechtecke oder Handles. Positionen von 
   - **Idempotenz:** Lesen ist seiteneffektfrei
 - **Versionierung:** Layout wird aus Rust-Typen erzeugt, eine Layout-Version im Kopf des Puffers
 - **Layout-Version 1 (Schritt 2.7, `core/src/frame.rs`):** Kopf 32 Byte (Layout-Version, Kopfgröße, Sitzung, Tick, Kartenbreite und -höhe, Personen gesamt, Personen im Bild, Etage des Filters oder 127 für alle, Bytes je Person, Revision der Wegweiser), danach je Person 6 Byte: x und y als u16 in 1/32 Zelle, Etage i8, Richtung u8. Die Anforderung `frameRequest { session, filter: { floor?, view? }, ack }` quittiert zugleich die Ereignisse bis `ack`. Der Leser im Renderer (`app/renderer/frame-reader.ts`) prüft alle Längen gegen `byteLength`.
-- **Offene Fragen:** Umfang je Bild – geklärt in Spike 1.3 (kompaktes Vollbild mit Filter auf Etage und Ausschnitt); Ereignisse kommen mit dem Bild (S-3, ADR-021). **Ruhender Zustand der Welt** (Raster, Böden, Wände, Objekte, Zonen) `[OFFEN]`: S-1 trägt bis jetzt nur bewegte Objekte; der Weg wird im Entwurfsschritt 3.8 vor 3.1 mit Messung entschieden, Ausgangshypothese „geänderte Blöcke seit dem quittierten Stand im Bild", Gegenmodell Abruf über S-7 (ADR-032, L-1). Bis dahin gilt die Zusage von S-2 „Wirkung im Bild von `tick`" nur für bewegte Objekte.
+- **Layout-Version 2 (ADR-038, entschieden in 3.8, Umsetzung 3.1; `protocol` 2):**
+  - **Kopf 48 Byte:** Felder von Layout 1, dazu Welt-Revision des Bildes, Zahl der Welt-Blöcke, Bytes des Welt-Abschnitts und Anzahlen je Abschnitt.
+  - **Abschnitte** in fester Reihenfolge, jeder ab einer 4-Byte-Grenze:
+    - Personen, 8 Byte: x, y u16 in 1/32 Zelle; Etage i8; Richtung u8 (256 Stufen); Gruppe u8 nach ADR-037 (Fluggäste mit Abflug, Ankunft und Business, Besucher, Personal, Franchise-Personal, Sicherheitsbeamte, Vorfeldpersonal, Bauarbeiter); Zustand u8.
+    - Fahrzeuge, 12 Byte: x, y u16; Etage i8; Zustand u8; Richtung u16 (65.536 Stufen); Typ u16; Reserve u16.
+    - Flugzeuge, 16 Byte: x, y u16; Richtung u16; Typ u16; Zustand u16; Höhe u16 in dm; Reserve u32.
+    - Gepäck, 8 Byte: x, y u16; Etage i8; Richtung u8; Typ u16.
+    - Welt (siehe unten).
+  - **Typ** ist der Index im Katalog der Sitzung (S-7). Keine Handles im Bild; Auswahl per Klick über S-7.
+- **Ruhende Welt im Bild (ADR-038):**
+  - **Inhalt:** Jedes Bild trägt die Blöcke aller Etagen, die sich seit dem an diesen Port übergebenen Stand geändert haben, sichtbare Blöcke (Etage und Ausschnitt des Filters) zuerst, höchstens 1 MB je Bild (Herkunft: Entwurf 3.8, gemessen 2,8 MB für das Referenz-Terminal in 3 Bildern; Nachmessung 4.1). Was nicht passt, folgt im nächsten Bild; die Erstübertragung nach einem Sitzungswechsel ist derselbe Weg mit „alles geändert“.
+  - **Format:** Block mit Kopf (Tabellen-Index, Kodierung, Palettenlänge, Zahl der Objekte, Länge); Kodierung gleichförmig, Palette mit 4 Bit oder roh. Darstellungsdaten je Zelle 8 Byte: Flags (Wand, Treppe, Flächenart, Personalzone nach ADR-037), Zone, Markierung, Reserve, Bodenbelag u16, Wandart u16 (Katalog-Index). Danach die Objekte des Blocks mit Katalog-Index, Lage im Block, Drehung und Zustand.
+  - **Konsistenz:** Der Dreifachpuffer überspringt Bilder; der Kern rechnet die Änderungen deshalb gegen den übergebenen Stand, nicht gegen das vorige Bild. Höchstens eine Bildanforderung ist unterwegs, die nächste Anforderung quittiert das Bild.
+  - **Zusage:** Die Zusage von S-2 „Wirkung im Bild von `tick`“ gilt damit auch für die ruhende Welt (gemessen: in allen Bauaktionen im selben Bild wie der Tick der Annahme).
+  - **Neue Wegweiser** ändern keinen Block und lösen keine Übertragung aus.
+- **Offene Fragen:** Umfang je Bild – geklärt in Spike 1.3 (kompaktes Vollbild mit Filter auf Etage und Ausschnitt); Ereignisse kommen mit dem Bild (S-3, ADR-021). Ruhender Zustand der Welt – entschieden in 3.8 (ADR-038). Budget je Bild und Speicher im Referenzszenario: Nachmessung 4.1.
 
 <!-- ANCHOR:s-2-befehlskanal -->
 ## Schnittstelle: S-2 Befehlskanal (Präsentation → Kern) [BELASTBAR]
@@ -131,7 +146,7 @@ Befehle und Abfragen adressieren Zellen, Rechtecke oder Handles. Positionen von 
   - **Antwort:** `{ type: "queryResult", id, buf: ArrayBuffer }` im Spaltenformat aus Spike 1.4: Kopf 32 Byte (Layout-Version, Tick, Gesamtzahl passender Zeilen, Fensterbeginn, Zeilen im Fenster, Spaltenzahl, Wörterbuch-Version), danach je Spalte ein Block passender Breite ab einer 4-Byte-Grenze. Die erste Spalte ist immer das `Handle` der Zeile (Auswahl, Sprung zum Objekt).
   - **Texte** (Airline-Namen, Orte, Status) als Nummern in ein Wörterbuch; das Wörterbuch holt der Renderer mit `{ kind: "dictionary", table }`, sobald die Wörterbuch-Version im Kopf wechselt. Ein Eintrag ist `{ key }` (Textschlüssel, die Präsentation übersetzt) oder `{ text }` (freier Text nur für Namen, die der Spieler vergibt); umgesetzt mit den fachlichen Tabellen in 3.6, bis dahin liefert die Test-Tabelle Bezeichner als Text (ADR-032, L-6).
 - **Detailabfrage:** `{ kind: "detail", about: Handle }` → `queryResult { id, tick, detail: Detail | null }` als strukturiertes Objekt (erzeugte Typen); `null` bei veraltetem Handle. Textfelder wie im Wörterbuch (`{ key }` oder `{ text }`); `tick` und Textfelder ab 3.6 (ADR-032, L-6).
-- **Katalog der Sitzung (ab 3.1, ADR-032, L-2):** `{ kind: "catalog" }` → `queryResult { id, catalog }` mit allen geladenen Einträgen der laufenden Sitzung: volle ID, Inhaltsart, Namensschlüssel und die Felder des Eintrags, die die Präsentation braucht (für Objekttypen `placement`). Der Katalog ändert sich nur mit der Sitzung; die Präsentation holt ihn nach `welcome` und nach `sessionStarted`. Neue Inhaltsarten ergänzen ihn additiv.
+- **Katalog der Sitzung (ab 3.1, ADR-032, L-2):** `{ kind: "catalog" }` → `queryResult { id, catalog }` mit allen geladenen Einträgen der laufenden Sitzung: volle ID, Inhaltsart, Namensschlüssel und die Felder des Eintrags, die die Präsentation braucht (für Objekttypen `placement`). Der Katalog ändert sich nur mit der Sitzung; die Präsentation holt ihn nach `welcome` und nach `sessionStarted`. Neue Inhaltsarten ergänzen ihn additiv. Die Einträge stehen in fester Reihenfolge; ihr Index ist die Nummer, mit der S-1 auf sie verweist (Typ, Bodenbelag, Wandart, Objekt; ADR-038, additiv nach Regel-008).
 - **Konsistenz:** Der Kern beantwortet eine Abfrage mit dem Zustand des jüngsten an den Renderer übergebenen Bildes (Tick im Kopf), damit Tabelle und Spielfeld zusammenpassen.
 - **Drosselung:** Je Panel höchstens eine Abfrage unterwegs; Voreinstellung 4 Aktualisierungen je Sekunde (`project-context.md` Abschnitt 6, „wenige Male pro Sekunde"). Der Kern beantwortet Abfragen außerhalb des Simulationsschritts und verzögert ihn nicht.
 - **Grenzen, vom Kern durchgesetzt:** `limit` ≤ 1.000, höchstens 64 Spalten, 16 Filter, 4 Sortierkriterien; `offset` hinter der Gesamtzahl ergibt ein leeres Fenster. Höchstens 16 offene Abfragen je Sitzung; eine neue Abfrage desselben Panels (gleiche `panel`-Kennung) ersetzt eine noch nicht begonnene ältere.
@@ -255,4 +270,4 @@ Additive, rückwärtskompatible Ergänzungen nach Regel-008 (ohne eigenen ADR). 
 
 | Datum | Schnittstelle | Ergänzung | Schritt | Grundlage |
 |---|---|---|---|---|
-| – | – | noch keine Ergänzung nach Regel-008 | – | – |
+| 2026-10-20 | S-7 | Katalog: feste Reihenfolge, Index = Verweis-Nummer in S-1 | 3.8 (Umsetzung 3.1) | Regel-008, im Rahmen von ADR-038 vorgelegt und freigegeben |

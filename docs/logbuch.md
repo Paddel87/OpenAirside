@@ -24,6 +24,149 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 17:25 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** rund 2 Stunden 35 Minuten seit `[SESSIONSTART]` 14:53 UTC.
+- **Bearbeitet:**
+  - Schritt 3.8: Vorlage vor der Messung mit drei Antworten; Prototyp auf `erkundung/3-8-messaufbau`; zwei Release-Läufe (39449159828, 39459607051).
+  - Fehler im W-B-Prototyp gefunden und behoben.
+  - Sechs Messläufe des Projektinhabers ausgewertet; Vorlage zur Entscheidung; ADR-038 mit Reflexion nach Regel-009.
+- **Erreicht:**
+  - 3.8 erledigt; Weltdarstellung `[BELASTBAR]`.
+  - S-1 Layout 2 und `protocol` 2 entschieden; erste Ergänzung nach Regel-008 (S-7-Katalog-Index).
+  - Neuer Schritt 3.14; Maßnahme (11) gilt.
+- **Offen geblieben:**
+  - PR für `erkundung/3-8-weltdarstellung-spielfeld` nach `main`, nur auf Anweisung. Der Branch enthält auch die übernommenen Sessionende-Commits der Session 3.7.
+  - Der Spike-Branch `erkundung/3-8-messaufbau` bleibt als Aufzeichnung bestehen und wird nicht gemergt.
+- **Nächster Schritt:** 3.14 Späte Bilder auf dem Referenz-PC (Messung mit Zeitstempeln, Projektinhaber), in einer neuen Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 17:25 UTC). 0 Schritte oberhalb der Empfehlung (3.8: Entscheidung). Abgegeben: keine Teilarbeiten; Probelauf für Routine und Mechanik bleibt offen.
+- **Kontextgröße:** 605.223 Token laut `get_session` 17:25 UTC, **über der Grenze von 400.000**. Empfehlung: die nächste Arbeit in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 17:25 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt. Electron 44: Vorlauf ab 2027-01-02, Q.1. Runner-Image Ubuntu 26: Q.1.
+- **Archivierung und Größen:** keine Trigger. Logbuch rund 320 Zeilen (Grenze 800), `project-context.md` 375 Zeilen (Budget 600), `architecture.md` 470 Zeilen (eigene Schwelle 500). Phase 3 läuft.
+- **Drift-Prüfung:**
+  - README nachgezogen (Phase, Architektur-Reife, Nächste Schritte).
+  - ADR-038 verweist auf vorhandene Schritte (3.1, 3.2, 3.4, 3.5, 3.14, 4.1, 5.1).
+  - Reifegrade passen zu ADR-038.
+  - Modulnamen in 3.8 und 3.14 stimmen mit der Modul-Karte überein.
+  - Keine Anforderung neu oder geändert (FR-010 vorbereitend).
+  - Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker.
+  - Reaktiv-Quote 7 / 10 (ADR-029 bis ADR-038) stimmt mit den Tags, gesamt 16 / 38.
+  - Phase 3: 14 Schritte bei Plan 13, unter der Wucherungs-Schwelle.
+- **Mini-Reibungen:**
+  - Zwei Zeitstempel geschätzt statt mit `date -u` geholt (17:35 statt 17:25), vor dem Commit korrigiert. Wiederkehrend, siehe Reflexion Phase 2.
+  - Prettier formatiert die Messdateien in `docs/research/` beim Commit um; Inhalt jeweils per Vergleich als gleich belegt.
+- **Beobachtung:** Die Sichtbeobachtungen des Projektinhabers (Ruckeln in der Nahansicht, Figuren über Möbeln, Fenster 12) deckten sich mit den Messwerten bzw. mit Grenzen des Prototyps und halfen beim Zuordnen der späten Bilder.
+
+### 2026-10-20 17:25 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Bestandteil:** Weltdarstellung im Spielfeld. **Wechsel:** `[OFFEN]` → `[BELASTBAR]`. **Auslöser:** ADR-038 (Messung 3.8). Neu `[VORLÄUFIG]`: Speicher der Weltdarstellung (3.1). NFR Darstellung geteilt: macOS mit Weltdarstellung, Stufen 16/32 und 512 Grafiken `[BELASTBAR]`, Windows `[VORLÄUFIG]` (3.14). Eingetragen in `architecture.md` Abschnitt 9.
+
+### 2026-10-20 17:25 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-038** `[REAKTIV]` „Ruhende Welt als Blöcke im Bild, Zeichnung mit Datentextur, S-1 Layout 2“: freigegeben vom Projektinhaber per Auswahl, alle Empfehlungen:
+  - Frage 1: W-A + Z-1.
+  - Frage 2: Speicher in 3.1 nachmessen.
+  - Frage 3: neue Erkundung 3.14.
+  - Frage 4: Kenntnis der Reflexion und Maßnahme (11).
+- **Klassifikation:** reaktiv nach der 14-Tage-Regel (S-1 aus ADR-021 und ADR-032). Reaktiv-Quote 7 / 10 (ADR-029 bis ADR-038). Neues Muster nach Regel-009 (Code in der Brücke): Reflexion mit Stopp in `fahrplan.md`, zur Kenntnis genommen.
+- **Nachgezogen:**
+  - `decisions.md` (Teil A, Status ADR-021 und ADR-032, Quote).
+  - `architecture-schnittstellen.md`: S-1 Layout 2 und ruhende Welt, Grundlagen `protocol` 2, S-7 Katalog-Index; Änderungsprotokoll mit der ersten Ergänzung nach Regel-008.
+  - `architecture.md`: Modul Spielfeld, Abschnitt 6 und 9.
+  - Fahrplan: 3.8 erledigt, neuer Schritt 3.14, Landeplätze in 3.1, 3.2, 3.4, 3.5, 4.1, 5.1; Reflexion, Replanning.
+  - README, Aufzeichnung `spikes/3.8-weltdarstellung/README.md`.
+- **Schritt 3.8:** erledigt (Phasentyp-Kontext ERKUNDUNG, Akzeptanz wissensbasiert; zwei Sessions Zeitbox, eine gebraucht). Phase 3: 14 Schritte bei Plan 13.
+
+### 2026-10-20 17:22 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 3.8, Messung abgeschlossen:** sechs Läufe (Referenz-PC und Mac je W-A + Z-1, W-A + Z-2, W-B + Z-1), Dateien in `docs/research/3.8-ergebnisse/`, Auswertung in der Vorlage Abschnitte 14–17.
+- **Mac W-B + Z-1:** sichtbar 32 ms, ganz 174 ms; Bauaktion rund ein Bild nach dem Tick; 120 Bilder/s; Speicher 913–1.257 MB (mehr als W-A).
+- **Vorgelegt** (Vorlage Abschnitt 18): W-A + Z-1 mit Layout 2, Katalog-Index additiv in S-7, Reifegrade; offene Punkte späte Bilder Referenz-PC und Speicher Mac; Klassifikation `[REAKTIV]` (14-Tage-Regel, Quote 7 / 10), neues Muster nach Regel-009 (Code in der Brücke) mit Reflexion und Vorschlag Maßnahme (11).
+
+### 2026-10-20 17:20 (UTC) – [BEOBACHTUNG]
+
+- **Ergebnis Referenz-PC W-B + Z-1** (`docs/research/3.8-ergebnisse/referenz-pc-wb-z1.json`; Vorlage Abschnitt 16):
+  - Erstübertragung: sichtbar 74 ms, ganz 348 ms.
+  - Bauaktion bis zum Welt-Bild: Median 40 ms, höchstens 73 ms, 3–4 Bilder; rund ein Bild nach dem Tick der Annahme (W-A: dasselbe Bild).
+  - Speicher wie W-A.
+- **Späte Bilder auch bei W-B** ab Fenster 8 (Rundlauf p99 14–31 ms), vorher nicht. Der Welt-Abschnitt im Bild ist als Ursache widerlegt. Ursache auf dem Referenz-PC weiter offen, vermutlich Renderer unter Windows.
+
+### 2026-10-20 16:48 (UTC) – [BEOBACHTUNG]
+
+- **Ergebnisse Mac W-A** (`docs/research/3.8-ergebnisse/mac-m3pro-wa-z1.json`, `mac-m3pro-wa-z2.json`; Vorlage Abschnitt 15):
+  - 119,8–120,0 Bilder/s, Bildabstand p99 bis 11,7 ms, Rundlauf p99 bis 2,5 ms.
+  - Erstübertragung ganz 123 bzw. 141 ms; Bauaktion bis zum Welt-Bild höchstens 32 ms.
+  - Speicher über der Schwelle, Z-1 Spitze +339 MB, Z-2 +620 MB gegenüber 2.10.
+- **Sichtbeobachtung Projektinhaber, Lauf `world wb z1` (Referenz-PC, neues Paket, noch laufend):** bis Fenster 11 kein Ruckeln erkennbar, ab Fenster 12 der Anzeige (Index 11, Nahansicht) Ruckeln. Frage, ob Personen über Möbel laufen dürfen: im Prototyp ja, weil die 20.160 Objekte nur Darstellungsdaten sind und der Kern sie nicht kennt (Objekte im Weltzustand und ihre Wirkung auf die Begehbarkeit kommen mit 3.1).
+- **Sichtbeobachtung Projektinhaber (Referenz-PC):** Ruckeln vor allem in der Nahansicht beim Kreisen; deckt sich mit Bildabstand p99 bis 47 ms in den kreisenden Ansichten.
+- **Folgerung:** Die späten Bilder des Referenz-PCs sind dort an den Rechner gebunden, nicht an W-A. Der Engpass ist der Speicher. Z-2 scheidet aus.
+
+### 2026-10-20 16:45 (UTC) – [BEOBACHTUNG]
+
+- **Schritt 3.8, Fehler im Prototyp (W-B):** Auf dem Mac blieb `world wb z1` ohne Welt. Ursache: Das erste Bild einer neuen Sitzung kommt vor `sessionStarted`; der Renderer fragte die angekündigten Blöcke noch mit der alten Sitzung ab, der Kern verwarf sie (Vertrag S-7), alle vier Abfrageplätze blieben belegt. Im Container lief es zufällig durch (Reihenfolge der Nachrichten). Behoben in `f23e154` (Abfrage erst mit der neuen Sitzung, hängende Abfragen neu stellen); Container-Probe danach: sichtbarer Ausschnitt 1,1 s, ganze Welt 1,6 s. Neuer Release-Lauf 39459607051. Lehre für den Vertrag: W-B müsste den Sitzungswechsel ausdrücklich regeln.
+- **Ergebnisse Referenz-PC W-A** (`docs/research/3.8-ergebnisse/referenz-pc-wa-z1.json`, `referenz-pc-wa-z2.json`; Auswertung in der Vorlage Abschnitt 14):
+  - Erstübertragung: sichtbar 0,14 s bzw. im ersten Bild, ganz 0,23 bzw. 0,27 s.
+  - Bauaktion bis zum Welt-Bild höchstens 57 ms, in allen 122 Bauaktionen im selben Bild wie der Tick.
+  - Bildrate 58,1–60,0 bzw. 58,9–60,0 Bilder/s, Bildabstand p99 bis 47 ms (2.10: 17,3–19,7 ms). Ursache: Rundlauf der Bildanforderung p99 14–31 ms statt 1–3 ms. Herkunft offen, Kern-Prozess oder Renderer.
+  - Speicher: Z-1 +90 bis +161 MB, Z-2 bis +369 MB gegenüber 2.10.
+
+### 2026-10-20 15:32 (UTC) – [BEOBACHTUNG]
+
+- **Schritt 3.8, Prototyp:** auf dem nicht gemergten Spike-Branch `erkundung/3-8-messaufbau` (`257a498`, `8f557d2`, `74ceec9`). Kern allein: 4.988 Blöcke des Referenz-Terminals auf Karte 2048² = 2,76 MB, Kodierung 100 ms; W-A in 3 Bildern (langsamstes 47 ms im Kern-Prozess). Container-Probelauf aller drei Kombinationen über SwiftShader: ganze Welt nach 0,74–0,96 s, Bauaktion bis zum Welt-Bild mit W-B 1–2 Bilder später als mit W-A. Bildraten ohne Aussage.
+- **Antworten zum Messplan (15:05 UTC, per Auswahl):** Übersicht als Einstellung im Grafikmenü mit Voreinstellung „vereinfacht“; ganze Welt nach höchstens 3 s, sichtbarer Ausschnitt nach höchstens 1 s; drei Läufe je Rechner. Festgehalten in der Vorlage Abschnitt 11.
+- **Release-Lauf** 39449159828 auf dem Spike-Branch grün auf drei Plattformen (Bau und Rauchtest der Pakete; Artefakte openairside-Windows, -macOS, -Linux); Messanleitung in `docs/research/3.8-weltdarstellung.md` Abschnitt 13.
+- **Reibungen:** (1) PixiJS 8.20.1 setzt `#version 300 es` bei eigenem `GlProgram` nicht selbst; ohne die Zeile scheitert `texelFetch` beim Übersetzen. (2) Ein Block ohne zweiten Halter wird von `Arc::make_mut` an Ort und Stelle geändert; die Erkennung geänderter Blöcke über die Identität braucht deshalb, dass der Sender die übergebenen Blöcke selbst hält. (3) Der Grafik-Prüfer meldet die 512 Testgrafiken (kein Objekt im Basispaket); betrifft nur den Spike-Branch, der Release-Workflow prüft das nicht.
+
+### 2026-10-20 15:01 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 3.8, Vorlage vor der Messung:** `docs/research/3.8-weltdarstellung.md`. Kandidaten für den Weg der ruhenden Welt (W-A Blöcke im Bild gegen den quittierten Stand, W-B Abruf über S-7) und für das Zeichnen (Z-1 Datentextur mit Shader, Z-2 vorgerenderte Blöcke; Z-3 Sprite je Zelle ohne Messung verworfen: 6,55 Mio. Zellen). Entwurf S-1 Layout 2 (Kopf 48 Byte; Personen 8 Byte mit Gruppe nach ADR-037, Fahrzeuge 12, Flugzeuge 16, Gepäck 8; Welt-Abschnitt nur bei W-A).
+- **Vertragsabgleich (Maßnahmen 7–9):** 12 Sätze geprüft. Funde: V-1 Layout 2 erhöht `protocol` auf 2; V-4 W-B bräche „Wirkung im Bild von `tick`“ und das vorläufige Zeichnen; V-5 (Maßnahme 8) der Katalog in S-7 nennt keine feste Reihenfolge, auf die S-1 per Index verweisen kann; V-7 W-B bräuchte eigene Grenzen mit Herkunft.
+- **Frage 3 (neue Wegweiser):** im Entwurf beantwortet – die Darstellung zeigt keine Wegweiser und erhält nach `waypointsAdopted` nichts neu; die Messung prüft es mit.
+- **Vorgelegt:** drei Fragen (Einzelheiten in der weiten Übersicht, Wartezeit der Erstübertragung, Umfang des Messplans). Messaufbau: Prototyp auf dem nicht gemergten Spike-Branch `erkundung/3-8-messaufbau`, Pakete aus dem bestehenden Release-Workflow.
+
+### 2026-10-20 14:53 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 2026-10-20 14:52 UTC (Session zu 3.7, Kontext 492.293 Token über der Grenze von 400.000; neue Session vom Projektinhaber gewählt). Merge-Vermerk `8adb074` und Sessionende `3f813e3` nach `project-context.md` Abschnitt 10 von `scp/compassionate-shannon-wz4apd` auf den Branch dieser Session vom aktuellen `main` (`b8b3106`) übernommen (`b23c396`, `6b56ab1`); der alte Branch wird nicht weiterverwendet.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 3, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` laut `get_session` 14:53 UTC → Entscheidungs-Klasse.
+- **Werkzeug:** Claude Code in der Cloud; Branch `erkundung/3-8-weltdarstellung-spielfeld` nach `CLAUDE.md` Abschnitt 11.
+- **Vorhaben:** Schritt 3.8 Weltdarstellung im Spielfeld und S-1 Layout 2 (Vergleichsstudie mit Messung, Zeitbox zwei Sessions). Empfohlene Klasse: Entscheidung (Auslöser 1, Kategorie 5) – aktive Klasse passt.
+- **Vorabprüfung:** Eingangskriterium „3.7 entschieden“ erfüllt (ADR-037); Abhängigkeit 3.7 erledigt. Reaktiv-Quote 7 / 10 über dem Schwellenwert, Reflexion zu ADR-037 liegt vor (Regel-009). Vor dem Vertrag: Vertragsabgleich nach Maßnahmen (7) bis (9).
+
+### 2026-10-20 14:52 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 50 Minuten seit `[SESSIONSTART]` 14:02 UTC.
+- **Bearbeitet:**
+  - Archivierte Session geprüft: „Weiter mit 3.7“ kam an, die Session wurde 11 Sekunden später archiviert, ohne Ausführung.
+  - Schritt 3.7: Messung `spikes/3.7-personengruppen/`, Vorlage, Einwand des Projektinhabers zu Frage 1, ADR-037, Reflexion nach Regel-009.
+  - PR #28 eröffnet und nach grüner CI gemergt (`b8b3106`).
+- **Erreicht:**
+  - 3.7 erledigt.
+  - Personengruppen, Flächenarten, Zugangsprofile und Querungen entschieden; Landeplätze in 3.1, 3.2, 3.3, 3.4, 3.5, 3.11, 3.12, 4.1 und 5.6.
+  - Maßnahme (10) gilt.
+- **Offen geblieben:** Merge-Vermerk `8adb074` und dieser Eintrag liegen auf `scp/compassionate-shannon-wz4apd` (`project-context.md` Abschnitt 10). Die nächste Session übernimmt sie auf ihren Branch vom aktuellen `main`.
+- **Nächster Schritt:** 3.8 Weltdarstellung im Spielfeld und S-1 Layout 2, in einer neuen Session; der Projektinhaber hat die neue Session gewählt.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 14:50 UTC). 0 Schritte oberhalb der Empfehlung (3.7: Entscheidung). Abgegeben: keine Teilarbeiten; der Probelauf für Routine und Mechanik bleibt offen.
+- **Kontextgröße:** 492.293 Token laut `get_session` 14:50 UTC, **über der Grenze von 400.000**. Empfehlung: die nächste Arbeit in einer neuen Session beginnen; so umgesetzt.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 14:50 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt. Electron 44: Vorlauf ab 2027-01-02, Q.1. Runner-Image Ubuntu 26: Q.1.
+- **Archivierung und Größen:** keine Trigger. Logbuch rund 200 Zeilen (Grenze 800), `project-context.md` 375 Zeilen (Budget 600), `architecture.md` 467 Zeilen (eigene Schwelle 500). Phase 3 läuft noch.
+- **Drift-Prüfung:**
+  - README nachgezogen (Phase, Architektur-Reife, Nächste Schritte, Datum).
+  - ADR-037 verweist auf vorhandene Schritte (3.1–3.5, 3.11, 3.12, 4.1, 5.6).
+  - Reifegrade passen zu ADR-037 (Datenmodell fortgeschrieben, neue Zeile Aufgabenfelder `[VORLÄUFIG]`).
+  - Modulnamen in 3.7 stimmen mit der Modul-Karte überein.
+  - FR-052 → 3.7, 3.4.
+  - Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker.
+  - Reaktiv-Quote 7 / 10 (ADR-028 bis ADR-037) stimmt mit den Tags, gesamt 15 / 37.
+  - Phase 3: 13 Schritte bei Plan 13.
+- **Beobachtung:** Der Einwand des Projektinhabers (Henne-Ei bei den Sicherheitsbeamten) fand einen Fehler in der ersten Empfehlung, den weder Messung noch Inventar gezeigt hätten. Fragen mit Vision-Bezug lohnen sich auch dann, wenn die Empfehlung klar wirkt.
+
+### 2026-10-20 14:49 (UTC) – [BEOBACHTUNG]
+
+- **Merge:** PR #28 (Schritt 3.7, ADR-037) nach Anweisung des Projektinhabers gemergt („PR eröffnen und bei grün mergen“), Merge-Commit `b8b3106`. Vorher grün auf `49312e5`: Push-Lauf 39441426518 und die PR-Läufe CI 39441613876 und Security 39441613790 (39 Prüfungen, CodeQL ohne Meldung). Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf `scp/compassionate-shannon-wz4apd` und geht mit dem PR des nächsten Schritts nach `main`.
+
 ### 2026-10-20 14:40 (UTC) – [ADR-ANGELEGT]
 
 - **ADR-037** `[REAKTIV]` „Personengruppen mit Zugangsprofilen, Flächenarten und Querungen“: freigegeben vom Projektinhaber per Auswahl.
