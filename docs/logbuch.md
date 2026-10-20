@@ -24,11 +24,45 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
-### 2026-10-20 17:35 (UTC) – [REIFEGRAD-WECHSEL]
+### 2026-10-20 17:25 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** rund 2 Stunden 35 Minuten seit `[SESSIONSTART]` 14:53 UTC.
+- **Bearbeitet:**
+  - Schritt 3.8: Vorlage vor der Messung mit drei Antworten; Prototyp auf `erkundung/3-8-messaufbau`; zwei Release-Läufe (39449159828, 39459607051).
+  - Fehler im W-B-Prototyp gefunden und behoben.
+  - Sechs Messläufe des Projektinhabers ausgewertet; Vorlage zur Entscheidung; ADR-038 mit Reflexion nach Regel-009.
+- **Erreicht:**
+  - 3.8 erledigt; Weltdarstellung `[BELASTBAR]`.
+  - S-1 Layout 2 und `protocol` 2 entschieden; erste Ergänzung nach Regel-008 (S-7-Katalog-Index).
+  - Neuer Schritt 3.14; Maßnahme (11) gilt.
+- **Offen geblieben:**
+  - PR für `erkundung/3-8-weltdarstellung-spielfeld` nach `main`, nur auf Anweisung. Der Branch enthält auch die übernommenen Sessionende-Commits der Session 3.7.
+  - Der Spike-Branch `erkundung/3-8-messaufbau` bleibt als Aufzeichnung bestehen und wird nicht gemergt.
+- **Nächster Schritt:** 3.14 Späte Bilder auf dem Referenz-PC (Messung mit Zeitstempeln, Projektinhaber), in einer neuen Session.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 17:25 UTC). 0 Schritte oberhalb der Empfehlung (3.8: Entscheidung). Abgegeben: keine Teilarbeiten; Probelauf für Routine und Mechanik bleibt offen.
+- **Kontextgröße:** 605.223 Token laut `get_session` 17:25 UTC, **über der Grenze von 400.000**. Empfehlung: die nächste Arbeit in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 17:25 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt. Electron 44: Vorlauf ab 2027-01-02, Q.1. Runner-Image Ubuntu 26: Q.1.
+- **Archivierung und Größen:** keine Trigger. Logbuch rund 320 Zeilen (Grenze 800), `project-context.md` 375 Zeilen (Budget 600), `architecture.md` 470 Zeilen (eigene Schwelle 500). Phase 3 läuft.
+- **Drift-Prüfung:**
+  - README nachgezogen (Phase, Architektur-Reife, Nächste Schritte).
+  - ADR-038 verweist auf vorhandene Schritte (3.1, 3.2, 3.4, 3.5, 3.14, 4.1, 5.1).
+  - Reifegrade passen zu ADR-038.
+  - Modulnamen in 3.8 und 3.14 stimmen mit der Modul-Karte überein.
+  - Keine Anforderung neu oder geändert (FR-010 vorbereitend).
+  - Keine `[BLOCKIERT]`-Schritte, keine aktiven Blocker.
+  - Reaktiv-Quote 7 / 10 (ADR-029 bis ADR-038) stimmt mit den Tags, gesamt 16 / 38.
+  - Phase 3: 14 Schritte bei Plan 13, unter der Wucherungs-Schwelle.
+- **Mini-Reibungen:**
+  - Zwei Zeitstempel geschätzt statt mit `date -u` geholt (17:35 statt 17:25), vor dem Commit korrigiert. Wiederkehrend, siehe Reflexion Phase 2.
+  - Prettier formatiert die Messdateien in `docs/research/` beim Commit um; Inhalt jeweils per Vergleich als gleich belegt.
+- **Beobachtung:** Die Sichtbeobachtungen des Projektinhabers (Ruckeln in der Nahansicht, Figuren über Möbeln, Fenster 12) deckten sich mit den Messwerten bzw. mit Grenzen des Prototyps und halfen beim Zuordnen der späten Bilder.
+
+### 2026-10-20 17:25 (UTC) – [REIFEGRAD-WECHSEL]
 
 - **Bestandteil:** Weltdarstellung im Spielfeld. **Wechsel:** `[OFFEN]` → `[BELASTBAR]`. **Auslöser:** ADR-038 (Messung 3.8). Neu `[VORLÄUFIG]`: Speicher der Weltdarstellung (3.1). NFR Darstellung geteilt: macOS mit Weltdarstellung, Stufen 16/32 und 512 Grafiken `[BELASTBAR]`, Windows `[VORLÄUFIG]` (3.14). Eingetragen in `architecture.md` Abschnitt 9.
 
-### 2026-10-20 17:35 (UTC) – [ADR-ANGELEGT]
+### 2026-10-20 17:25 (UTC) – [ADR-ANGELEGT]
 
 - **ADR-038** `[REAKTIV]` „Ruhende Welt als Blöcke im Bild, Zeichnung mit Datentextur, S-1 Layout 2“: freigegeben vom Projektinhaber per Auswahl, alle Empfehlungen:
   - Frage 1: W-A + Z-1.
