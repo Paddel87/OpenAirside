@@ -24,6 +24,15 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-20 14:02 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 2026-10-19 20:03 UTC, danach Merge PR #27 (`119d2b1`) mit Vermerk `d2e6c70` auf `docs/phasenabschluss-2`. Der Vermerk ist nach `project-context.md` Abschnitt 10 auf den Branch dieser Session vom aktuellen `main` übernommen (`0162671`); `docs/phasenabschluss-2` wird nicht weiterverwendet. Die Session „Phasenabschluss Phase 2“ erhielt am 2026-10-20 13:50 UTC „Weiter mit 3.7“ und wurde 11 Sekunden später versehentlich archiviert, ohne dass etwas ausgeführt wurde (Transkript über `list_events` geprüft); 3.7 beginnt hier.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 3, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` laut `get_session` 14:01 UTC → Entscheidungs-Klasse. Kontingent: 5-Stunden-Fenster `allowed`.
+- **Werkzeug:** Claude Code in der Cloud; vom Werkzeug vergebener Branch `scp/compassionate-shannon-wz4apd` (Typ und Schritt-ID im PR-Titel, `CLAUDE.md` Abschnitt 11).
+- **Vorhaben:** Schritt 3.7 Personengruppen, Begehbarkeit und Querungen (Entwurf mit Messung, ADR in Ergänzung von ADR-020). Empfohlene Klasse: Entscheidung (Auslöser 1) – aktive Klasse passt.
+- **Vorabprüfung:** Eingangskriterium „Datenmodell im Kern `[BELASTBAR]`“ erfüllt (`architecture.md` Abschnitt 9); Abhängigkeit 2.3 erledigt. Reaktiv-Quote 6 / 10 über dem Schwellenwert, Reflexion für Phase 2 liegt vor (Regel-009).
+
 ### 2026-10-19 20:10 (UTC) – [BEOBACHTUNG]
 
 - **Merge:** PR #27 (Phasenabschluss 2) nach Anweisung des Projektinhabers gemergt („PR eröffnen und bei grün mergen“), Merge-Commit `119d2b1`. Vorher grün auf `62998bd`: Push-Lauf 39316204108 und die PR-Läufe CI 39316460887 und Security 39316460888 (39 Prüfungen, CodeQL ohne Meldung). Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf `docs/phasenabschluss-2` und geht mit dem PR des nächsten Schritts nach `main`.

@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-19 (Session ab 19:40 UTC, Phasenabschluss 2)
+- **Stand vom:** 2026-10-20 (Session ab 14:02 UTC, Schritt 3.7)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner
-- **Nächster Schritt:** 3.7 Personengruppen, Begehbarkeit und Querungen (Entwurf, ADR in Ergänzung von ADR-020, mit Walk-out nach FR-052), in einer neuen Session auf einem neuen Branch vom aktuellen `main`
+- **Aktiver Schritt:** 3.7 Personengruppen, Begehbarkeit und Querungen (Entwurf, ADR in Ergänzung von ADR-020, mit Walk-out nach FR-052)
+- **Nächster Schritt:** 3.8 Weltdarstellung im Spielfeld und S-1 Layout 2
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 6 / 10 (ADR-027 bis ADR-036) über dem Schwellenwert; Reflexion für Phase 2 siehe „Iterations-Reflexion“, ab jetzt nach Regel-009
 
 <!-- ANCHOR:phasen-typen -->
@@ -102,7 +102,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.7: Personengruppen, Begehbarkeit und Querungen
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT (seit 2026-10-20)
 - **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt)
 - **Schritt-Art (nur ERKUNDUNG):** Entwurf mit Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session
