@@ -13,6 +13,7 @@ import type { TickStats } from "../src/generated/TickStats.js";
 import { type ClientHandlers, CoreClient } from "./core-client.js";
 import { basePackLoaded, formatPacks, parseConsoleLine, TABLE_COLUMNS } from "./console.js";
 import { FALLBACK_LANGUAGE, loadTexts, Localizer } from "./i18n.js";
+import { type CoreStamps, coreStamps, LatencyProbe } from "./latency.js";
 import { defaultConfig, MeasureSeries, type SeriesHost } from "./measure.js";
 import { PerfMeter } from "./perf.js";
 import { describeError, onCorePort } from "./platform.js";
@@ -69,6 +70,40 @@ async function start(): Promise<void> {
   let states: readonly string[] = [];
   let stats: TickStats | undefined;
   let series: MeasureSeries | undefined;
+  // Spike 3.14: stamps of the frame path and Chromium traces.
+  const TRACE_MS = 10_000;
+  let tracing = false;
+  const trace = (label: string): void => {
+    const api = window.openairside;
+    if (api === undefined || tracing) return;
+    tracing = true;
+    probe.marks = true;
+    write(`trace ${label}: recording ${String(TRACE_MS / 1000)} s`);
+    api.measure
+      .trace(label, TRACE_MS)
+      .then((file) => {
+        write(`trace ${label}: saved to ${file}`);
+      })
+      .catch((error: unknown) => {
+        write(`trace ${label} failed: ${describeError(error)}`);
+      })
+      .finally(() => {
+        tracing = false;
+        probe.marks = false;
+      });
+  };
+  const probe = new LatencyProbe(undefined, undefined, () => {
+    trace("burst");
+  });
+  let arrival: { at: number; stamps: CoreStamps | undefined } | undefined;
+  playfield.aroundTicker(
+    () => {
+      probe.onPixiStart();
+    },
+    () => {
+      probe.onPixiEnd();
+    },
+  );
 
   const showPacks = (reports: readonly PackReport[]): void => {
     for (const line of formatPacks(reports)) write(line);
@@ -133,6 +168,8 @@ async function start(): Promise<void> {
       }
     },
     frame: (frame) => {
+      if (arrival !== undefined) probe.onAnswer(arrival.at, arrival.stamps);
+      arrival = undefined;
       tick = frame.header.tick;
       personsTotal = frame.header.personsTotal;
       root.dataset.tick = String(tick);
@@ -205,7 +242,15 @@ async function start(): Promise<void> {
     client = current;
     states = [];
     port.onmessage = (event: MessageEvent) => {
-      if (client === current) current.handle(event.data);
+      const data: unknown = event.data;
+      if (
+        typeof data === "object" &&
+        data !== null &&
+        (data as { type?: unknown }).type === "frame"
+      ) {
+        arrival = { at: performance.now(), stamps: coreStamps(data) };
+      }
+      if (client === current) current.handle(data);
     };
     port.start();
     current.start();
@@ -348,6 +393,20 @@ async function start(): Promise<void> {
       updatedAt: (floor, x, y) => playfield.world.updatedAt(floor, x, y),
       pixelRatio: () => window.devicePixelRatio,
     },
+    latency: {
+      start: () => {
+        probe.start();
+      },
+      stop: () => {
+        probe.stop();
+      },
+      label: (label) => {
+        probe.label = label;
+      },
+      take: () => probe.take(),
+      late: () => probe.late,
+      trace,
+    },
   };
   try {
     // Long tasks (> 50 ms) of the renderer's main thread, for the series.
@@ -365,6 +424,14 @@ async function start(): Promise<void> {
     const api = window.openairside;
     if (api === undefined || client === undefined) {
       write("measure: not connected");
+      return;
+    }
+    // Spike 3.14: a backend without WebGL2 falls back to canvas; the world view needs WebGL2.
+    if (!playfield.gpu.startsWith("WebGL2")) {
+      write(
+        `measure: no WebGL2 with this graphics backend (${playfield.gpu}) – choose another with angle`,
+      );
+      root.dataset.measure = "failed";
       return;
     }
     await api.measure.start();
@@ -385,6 +452,8 @@ async function start(): Promise<void> {
           devicePixelRatio: window.devicePixelRatio,
           windowWidth: window.innerWidth,
           windowHeight: window.innerHeight,
+          fullscreen:
+            document.fullscreenElement !== null || window.innerHeight === window.screen.height,
         },
       });
       write(`measure: done, result saved to ${file}`);
@@ -398,6 +467,35 @@ async function start(): Promise<void> {
     event.preventDefault();
     const line = input.value;
     input.value = "";
+    // Spike 3.14: graphics backend (restarts the program) and full screen.
+    const words = line.trim().split(/\s+/);
+    if (words[0] === "angle" || words[0] === "fullscreen") {
+      const api = window.openairside;
+      if (api === undefined) {
+        write("not connected");
+      } else if (words[0] === "angle") {
+        const value = words[1] ?? "";
+        write(`angle ${value}: restarting`);
+        api.measure.setAngle(value).catch((error: unknown) => {
+          write(`angle failed: ${describeError(error)} (d3d11, d3d11on12, vulkan, gl, default)`);
+        });
+      } else {
+        const on = words[1] !== "off";
+        api.measure.fullscreen(on).then(
+          () => {
+            write(`fullscreen ${on ? "on" : "off"}`);
+          },
+          (error: unknown) => {
+            write(`fullscreen failed: ${describeError(error)}`);
+          },
+        );
+      }
+      return;
+    }
+    if (words[0] === "trace") {
+      trace("manual");
+      return;
+    }
     const result = parseConsoleLine(line);
     if (series !== undefined) {
       write("measurement running – please wait");
@@ -513,9 +611,11 @@ async function start(): Promise<void> {
     if (event.key === "PageDown") playfield.changeFloor(-1);
   });
 
-  const loop = (): void => {
+  const loop = (ts: number): void => {
+    probe.onTick(ts);
     if (client?.requestFrame(playfield.filter()) === true) {
       requestedAt = performance.now();
+      probe.onRequest();
     }
     requestAnimationFrame(loop);
   };

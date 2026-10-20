@@ -11,6 +11,7 @@
  * ADR-031) and takes the autosave interval from the settings.
  */
 import { createRequire } from "node:module";
+import { monitorEventLoopDelay } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 import type { MessagePortMain } from "electron";
 import type { Reason } from "../generated/Reason.js";
@@ -105,6 +106,23 @@ function send(port: MessagePortMain, out: readonly BridgeOutgoing[]): void {
   }
 }
 
+// Spike 3.14: event-loop delay of the core process, reported with every frame.
+const loopDelay = monitorEventLoopDelay({ resolution: 1 });
+loopDelay.enable();
+
+/** Spike 3.14: like `send`, with arrival and sending stamps on frames (ms since the epoch). */
+function sendStamped(port: MessagePortMain, out: readonly BridgeOutgoing[], recv: number): void {
+  for (const answer of out) {
+    const message = toPortMessage(answer) as unknown as Record<string, unknown>;
+    if (message.type === "frame") {
+      const eld = loopDelay.max / 1e6;
+      loopDelay.reset();
+      message.stamps = { recv, send: performance.timeOrigin + performance.now(), eld };
+    }
+    port.postMessage(message);
+  }
+}
+
 try {
   const require = createRequire(import.meta.url);
   const bridge = require(nativeModulePath) as BridgeModule;
@@ -163,7 +181,8 @@ try {
     core.openPort();
     current = port;
     port.on("message", (message) => {
-      send(port, core.receive(message.data));
+      const recv = performance.timeOrigin + performance.now();
+      sendStamped(port, core.receive(message.data), recv);
     });
     port.start();
   });

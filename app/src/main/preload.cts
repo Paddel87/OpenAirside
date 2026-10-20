@@ -55,6 +55,9 @@ contextBridge.exposeInMainWorld("openairside", {
   measure: {
     start: (): Promise<unknown> => call("measure:start"),
     report: (result: unknown): Promise<unknown> => call("measure:report", result),
+    trace: (label: string, ms: number): Promise<unknown> => call("measure:trace", label, ms),
+    setAngle: (value: string): Promise<unknown> => call("measure:setAngle", value),
+    fullscreen: (on: boolean): Promise<unknown> => call("measure:fullscreen", on),
   },
   packs: {
     list: (): Promise<unknown> => call("packs:list"),

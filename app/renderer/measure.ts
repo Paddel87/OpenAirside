@@ -25,6 +25,7 @@ import type { EventRecord } from "../src/generated/EventRecord.js";
 import type { Query } from "../src/generated/Query.js";
 import type { TickStats } from "../src/generated/TickStats.js";
 import type { WorldMode } from "../src/generated/WorldMode.js";
+import type { LateAnswer, LatencyFigures } from "./latency.js";
 import type { DrawWay, WorldFigures } from "./world-view.js";
 
 /** Version of the result format; raised by every non-additive change. */
@@ -123,6 +124,20 @@ export interface SeriesHost {
   tierPx(): number;
   /** Spike 3.8. */
   world?: WorldHost;
+  /** Spike 3.14. */
+  latency?: LatencyHost;
+}
+
+/** Spike 3.14: time stamps of the frame path (latency.ts) and traces. */
+export interface LatencyHost {
+  /** Starts collecting late answers and arms the burst trace. */
+  start(): void;
+  stop(): void;
+  label(label: string): void;
+  take(): LatencyFigures;
+  late(): readonly LateAnswer[];
+  /** Records a Chromium trace of 10 s with label `label`. */
+  trace(label: string): void;
 }
 
 /** One object sprite of the scene, top left corner in cells. */
@@ -214,6 +229,8 @@ export interface WindowResult {
   readonly worldBuildMsMax?: number;
   readonly worldBuildFramesMax?: number;
   readonly world?: WorldFigures;
+  /** Spike 3.14. */
+  readonly latency?: LatencyFigures;
 }
 
 /** Result of a run, before the main process adds system and memory. */
@@ -235,6 +252,8 @@ export interface SeriesResult {
     readonly allMs: number;
     readonly figures: WorldFigures;
   };
+  /** Spike 3.14: late answers of the run. */
+  readonly late?: readonly LateAnswer[];
 }
 
 /** Worst and mean values over all windows. */
@@ -648,6 +667,9 @@ export class MeasureSeries {
     const windows: WindowResult[] = [];
     const known = new Set<number>();
     const started = host.now();
+    const latency = host.latency;
+    latency?.start();
+    latency?.take();
     const end = started + c.minutes * 60_000;
     let nextBuild = started + 2000;
     for (let k = 0; host.now() < end; k += 1) {
@@ -663,6 +685,9 @@ export class MeasureSeries {
             ? { kind: "overview", floor: 0 }
             : { kind: "circle", floor: 0, ...hotspot, radius: 115, zoom: 4, angle: 0 };
       this.#show(view);
+      latency?.label(label ?? view.kind);
+      // Spike 3.14: fixed trace at minute 2 (window 4 of 30 s).
+      if (k === 4) latency?.trace("minute2");
       const left = Math.max(0, Math.round((end - host.now()) / 60_000));
       host.status(
         `measure: window ${String(k + 1)}, about ${String(left)} min left – do not touch, keep the window visible`,
@@ -689,12 +714,15 @@ export class MeasureSeries {
         },
         known,
       );
+      const lat = latency?.take();
+      const withLatency = lat === undefined ? result : { ...result, latency: lat };
       windows.push(
         world === undefined || label === undefined
-          ? result
-          : { ...result, label, world: world.figures() },
+          ? withLatency
+          : { ...withLatency, label, world: world.figures() },
       );
     }
+    latency?.stop();
     if (this.#walls !== undefined) {
       this.#toggleWalls(host.now());
     }
@@ -712,6 +740,7 @@ export class MeasureSeries {
       windows,
       summary: summarize(windows),
       ...(firstTransfer === undefined ? {} : { world: firstTransfer }),
+      ...(latency === undefined ? {} : { late: latency.late() }),
     };
   }
 

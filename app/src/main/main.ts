@@ -16,6 +16,7 @@
 import {
   app,
   BrowserWindow,
+  contentTracing,
   ipcMain,
   type IpcMainInvokeEvent,
   Menu,
@@ -38,6 +39,7 @@ import {
   renameSync,
   rmSync,
   statSync,
+  writeFileSync,
 } from "node:fs";
 import {
   type FileHandle,
@@ -51,7 +53,10 @@ import {
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { pipeline } from "node:stream/promises";
 import { fileURLToPath } from "node:url";
+import { createGzip } from "node:zlib";
+import { createReadStream, createWriteStream } from "node:fs";
 import type { LanguageInfo } from "../generated/LanguageInfo.js";
 import type { PackReport } from "../generated/PackReport.js";
 import type { SaveMeta } from "../generated/SaveMeta.js";
@@ -537,10 +542,93 @@ function startMeasure(): null {
   if (!measureRun.start(Date.now())) {
     fail("alreadyRunning");
   }
+  measureStartedAt = Date.now();
+  traces.length = 0;
   sampleMemory();
   measureTimer = setInterval(sampleMemory, MEMORY_INTERVAL_MS);
   return null;
 }
+
+/** Spike 3.14: ANGLE backends the console may choose (Chromium switch `--use-angle`). */
+const ANGLE_VALUES = ["d3d11", "d3d11on12", "vulkan", "gl", "default"] as const;
+/** Spike 3.14: file in the data folder with the chosen backend. */
+const ANGLE_FILE = "spike-angle.txt";
+/** Spike 3.14: trace categories (renderer, compositor, GPU process, display ticks, V8, IPC). */
+const TRACE_CATEGORIES = [
+  "toplevel",
+  "benchmark",
+  "blink",
+  "blink.user_timing",
+  "cc",
+  "viz",
+  "gpu",
+  "ipc",
+  "mojom",
+  "v8",
+  "renderer.scheduler",
+  "disabled-by-default-devtools.timeline",
+  "disabled-by-default-devtools.timeline.frame",
+  "disabled-by-default-gpu.service",
+  "disabled-by-default-viz.gpu_composite_time",
+];
+/** Spike 3.14: traces of the open run. */
+const traces: { label: string; atS: number; file: string; bytes: number }[] = [];
+let traceRunning = false;
+
+function chosenAngle(): string {
+  try {
+    const value = readFileSync(path.join(app.getPath("userData"), ANGLE_FILE), "utf8").trim();
+    return (ANGLE_VALUES as readonly string[]).includes(value) ? value : "default";
+  } catch {
+    return "default";
+  }
+}
+
+/** Spike 3.14: records a Chromium trace for `ms` and saves it gzipped in the downloads folder. */
+async function recordTrace(label: unknown, ms: unknown): Promise<string> {
+  if (typeof label !== "string" || !/^[a-z0-9]{1,16}$/.test(label)) fail("invalidArgument");
+  if (typeof ms !== "number" || !Number.isInteger(ms) || ms < 1000 || ms > 30_000) {
+    fail("invalidArgument");
+  }
+  if (traceRunning) fail("alreadyRunning");
+  traceRunning = true;
+  const startedAt = Date.now();
+  try {
+    await contentTracing.startRecording({
+      included_categories: TRACE_CATEGORIES,
+      excluded_categories: ["*"],
+      recording_mode: "record-as-much-as-possible",
+    });
+    await new Promise((resolve) => setTimeout(resolve, ms));
+    const folder = app.getPath("downloads");
+    await mkdir(folder, { recursive: true });
+    const stamp = new Date(startedAt).toISOString().replace(/[:.]/g, "-");
+    const raw = path.join(app.getPath("temp"), `openairside-trace-${label}-${stamp}.json`);
+    await contentTracing.stopRecording(raw);
+    const file = path.join(
+      folder,
+      `openairside-trace-${process.platform}-${label}-${stamp}.json.gz`,
+    );
+    await pipeline(createReadStream(raw), createGzip(), createWriteStream(file, { flags: "wx" }));
+    await rm(raw, { force: true });
+    const bytes = statSync(file).size;
+    traces.push({
+      label,
+      atS: Math.round((startedAt - (measureStartedAt ?? startedAt)) / 1000),
+      file: path.basename(file),
+      bytes,
+    });
+    log(
+      "info",
+      `trace ${label} written to the downloads folder (${String(Math.round(bytes / 1e6))} MB)`,
+    );
+    return file;
+  } finally {
+    traceRunning = false;
+  }
+}
+
+let measureStartedAt: number | undefined;
 
 /** S-6 `measure.report`: writes the result file into the downloads folder. */
 async function reportMeasure(result: unknown): Promise<string> {
@@ -560,6 +648,9 @@ async function reportMeasure(result: unknown): Promise<string> {
     gpuFeatureStatus: app.getGPUFeatureStatus(),
     coreOptions: withoutPackOptions(parseCoreArgs(process.argv)),
     finishedAt: new Date().toISOString(),
+    angle: app.commandLine.getSwitchValue("use-angle") || "default",
+    fullscreen: gameWindow?.isFullScreen() ?? false,
+    traces: [...traces],
   });
   if (!done.ok) {
     fail(done.error);
@@ -1085,6 +1176,14 @@ if (!app.commandLine.hasSwitch("no-sandbox")) {
   app.enableSandbox();
 }
 
+// Spike 3.14: graphics backend chosen with the console command `angle`.
+{
+  const angle = chosenAngle();
+  if (angle !== "default" && !app.commandLine.hasSwitch("use-angle")) {
+    app.commandLine.appendSwitch("use-angle", angle);
+  }
+}
+
 void app.whenReady().then(() => {
   openLogFile();
   settings = readSettings();
@@ -1107,6 +1206,22 @@ void app.whenReady().then(() => {
   });
   handle("measure:start", startMeasure);
   handle("measure:report", reportMeasure);
+  handle("measure:trace", recordTrace);
+  handle("measure:setAngle", (value: unknown) => {
+    if (typeof value !== "string" || !(ANGLE_VALUES as readonly string[]).includes(value)) {
+      fail("invalidArgument");
+    }
+    writeFileSync(path.join(app.getPath("userData"), ANGLE_FILE), value);
+    log("info", `spike 3.14: angle ${value}, restarting`);
+    app.relaunch();
+    app.exit(0);
+    return null;
+  });
+  handle("measure:fullscreen", (on: unknown) => {
+    if (typeof on !== "boolean") fail("invalidArgument");
+    gameWindow?.setFullScreen(on);
+    return null;
+  });
   handle("packs:list", () => packReports);
   handle("packs:setActive", setActivePacks);
   handle("saves:list", () => exclusive("list", listSaves));

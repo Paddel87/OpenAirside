@@ -19,6 +19,7 @@ import {
   Rectangle,
   Sprite,
   Texture,
+  UPDATE_PRIORITY,
 } from "pixi.js";
 // Replaces the eval-based particle upload, so that the CSP needs no 'unsafe-eval' (spike 1.3).
 import "pixi.js/unsafe-eval";
@@ -149,6 +150,12 @@ export class Playfield {
     const field = new Playfield(app, await loadAtlas());
     field.#bindInput(app.canvas);
     return field;
+  }
+
+  /** Spike 3.14: callbacks around the PixiJS ticker (render included). */
+  aroundTicker(before: () => void, after: () => void): void {
+    this.#app.ticker.add(before, undefined, UPDATE_PRIORITY.INTERACTION);
+    this.#app.ticker.add(after, undefined, UPDATE_PRIORITY.UTILITY);
   }
 
   /** Name of the GPU, for the measurement protocol. */

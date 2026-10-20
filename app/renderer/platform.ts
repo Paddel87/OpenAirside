@@ -78,6 +78,12 @@ export interface OpenAirsideApi {
     start(): Promise<null>;
     /** Writes the result with system data and memory; returns the file path. */
     report(result: unknown): Promise<string>;
+    /** Spike 3.14: records a Chromium trace for `ms`; returns the file path. */
+    trace(label: string, ms: number): Promise<string>;
+    /** Spike 3.14: sets the ANGLE backend and restarts the program. */
+    setAngle(value: string): Promise<null>;
+    /** Spike 3.14: full screen on or off. */
+    fullscreen(on: boolean): Promise<null>;
   };
   /** Data packs (step 2.4): found packs and the choice of the active ones. */
   readonly packs: {
