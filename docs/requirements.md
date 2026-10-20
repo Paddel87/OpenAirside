@@ -150,7 +150,7 @@ Spalte „Fahrplan-Schritt": Schritt-ID aus `docs/fahrplan.md`. Spalte „Test":
 | FR-022 | Gates, Boarding (inkl. Self-Boarding), Stellplätze, Brücken, Busse | UC-005 | Muss | Inventar Abschnitt 9 (GATE-*), MOD-12 | 3.2, 5.4 | `core/tests/gates.rs` | OFFEN |
 | FR-023 | Läden, Gastronomie, Lounges, Toiletten, Franchises | UC-005 | Muss | Inventar Abschnitt 10, MOD-16 | 5.4 | `core/tests/commercial.rs` | OFFEN |
 | FR-024 | Infoschalter und digitale Beschilderung mit spürbarer Wirkung | UC-005 | Muss | MOD-14; Gate-Wechsel erreicht Passagiere messbar schneller | 5.4 | `core/tests/info.rs` | OFFEN |
-| FR-052 | Walk-out-Positionen: Fluggäste gehen auf Vorfeld-Gehwegen zum Flugzeug an Stellplätzen ohne Fluggastbrücke | UC-005 | Muss | MOD-13, GATE-06; Querungen von Betriebsstraßen gesperrt oder geregelt (3.7); Boarding und Aussteigen zu Fuß im Szenario (ADR-036, 2026-10-19) | 3.7, 3.4 | `core/tests/walk_out.rs` | OFFEN |
+| FR-052 | Walk-out-Positionen: Fluggäste gehen auf Vorfeld-Gehwegen zum Flugzeug an Stellplätzen ohne Fluggastbrücke | UC-005 | Muss | MOD-13, GATE-06; Querungen von Betriebsstraßen geregelt im Wechsel (ADR-037); Boarding und Aussteigen zu Fuß im Szenario (ADR-036, 2026-10-19) | 3.7, 3.4 | `core/tests/walk_out.rs` | OFFEN |
 
 ### Gepäck
 

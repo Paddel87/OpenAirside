@@ -1,0 +1,6 @@
+{"mode":"fields","profile":"base","targets":36,"blocks":1468,"cells":1503232,"mb":54.1,"mb_per_target":1.50,"s_median":0.960,"s_all":[0.96, 0.935, 1.144],"unreachable_cells":0,"peak_mb":145}
+{"mode":"fields","profile":"pax","targets":42,"blocks":1576,"cells":1613824,"mb":67.8,"mb_per_target":1.61,"s_median":1.254,"s_all":[1.254, 1.283, 1.178],"unreachable_cells":0,"peak_mb":199}
+{"mode":"fields","profile":"staff","targets":16,"blocks":1576,"cells":1613824,"mb":25.8,"mb_per_target":1.61,"s_median":0.574,"s_all":[0.517, 0.601, 0.574],"unreachable_cells":0,"peak_mb":199}
+{"mode":"fields","profile":"ramp","targets":21,"blocks":1612,"cells":1650688,"mb":34.7,"mb_per_target":1.65,"s_median":0.592,"s_all":[0.595, 0.592, 0.586],"unreachable_cells":0,"peak_mb":199}
+{"mode":"fields","profile":"build","targets":8,"blocks":4988,"cells":5107712,"mb":40.9,"mb_per_target":5.11,"s_median":0.840,"s_all":[0.861, 0.792, 0.84],"unreachable_cells":0,"peak_mb":231}
+{"mode":"fields","profile":"union","targets":87,"blocks":4988,"cells":5107712,"mb":444.4,"mb_per_target":5.11,"s_median":9.402,"s_all":[9.402, 11.139, 8.343],"unreachable_cells":0,"peak_mb":1013}

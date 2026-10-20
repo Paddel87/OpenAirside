@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-19 (Session ab 19:40 UTC, Phasenabschluss 2)
+- **Stand vom:** 2026-10-20 (Session ab 14:02 UTC, Schritt 3.7 erledigt)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner
-- **Nächster Schritt:** 3.7 Personengruppen, Begehbarkeit und Querungen (Entwurf, ADR in Ergänzung von ADR-020, mit Walk-out nach FR-052), in einer neuen Session auf einem neuen Branch vom aktuellen `main`
-- **Offene STOPP-Situationen:** keine. Reaktiv-Quote 6 / 10 (ADR-027 bis ADR-036) über dem Schwellenwert; Reflexion für Phase 2 siehe „Iterations-Reflexion“, ab jetzt nach Regel-009
+- **Aktiver Schritt:** keiner (3.7 erledigt am 2026-10-20, ADR-037)
+- **Nächster Schritt:** 3.8 Weltdarstellung im Spielfeld und S-1 Layout 2 (Entwurf mit Messung auf Referenz-PC und Mac)
+- **Offene STOPP-Situationen:** keine. Reaktiv-Quote 7 / 10 (ADR-028 bis ADR-037) über dem Schwellenwert; Reflexion zu ADR-037 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -102,7 +102,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.7: Personengruppen, Begehbarkeit und Querungen
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT (2026-10-20, ADR-037)
 - **Phasentyp-Kontext:** ERKUNDUNG (Entwurfsschritt)
 - **Schritt-Art (nur ERKUNDUNG):** Entwurf mit Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session
@@ -116,6 +116,9 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Welt & Bau, Wegfindung & Passagierführung, Personen, Verkehr & Verkehrssteuerung
 - **Reifegrad-Wirkung:** Datenmodell im Kern bleibt `[BELASTBAR]` (per ADR fortgeschrieben)
 - **Artefakte:** ADR, Messnotiz in `docs/research/`
+- **Ergebnis:** Gruppen Fluggäste, Besucher, Personal und Franchise-Personal, Sicherheitsbeamte, Vorfeldpersonal, Bauarbeiter; keine Crew, keine Einweiser. Flächenart und Personalzone je Zelle, Zugangsprofil je Ziel. Ein Feldsatz für alle Profile außer Bauarbeitern, ein eigener für Bauarbeiter. Personal folgt Wegweisern, keine Einzelweg-Suche. Kontrolle für alle außer Sicherheitsbeamten und Bauarbeitern; Vorfeldpersonal zu Fuß und per Servicewagen; Walk-out-Querungen im Wechsel; Bauarbeiter überall außer auf Bahnen in Betrieb (ADR-037, freigegeben 2026-10-20).
+- **Belege:** `spikes/3.7-personengruppen/` (Produktions-Code der Wegweiser, 4 vCPU): Flächen +10 % Zellen; 79 Ziele 130 MB, 2,6 s; Satz für alle Gruppen 444 MB, 9–11 s; Bauarbeiter zwei Felder 10 MB, 0,6 s; A* je Fahrt im Terminal Median 18–61 ms, p99 170–272 ms, Kosten gleich den Wegweisern. Herleitung und Vorlage: `docs/research/3.7-personengruppen.md`.
+- **Landeplätze:** 3.1 (Flächenart beim Bauen, Felder der Bauarbeiter, S-5-Format), 3.2 (Personalzonen, Profile der Ziele, Sicherheitsbeamte), 3.3 (Ursachen der Unerreichbarkeit), 3.11 und 4.1 (Zahl der Ziele, Neuberechnung), 3.12 (Reservierung der Querungen), 3.4 (Walk-out, Querungszustand), 3.5 (Vorfeldpersonal), 5.6 (Aufgabenfelder)
 
 #### 3.8: Weltdarstellung im Spielfeld und S-1 Layout 2
 
@@ -173,7 +176,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Bewertung der NFR „Bauaktion im nächsten Bild“ und ggf. neues CI-Gate; die Umsetzung ist Routine und abgebbar.
 - **Eingangskriterien:** Weltdarstellung `[BELASTBAR]` (3.8); Kernstruktur umgebaut (3.9)
 - **Anforderungen (ab Klasse M):** FR-010, FR-011
-- **Zu tun:** Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7) auf dem Weg aus 3.8; Katalog der Sitzung über S-7 `catalog` für Bau-Werkzeug und Vorschau, `game.new({ map })` in S-6 und S-8 (Grundform), Parameter `{ key }` in `ParamValue` (ADR-032, L-2, L-3, L-5); Bewegung der Bauarbeiter nach 3.7; Objekte im Weltzustand und Spielstand mit der Höchstzahl `MAX_OBJECTS` (aus 2.5). **Dauerbau (ADR-036):** überholte Wegweiser-Anfragen zusammenfassen bzw. nicht weiterrechnen (`core/src/adoption.rs`), Benchmark mit einer Bauaktion alle 0,25–0,5 s.
+- **Zu tun:** Bauen im Raster (eine Etage), Bauaufträge sofort sichtbar; Wirkung von `build`, `buildArea` und `demolish` im Kern (`TODO(fahrplan-ref: 3.1)` aus 2.2); Darstellung des Rasters im Spielfeld (aus 2.7) auf dem Weg aus 3.8; Katalog der Sitzung über S-7 `catalog` für Bau-Werkzeug und Vorschau, `game.new({ map })` in S-6 und S-8 (Grundform), Parameter `{ key }` in `ParamValue` (ADR-032, L-2, L-3, L-5); Bewegung der Bauarbeiter nach 3.7 (ADR-037: eigener Feldsatz über dem Erdgeschoss, je Anlieferstelle ein Feld und ein Feld zu allen Baustellen; Bauarbeiter überall außer auf Bahnen in Betrieb); Flächenart und Personalzone im Raster, Zugangsprofil am Ziel und Regeln der Wegweiser-Berechnung (ADR-037), neue Format-Version des Spielstands mit Vertragsabgleich S-5 nach Maßnahme (7) und (8); Objekte im Weltzustand und Spielstand mit der Höchstzahl `MAX_OBJECTS` (aus 2.5). **Dauerbau (ADR-036):** überholte Wegweiser-Anfragen zusammenfassen bzw. nicht weiterrechnen (`core/src/adoption.rs`), Benchmark mit einer Bauaktion alle 0,25–0,5 s.
 - **Akzeptanzkriterien:** `core/tests/build.rs` und `core/tests/construction.rs` grün; Bauaktion bis zum Bild mit vorläufigem Zeichnen auf Referenz-PC und Mac gemessen (Ziel nächstes Bild, FR-011 < 100 ms); Dauerbau-Benchmark: Wegweiser werden während Dauerbau innerhalb einer festgelegten Frist übernommen, Speicherspitze unter einer festgelegten Grenze (Frist und Grenze in der Vorlage vor dem Code); Coverage Kern ≥ 85 %.
 - **Betroffene Module:** Welt & Bau, Takt & Weltzustand, Personen (Bauarbeiter), Brücke, Spielfeld, Oberfläche, Plattform
 - **Reifegrad-Wirkung:** Welt & Bau (Bauen) durch Umsetzung; NFR Bauaktion im nächsten Bild `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen
@@ -188,7 +191,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – Umsetzung nach Inventar und Kernprozessen; Entscheidung nur bei Vertragsfragen.
 - **Eingangskriterien:** 3.1 erledigt
 - **Anforderungen (ab Klasse M):** FR-012, FR-016, FR-019, FR-020, FR-022
-- **Zu tun:** Kleines Terminal mit Check-in, Sicherheit, Gate, Boarding und Toiletten; Zonen und Räume in Grundform; Passagierablauf Abflug und Ankunft mit Bedürfnissen und Zielwahl im Modul Personen (`TODO(fahrplan-ref: 3.2)` in `world.rs`); Inventar-IDs nach Regel-004.
+- **Zu tun:** Kleines Terminal mit Check-in, Sicherheit, Gate, Boarding und Toiletten; Zonen und Räume in Grundform; Passagierablauf Abflug und Ankunft mit Bedürfnissen und Zielwahl im Modul Personen (`TODO(fahrplan-ref: 3.2)` in `world.rs`); Personalzonen (ZON-02, nur verlassen für Fluggäste), Zugangsprofile der Ziele, Personal und Sicherheitsbeamte (ohne Zonenregel) an Schalter, Kontrolle und Gate, landseitige Ziele ohne Weg über die Kontrolle (ADR-037); Inventar-IDs nach Regel-004.
 - **Akzeptanzkriterien:** `core/tests/pax_flow.rs` grün; 1 h Spielzeit im Szenario ohne Stillstand im Passagierverkehr, der sich nicht selbst auflöst (FR-016, ADR-036); `core/tests/zones.rs`, `checkin.rs`, `security.rs`, `gates.rs` in Grundform grün; Coverage Kern ≥ 85 %.
 - **Betroffene Module:** Personen, Welt & Bau, Wegfindung & Passagierführung, Takt & Weltzustand, Spielfeld, Oberfläche
 - **Reifegrad-Wirkung:** Modul Personen → `[BELASTBAR]` im umgesetzten Umfang
@@ -205,7 +208,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – kann die Grundannahme aus ADR-004 berühren (Aufwand nach Zahl der Ziele, nicht der Personen).
 - **Eingangskriterien:** Passagierablauf aus 3.2
 - **Anforderungen (ab Klasse M):** FR-017, FR-018
-- **Zu tun:** Modell für „Suchen ohne Schilder“ und für Feinwege zum Einzelziel (Sitzplatz, Schalter; aus 1.2); `MAX_TARGETS = 255` (`core/src/target.rs`) und Speicher je Ziel gegen ein realistisch bestücktes kleines Terminal (Check-in, Toiletten, Gates, Läden) prüfen.
+- **Zu tun:** Modell für „Suchen ohne Schilder“ und für Feinwege zum Einzelziel (Sitzplatz, Schalter; aus 1.2); `MAX_TARGETS = 255` (`core/src/target.rs`) und Speicher je Ziel gegen ein realistisch bestücktes kleines Terminal (Check-in, Toiletten, Gates, Läden, Arbeitsplätze des Personals nach ADR-037) prüfen.
 - **Akzeptanzkriterien:** Wir wissen, wie Suchen und Feinwege funktionieren und was sie bei 10.000 Personen kosten; Ergebnis als ADR oder begründet ohne Änderung.
 - **Betroffene Module:** Wegfindung & Passagierführung, Personen
 - **Reifegrad-Wirkung:** Wegfindung & Passagierführung: offene Fragen geschlossen
@@ -220,7 +223,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – Umsetzung nach dem Ergebnis von 3.11.
 - **Eingangskriterien:** 3.11 entschieden
 - **Anforderungen (ab Klasse M):** FR-017, FR-018, FR-043
-- **Zu tun:** Schilder und Bodenmarkierungen als Kostenfaktoren der Wegweiser; Suchen ohne Schilder nach 3.11; Ursache der Unerreichbarkeit (Zonenregel, eingeschlossen, fehlende Station) für den Spieler.
+- **Zu tun:** Schilder und Bodenmarkierungen als Kostenfaktoren der Wegweiser; Suchen ohne Schilder nach 3.11; Ursache der Unerreichbarkeit (Zonenregel, eingeschlossen, fehlende Station; nach ADR-037 zusätzlich Personalzone, kein Gehweg oder keine Querung, nur über Bahn in Betrieb) für den Spieler.
 - **Akzeptanzkriterien:** `core/tests/signage.rs` (mit Beschilderung messbar kürzere Wegzeit) und `core/tests/path_diagnostics.rs` grün; Benchmark Wegweiser unverändert in seinen Grenzen.
 - **Betroffene Module:** Wegfindung & Passagierführung, Personen, Spielfeld, Oberfläche
 - **Reifegrad-Wirkung:** Modul Wegfindung & Passagierführung → `[BELASTBAR]`
@@ -237,7 +240,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – Architekturentscheidung zum Verkehr.
 - **Eingangskriterien:** Wegenetze im Weltzustand (2.3), Querungen aus 3.7
 - **Anforderungen (ab Klasse M):** FR-014, FR-028
-- **Zu tun:** Verfahren, mit dem Straßen- und Rollverkehr ohne Stillstand bleibt, der sich nicht selbst auflöst (Reservierung von Abschnitten, kein Einfahren in nicht räumbare Kreuzungen, Vorrang-Rangfolge nach ADR-005); Wartegründe abfragbar; Kosten bei Fahrzeug- und Flugzeugzahlen des Referenzszenarios.
+- **Zu tun:** Verfahren, mit dem Straßen- und Rollverkehr ohne Stillstand bleibt, der sich nicht selbst auflöst (Reservierung von Abschnitten, kein Einfahren in nicht räumbare Kreuzungen, Vorrang-Rangfolge nach ADR-005); Querungen im Wechsel nach ADR-037 (Personen warten bei belegtem oder reserviertem Abschnitt, Fahrzeuge bei Personen auf der Querung, Rang 1 sperrt neues Betreten); Wartegründe abfragbar; Kosten bei Fahrzeug- und Flugzeugzahlen des Referenzszenarios.
 - **Akzeptanzkriterien:** Verfahren per ADR entschieden, im Spike mit einem Notfall-Szenario ohne Blockade belegt.
 - **Betroffene Module:** Verkehr & Verkehrssteuerung
 - **Reifegrad-Wirkung:** Verkehr, Blockadevermeidung `[VORLÄUFIG]` → `[BELASTBAR]` per ADR
@@ -269,7 +272,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Entscheidung – größter Umsetzungsschritt der Phase mit neuen Fachmodulen; Teilarbeiten Routine.
 - **Eingangskriterien:** Blockadevermeidung `[BELASTBAR]` (3.12); S-1 Layout 2 entschieden (3.8)
 - **Anforderungen (ab Klasse M):** FR-014, FR-027, FR-028, FR-052
-- **Zu tun:** Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung; Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke und Walk-out-Boarding (ADR-020, ADR-036, FR-052); Querungen nach 3.7; Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); Fahrzeuge im Spielstand mit der Höchstzahl `MAX_VEHICLES` (aus 2.5); Schema der Inhaltsart `vehicles/` in Datenpaketen (aus 2.4, ADR-025).
+- **Zu tun:** Straßenverkehr, Bahn und Rollwege mit Knoten, Verkehrssteuerung; Vorfeld-Gehwege zu Stellplätzen ohne Fluggastbrücke und Walk-out-Boarding (ADR-020, ADR-036, FR-052); Querungen nach 3.7 (Querungszustand im Verkehr, Flugzeugtür am Ende des Gehwegs als Ziel der Fluggäste, ADR-037); Nachtsprung bei Flugzeugen in Bewegung sperren (`TODO(fahrplan-ref: 3.4)` aus 2.2, META-08); Fahrzeuge im Spielstand mit der Höchstzahl `MAX_VEHICLES` (aus 2.5); Schema der Inhaltsart `vehicles/` in Datenpaketen (aus 2.4, ADR-025).
 - **Akzeptanzkriterien:** `core/tests/road_traffic.rs`, `airside.rs`, `traffic_control.rs` und `walk_out.rs` grün; 1 h Spielzeit ohne Dauerstau; Benchmarks in ihren Grenzen; Coverage Kern ≥ 85 %.
 - **Betroffene Module:** Verkehr & Verkehrssteuerung, Flugbetrieb, Welt & Bau, Personen, Brücke, Spielfeld, Inhalte & Mods
 - **Reifegrad-Wirkung:** Modul Verkehr & Verkehrssteuerung → `[BELASTBAR]` im umgesetzten Umfang
@@ -284,7 +287,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Empfohlene Klasse:** Routine – Umsetzung nach Inventar.
 - **Eingangskriterien:** 3.4 erledigt
 - **Anforderungen (ab Klasse M):** FR-025, FR-032
-- **Zu tun:** Turnaround-Services und Gepäckanlage in Grundform; Wege des Vorfeldpersonals nach 3.7; Inventar-IDs nach Regel-004.
+- **Zu tun:** Turnaround-Services und Gepäckanlage in Grundform; Wege des Vorfeldpersonals nach 3.7 (ADR-037: zu Fuß über Stellplätze, Gehwege und Querungen, sonst per Servicewagen, Erklärung bei Unerreichbarkeit); Inventar-IDs nach Regel-004.
 - **Akzeptanzkriterien:** `core/tests/baggage.rs` und `core/tests/turnaround.rs` in Grundform grün; Coverage Kern ≥ 85 %.
 - **Betroffene Module:** Abfertigung & Gepäck, Personen, Verkehr & Verkehrssteuerung, Spielfeld
 - **Reifegrad-Wirkung:** Modul Abfertigung & Gepäck → `[BELASTBAR]` im umgesetzten Umfang
@@ -311,7 +314,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 | Schritt | Kurztitel | Anforderungen |
 |---|---|---|
-| 4.1 | Referenzszenario baubar, Leistungstest als CI-Gate; Messung auf echter 8-Kern-Hardware (Auflage ADR-014); Größe des Weltzustands im Spielstand messen und die Grenzen von S-5 (512 MB, ADR-030) prüfen | FR-040, FR-016 |
+| 4.1 | Referenzszenario baubar, Leistungstest als CI-Gate; Messung auf echter 8-Kern-Hardware (Auflage ADR-014); Größe des Weltzustands im Spielstand messen und die Grenzen von S-5 (512 MB, ADR-030) prüfen; Neuberechnung der Wegweiser mit den Zielen aller Personengruppen (ADR-037) | FR-040, FR-016 |
 | 4.2 | Coverage auf Mindestwerte, Langzeittest, erste Funktionsgleichheits-Prüfung der umgesetzten Inventar-IDs | – |
 | 4.3 | Aufgegangen in 3.13 (vorgezogen vor 3.4, ADR-036) | – |
 
@@ -326,7 +329,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | 5.3 | Landseite: Parken, ÖPNV, Kreuzungen mit wählbarer Vorfahrt | FR-013, FR-015 |
 | 5.4 | Terminal vollständig: moderner Check-in, Kontrollspuren, Grenze, Läden, Info | FR-019 bis FR-024 |
 | 5.5 | Airside, Gepäck mit dreistufiger Kontrolle, Flüge, Abfertigung vollständig, Startfreigabe | FR-025, FR-026, FR-027, FR-029, FR-030, FR-032 |
-| 5.6 | Personal, Wirtschaft, Forschung, Serviceziele, Notfälle, Störungen, Tutorial, Erfolge mit Vermerk der Debug-Nutzung im Spielstand (META-15, ADR-032, L-7); große Tabellen für Personal und Finanzen; Schema der Inhaltsart `research/` in Datenpaketen (aus 2.4, ADR-025) | FR-007, FR-008, FR-033 bis FR-039 |
+| 5.6 | Personal, Wirtschaft, Forschung, Serviceziele, Notfälle, Störungen, Tutorial, Erfolge mit Vermerk der Debug-Nutzung im Spielstand (META-15, ADR-032, L-7); große Tabellen für Personal und Finanzen; Schema der Inhaltsart `research/` in Datenpaketen (aus 2.4, ADR-025); Aufgabenfelder für wechselnde Einzelziele des Personals (Technik, Reinigung) mit Vermeiden doppelter Zuteilung (ADR-037) | FR-007, FR-008, FR-033 bis FR-039 |
 | 5.7 | Flugzeugtypen und Airlines inklusive Add-on-Klassen | FR-031 |
 | 5.8 | Benchmark mit Empfehlung, Leistungsbewusstsein (Empfehlung und Warnung nach bebauter, begehbarer Fläche und Zahl der Ziele, ADR-020); Messung auf schwacher integrierter Grafik (Auflage ADR-014) | FR-041, FR-042 |
 
@@ -558,6 +561,17 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
   - Maßnahme: Regel-008 (additive Ergänzungen ohne ADR, `CLAUDE.md` Abschnitt 4 Nr. 5). Regel-009 regelt Reflexionen künftig.
   - Die Zählregel aus `CLAUDE.md` Abschnitt 6 bleibt unverändert; Rückmeldung an das Vorlagen-Repo, dass sie formal reaktive Fortschreibungen nicht von Strukturmängeln unterscheidet.
 - **Neue Erkundungen:** 3.11 Suchen ohne Schilder und Feinwege, 3.12 Blockadevermeidung, 3.13 Schrittzeit-Spitzen auf Apple-Chips; Entwurf 3.9 Kernstruktur.
+
+### Ergänzung Reaktiv-Quote (2026-10-20, Anlass ADR-037; neues Muster nach Regel-009)
+
+- **Befund:** 7 / 10 `[REAKTIV]` (ADR-028, ADR-029, ADR-030, ADR-031, ADR-032, ADR-036, ADR-037) über ADR-028 bis ADR-037, 70 %.
+- **Ursache von ADR-037:** formal die 14-Tage-Regel (`CLAUDE.md` Abschnitt 6). ADR-037 ändert 7 Tage nach ADR-020 dessen Satz „Personen betreten Vorfeld, Rollwege und Bahnen nicht“. Inhaltlich war die Frage mit dem Entwurfsschritt 3.7 geplant (ADR-036, `docs/research/phasenabschluss-2.md`). Der Satz in ADR-020 galt aber ohne Einschränkung für alle Personen, bevor die Gruppen entworfen waren.
+- **Neues Muster nach Regel-009:** ADR-037 führt zu Code in Welt & Bau (Flächenart, Personalzone, Profil am Ziel) und Wegfindung (Regeln je Profil). Deshalb neue Reflexion mit Stopp statt Verweis auf die Phasen-Reflexion.
+- **Architektur-Refactoring nötig?** Nein (Einschätzung der bauenden KI). Die Änderung liegt hinter derselben Schnittstelle „Richtung je Ziel und Zelle“ (ADR-010). Raster und Wegweiser bekommen Merkmale und Regeln, keine neue Struktur. Bisher hängt kein Code davon ab, die Umsetzung beginnt in 3.1.
+- **Muster:** wie bei ADR-020 selbst (Maßnahme 5): eine Festlegung, deren Geltungsbereich noch nicht bestimmt war – damals die Einheit, jetzt die Gruppe.
+- **Maßnahme (10):** Eine Festlegung über „Personen“ oder „Fahrzeuge“ nennt die Gruppen, für die sie gilt. Ist die Gruppenfrage offen, gilt sie nur für die genannten Gruppen und trägt einen Landeplatz für die übrigen.
+- **Ausblick:** Sind die folgenden ADRs nicht reaktiv, sinkt die Quote auf 6 / 10 ab ADR-038 und auf 2 / 10 (Schwellenwert eingehalten) ab ADR-042; ADR-036 und ADR-037 fallen ab ADR-046 bzw. ADR-047 aus dem Fenster.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-20 per Auswahl: „Zur Kenntnis genommen“; kein Umbau, Maßnahme (10) gilt.
 
 <!-- ANCHOR:parallelisierbarkeit -->
 ## Parallelisierbarkeit

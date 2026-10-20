@@ -1,0 +1,18 @@
+# Measurement for roadmap step 3.7 (groups of persons, walkable areas, crossings). Throwaway code.
+# Uses the production core as a path dependency, so the flow field numbers match `core/benches/flowfield.rs`.
+[package]
+name = "personengruppen"
+version = "0.0.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+[dependencies]
+openairside-core = { path = "../../core" }
+rayon = "=1.12.0"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = 1

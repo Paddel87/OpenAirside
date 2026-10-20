@@ -32,7 +32,7 @@
 | 017 | 2026-10-13 | Aktiv | REAKTIV | PERFORMANCE | Architektur | Reifegrad „NFR Performance Gesamtsystem" auf das Gemessene begrenzt |
 | 018 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, STACK | Build/Deploy, Externe Abhängigkeiten | Projektgerüst, CI-Gates und napi-Versionen für Phase 2 |
 | 019 | 2026-10-13 | Aktiv | REAKTIV | STACK | Lizenz/Compliance | Erlaubte Lizenzen um BlueOak-1.0.0, 0BSD, Python-2.0 und WTFPL erweitert |
-| 020 | 2026-10-13 | Aktiv | REAKTIV | DATENMODELL, PERFORMANCE | Datenmodell | Weltmaßstab 2 m je Zelle, Luftseite im Raster, Wegweiser in Blöcken, Zeitmodell |
+| 020 | 2026-10-13 | Aktiv (Begehbarkeit des Vorfelds je Personengruppe geändert durch ADR-037) | REAKTIV | DATENMODELL, PERFORMANCE | Datenmodell | Weltmaßstab 2 m je Zelle, Luftseite im Raster, Wegweiser in Blöcken, Zeitmodell |
 | 021 | 2026-10-13 | Aktiv (S-6 für Pakete geändert durch ADR-026, um `saves.preview` ergänzt durch ADR-028, `onCoreExit` durch ADR-029, `lang.*` und Modul-Karte durch ADR-031; S-5-Grenzen geändert durch ADR-030; fortgeschrieben und um S-8 ergänzt durch ADR-032) | ERKENNTNIS | SCHNITTSTELLE, SECURITY | API-Verträge, Architektur, Sicherheit | Schnittstellenverträge S-2 bis S-7 |
 | 022 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Kern-Benchmark als CI-Gate und Prüfung der erzeugten TypeScript-Typen |
 | 023 | 2026-10-13 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Wegweiser-Benchmark als Schritt im CI-Job „Kern-Benchmark“ |
@@ -49,10 +49,11 @@
 | 034 | 2026-10-19 | Aktiv | ERKENNTNIS | PERFORMANCE | Architektur | Darstellung mit echten Grafiken belastbar im gemessenen Umfang |
 | 035 | 2026-10-19 | Aktiv | OPERATIV | DEPLOYMENT | Build/Deploy | Toolchain in den Workflows mit `rustup toolchain install` |
 | 036 | 2026-10-19 | Aktiv | REAKTIV | MODUL, DATENMODELL, METHODIK | Architektur, Datenmodell, Methodik | Phasenabschluss 2 – gezielt umbauen vor dem vertikalen Schnitt |
+| 037 | 2026-10-20 | Aktiv | REAKTIV | DATENMODELL, MODUL | Datenmodell, Architektur | Personengruppen mit Zugangsprofilen, Flächenarten und Querungen |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 6 / 10 über die letzten 10 ADRs (ADR-027 bis ADR-036: ADR-028, ADR-029, ADR-030, ADR-031, ADR-032, ADR-036), 60 % – **über dem Schwellenwert**; gesamt 14 / 36. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Phase 2, 2026-10-19, ADR-036); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
+- **Aktueller Wert:** 7 / 10 über die letzten 10 ADRs (ADR-028 bis ADR-037: ADR-028, ADR-029, ADR-030, ADR-031, ADR-032, ADR-036, ADR-037), 70 % – **über dem Schwellenwert**; gesamt 15 / 37. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-037, 2026-10-20, neues Muster nach Regel-009); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -138,6 +139,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-034: Darstellung mit echten Grafiken belastbar im gemessenen Umfang](decisions/ADR-034.md)
 - [ADR-035: Toolchain in den Workflows mit `rustup toolchain install`](decisions/ADR-035.md)
 - [ADR-036: Phasenabschluss 2 – gezielt umbauen vor dem vertikalen Schnitt](decisions/ADR-036.md)
+- [ADR-037: Personengruppen mit Zugangsprofilen, Flächenarten und Querungen](decisions/ADR-037.md)
 
 ---
 

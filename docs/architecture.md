@@ -130,7 +130,7 @@ Kennungen der Knoten sind eindeutig (ADR-032, K-1: zuvor standen Abfrage und Abf
 - **Verantwortung:** Rechtwinkliges Raster mit fünf Etagen (2 m je Zelle, ADR-020) für Gebäude, Straßen, Vorfeld, Rollwege und Bahnen, Fundamente, Wände, Objekte, Zonen, Räume, Terminalbereiche; Bauplanung, Bauaufträge, simulierter Bau durch Bauarbeiter, Abriss und Versetzen; meldet Änderungen an Wegfindung und Verkehr.
 - **Nicht-Verantwortung:** keine Wegberechnung, keine Darstellung der Bauvorschau (das macht das Spielfeld anhand des Zustands).
 - **Öffentliche Schnittstellen:** Bau-Befehle über S-2
-- **Interne Struktur:** Raster je Etage in Blöcken von 32 × 32 Zellen; das Erdgeschoss ist voll belegt, die übrigen Etagen nur dort, wo gebaut ist (ADR-020). Aus den Bauten abgeleitete Wegenetze (Fahrspuren, Rollweg-Knoten, Bahnen) liegen im Weltzustand und werden vom Verkehr genutzt. Änderungen werden an abhängige Module gemeldet.
+- **Interne Struktur:** Raster je Etage in Blöcken von 32 × 32 Zellen; das Erdgeschoss ist voll belegt, die übrigen Etagen nur dort, wo gebaut ist (ADR-020). Aus den Bauten abgeleitete Wegenetze (Fahrspuren, Rollweg-Knoten, Bahnen) liegen im Weltzustand und werden vom Verkehr genutzt. Änderungen werden an abhängige Module gemeldet. Jede Zelle trägt eine Flächenart (öffentliche Gehfläche, Vorfeld-Gehweg, Querung, Stellplatzfläche, Vorfeld und Rollweg, Bahn, Straße, Gelände) und das Merkmal Personalzone in freien Bits des Flag-Bytes; jedes Ziel trägt ein Zugangsprofil (ADR-037, Umsetzung 3.1 und 3.2).
 - **Abhängigkeiten:** Inhalte (Objektdefinitionen), Wirtschaft (Kosten)
 - **NFRs:** Bauaktion im nächsten Bild sichtbar; Neuberechnungen inkrementell und im Hintergrund
 - **Umsetzung (Schritt 2.3, `core/src/`):** `grid` (Raster in 32 × 32-Blöcken je Etage −2 … +2; Erdgeschoss mit allen Blöcken, übrige Etagen nur bei Bedarf; nicht gespeicherte Zellen sind Leere und nicht begehbar; Zelle = Flags `WALL`/`STAIRS`, Zone, Kostenfaktor 1 … 40 in Zehnteln; Blöcke teilen sich per `Arc`, ein Schnappschuss für die Hintergrundberechnung kostet einen Zeiger je Block; Änderung wird mit Fehlercode abgelehnt, nicht still korrigiert), `network` (Wegenetze für Straßen, Rollwege und Bahnen als gerichtete Graphen auf Rasterzellen, ohne Verkehrslogik: Fahrspur-Eigenschaften, Vorrang und Reservierung folgen in 3.4), `target` (Ziele als Startzellen der Wegweiser, höchstens 255; Ladungsart `Passengers`/`Freight`, Fracht ohne Spielmechanik, FR-046), `scenario` (prozedurales Referenz-Terminal 768² × 5 für Benchmark und Tests, ersetzt durch das Referenzszenario aus Datenpaketen in 4.1). Zonen: Landseite → Sicherheit → Luftseite → Ausgang → Landseite als Einbahnregeln (aus Spike 1.2). Heiße Felder der Personen liegen in `world`; kalte Felder entstehen mit den Objektarten, die sie brauchen (Personen: 3.2).
@@ -141,7 +141,7 @@ Kennungen der Knoten sind eindeutig (ADR-032, K-1: zuvor standen Abfrage und Abf
 - **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13, Begründung: Modul noch nicht umgesetzt; das Wegweiser-Prinzip selbst ist seit 2026-10-13 `[BELASTBAR]` (ADR-014)
 - **Verantwortung:** Berechnet je Ziel Wegweiser für die ganze Karte (alle Etagen, unter Beachtung von Zonen und Kontrollen); bewertet Kacheln anhand von Bodenmarkierungen und Beschilderung; liefert Grundorientierung ohne Beschilderung (längere Wege, Suchverhalten); erkennt Unerreichbarkeit und deren Ursache für die Erklärung an den Spieler.
 - **Nicht-Verantwortung:** kein Fahrzeug- und Rollverkehr (eigenes Modul); keine Entscheidung, welches Ziel eine Person wählt (Modul Personen).
-- **Interne Struktur:** Ein Wegweiser je Ziel bzw. Zielgruppe, 1 Byte je Zelle, gespeichert nur in 32 × 32-Blöcken mit begehbaren Zellen (ADR-020; Vorfeld, Rollwege und Bahnen sind außer auf Vorfeld-Gehwegen nicht begehbar), Dijkstra rückwärts vom Ziel mit Zonenregeln (Land → Kontrolle → Luft, Luft → Ausgang → Land) und Kostenfaktoren aus Bodenmarkierungen; Neuberechnung nach Bauänderungen vollständig im Hintergrund auf allen Kernen, Übernahme sobald fertig (ADR-010); Unerreichbarkeit mit Ursache (Zonenregel oder eingeschlossen). Feinwege für die letzten Meter zu Einzelzielen (z. B. Sitzplatz) offen.
+- **Interne Struktur:** Ein Wegweiser je Ziel bzw. Zielgruppe, 1 Byte je Zelle, gespeichert nur in 32 × 32-Blöcken mit begehbaren Zellen (ADR-020), berechnet mit den Regeln des Zugangsprofils des Ziels (ADR-037: Fluggäste und Besucher, Personal, Sicherheitsbeamte, Vorfeldpersonal, Bauarbeiter; Personalzone für Fluggäste nur zum Verlassen; landseitige Ziele ohne Weg über die Kontrolle); ein Feldsatz für alle Profile außer Bauarbeitern, ein eigener Satz über dem Erdgeschoss für Bauarbeiter (je Anlieferstelle ein Feld, ein Feld zu allen Baustellen); keine Einzelweg-Suche je Fahrt (Messung 3.7), Dijkstra rückwärts vom Ziel mit Zonenregeln (Land → Kontrolle → Luft, Luft → Ausgang → Land) und Kostenfaktoren aus Bodenmarkierungen; Neuberechnung nach Bauänderungen vollständig im Hintergrund auf allen Kernen, Übernahme sobald fertig (ADR-010); Unerreichbarkeit mit Ursache (Zonenregel oder eingeschlossen). Feinwege für die letzten Meter zu Einzelzielen (z. B. Sitzplatz) offen.
 - **Gemessen (Spike 1.2, 4 vCPU):** 512 × 512 × 2 Zellen, 29 Ziele: 14,5 MB, Neuberechnung 0,2–0,4 s; Aufwand linear in Zellen × Ziele.
 - **Abhängigkeiten:** Welt & Bau (Raster, Zonen), Personen (Nachfrage nach Zielen)
 - **NFRs:** Aufwand abhängig von der Zahl der Ziele, nicht der Personen; 10.000 Personen im Referenzszenario
@@ -150,14 +150,15 @@ Kennungen der Knoten sind eindeutig (ADR-032, K-1: zuvor standen Abfrage und Abf
 - **Gemessen (Spike 1.5, Referenz-PC und Mac M3 Pro):** volle Neuberechnung 768 × 768 × 5 mit 36 Zielen im Hintergrund 0,29 s (22 Threads), 0,66 s (6 Threads), 0,60 s (Mac, 9 Threads); Prinzip `[BELASTBAR]` seit 2026-10-13 (ADR-014).
 - **Umsetzung (Schritt 2.3, `core/src/flowfield.rs`):** Rückwärts-Dijkstra mit Bucket-Queue (ganzzahlige Kosten: gerade 10, diagonal 14, mal Kostenfaktor der verlassenen Zelle, Treppe 40; keine Abkürzung über Ecken; Zonenregeln) je Ziel, gespeichert als ein Byte je Zelle (Richtung 0 … 9, `ARRIVED`, `UNREACHABLE`) nur in Blöcken mit begehbaren Zellen. Eine `FieldSet` entsteht vollständig aus einem Schnappschuss des Rasters, ist danach unveränderlich und wird als Ganzes übernommen (ADR-010); die Felder werden parallel berechnet, jedes sequenziell, das Ergebnis ist unabhängig von der Threadzahl. Die Ursache der Unerreichbarkeit (Zonenregel oder eingeschlossen) für die Erklärung an den Spieler folgt in 3.3 (FR-018), die inkrementelle Reparatur aus dem Spike entfällt (ADR-010: volle Neuberechnung).
 - **Gemessen (Schritt 2.3, 4 vCPU, `core/benches/flowfield.rs`):** Terminal 768² × 5 in Welt 2048², 64 Ziele: 1,5 Mio. Zellen in Blöcken, 101 MB, volle Neuberechnung 1,13–1,23 s auf allen vier Kernen (vor der Optimierung der Nachbarzugriffe 1,65 s; GitHub-Runner 2,48 s, Lauf 38486734288 ff.); Schritt mit 10.000 Personen im Echtzeit-Takt 3× während zwei Neuberechnungen im Hintergrund: Mittel 0,3 ms, p99 0,9 ms, Übernahme-Schritt unter 1 ms (mit 2 Simulations- und 2 Hintergrund-Threads; mit mehr Threads als Kernen schwankt p99 zwischen 2 und 4 ms).
-- **Offene Fragen:** Modell für „Suchen ohne Schilder" und Feinwege – Erkundung 3.11 vor 3.3 (ADR-036)
+- **Gemessen (Schritt 3.7, 4 vCPU, `spikes/3.7-personengruppen/`):** Referenz-Terminal mit Vorplatz, 6 Walk-out-Gehwegen und 17 Stellplatzflächen in Welt 2048²: 1,65 statt 1,50 Mio. Zellen; ein Satz für Fluggäste und Personal mit 79 Zielen 130 MB, 2,6 s; Bauarbeiter 5,1 MB je Feld, zwei Felder 10 MB, 0,6 s; ein Satz für alle Gruppen 444 MB, 9–11 s; A* je Fahrt im Terminal Median 18–61 ms, p99 170–272 ms.
+- **Offene Fragen:** Modell für „Suchen ohne Schilder" und Feinwege – Erkundung 3.11 vor 3.3 (ADR-036); Aufgabenfelder für wechselnde Einzelziele des Personals `[VORLÄUFIG]` – Entscheidung in 5.6 (ADR-037)
 
 ### Modul: Verkehr & Verkehrssteuerung [VORLÄUFIG]
 
 - **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13
 - **Verantwortung:** Straßenverkehr (Fahrspuren je Richtung, Vorfahrt automatisch oder je Kreuzung manuell, kein Einfahren in blockierte Kreuzungen), Rollverkehr auf vom Spieler gezogenen Rollweg-Knoten, Vorrang-Rangfolge (ADR-005), automatische Verkehrssteuerung in der Rolle von Tower und Rollkontrolle (Rollrouten, Abflugreihenfolge, Startfreigabe am Gate, „Aufrollen und Warten", Eingriff bei drohender Blockade).
 - **Nicht-Verantwortung:** keine Fußgänger (Wegfindung); keine Abfertigungslogik am Stellplatz (Abfertigung).
-- **Interne Struktur:** Wegenetze im Weltzustand für Straßen (Fahrspuren), Rollwege (Rollweg-Knoten) und Bahnen, abgeleitet aus den Bauten im Raster (ADR-020); Reservierung von Abschnitten; Konfliktlösung nach Rangfolge; Querungen mit dem Raster der Personen (Zebrastreifen, Vorfeld-Gehwege).
+- **Interne Struktur:** Wegenetze im Weltzustand für Straßen (Fahrspuren), Rollwege (Rollweg-Knoten) und Bahnen, abgeleitet aus den Bauten im Raster (ADR-020); Reservierung von Abschnitten; Konfliktlösung nach Rangfolge; Querungen mit dem Raster der Personen (Zebrastreifen, Vorfeld-Gehwege): Der Verkehr führt je Querung einen Zustand, Personen und Fahrzeuge kommen im Wechsel dran, bei Rang 1 betritt niemand die Querung neu (ADR-037).
 - **Abhängigkeiten:** Welt & Bau, Flugbetrieb, Abfertigung, Ereignisse (Einsatzfahrzeuge)
 - **NFRs:** kein Stillstand, der sich nicht selbst auflöst; Wartegründe sind abfragbar
 - **Offene Fragen:** Verfahren zur Blockadevermeidung – Erkundung 3.12 vor 3.4 (ADR-036)
@@ -182,6 +183,7 @@ Kennungen der Knoten sind eindeutig (ADR-032, K-1: zuvor standen Abfrage und Abf
 
 - **Reifegrad:** `[VORLÄUFIG]`, seit 2026-10-13
 - **Verantwortung:** Passagiere (Bedürfnisse, Zielwahl, Verhalten, Zufriedenheit), Personal (Typen, Können, Schichten, Pausen, Zufriedenheit, Gewerkschaft), Aufgabenverteilung.
+- **Gruppen (ADR-037):** Fluggäste, Besucher, Personal und Franchise-Personal, Sicherheitsbeamte, Vorfeldpersonal (zu Fuß, wo verbunden, sonst per Servicewagen), Bauarbeiter; keine Crew, keine Einweiser. Jede Gruppe nutzt nur Ziele ihres Zugangsprofils; Personal nutzt für öffentliche Ziele die Wegweiser der Fluggäste.
 - **Nicht-Verantwortung:** keine Wegberechnung (Wegfindung).
 - **Abhängigkeiten:** Wegfindung, Welt & Bau, Abfertigung, Wirtschaft
 - **NFRs:** Personen als kompakte Daten; keine sich ansammelnden Prozesse über die Spielzeit (Lehre aus dem Original)
@@ -363,7 +365,8 @@ Grobübersicht der wichtigsten Entitäten. Alle Entitäten `[VORLÄUFIG]`; inter
 | Speicherung | Blöcke von 32 × 32 Zellen je Etage; Erdgeschoss voll, übrige Etagen und Wegweiser nur in belegten bzw. begehbaren Blöcken |
 | Abmessungen | echte Maße als Datenwerte; Richtwert große Bahn 3.000 m = 1.500 Zellen, Stellplatz Mittelstrecke rund 20 × 20 Zellen |
 | Bewegung | Personen auf dem Raster (Wegweiser); Fahrzeuge und Flugzeuge auf Wegenetzen (Fahrspuren, Rollweg-Knoten, Bahnen) im Weltzustand |
-| Vorfeld | für Personen nur auf gebauten Vorfeld-Gehwegen begehbar |
+| Vorfeld | für Fluggäste und Besucher nur auf gebauten Vorfeld-Gehwegen begehbar; Vorfeldpersonal zusätzlich auf Stellplatzflächen, Bauarbeiter auf allen Bodenflächen außer Bahnen in Betrieb (ADR-037) |
+| Flächenart und Zugang (ADR-037) | Flächenart und Merkmal Personalzone je Zelle im Flag-Byte; Zugangsprofil je Ziel; Querungen nach Querungszustand des Verkehrs |
 | Zeit | Tick = 1/3 Spielsekunde; 1× = 60 Ticks/s (Spieltag 72 min), 2× = 120, 3× = 180 (Spieltag 24 min) |
 | Leistungsmaßstab | Terminal 768² × 5 aus Spike 1.5, eingebettet in eine Welt 2048² |
 
@@ -408,11 +411,13 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 - **Fester Übernahme-Tick für Wegweiser im normalen Spiel:** Stocken nach Umbauten, widerspricht „Bauen ohne Wartezeit"; nur als Prüfmodus für Tests – siehe ADR-010
 - **Hierarchische Wegweiser in Sektoren:** für die gewählte Kartengröße (Referenzszenario mit Reserve) nicht nötig – siehe ADR-010
 - **ECS-Paket für den Weltzustand:** neue Abhängigkeit ohne gemessenen Vorteil – siehe ADR-010
+- **Einzelweg-Suche (A*) je Fahrt für Personal:** im Terminal Median 18–61 ms, p99 bis 272 ms je Fahrt, weit über dem Zeitbudget eines Simulationsschritts – siehe ADR-037
+- **Ein Feldsatz für alle Personengruppen:** Bauarbeiter-Flächen ziehen jedes Feld über das ganze Erdgeschoss (444 MB, 9–11 s) – siehe ADR-037
 - **Kern als WebAssembly mit einem Thread:** nur ein Prozessorkern, bei schwerer Last 3,9 × langsamer als nativ mit 4 Threads – siehe ADR-009
 - **Kern als WebAssembly mit mehreren Threads:** derzeit nur mit Nightly-Rust baubar, 1,37–1,50 × langsamer als nativ; nicht endgültig verworfen, sondern zurückgestellt: Neubewertung in Fahrplan-Schritt Q.2 – siehe ADR-009
 
 <!-- ANCHOR:reifegrad-uebersicht -->
-## 9. Reifegrad-Übersicht (Stand vom 2026-10-19, Phasenabschluss 2)
+## 9. Reifegrad-Übersicht (Stand vom 2026-10-20, ADR-037)
 
 | Bestandteil | Reifegrad | Seit | Validiert durch / wartet auf |
 |---|---|---|---|
@@ -421,7 +426,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Pattern Kern/Präsentation (ADR-003) | BELASTBAR | 2026-10-13 | Spikes 1.1–1.5, ADR-014 |
 | Stack Electron/TypeScript/PixiJS/React + Rust (ADR-002) | BELASTBAR | 2026-10-13 | Leistungsnachweis 1.5 auf Referenz-PC und Mac M3 Pro, ADR-014; Auflagen: Linux 7.2, schwache integrierte Grafik 5.8 |
 | Betriebsart des Rust-Kerns (napi-rs, Utility-Prozess) | BELASTBAR | 2026-10-13 | ADR-009; Leistungsnachweis 1.5, ADR-014; Linux 7.2 |
-| Datenmodell und Parallelisierung im Kern | BELASTBAR | 2026-10-13 | ADR-010; Leistungsnachweis 1.5 (Schritt 0,4–0,8 ms bei 10.000 Personen), ADR-014; Weltmaßstab, Blöcke und Wegenetze nach ADR-020 (Messung 2.8); Block-Speicherung bestätigt durch Umsetzung und Benchmark in 2.3 (101 MB, 1,1–1,2 s für 64 Ziele auf 4 vCPU) |
+| Datenmodell und Parallelisierung im Kern | BELASTBAR | 2026-10-13 | ADR-010; Leistungsnachweis 1.5 (Schritt 0,4–0,8 ms bei 10.000 Personen), ADR-014; Weltmaßstab, Blöcke und Wegenetze nach ADR-020 (Messung 2.8); Block-Speicherung bestätigt durch Umsetzung und Benchmark in 2.3 (101 MB, 1,1–1,2 s für 64 Ziele auf 4 vCPU); Personengruppen, Flächenarten und Zugangsprofile nach ADR-037 (Messung 3.7 mit dem Produktions-Code, Umsetzung 3.1, 3.2) |
 | Wegfindung per Wegweiser-Prinzip (ADR-004, ADR-010, ADR-013) | BELASTBAR | 2026-10-13 | Spike 1.2; Leistungsnachweis 1.5 mit 768² × 5 auf Referenz-PC und Mac, ADR-014; Luftseite im Raster, Speicherung in Blöcken (ADR-020); offen: Feinwege und Suchen ohne Schilder (3.11) |
 | S-1 Zustandspuffer | BELASTBAR | 2026-10-13 | Spike 1.3 auf Referenz-PC (Windows, 60 Bilder/s) und Mac M3 Pro (120 Bilder/s); Linux in 7.2 (ADR-011) |
 | S-2 Befehlskanal, S-3 Ereignisstrom, S-7 Abfrage | BELASTBAR | 2026-10-13 | ADR-021 (Entwurf 2.9, getrennte Prüfung), fortgeschrieben durch ADR-032 (Sammelprüfung 2.11: Katalog, Parameter `{ key }`, Wörterbuch, `sessionEnded` gestrichen); S-2 und S-3 im Kern umgesetzt in 2.2 (Tests `core/tests/commands.rs`, `time.rs`); Anbindung an den Port und S-7 umgesetzt in 2.7 (Tabellenabfrage 1.000 Zeilen im Median 1,6–3,8 ms gemessen) |
@@ -439,7 +444,8 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 | Oberfläche mit großen Tabellen | BELASTBAR | 2026-10-13 | Spike 1.4 auf Referenz-PC (Windows) und Mac M3 Pro: virtualisiert bis 5.000 sortierte Zeilen ohne Einfluss auf die Bildrate, bis 20.000 bei wenigen Aktualisierungen/s; Bedingungen: Virtualisierung Pflicht; Abfrage-Schnittstelle S-7 mit Sortierung im Kern (ADR-021), fachliche Tabellen ab 3.6 (ADR-016); Linux in 7.2 (ADR-011) |
 | Grafik-Pipeline (SVG → Atlanten, ADR-008, ADR-033) | BELASTBAR | 2026-10-19 | Umsetzung 2.10: `tools/assets` mit 7 cargo-Tests, Prüfer `scripts/assets.mjs`, Atlanten in jedem `npm run build`; CI-Lauf 39290398392 grün auf drei Plattformen, Rauchtest lädt die Atlanten unter der CSP (`data-atlas`); vorher `[VORLÄUFIG]` seit 2026-10-13 (ADR-008); Grafiken in Mods 6.1 |
 | Verpackung für drei Plattformen | VORLÄUFIG | 2026-10-13 | Schritt 1.6 erledigt (Bau und Start auf allen drei Plattformen); bleibt vorläufig: unsigniert (Entscheidung 7.1), Linux-Sandbox (7.2) |
-| Verkehr, Blockadevermeidung | VORLÄUFIG | 2026-10-13 | Erkundung 3.12 vor 3.4 (ADR-036) |
+| Verkehr, Blockadevermeidung | VORLÄUFIG | 2026-10-13 | Erkundung 3.12 vor 3.4 (ADR-036); Querungen im Wechsel nach ADR-037 |
+| Aufgabenfelder für wechselnde Einzelziele des Personals | VORLÄUFIG | 2026-10-20 | ADR-037; Vermeiden doppelter Zuteilung offen, Entscheidung in 5.6 |
 | Code-Mods | OFFEN | 2026-10-13 | eigene Erkundung |
 | NFR Performance: Simulationsschritt, Wegweiser, Übergabe S-1, Langzeit | BELASTBAR | 2026-10-13 | Leistungsnachweis 1.5, ADR-014, Grenze nach ADR-017; Linux 7.2, echte 8-Kern-Hardware spätestens 4.1 |
 | NFR Performance: Darstellung statischer Objekt-Sprites (Atlas-Stufe 8 px je Zelle) mit Zonen und 10.000 Personen, Windows und macOS | BELASTBAR | 2026-10-19 | ADR-034: Messung 2.10 auf Referenz-PC (59,9–60,0 Bilder/s bei 60 Hz) und Mac M3 Pro (119,1–120,1 Bilder/s bei 120 Hz) mit 20.000 Sprites, `docs/research/2.10-messung.md`; Schrittzeit-Spitzen auf Apple-Chips in 3.13 (vorgezogen aus 4.3, ADR-036) |
