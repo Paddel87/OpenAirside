@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-20 (Session ab 17:37 UTC, Schritt 3.14 in Arbeit)
+- **Stand vom:** 2026-10-20 (Session ab 17:37 UTC, Schritt 3.14 erledigt)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 3.14 Späte Bilder auf dem Referenz-PC – Vorlage vor der Messung vorgelegt (`docs/research/3.14-spaete-bilder.md`)
-- **Nächster Schritt:** nach den Antworten zur Vorlage Messprototyp auf `erkundung/3-14-messaufbau`, Prüfung nach Maßnahme (11), Messläufe des Projektinhabers; danach 3.9 Kernstruktur der Fachmodule
+- **Aktiver Schritt:** keiner (3.14 erledigt am 2026-10-20, Ursache belegt, Maßnahme in 3.15)
+- **Nächster Schritt:** 3.15 GPU-Namen nur einmal lesen (Korrektur auf `main`), danach 3.9 Kernstruktur der Fachmodule, in einer neuen Session (die Session zu 3.14 endete über der Grenze der Sessiongröße)
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 7 / 10 (ADR-029 bis ADR-038) über dem Schwellenwert; Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
@@ -94,9 +94,9 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 **Reifegrad-Erwartung am Phasenende:** Weltdarstellung im Spielfeld per ADR in 3.8 `[BELASTBAR]` (erreicht, ADR-038); Speicher der Weltdarstellung nach Nachmessung in 3.1; NFR Darstellung unter Windows nach 3.14; Module Personen, Wegfindung & Passagierführung, Verkehr & Verkehrssteuerung, Flugbetrieb, Abfertigung & Gepäck, Spielfeld und Oberfläche durch Umsetzung `[BELASTBAR]` im umgesetzten Umfang; NFR „Bauaktion im nächsten Bild" gemessen (3.1); Verkehr/Blockadevermeidung per ADR aus 3.12.
 
-**Ursprünglicher Schrittplan:** 13 Schritte, festgehalten am 2026-10-19 beim Phasenabschluss 2 (ADR-036): 3.1–3.13. Seit 2026-10-20 (ADR-038) 14 Schritte mit 3.14; Wucherungs-Schwelle (Faktor 2 und mindestens 5 zusätzliche) nicht erreicht.
+**Ursprünglicher Schrittplan:** 13 Schritte, festgehalten am 2026-10-19 beim Phasenabschluss 2 (ADR-036): 3.1–3.13. Seit 2026-10-20 (ADR-038) 14 Schritte mit 3.14, seit 2026-10-20 (Ergebnis 3.14, Antwort des Projektinhabers) 15 mit 3.15; Wucherungs-Schwelle (Faktor 2 und mindestens 5 zusätzliche, also 26) nicht erreicht.
 
-**Reihenfolge:** 3.7 → 3.8 → 3.14 → 3.9 → 3.10 → 3.1 → 3.2 → 3.11 → 3.3 → 3.12 → 3.13 → 3.4 → 3.5 → 3.6. 3.7, 3.8, 3.11, 3.12 und 3.13 sind Entwurfs- bzw. Erkundungsschritte mit Phasentyp-Kontext ERKUNDUNG (wie 2.8 und 2.9); ebenso 3.14 (seit ADR-038); sie liefern Entscheidungen oder Messungen, keinen Spielcode.
+**Reihenfolge:** 3.7 → 3.8 → 3.14 → 3.15 → 3.9 → 3.10 → 3.1 → 3.2 → 3.11 → 3.3 → 3.12 → 3.13 → 3.4 → 3.5 → 3.6. 3.7, 3.8, 3.11, 3.12 und 3.13 sind Entwurfs- bzw. Erkundungsschritte mit Phasentyp-Kontext ERKUNDUNG (wie 2.8 und 2.9); ebenso 3.14 (seit ADR-038); sie liefern Entscheidungen oder Messungen, keinen Spielcode.
 
 **Form der Einträge (ADR-036):** Je Schritt Ergebnis, Belege und Landeplätze; Herleitungen und Vorlagen stehen in `docs/research/`. Vor jedem Schritt, der eine Schnittstelle berührt, läuft der Vertragsabgleich nach den Maßnahmen 7–9 (Iterations-Reflexion); additive Ergänzungen nach Regel-008.
 
@@ -142,7 +142,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.14: Späte Bilder auf dem Referenz-PC (Windows)
 
-- **Status:** IN ARBEIT (seit 2026-10-20; Vorlage vor der Messung `docs/research/3.14-spaete-bilder.md`)
+- **Status:** ERLEDIGT (2026-10-20, ohne ADR: Maßnahme ohne Kategorie aus `CLAUDE.md` Abschnitt 4)
 - **Phasentyp-Kontext:** ERKUNDUNG
 - **Schritt-Art (nur ERKUNDUNG):** Messung
 - **Zeitbox (nur ERKUNDUNG):** maximal eine Session (Messläufe auf dem Referenz-PC durch den Projektinhaber)
@@ -156,6 +156,24 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Spielfeld, Brücke, Benchmark & Leistung
 - **Reifegrad-Wirkung:** NFR Darstellung unter Windows `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen
 - **Artefakte:** Messprotokoll, ggf. ADR
+- **Ergebnis:** Ursache belegt: Die Leistungsanzeige las alle 250 ms den GPU-Namen über `getParameter(UNMASKED_RENDERER_WEBGL)`. Der synchrone Rundlauf zum GPU-Prozess blockierte den Hauptthread des Renderers ein oder zwei Bildtakte lang, wenn der GPU-Prozess unter ANGLE/D3D11 einen Flush bis zum nächsten Takt hielt. Das trat auch ohne Weltdarstellung auf. Kern-Prozess, Port und Zeichnen sind ausgeschlossen. Maßnahme: GPU-Namen einmal lesen, keine synchronen WebGL-Abfragen im laufenden Betrieb. Grafikweg, Threads und Betriebsart bleiben unverändert. Die Läufe 3–5 (Vollbild, D3D11on12, Vulkan) entfallen.
+- **Belege:** Lauf 2 vorher 2,0 % späte Antworten im 250-ms-Raster. Zeitspuren aus Lauf 1 und 2 mit `GLES2::GetString` → `CommandBufferHelper::Finish` bei jeder späten Antwort. Nachmessung mit `9d01469`: mit Welt 0,01 %, ohne Welt 0 späte Antworten; Rundlauf p99 ≤ 1,1 ms; Bildabstand p99 17,3–18,1 ms; 59,8–60,0 Bilder/s. Messprototyp `erkundung/3-14-messaufbau` (nicht gemergt, Aufzeichnung `spikes/3.14-spaete-bilder/`), Herleitung `docs/research/3.14-spaete-bilder.md`, Messdateien `docs/research/3.14-ergebnisse/`.
+- **Landeplätze:** 3.15 (Korrektur auf `main`, Reifegrad NFR Darstellung unter Windows); 3.1 und 4.1 (Bauaktion und Budget je Bild werden ohne die synchrone Abfrage gemessen)
+
+#### 3.15: GPU-Namen nur einmal lesen (Korrektur aus 3.14)
+
+- **Status:** OFFEN
+- **Phasentyp-Kontext:** UMSETZUNG (Fehlerbehebung innerhalb des Moduls)
+- **Abhängigkeiten:** 3.14; vor 3.1 (dessen Messungen sonst die späten Bilder enthalten)
+- **Freigabepflichtig:** nein (Fehlerbehebung im Spielfeld ohne Schnittstellenänderung; Antwort des Projektinhabers vom 2026-10-20: eigener Schritt)
+- **Empfohlene Klasse:** Routine – klar spezifizierte Fehlerbehebung mit Test; die Beförderung des Reifegrads ist Entscheidung (Auslöser 4).
+- **Eingangskriterien:** Ursache belegt (3.14) – erfüllt
+- **Anforderungen (ab Klasse M):** – (NFR Performance)
+- **Zu tun:** Der Getter `gpu` in `app/renderer/playfield.ts` liest den Namen einmal und hält ihn, wie Spike-Commit `9d01469`. Die Leistungsanzeige in `app/renderer/main.ts` ruft keine synchrone WebGL-Abfrage mehr auf. Suche nach weiteren synchronen WebGL-Abfragen im laufenden Betrieb (`getParameter`, `getError`, `readPixels`, `getExtension`); die Regel „nur beim Start“ wird als Kommentar am Spielfeld und in `docs/architecture.md` (Spielfeld) festgehalten. Unit-Test: Ein zweiter Zugriff fragt den Kontext nicht erneut ab.
+- **Akzeptanzkriterien:** Test grün; Vitest gesamt ≥ 70 %; Rauchtest grün auf drei Plattformen; Messung mit dem Paket des Schritts auf dem Referenz-PC (`measure 6`): Bildabstand p99 ≤ 19,7 ms und unter 0,1 % späte Antworten, wie die Nachmessung 3.14.
+- **Betroffene Module:** Spielfeld, Benchmark & Leistung
+- **Reifegrad-Wirkung:** NFR Darstellung unter Windows `[VORLÄUFIG]` → `[BELASTBAR]` bei Bestehen
+- **Artefakte:** Spielfeld-Code, Test, Messdatei
 
 #### 3.9: Kernstruktur der Fachmodule
 
