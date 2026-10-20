@@ -17,12 +17,94 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) ausgeplant mit 13 Schritten, nächster Schritt 3.7.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8 und 3.14 sind erledigt, nächster Schritt 3.15.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-20 21:40 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** rund 4 Stunden seit `[SESSIONSTART]` 17:37 UTC, davon gut 3 Stunden Messläufe des Projektinhabers.
+- **Bearbeitet:**
+  - Schritt 3.14: Vorlage vor der Messung mit zwei Antworten (5 Läufe, Rückgabe im Chat).
+  - Messprototyp `erkundung/3-14-messaufbau` (`6808a35`, `9d01469`), geprüft nach Maßnahme (11); Release-Läufe 39471593590 und 39483411097.
+  - Lauf 2 und drei Zeitspuren ausgewertet: Ursache gefunden. Nachmessung beider Läufe mit der Korrektur.
+- **Erreicht:**
+  - 3.14 erledigt ohne ADR. Ursache: synchrone Abfrage des GPU-Namens alle 250 ms in der Leistungsanzeige.
+  - Mit der Korrektur 0–0,01 % späte Antworten und Bildabstand p99 17,3–18,1 ms.
+  - Neuer Schritt 3.15 (Korrektur auf `main`) nach Antwort des Projektinhabers.
+  - Reifegrad „NFR Darstellung unter Windows“ bleibt `[VORLÄUFIG]` bis 3.15.
+- **Offen geblieben:**
+  - PR für `erkundung/3-14-spaete-bilder-referenz-pc` nach `main`, nur auf Anweisung.
+  - Der Spike-Branch `erkundung/3-14-messaufbau` bleibt als Aufzeichnung und wird nicht gemergt.
+  - Ungeklärt bleibt, warum der GPU-Prozess unter D3D11 zeitweise einen Takt im Flush wartet. Ohne synchrone Abfragen ist das nicht sichtbar.
+  - AMD-Treiberversion und Update-Verlauf hat der Projektinhaber nicht nachgereicht; für das Ergebnis nicht mehr nötig.
+- **Nächster Schritt:** 3.15 GPU-Namen nur einmal lesen, in einer neuen Session; danach 3.9.
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 21:37 UTC). 0 Schritte oberhalb der Empfehlung (3.14: Entscheidung). Abgegeben: keine Teilarbeiten.
+- **Kontextgröße:** 408.994 Token laut `get_session` 21:37 UTC, **über der Grenze von 400.000**. Empfehlung: die nächste Arbeit in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 21:37 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt.
+- **Archivierung und Größen:** keine Trigger. Logbuch rund 400 Zeilen (Grenze 800), `project-context.md` 375 Zeilen (Budget 600), `architecture.md` 470 Zeilen.
+- **Drift-Prüfung:**
+  - README nachgezogen (Phase, Architektur-Reife, Nächste Schritte); „Aktueller Stand“ im Logbuch berichtigt (nannte noch 3.7).
+  - Kein neuer ADR; Reaktiv-Quote unverändert 7 / 10.
+  - Reifegrad passt zum Ergebnis 3.14.
+  - Modulnamen in 3.14 und 3.15 stimmen mit der Modul-Karte überein.
+  - Keine Anforderung neu oder geändert; keine Blocker.
+  - Phase 3: 15 Schritte bei Plan 13, unter der Wucherungs-Schwelle von 26.
+- **Mini-Reibungen:**
+  - Prettier formatiert die Messdateien beim Commit um. Der Inhalt wurde jeweils per Vergleich als gleich belegt; der erste Commit-Versuch schlägt dadurch jedes Mal fehl.
+- **Beobachtung:** Die Selbst-Nachricht und die Zeitspur hätten die Ursache schon in 3.8 sichtbar gemacht. Bei späten Bildern zuerst den Hauptthread in der Zeitspur prüfen, bevor man Grafikwege vergleicht.
+
+### 2026-10-20 21:37 (UTC) – [BEOBACHTUNG]
+
+- **3.14, Nachmessung Lauf 2 (ohne Welt, Paket `9d01469`):** 0 späte von 21.691 Antworten, Rundlauf p99 0,7–1,1 ms, Bildabstand p99 17,3–18,1 ms, 59,8–60,0 Bilder/s. Zusammen mit Lauf 1 ist die Ursache belegt, alle Schwellen sind erfüllt. Die Läufe 3–5 entfallen. Ergebnis: `docs/research/3.14-spaete-bilder.md` Abschnitt 14.
+- **Mini-Reibung:** Der erste Versuch von Lauf 2 (21:28 UTC) lieferte keine Messdatei, vermutlich zu früh nachgesehen. Der Lauf wurde neu gestartet.
+- **Kontextgröße:** 408.994 Token laut `get_session` 21:37 UTC, über der Grenze von 400.000.
+
+### 2026-10-20 21:25 (UTC) – [BEOBACHTUNG]
+
+- **3.14, Nachmessung Lauf 1 (mit Welt, Paket `9d01469`):** 2 späte von 21.636 Antworten (0,01 %), Rundlauf p99 0,8–1,1 ms, Bildabstand p99 17,4–18,1 ms, 59,8–60,0 Bilder/s, keine langen Aufgaben. Alle Schwellen der Vorlage sind erfüllt; der Projektinhaber sah es flüssig. Die Ursache aus Abschnitt 12 (synchrone Abfrage des GPU-Namens alle 250 ms) ist damit für die Weltdarstellung belegt. Lauf 2 (ohne Welt) folgt. `docs/research/3.14-spaete-bilder.md` Abschnitt 13.
+
+### 2026-10-20 19:26 (UTC) – [PROBLEM-GELÖST]
+
+- **3.14, Ursache der späten Bilder (vorbehaltlich Nachmessung):** Lauf 2 (ohne Welt) und die Zeitspuren aus Lauf 1 und 2 zeigen bei jeder späten Antwort denselben Ablauf. Der Hauptthread des Renderers wartet in einem Zeitgeber auf `GLES2::GetString` → `CommandBufferHelper::Finish`, also auf den GPU-Prozess. Dessen WebGL-Flush dauert in diesen Phasen rund einen Bildtakt. Die späten Antworten folgen im 250-ms-Raster. Auslöser ist die Leistungsanzeige: Sie liest alle 250 ms `playfield.gpu`, und der Getter ruft `getParameter(UNMASKED_RENDERER_WEBGL)` synchron auf. Dieser Getter steht auch auf `main`. Kern-Prozess (H3) und Zeichnen (PixiJS-Ticker p99 unter 1 ms) sind ausgeschlossen. Einzelheiten: `docs/research/3.14-spaete-bilder.md` Abschnitt 12, Messdatei `docs/research/3.14-ergebnisse/`.
+- **Nachmessung:** Spike-Commit `9d01469` liest den Namen nur einmal; Probelauf im Container mit drei Sitzungswechseln fehlerfrei; Release-Lauf gestartet.
+
+### 2026-10-20 19:17 (UTC) – [BEOBACHTUNG]
+
+- **Sichtbeobachtung des Projektinhabers, 3.14 Lauf 2 (ohne Weltdarstellung, `measure 6`):** „wieder das gleiche Ruckeln“, angezeigtes Fenster 10 (Index 9, Kreisen). In 2.10 trat auf demselben Rechner ohne Welt kein Ruckeln auf. Hinweis darauf, dass die Ursache nicht an der Weltdarstellung hängt, sondern am heutigen Stand von Rechner, Treiber oder Paket. Bestätigung steht mit der Messdatei aus.
+
+### 2026-10-20 18:05 (UTC) – [BEOBACHTUNG]
+
+- **Messprototyp 3.14:** `erkundung/3-14-messaufbau` (`6808a35`, von `f23e154`), Release-Lauf 39471593590 per „Run workflow“ gestartet. Prüfung nach Maßnahme (11) im Container bestanden: drei Sitzungswechsel in einem Programmstart, Zeitstempel beider Seiten in allen drei Messdateien, vier Zeitspuren zu 1,9–3,0 MB, Auswertung mit `analyze.py` gelesen. Einzelheiten und Messanleitung: `docs/research/3.14-spaete-bilder.md` Abschnitte 10 und 11.
+- **Mini-Reibungen:** (1) Unter Linux gibt es im Container keinen Ordner „Downloads“; Electron legt die Dateien dann im Heimatordner ab, das `ls` im Probelauf schlug fehl (nur Prüfbefehl). (2) Mit `--use-angle=gl` fällt PixiJS im Container ohne Meldung auf Canvas zurück und die Weltdarstellung wirft einen Fehler; im Prototyp nun Abbruch mit Meldung. (3) Die Liste der späten Antworten ist auf 400 begrenzt; die erste Auswertung rechnete den Anteil aus der Liste statt aus den Fenstern (behoben). (4) `scripts/assets.test.mjs` schlägt auf dem Spike-Branch fehl (512 Testgrafiken aus 3.8 ohne Objekt), wie schon in 3.8; ohne Bedeutung für die Messung.
+
+### 2026-10-20 17:44 (UTC) – [BEOBACHTUNG]
+
+- **Antworten zur Vorlage 3.14:** Frage 1 A (fünf Läufe), Frage 2 A (Dateien im Chat). Festgehalten in `docs/research/3.14-spaete-bilder.md` Abschnitt 9. Weiter mit dem Messprototyp auf `erkundung/3-14-messaufbau`.
+
+### 2026-10-20 17:41 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt 3.14, Vorlage vor der Messung:** `docs/research/3.14-spaete-bilder.md`.
+- **Neuer Befund aus den Dateien von 3.8:** Die späten Antworten liegen in der Übersicht bei genau einem oder zwei Bildtakten (16,8–18,1 bzw. 32,4–33,9 ms), beim Kreisen 2,3 ms darunter (14,0–14,4 bzw. 30,4–31,2 ms), weil die Anforderung dort später nach dem Takt hinausgeht. Die Antwort wartet also auf den Takt des Renderers; das spricht gegen den Kern-Prozess (H3) und gegen das Zeitgeber-Raster von Windows (15,6 ms) und für Renderer bzw. Grafikweg (H1, H2, H4).
+- **Messaufbau:** Spike-Branch `erkundung/3-14-messaufbau` vom Stand `f23e154`; Zeitstempel je Bild auf beiden Seiten, Selbst-Nachricht im Renderer, Zeitspur über Electron `contentTracing`, Umschalter `--use-angle` nur im Prototyp; keine neue Abhängigkeit, keine Änderung an `main`.
+- **Vorgelegt:** zwei Fragen (Umfang der Messung: 5 Läufe empfohlen; Rückgabe der Dateien).
+
+### 2026-10-20 17:37 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 2026-10-20 17:25 UTC (Session zu 3.8, Kontext 605.223 Token über der Grenze von 400.000; neue Session vom Projektinhaber gewählt: „Weiter mit 3.14 in neuer Session“). Merge-Vermerk `7cd0d3e` nach `project-context.md` Abschnitt 10 von `erkundung/3-8-weltdarstellung-spielfeld` auf den Branch dieser Session `erkundung/3-14-spaete-bilder-referenz-pc` vom aktuellen `main` (`4b8a679`) übernommen (`0ed265d`); der alte Branch wird nicht weiterverwendet. Branch und Übernahme liefen vor diesem Eintrag, damit er auf dem Arbeits-Branch steht.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 3, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht).
+- **Geplant:** Schritt 3.14 (ERKUNDUNG, Messung): Vorlage vor der Messung, Messaufbau mit Zeitstempeln auf beiden Seiten, Prüfung nach Maßnahme (11) im Container, Pakete an den Projektinhaber.
+- **Vorabprüfung:** 3.14 hat keine Eingangskriterien außer dem Referenz-PC; NFR Darstellung unter Windows `[VORLÄUFIG]` ist der Erkundungsgrund. Reaktiv-Quote 7 / 10 über dem Schwellenwert, Maßnahmen (5) bis (11) gelten.
+- **Modus/Werkzeug:** Claude Code in der Cloud (Container), Rechte-Modus „auto“; Pre-Commit-Hook installiert (`pre-commit` 4.x per pip, `.git/hooks/pre-commit` vorhanden). Node im Container 22.22.0, Node 26.11.1 bei TypeScript-Arbeit nachzuholen.
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` (Quelle: `get_session` 17:36 UTC) – Entscheidungs-Klasse; 3.14 empfiehlt Entscheidung.
+
+### 2026-10-20 17:34 (UTC) – [BEOBACHTUNG]
+
+- **Merge:** PR #29 (Schritt 3.8, ADR-038) nach Anweisung des Projektinhabers gemergt („PR eröffnen und bei grün mergen“), Merge-Commit `4b8a679`. Vorher grün auf `ac00324`: Push-Lauf 39466020245 und die PR-Läufe CI 39466633289 und Security 39466633371 (39 Prüfungen). Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf `erkundung/3-8-weltdarstellung-spielfeld` und geht mit dem PR des nächsten Schritts nach `main`.
 
 ### 2026-10-20 17:25 (UTC) – [SESSIONENDE]
 
