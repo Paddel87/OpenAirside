@@ -8,12 +8,12 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-21 (Session ab 22:30 UTC, Vorlage zu 3.9)
+- **Stand vom:** 2026-10-21 (Session ab 22:30 UTC, Schritt 3.9 erledigt)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 3.9 Kernstruktur der Fachmodule – Umbau nach ADR-039 (Option B); 3.15 erledigt am 2026-10-20
-- **Nächster Schritt:** Umbau 3.9 abschließen; danach 3.10
-- **Offene STOPP-Situationen:** keine. Reaktiv-Quote 7 / 10 (ADR-029 bis ADR-038) über dem Schwellenwert; Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
+- **Aktiver Schritt:** keiner (3.9 erledigt am 2026-10-21, ADR-039)
+- **Nächster Schritt:** 3.10 Plattform: `main.ts` nach Zuständigkeiten teilen
+- **Offene STOPP-Situationen:** keine. Reaktiv-Quote 6 / 10 (ADR-030 bis ADR-039) über dem Schwellenwert; Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -181,7 +181,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.9: Kernstruktur der Fachmodule
 
-- **Status:** IN ARBEIT (Entwurf B freigegeben am 2026-10-21, ADR-039; Vorlage `docs/research/3.9-kernstruktur.md`)
+- **Status:** ERLEDIGT (2026-10-21, ADR-039)
 - **Phasentyp-Kontext:** UMSETZUNG (Umbau des bestehenden Kerns; Entwurf als Vorlage vor dem Code)
 - **Abhängigkeiten:** 3.7, 3.8
 - **Freigabepflichtig:** ja (Kategorie 1 und 4) – Entwurf als `ENTSCHEIDUNG ERFORDERLICH` vor dem Code
@@ -193,6 +193,9 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Takt & Weltzustand, Welt & Bau, Wegfindung & Passagierführung, Personen
 - **Reifegrad-Wirkung:** Takt & Weltzustand bleibt `[BELASTBAR]` (per ADR fortgeschrieben)
 - **Artefakte:** ADR, Kern-Code, Tests, ggf. neue Spielstand-Formatversion (vor 1.0 zulässig, ADR-021)
+- **Ergebnis:** Option B nach Antwort des Projektinhabers (gegen die Empfehlung A): Fachmodule `core/src/build/`, `wayfinding/`, `persons/` mit Zustand, Spielstand-Teil, Prüfung beim Laden und Prüfsummen-Beitrag je an einer Stelle; feste Reihenfolge Welt & Bau → Wegfindung → Personen; interne Ereignis-Warteschlange `core/src/internal.rs` (erstes Ereignis „Raster geändert“); Baustein `Pool<T>` (`core/src/pool.rs`) mit Personen als erster Objektart; Spielstand-Format 2. Kein Verhalten geändert.
+- **Belege:** Zustands-Prüfsumme eines Laufs mit Bauaktionen, Pause und Debug-Befehlen vor und nach dem Umbau gleich (`f8580b54e3165422`, alle Zwischenwerte gleich); alle Kern-Tests grün (`determinism.rs`, `savegame_roundtrip.rs` u. a.); Probe-Objektart im Test von `pool.rs`; Coverage Kern 98,53 %, gesamt 98,23 % Lines; Benchmarks lokal Tick Mittel 0,098 ms / p99 0,22 ms, Wegweiser 1,53 s / Schritt p99 3,19 ms (unter paralleler Kompilierlast), CI-Gate „Kern-Benchmark“ grün; `check:types` und `check:schema` unverändert; CI auf PR #33 grün.
+- **Landeplätze:** 3.1 (Handles, Abriss, Zusammenfassen der Neuberechnungen, Ereignisse von Bau ↔ Personen), 3.2 (Bedürfnisse, Gruppen, `TODO(fahrplan-ref: 3.2)`), 3.4/3.5/3.6/5.6 (Stelle der übrigen Fachmodule in der Reihenfolge)
 
 #### 3.10: Plattform: `main.ts` nach Zuständigkeiten teilen
 

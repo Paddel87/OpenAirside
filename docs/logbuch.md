@@ -17,12 +17,22 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14 und 3.15 sind erledigt, nächster Schritt 3.9.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, nächster Schritt 3.10.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-21 23:20 (UTC) – [BEOBACHTUNG]
+
+- **3.9 umgesetzt:** Kern nach ADR-039 umgebaut (`383f545`), Dokumente nachgezogen (`3308f96`); PR #33 nach Anweisung „Mach daraus ein PR und merge ihn bei grün“ eröffnet.
+- **Prüfsumme wertgleich:** Basislauf vor und nach dem Umbau `f8580b54e3165422` (Tick 590), alle Zwischenwerte gleich; der temporäre Test wurde nicht committet.
+- **Einziger angepasster Testwert:** `savegame_roundtrip.rs` nahm Format 2 als „zu neu“ an; jetzt 3 als zu neu, 0 und 1 als `migrationFailed`.
+- **Kleine Abweichung im Detail:** Zwei `setWalls` in derselben Befehlsgruppe berechneten früher die erste Anfrage mit dem Zwischenstand; jetzt beide in der Stufe Wegfindung mit dem Endstand. Revisionen, übernommenes Ergebnis und Spielstand sind gleich, weil eine neuere Anfrage die ältere ersetzt.
+- **Zeitstempel berichtigt:** `[ENTSCHEIDUNG-VORGELEGT]` und `[ADR-ANGELEGT]` trugen geschätzte Zeiten (23:10, 23:25); nach den Commit-Zeiten 22:35 und 22:42.
+- **Werkzeuge im Container:** pre-commit installiert; Node 26.11.1 mit Prüfsumme nach `~/node26` für `check:types`; cargo-llvm-cov 0.9.1.
+- **Modell-Arbeit:** Umbau (Routine) lief auf der Entscheidungs-Klasse; keine Abgabe, Probelauf offen.
 
 ### 2026-10-21 22:42 (UTC) – [ADR-ANGELEGT]
 
