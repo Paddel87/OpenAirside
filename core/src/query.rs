@@ -278,7 +278,7 @@ fn column(id: &str) -> Result<ColumnId, &'static str> {
 }
 
 fn state_of(heading: u8) -> u16 {
-    use crate::flowfield::{ARRIVED, DOWN, UNREACHABLE, UP};
+    use crate::wayfinding::flowfield::{ARRIVED, DOWN, UNREACHABLE, UP};
     match heading {
         UP | DOWN => 1,
         ARRIVED => 2,
@@ -699,8 +699,8 @@ mod tests {
                 state: "unreachable".into(),
             }))
         );
-        assert_eq!(state_of(crate::flowfield::UP), 1);
-        assert_eq!(state_of(crate::flowfield::ARRIVED), 2);
+        assert_eq!(state_of(crate::wayfinding::flowfield::UP), 1);
+        assert_eq!(state_of(crate::wayfinding::flowfield::ARRIVED), 2);
         assert_eq!(state_of(0), 0);
         let ops = [
             (FilterOp::Eq, true),

@@ -2,9 +2,9 @@
 //! exists in the schema and targets can serve it; there are no game
 //! mechanics for it yet (FR-048, after 1.0).
 
+use openairside_core::build::grid::{Cell, Zone};
+use openairside_core::build::target::{LoadKind, Target};
 use openairside_core::geometry::{CellPos, CellRect, MapSize};
-use openairside_core::grid::{Cell, Zone};
-use openairside_core::target::{LoadKind, Target};
 use openairside_core::world::World;
 
 #[test]
@@ -27,6 +27,7 @@ fn a_world_holds_freight_targets_next_to_passenger_targets() {
         y1: 16,
     };
     world
+        .build_mut()
         .grid_mut()
         .fill(rect, Cell::floor(Zone::Landside))
         .unwrap();
@@ -35,19 +36,23 @@ fn a_world_holds_freight_targets_next_to_passenger_targets() {
         y: 3,
         floor: 0,
     };
-    let passengers = world.add_target(Target::passengers(vec![cell])).unwrap();
+    let passengers = world
+        .build_mut()
+        .add_target(Target::passengers(vec![cell]))
+        .unwrap();
     let freight = world
+        .build_mut()
         .add_target(Target {
             cells: vec![cell],
             load: LoadKind::Freight,
         })
         .unwrap();
     assert_eq!(
-        world.targets()[usize::from(passengers)].load,
+        world.build().targets()[usize::from(passengers)].load,
         LoadKind::Passengers
     );
     assert_eq!(
-        world.targets()[usize::from(freight)].load,
+        world.build().targets()[usize::from(freight)].load,
         LoadKind::Freight
     );
 }

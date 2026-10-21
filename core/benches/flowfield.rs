@@ -23,11 +23,11 @@ use std::time::Instant;
 use openairside_core::adoption::AdoptionMode;
 use openairside_core::command::Command;
 use openairside_core::event::Event;
-use openairside_core::flowfield::FieldSet;
 use openairside_core::geometry::MapSize;
 use openairside_core::scenario::{reference_terminal, target_count};
 use openairside_core::simulation::{Simulation, SimulationConfig};
 use openairside_core::time::Speed;
+use openairside_core::wayfinding::flowfield::FieldSet;
 
 const PERSONS: u32 = 10_000;
 const TERMINAL_EDGE: u16 = 768;
@@ -91,13 +91,13 @@ fn run() -> Result<bool, String> {
     let map = MapSize::new(2048, 2048).ok_or("invalid map size")?;
     let world = reference_terminal(map, TERMINAL_EDGE, GATES, PERSONS, 2026)
         .ok_or("the terminal does not fit on the map")?;
-    if world.targets().len() != target_count(usize::from(GATES)) {
+    if world.build().targets().len() != target_count(usize::from(GATES)) {
         return Err("unexpected number of targets".into());
     }
 
     // (1) Full recomputation on all cores, as measured in spike 1.5.
     let cpus = std::thread::available_parallelism().map_or(1, std::num::NonZero::get);
-    let input = world.field_input();
+    let input = openairside_core::wayfinding::Wayfinding::input(world.build());
     let pool = rayon::ThreadPoolBuilder::new()
         .num_threads(cpus)
         .build()

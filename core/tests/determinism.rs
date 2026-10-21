@@ -3,10 +3,10 @@
 //! the flow fields after build actions.
 
 use openairside_core::adoption::AdoptionMode;
+use openairside_core::build::grid::Cell;
 use openairside_core::command::Command;
 use openairside_core::event::Event;
 use openairside_core::geometry::{CellPos, MapSize};
-use openairside_core::grid::Cell;
 use openairside_core::scenario::reference_terminal;
 use openairside_core::simulation::{Simulation, SimulationConfig};
 use openairside_core::time::Speed;
@@ -40,15 +40,23 @@ fn run(threads: usize, background_threads: usize) -> (u64, Vec<(u32, u32)>) {
         match sim.tick() {
             60 => {
                 for x in 30..34 {
-                    sim.world_mut().grid_mut().set(door(x), Cell::VOID).unwrap();
+                    sim.world_mut()
+                        .build_mut()
+                        .grid_mut()
+                        .set(door(x), Cell::VOID)
+                        .unwrap();
                 }
                 sim.request_recompute();
             }
             200 => {
                 for x in 30..34 {
                     sim.world_mut()
+                        .build_mut()
                         .grid_mut()
-                        .set(door(x), Cell::floor(openairside_core::grid::Zone::Landside))
+                        .set(
+                            door(x),
+                            Cell::floor(openairside_core::build::grid::Zone::Landside),
+                        )
                         .unwrap();
                 }
                 sim.request_recompute();

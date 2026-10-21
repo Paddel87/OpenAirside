@@ -11,9 +11,11 @@
 
 use rayon::prelude::*;
 
+use crate::build::grid::{
+    BLOCK, BLOCK_CELLS, FLOORS, GridSnapshot, STAIRS, WALL, Zone, floor_index,
+};
+use crate::build::target::Target;
 use crate::geometry::CellPos;
-use crate::grid::{BLOCK, BLOCK_CELLS, FLOORS, GridSnapshot, STAIRS, WALL, Zone, floor_index};
-use crate::target::Target;
 
 /// Planar directions 0 … 7 as (dx, dy): east, south-east, south, …
 pub const DIRS: [(i32, i32); 8] = [
@@ -499,8 +501,8 @@ mod tests {
     use std::collections::BinaryHeap;
 
     use super::*;
+    use crate::build::grid::{COST_AVOID, COST_MARKED, COST_NORMAL, Cell, Grid};
     use crate::geometry::MapSize;
-    use crate::grid::{COST_AVOID, COST_MARKED, COST_NORMAL, Cell, Grid};
     use crate::hash::StateHasher;
 
     struct Rng(u64);

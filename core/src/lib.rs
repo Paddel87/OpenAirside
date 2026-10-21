@@ -4,20 +4,24 @@
 //! JavaScript (rule 006 in `docs/decisions.md`). Step 2.2 provides the tick
 //! with time control, the command channel S-2, the event stream S-3 and the
 //! verification mode; the world grid and flow fields follow in step 2.3,
-//! the data pack loader (S-4) in step 2.4.
+//! the data pack loader (S-4) in step 2.4. Since step 3.9 (ADR-039) each
+//! domain module has its own folder (`build`, `wayfinding`, `persons`), and
+//! `world` puts them together in their fixed order with internal events
+//! between them (`internal`).
 
 pub mod adoption;
+pub mod build;
 pub mod command;
 pub mod datapack;
 pub mod event;
-pub mod flowfield;
 pub mod frame;
 pub mod geometry;
-pub mod grid;
 pub mod hash;
 pub mod host;
-pub mod network;
+pub mod internal;
 pub mod pacer;
+pub mod persons;
+pub mod pool;
 pub mod port;
 pub mod query;
 pub mod runner;
@@ -25,9 +29,9 @@ pub mod savegame;
 pub mod scenario;
 pub mod settings;
 pub mod simulation;
-pub mod target;
 pub mod text;
 pub mod time;
+pub mod wayfinding;
 pub mod world;
 
 /// Version of the simulation core, taken from the workspace manifest.

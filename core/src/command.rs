@@ -208,7 +208,7 @@ fn validate_debug(action: &DebugAction, map: MapSize) -> Result<(), Reason> {
         DebugAction::ClearPersons {} => Ok(()),
         DebugAction::SetWalls { area, .. } => check_area(*area, map),
         DebugAction::LoadScenario { persons, .. } => {
-            if usize::try_from(*persons).map_or(true, |p| p > crate::world::MAX_PERSONS) {
+            if usize::try_from(*persons).map_or(true, |p| p > crate::persons::MAX_PERSONS) {
                 Err(rejection(code::LIMIT_EXCEEDED))
             } else {
                 Ok(())

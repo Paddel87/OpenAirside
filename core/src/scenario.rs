@@ -8,13 +8,14 @@
 // areas, 2 runways, ~17 gates) replaces this procedural terminal; it is
 // built from data packs and a reference save game.
 
-use crate::command::Scenario;
-use crate::geometry::{CellPos, MapSize};
-use crate::grid::{
+use crate::build::grid::{
     COST_AVOID, COST_MARKED, COST_NORMAL, Cell, FLOORS, GROUND_INDEX, STAIRS, WALL, Zone,
 };
-use crate::target::Target;
-use crate::world::{SplitMix64, World};
+use crate::build::target::Target;
+use crate::command::Scenario;
+use crate::geometry::{CellPos, MapSize};
+use crate::persons::SplitMix64;
+use crate::world::World;
 
 /// Smallest and largest terminal edge in cells. The layout repeats walls
 /// every 64 cells and needs room for the hall, the security line and the
@@ -326,6 +327,7 @@ pub fn reference_terminal(
                         cost: dense.cost[i],
                     };
                     world
+                        .build_mut()
                         .grid_mut()
                         .set(cell_pos(origin, (x, y, f)), cell)
                         .ok()?;
@@ -335,7 +337,10 @@ pub fn reference_terminal(
     }
     for cells in targets {
         let cells = cells.into_iter().map(|c| cell_pos(origin, c)).collect();
-        world.add_target(Target::passengers(cells)).ok()?;
+        world
+            .build_mut()
+            .add_target(Target::passengers(cells))
+            .ok()?;
     }
     let mut rng = SplitMix64(seed);
     let starts: Vec<CellPos> = (0..persons)
@@ -353,7 +358,7 @@ pub fn reference_terminal(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::flowfield::FieldSet;
+    use crate::wayfinding::flowfield::FieldSet;
 
     fn map() -> MapSize {
         MapSize::new(512, 512).unwrap()
@@ -377,16 +382,16 @@ mod tests {
     #[test]
     fn the_terminal_has_the_documented_targets_and_floors() {
         let world = reference_terminal(map(), 256, 17, 100, 1).unwrap();
-        assert_eq!(world.targets().len(), target_count(17));
-        assert_eq!(world.persons(), 100);
+        assert_eq!(world.build().targets().len(), target_count(17));
+        assert_eq!(world.persons().len(), 100);
         // The ground floor holds all persons at the entrance row.
-        assert_eq!(world.per_floor()[GROUND_INDEX], 100);
+        assert_eq!(world.persons().per_floor()[GROUND_INDEX], 100);
         // Floors -2 … +2 all have walkable cells (metro … lounges).
         let origin = (512 - 256) / 2;
         for floor in -2..=2i8 {
             let any = (0..256u16).any(|x| {
                 (0..256u16).any(|y| {
-                    world.grid().walkable(CellPos {
+                    world.build().grid().walkable(CellPos {
                         x: origin + x,
                         y: origin + y,
                         floor,
@@ -395,7 +400,7 @@ mod tests {
             });
             assert!(any, "floor {floor} is empty");
         }
-        assert!(!world.grid().walkable(CellPos {
+        assert!(!world.build().grid().walkable(CellPos {
             x: 0,
             y: 0,
             floor: 0
@@ -411,15 +416,25 @@ mod tests {
             y: 128 + 254,
             floor: 0,
         };
-        for target in 0..world.targets().len() {
+        for target in 0..world.build().targets().len() {
             let target = u8::try_from(target).unwrap();
             assert!(
-                world.fields().path_cost(target, entrance(5)).is_some(),
+                world
+                    .wayfinding()
+                    .fields()
+                    .path_cost(target, entrance(5))
+                    .is_some(),
                 "target {target} not reachable"
             );
-            assert!(world.fields().path_cost(target, entrance(200)).is_some());
+            assert!(
+                world
+                    .wayfinding()
+                    .fields()
+                    .path_cost(target, entrance(200))
+                    .is_some()
+            );
         }
-        assert!(world.fields().cells() > 0);
+        assert!(world.wayfinding().fields().cells() > 0);
     }
 
     #[test]
@@ -428,9 +443,9 @@ mod tests {
         let mut world = reference_terminal(map(), 256, 17, 400, 3).unwrap();
         world.rebuild_fields_now(&pool);
         for _ in 0..30_000 {
-            world.advance(&pool);
+            world.step(&pool, &pool, 0, true);
         }
-        let per_floor = world.per_floor();
+        let per_floor = world.persons().per_floor();
         assert_eq!(per_floor.iter().sum::<u32>(), 400);
         assert!(
             per_floor.iter().filter(|&&n| n > 0).count() >= 3,
@@ -441,7 +456,7 @@ mod tests {
     #[test]
     fn unreachable_counts_are_zero_for_the_reference_terminal() {
         let world = reference_terminal(map(), 256, 17, 0, 1).unwrap();
-        let input = world.field_input();
+        let input = crate::wayfinding::Wayfinding::input(world.build());
         let set = pool(2).install(|| FieldSet::compute(&input, 0));
         assert_eq!(set.targets(), target_count(17));
         let stuck: u32 = (0..set.targets())
