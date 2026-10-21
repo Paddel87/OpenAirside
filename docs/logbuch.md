@@ -24,6 +24,20 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-21 01:17 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung nach dem `[SESSIONENDE]` 2026-10-20 23:15 UTC, rund 2 Stunden bis 01:17 UTC (mit Pausen).
+- **Bearbeitet:** Fragen des Projektinhabers zu 3.9 und zu den Grafiken; Abnahme der Spielgrafiken als Regel (`docs/stilleitfaden.md` Abschnitt 7) mit Akzeptanzkriterium in 3.1, 3.2, 3.4, 3.5; zehn Probeentwürfe mit Übersichtsseite (privates Artifact); Entwurf der Lackierungen in 3.6 eingetragen; PR #32 nach Anweisung („Mach daraus ein PR und merge ihn“) eröffnet und gemergt, Merge-Commit `89aa217`, 39 Prüfungen grün auf `308aa64`.
+- **Erreicht:** Ablauf für Grafik-Entwürfe festgelegt; Lackierungen haben einen Landeplatz (3.6).
+- **Offen geblieben:** Wahl des Projektinhabers zu den Probeentwürfen (spätestens vor 3.1); Ausrichtung von Fahrzeugen und Flugzeugen bei Drehung 0 (3.4). Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf `docs/grafik-abnahme` und geht mit dem PR des nächsten Schritts nach `main`.
+- **Nächster Schritt:** 3.9 Kernstruktur der Fachmodule, Entwurf als `ENTSCHEIDUNG ERFORDERLICH` vor dem Code (Entscheidungs-Klasse).
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 01:16 UTC). Seit dem letzten Sessionende kein Fahrplan-Schritt bearbeitet, nur Dokumentationspflege (Routine); abgegeben: keine Teilarbeiten.
+- **Kontextgröße:** 379.648 Token laut `get_session` 01:16 UTC, unter der Grenze von 400.000, aber nahe daran. Empfehlung: 3.9 in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 01:16 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt.
+- **Archivierung und Größen:** keine Trigger; Logbuch rund 490 Zeilen (Grenze 800).
+- **Drift-Prüfung:** README unverändert gültig (Phase, Reife, Nächste Schritte); keine ADRs, Anforderungen oder Blocker geändert; Modulnamen in 3.6 (Spielfeld ergänzt) stimmen mit der Modul-Karte; Phase 3 bei 15 Schritten.
+
 ### 2026-10-21 (UTC) – [BEOBACHTUNG]
 
 - **Probeentwürfe:** Rückmeldung des Projektinhabers „vielversprechend“, noch keine Wahl.
