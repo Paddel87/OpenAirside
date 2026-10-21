@@ -340,15 +340,15 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Status:** OFFEN
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 3.5
-- **Freigabepflichtig:** ja, für die Schemas `aircraft/` und `airlines/` (Kategorie 5, additiv nach Regel-008 falls rückwärtskompatibel)
-- **Empfohlene Klasse:** Routine – Umsetzung nach Inventar; Entscheidung nur bei Vertragsfragen.
+- **Freigabepflichtig:** ja, für die Schemas `aircraft/` und `airlines/` (Kategorie 5, additiv nach Regel-008 falls rückwärtskompatibel) und für die Darstellung der Lackierungen (Kategorie 1 und 4: Einfärben im Spielfeld, Lackierung als Inhaltsart; Erweiterung von `docs/stilleitfaden.md` um Airline-Farben und Logos)
+- **Empfohlene Klasse:** Routine – Umsetzung nach Inventar; Entscheidung bei Vertragsfragen und beim Entwurf der Lackierungen (Architektur und Datenmodell).
 - **Eingangskriterien:** 3.5 erledigt
 - **Anforderungen (ab Klasse M):** FR-030, FR-036, FR-039, FR-044 (Airline und Flugzeugtyp aus dem Mod-Ordner)
-- **Zu tun:** GA und kleine Linienflüge (Propellermaschinen, Szenario „Einsteiger“), Flugplaner als große Tabelle über S-7 mit Sortierung im Kern, Geld und Bewertung in Grundform; Wörterbuch- und Detail-Texte als `{ key }`/`{ text }`, `tick` im Detail (ADR-032, L-6); Schema der Inhaltsarten `aircraft/` und `airlines/` (aus 2.4, ADR-025).
-- **Akzeptanzkriterien:** `core/tests/flights.rs` und `core/tests/economy.rs` in Grundform grün; `app/tables.bench.ts`: 10.000 Zeilen sortieren und filtern < 100 ms (FR-039); Rauchtest lädt Airline und Flugzeugtyp aus dem Mod-Ordner; Szenario „Einsteiger“ spielbar (Abschlusskriterium der Phase, Spieltest des Projektinhabers).
-- **Betroffene Module:** Flugbetrieb, Wirtschaft & Management, Oberfläche, Inhalte & Mods, Brücke
+- **Zu tun:** GA und kleine Linienflüge (Propellermaschinen, Szenario „Einsteiger“), Flugplaner als große Tabelle über S-7 mit Sortierung im Kern, Geld und Bewertung in Grundform; Wörterbuch- und Detail-Texte als `{ key }`/`{ text }`, `tick` im Detail (ADR-032, L-6); Schema der Inhaltsarten `aircraft/` und `airlines/` (aus 2.4, ADR-025). **Lackierungen** (AIR-01, MOD-01; Antwort des Projektinhabers vom 2026-10-21): Entwurf als `ENTSCHEIDUNG ERFORDERLICH` vor dem Code. Ausgangshypothese: je Flugzeugtyp eine Grundgrafik mit markierten Flächen für Airline-Farbe 1 und 2 (Seitenleitwerk, Triebwerke, Flügelspitzen, Rumpfstreifen), je Airline Farben und ein Logo als eigene SVG-Grafik auf dem Rumpfdach, Einfärben und Logo beim Zeichnen im Spielfeld statt vorgerenderter Grafiken je Airline und Typ (Speicher der Atlanten). Mehrere Lackierungen je Typ und Airline, seltene Lackierungen. Nur erfundene Airlines und Logos im Basispaket (Markenrecht, `docs/vision.md` Risiken). Stilleitfaden: Airline-Farben außerhalb der Palette, Logos mit Schriftzug als Ausnahme von „kein Text in Grafiken“. Abnahme der Grafiken nach `docs/stilleitfaden.md` Abschnitt 7.
+- **Akzeptanzkriterien:** `core/tests/flights.rs` und `core/tests/economy.rs` in Grundform grün; `app/tables.bench.ts`: 10.000 Zeilen sortieren und filtern < 100 ms (FR-039); Rauchtest lädt Airline und Flugzeugtyp aus dem Mod-Ordner; Szenario „Einsteiger“ spielbar (Abschlusskriterium der Phase, Spieltest des Projektinhabers); Lackierungen per ADR entschieden, zwei Airlines mit unterschiedlicher Lackierung auf demselben Flugzeugtyp im Spielfeld unterscheidbar in allen drei Atlas-Stufen, Airline aus dem Mod-Ordner mit eigener Lackierung im Rauchtest; neue Grafiken vom Projektinhaber abgenommen (`docs/stilleitfaden.md` Abschnitt 7).
+- **Betroffene Module:** Flugbetrieb, Wirtschaft & Management, Oberfläche, Inhalte & Mods, Brücke, Spielfeld
 - **Reifegrad-Wirkung:** Module Flugbetrieb und Oberfläche → `[BELASTBAR]` im umgesetzten Umfang
-- **Artefakte:** Kern-Code, Schemas, Flugplaner, Tests
+- **Artefakte:** Kern-Code, Schemas, Flugplaner, Tests, ADR zu den Lackierungen, Grundgrafiken und Airline-Logos
 
 ### Phase 4: Härtung des vertikalen Schnitts – Typ: STABILISIERUNG
 

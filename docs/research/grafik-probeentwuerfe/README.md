@@ -13,4 +13,5 @@ Probematerial für den Stil der Spielgrafiken, vorgelegt nach `docs/stilleitfade
 - Alle zehn Dateien bestehen `checkSvg` aus `scripts/assets.mjs`.
 - Übersichtsseite mit den drei Atlas-Stufen und einer Beispielszene: <https://claude.ai/artifact/LcxV23uZmJj8KNjZHyeYDm> (privat, nur für den Projektinhaber).
 - **Offene Festlegung:** Für Fahrzeuge und Flugzeuge regelt der Stilleitfaden die Ausrichtung bei Drehung 0 noch nicht. Die Entwürfe zeigen die Front nach rechts (+x). Festlegung mit 3.4, passend zur Ausrichtung in S-1 Layout 2 (ADR-038).
-- **Wahl des Projektinhabers:** steht aus.
+- **Lackierungen nach Airline:** Entwurf in 3.6 (Grundgrafik mit Farbflächen, Logo auf dem Rumpfdach, Farben der Airline; Fahrplan). Die Grundgrafik des Flugzeugs aus 3.4 wird dafür um markierte Farbflächen ergänzt.
+- **Wahl des Projektinhabers:** steht aus (2026-10-21: „vielversprechend“, noch keine abschließende Entscheidung).

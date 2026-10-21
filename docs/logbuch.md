@@ -24,6 +24,11 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-21 (UTC) – [BEOBACHTUNG]
+
+- **Probeentwürfe:** Rückmeldung des Projektinhabers „vielversprechend“, noch keine Wahl.
+- **Frage Lackierungen und Logos:** beantwortet. Detail je Stufe (Flugzeug 608 × 576 px bei 32 px, 152 × 144 px bei 8 px); von oben sichtbar sind Rumpfdach, Leitwerk als Strich, Triebwerke, Flügelspitzen; reale Airline-Logos sind Marken. Vorschlag Grundgrafik mit Farbflächen, Logo auf dem Dach, Einfärben im Spielfeld. Auf Antwort „Ja, trag das bei 3.6 ein“ als Entwurfspunkt mit Akzeptanzkriterium und Freigabepflicht (Kategorie 1 und 4) in 3.6 eingetragen; Spielfeld zu den betroffenen Modulen ergänzt. Kein neuer Schritt, Phase 3 bleibt bei 15.
+
 ### 2026-10-21 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Anlass:** Frage des Projektinhabers, ob man sich Entwürfe von Bauelementen und Verkehrsmitteln zeigen lassen kann. Befund: Eine Abnahme der Spielgrafiken durch den Projektinhaber war nirgends vorgesehen; die bisherigen Grafiken (Bank, Boden, Wand, Ersatzgrafik, Symbol) waren Testmaterial der Pipeline aus 2.10.
