@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-20 (Session ab 22:24 UTC, Schritt 3.15 erledigt)
+- **Stand vom:** 2026-10-21 (Session ab 22:30 UTC, Vorlage zu 3.9)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (3.15 erledigt am 2026-10-20, Reifegrad NFR Performance unter Windows `[BELASTBAR]` mit Auflage 3.1)
-- **Nächster Schritt:** 3.9 Kernstruktur der Fachmodule (Entwurf als `ENTSCHEIDUNG ERFORDERLICH` vor dem Code)
+- **Aktiver Schritt:** 3.9 Kernstruktur der Fachmodule – Vorlage zur Freigabe (`docs/research/3.9-kernstruktur.md`); 3.15 erledigt am 2026-10-20
+- **Nächster Schritt:** nach Freigabe ADR-039 und Umbau 3.9; danach 3.10
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 7 / 10 (ADR-029 bis ADR-038) über dem Schwellenwert; Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
@@ -181,7 +181,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.9: Kernstruktur der Fachmodule
 
-- **Status:** OFFEN
+- **Status:** WARTET-AUF-FREIGABE (Vorlage vom 2026-10-21: `docs/research/3.9-kernstruktur.md`)
 - **Phasentyp-Kontext:** UMSETZUNG (Umbau des bestehenden Kerns; Entwurf als Vorlage vor dem Code)
 - **Abhängigkeiten:** 3.7, 3.8
 - **Freigabepflichtig:** ja (Kategorie 1 und 4) – Entwurf als `ENTSCHEIDUNG ERFORDERLICH` vor dem Code

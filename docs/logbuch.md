@@ -24,6 +24,21 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-21 23:10 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 3.9 Kernstruktur der Fachmodule (Kategorie 1 und 4; Kategorie 5 nur für Rust-Pfade im Kern-Crate).
+- **Vorlage:** `docs/research/3.9-kernstruktur.md`. Optionen: A Fachmodule `build/`, `wayfinding/`, `persons/` mit eigenem Zustand, Spielstand-Teil, Prüfung und Prüfsumme, feste Reihenfolge Welt & Bau → Wegfindung → Personen, Wirkungen als Rückgabewerte, Baustein `Pool<T>` für Objektarten (Empfehlung); B wie A mit interner Ereignis-Warteschlange; C nur Ordnerablage.
+- **Vertragsabgleich S-5 (Maßnahmen 7–9):** keine Abweichung vom Vertrag; Format-Version 1 → 2 nach der Versionierungsregel von S-5, Prüfsumme bleibt wertgleich.
+- **Klassifikation:** geplanter Entwurf aus ADR-036, ändert keinen ADR jünger als 14 Tagen (der Satz zu internen Ereignissen stammt aus der Initialisierung von `architecture.md`, nicht aus einem ADR) → nicht `[REAKTIV]`.
+
+### 2026-10-21 22:30 (UTC) – [SESSIONSTART]
+
+- **Anlass:** Schritt 3.9 Kernstruktur der Fachmodule, in neuer Session nach Empfehlung des letzten `[SESSIONENDE]` (Kontext 379.648 Token) und Anweisung des Projektinhabers („Weiter mit 3.9 in neuer Session“).
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` laut `get_session` 22:30 UTC → Entscheidungs-Klasse. Passt zur Empfehlung von 3.9 (Entwurf: Entscheidung, Eskalations-Auslöser 1).
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session`.
+- **Pflichtlektüre:** vollständig (project-context, Logbuch ab `[SESSIONENDE]` 2026-10-21 01:17 UTC von `origin/docs/grafik-abnahme`, Fahrplan Stand und Phase 3, Architektur 1/2/9, Decisions A/C, Blocker, Requirements-Übersicht).
+- **Branch:** `refactor/3-9-kernstruktur-fachmodule` vom aktuellen `main` (`89aa217`); Sessionende-Commit `7fcc3bb` übernommen (`85f809a`) nach `project-context.md` Abschnitt 10.
+
 ### 2026-10-21 01:17 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** Fortsetzung nach dem `[SESSIONENDE]` 2026-10-20 23:15 UTC, rund 2 Stunden bis 01:17 UTC (mit Pausen).
