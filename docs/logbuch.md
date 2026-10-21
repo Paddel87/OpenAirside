@@ -17,12 +17,57 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14 und 3.15 sind erledigt, nächster Schritt 3.9.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, nächster Schritt 3.10.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-21 23:20 (UTC) – [BEOBACHTUNG]
+
+- **3.9 umgesetzt:** Kern nach ADR-039 umgebaut (`383f545`), Dokumente nachgezogen (`3308f96`); PR #33 nach Anweisung „Mach daraus ein PR und merge ihn bei grün“ eröffnet.
+- **Prüfsumme wertgleich:** Basislauf vor und nach dem Umbau `f8580b54e3165422` (Tick 590), alle Zwischenwerte gleich; der temporäre Test wurde nicht committet.
+- **Einziger angepasster Testwert:** `savegame_roundtrip.rs` nahm Format 2 als „zu neu“ an; jetzt 3 als zu neu, 0 und 1 als `migrationFailed`.
+- **Kleine Abweichung im Detail:** Zwei `setWalls` in derselben Befehlsgruppe berechneten früher die erste Anfrage mit dem Zwischenstand; jetzt beide in der Stufe Wegfindung mit dem Endstand. Revisionen, übernommenes Ergebnis und Spielstand sind gleich, weil eine neuere Anfrage die ältere ersetzt.
+- **Zeitstempel berichtigt:** `[ENTSCHEIDUNG-VORGELEGT]` und `[ADR-ANGELEGT]` trugen geschätzte Zeiten (23:10, 23:25); nach den Commit-Zeiten 22:35 und 22:42.
+- **Werkzeuge im Container:** pre-commit installiert; Node 26.11.1 mit Prüfsumme nach `~/node26` für `check:types`; cargo-llvm-cov 0.9.1.
+- **Modell-Arbeit:** Umbau (Routine) lief auf der Entscheidungs-Klasse; keine Abgabe, Probelauf offen.
+
+### 2026-10-21 22:42 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-039** Kernstruktur der Fachmodule mit interner Ereignis-Warteschlange, `[STRATEGISCH]`, nicht reaktiv. Freigabe des Projektinhabers per Auswahl „B freigeben“ (gegen die Empfehlung A; keine Begründung genannt). Reaktiv-Quote 7 / 10 → 6 / 10 (ADR-030 bis ADR-039).
+- **Drift behoben:** In `decisions.md` Teil B fehlte der Listeneintrag zu ADR-038; nachgetragen.
+- **Basis vor dem Umbau:** temporärer Test mit Referenz-Terminal 256², 3.000 Personen, Prüfmodus (Übernahme nach 20 Ticks), `setWalls` bei Schritt 50 und 300, Pause 120–130 mit `spawnPersons` 500: Prüfsumme nach 600 Schritten `f8580b54e3165422` (Tick 590), Zwischenwerte je 100 Schritte in der Session festgehalten. Muss nach dem Umbau gleich sein.
+
+### 2026-10-21 22:35 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 3.9 Kernstruktur der Fachmodule (Kategorie 1 und 4; Kategorie 5 nur für Rust-Pfade im Kern-Crate).
+- **Vorlage:** `docs/research/3.9-kernstruktur.md`. Optionen: A Fachmodule `build/`, `wayfinding/`, `persons/` mit eigenem Zustand, Spielstand-Teil, Prüfung und Prüfsumme, feste Reihenfolge Welt & Bau → Wegfindung → Personen, Wirkungen als Rückgabewerte, Baustein `Pool<T>` für Objektarten (Empfehlung); B wie A mit interner Ereignis-Warteschlange; C nur Ordnerablage.
+- **Vertragsabgleich S-5 (Maßnahmen 7–9):** keine Abweichung vom Vertrag; Format-Version 1 → 2 nach der Versionierungsregel von S-5, Prüfsumme bleibt wertgleich.
+- **Klassifikation:** geplanter Entwurf aus ADR-036, ändert keinen ADR jünger als 14 Tagen (der Satz zu internen Ereignissen stammt aus der Initialisierung von `architecture.md`, nicht aus einem ADR) → nicht `[REAKTIV]`.
+
+### 2026-10-21 22:30 (UTC) – [SESSIONSTART]
+
+- **Anlass:** Schritt 3.9 Kernstruktur der Fachmodule, in neuer Session nach Empfehlung des letzten `[SESSIONENDE]` (Kontext 379.648 Token) und Anweisung des Projektinhabers („Weiter mit 3.9 in neuer Session“).
+- **Modell:** eingestellt `claude-opus-5-5`, bedient `claude-opus-5-5` laut `get_session` 22:30 UTC → Entscheidungs-Klasse. Passt zur Empfehlung von 3.9 (Entwurf: Entscheidung, Eskalations-Auslöser 1).
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session`.
+- **Pflichtlektüre:** vollständig (project-context, Logbuch ab `[SESSIONENDE]` 2026-10-21 01:17 UTC von `origin/docs/grafik-abnahme`, Fahrplan Stand und Phase 3, Architektur 1/2/9, Decisions A/C, Blocker, Requirements-Übersicht).
+- **Branch:** `refactor/3-9-kernstruktur-fachmodule` vom aktuellen `main` (`89aa217`); Sessionende-Commit `7fcc3bb` übernommen (`85f809a`) nach `project-context.md` Abschnitt 10.
+
+### 2026-10-21 01:17 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung nach dem `[SESSIONENDE]` 2026-10-20 23:15 UTC, rund 2 Stunden bis 01:17 UTC (mit Pausen).
+- **Bearbeitet:** Fragen des Projektinhabers zu 3.9 und zu den Grafiken; Abnahme der Spielgrafiken als Regel (`docs/stilleitfaden.md` Abschnitt 7) mit Akzeptanzkriterium in 3.1, 3.2, 3.4, 3.5; zehn Probeentwürfe mit Übersichtsseite (privates Artifact); Entwurf der Lackierungen in 3.6 eingetragen; PR #32 nach Anweisung („Mach daraus ein PR und merge ihn“) eröffnet und gemergt, Merge-Commit `89aa217`, 39 Prüfungen grün auf `308aa64`.
+- **Erreicht:** Ablauf für Grafik-Entwürfe festgelegt; Lackierungen haben einen Landeplatz (3.6).
+- **Offen geblieben:** Wahl des Projektinhabers zu den Probeentwürfen (spätestens vor 3.1); Ausrichtung von Fahrzeugen und Flugzeugen bei Drehung 0 (3.4). Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf `docs/grafik-abnahme` und geht mit dem PR des nächsten Schritts nach `main`.
+- **Nächster Schritt:** 3.9 Kernstruktur der Fachmodule, Entwurf als `ENTSCHEIDUNG ERFORDERLICH` vor dem Code (Entscheidungs-Klasse).
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 01:16 UTC). Seit dem letzten Sessionende kein Fahrplan-Schritt bearbeitet, nur Dokumentationspflege (Routine); abgegeben: keine Teilarbeiten.
+- **Kontextgröße:** 379.648 Token laut `get_session` 01:16 UTC, unter der Grenze von 400.000, aber nahe daran. Empfehlung: 3.9 in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed` laut `get_session` 01:16 UTC.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt.
+- **Archivierung und Größen:** keine Trigger; Logbuch rund 490 Zeilen (Grenze 800).
+- **Drift-Prüfung:** README unverändert gültig (Phase, Reife, Nächste Schritte); keine ADRs, Anforderungen oder Blocker geändert; Modulnamen in 3.6 (Spielfeld ergänzt) stimmen mit der Modul-Karte; Phase 3 bei 15 Schritten.
 
 ### 2026-10-21 (UTC) – [BEOBACHTUNG]
 

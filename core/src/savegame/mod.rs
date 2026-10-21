@@ -29,7 +29,7 @@ pub const CONTAINER_VERSION: u16 = 1;
 /// Version of the world state format; rises with every change that is not
 /// additive. Before version 1.0 older save games are rejected with
 /// `migrationFailed` (S-5).
-pub const FORMAT_VERSION: u32 = 1;
+pub const FORMAT_VERSION: u32 = 2;
 
 /// Largest save game file (512 MB, ADR-030).
 pub const MAX_FILE_BYTES: u64 = 1 << 29;
@@ -116,13 +116,13 @@ pub fn error(code: &str) -> Reason {
     Reason::new(TEXT_PREFIX, code)
 }
 
-fn limit(name: &str, max: f64) -> Reason {
+pub(crate) fn limit(name: &str, max: f64) -> Reason {
     error(code::LIMIT_EXCEEDED)
         .with_text("limit", name)
         .with_number("max", max)
 }
 
-fn invalid(check: &str) -> Reason {
+pub(crate) fn invalid(check: &str) -> Reason {
     error(code::INVALID_STATE).with_text("check", check)
 }
 

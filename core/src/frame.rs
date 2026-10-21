@@ -25,8 +25,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::build::grid::floor_index;
 use crate::geometry::MapSize;
-use crate::grid::floor_index;
 use crate::time::Tick;
 use crate::world::World;
 
@@ -145,11 +145,11 @@ impl Snapshot {
         self.tick = tick;
         self.width = map.width;
         self.height = map.height;
-        self.fields_revision = world.fields_revision();
+        self.fields_revision = world.wayfinding().fields_revision();
         self.persons.clear();
-        self.persons.reserve(world.persons());
+        self.persons.reserve(world.persons().len());
         let persons = &mut self.persons;
-        world.visit_persons(|p| {
+        world.persons().visit(|p| {
             persons.push(Packed {
                 x: fixed(p.x, map.width),
                 y: fixed(p.y, map.height),

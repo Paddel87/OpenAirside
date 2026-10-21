@@ -9,10 +9,10 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use openairside_core::adoption::AdoptionMode;
+use openairside_core::build::grid::{Cell, Zone};
 use openairside_core::command::Command;
 use openairside_core::datapack::{self, Catalog, game_version};
 use openairside_core::geometry::{CellPos, MapSize};
-use openairside_core::grid::{Cell, Zone};
 use openairside_core::hash::StateHasher;
 use openairside_core::savegame::{
     self, Limits, MAX_INFO_BYTES, SaveKind, SaveRequest, code, decode, read_info,
@@ -80,7 +80,11 @@ fn build_and_recompute(sim: &mut Simulation) -> u32 {
             y: EDGE / 2 + 30,
             floor: 0,
         };
-        sim.world_mut().grid_mut().set(pos, Cell::VOID).unwrap();
+        sim.world_mut()
+            .build_mut()
+            .grid_mut()
+            .set(pos, Cell::VOID)
+            .unwrap();
     }
     sim.request_recompute()
 }
@@ -148,7 +152,7 @@ fn loading_restores_the_state_hash() {
         session + 1,
         "loading starts a new session"
     );
-    assert_eq!(loaded.world().persons(), 2_000);
+    assert_eq!(loaded.world().persons().len(), 2_000);
 }
 
 #[test]
@@ -172,8 +176,8 @@ fn loading_during_a_recomputation_restores_the_hash_and_continues_bit_for_bit() 
     // Both continue identically: the result is adopted at the saved tick.
     steps(&mut sim, 100);
     steps(&mut loaded, 100);
-    assert_eq!(sim.world().fields_revision(), revision);
-    assert_eq!(loaded.world().fields_revision(), revision);
+    assert_eq!(sim.world().wayfinding().fields_revision(), revision);
+    assert_eq!(loaded.world().wayfinding().fields_revision(), revision);
     assert_eq!(loaded.state_hash(), sim.state_hash());
 }
 
@@ -280,15 +284,19 @@ fn damaged_files_are_rejected_in_the_order_of_the_contract() {
     longer.push(0);
     assert_eq!(code_of(&longer), code::CHECKSUM_MISMATCH);
 
+    assert_eq!(bytes[8], 2, "world state format 2 (ADR-039)");
     let mut newer = bytes.clone();
-    newer[8] = 2; // world state format 2
+    newer[8] = 3; // world state format 3
     assert_eq!(code_of(&newer), code::VERSION_TOO_NEW);
     let mut container = bytes.clone();
     container[6] = 9;
     assert_eq!(code_of(&container), code::VERSION_TOO_NEW);
-    let mut older = bytes.clone();
-    older[8] = 0;
-    assert_eq!(code_of(&older), code::MIGRATION_FAILED);
+    for format in [0, 1] {
+        // Format 1 (before ADR-039) is not migrated before version 1.0 (S-5).
+        let mut older = bytes.clone();
+        older[8] = format;
+        assert_eq!(code_of(&older), code::MIGRATION_FAILED);
+    }
 
     // Length fields: header is 12 + 1 + 5 ("0.0.0") bytes, then four u32.
     let lengths = 18;
@@ -364,6 +372,7 @@ fn the_game_limits_allow_only_the_two_map_sizes() {
     cfg.map = map;
     let mut sim = Simulation::with_world(cfg, World::new(map)).unwrap();
     sim.world_mut()
+        .build_mut()
         .grid_mut()
         .set(
             CellPos {

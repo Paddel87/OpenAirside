@@ -75,7 +75,7 @@ impl SaveSnapshot {
             day: time.day,
             year: time.year,
             airport_name: airport_name.to_owned(),
-            map: self.grid.map(),
+            map: self.map(),
             packs: self.packs.clone(),
         };
         let meta = serde_json::to_vec(&meta).map_err(|_| invalid("meta"))?;

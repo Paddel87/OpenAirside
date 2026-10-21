@@ -6,24 +6,22 @@
 use std::collections::VecDeque;
 use std::fmt;
 use std::sync::Arc;
-use std::time::Instant;
 
 use rayon::ThreadPool;
 use serde::{Deserialize, Serialize};
 
-use crate::adoption::{Adoption, AdoptionMode};
+use crate::adoption::AdoptionMode;
 use crate::command::{
     self, Command, DebugAction, MAX_COMMANDS_PER_STEP, Scenario, code, rejection,
 };
 use crate::datapack::Catalog;
 use crate::event::{Event, EventQueue, EventRecord, MAX_IN_FLIGHT, SpeedChangeReason};
-use crate::flowfield::{FieldInput, FieldSet};
 use crate::geometry::MapSize;
 use crate::hash::StateHasher;
-use crate::network::NetworkKind;
 use crate::savegame::{self, LoadedGame, SaveSnapshot, SavedPack};
 use crate::text::{Params, Reason, Severity};
 use crate::time::{GameTime, Speed, TICKS_PER_DAY, Tick, is_day_start, is_night, next_morning};
+pub use crate::wayfinding::RecomputeStats;
 use crate::world::World;
 
 /// Code of the notice and rejection when the tick reaches its maximum.
@@ -79,19 +77,6 @@ pub fn default_threads(cores: usize) -> (usize, usize) {
     (threads, background)
 }
 
-/// Duration of the last adopted recomputation of the flow fields, from the
-/// request to the adoption at the start of a tick (measurement tool of step
-/// 2.7). Wall-clock time; it never affects the simulated state.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
-#[cfg_attr(feature = "ts", derive(ts_rs::TS), ts(export))]
-#[serde(rename_all = "camelCase")]
-pub struct RecomputeStats {
-    /// Revision of the adopted flow fields.
-    pub revision: u32,
-    /// Milliseconds from the request to the adoption.
-    pub millis: u32,
-}
-
 /// Errors when creating a simulation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SimulationError {
@@ -141,12 +126,6 @@ pub struct Simulation {
     counters: Counters,
     events: EventQueue,
     world: World,
-    fields: Adoption<FieldSet>,
-    /// Revision and time of the newest recompute request.
-    recompute_started: Option<(u32, Instant)>,
-    /// Input of the open recompute request, kept for save games (S-5).
-    pending_input: Option<FieldInput>,
-    last_recompute: Option<RecomputeStats>,
     /// Content of the loaded data packs (S-4) for this session.
     content: Arc<Catalog>,
     /// Content chosen for the next session ([`Simulation::set_next_content`]).
@@ -184,6 +163,7 @@ impl Simulation {
         };
         let pool = build(config.threads, "sim")?;
         let background = build(config.background_threads, "bg")?;
+        world.reset_adoption(config.adoption);
         world.rebuild_fields_now(&background);
         Ok(Self {
             config,
@@ -200,10 +180,6 @@ impl Simulation {
             counters: Counters::default(),
             events: EventQueue::new(),
             world,
-            fields: Adoption::new(config.adoption),
-            recompute_started: None,
-            pending_input: None,
-            last_recompute: None,
             content: Arc::new(Catalog::empty()),
             next_content: None,
         })
@@ -241,12 +217,13 @@ impl Simulation {
     /// Like [`Simulation::restart`], with the given world (new game or a
     /// loaded save game).
     pub fn restart_with_world(&mut self, mut world: World) {
+        world.reset_adoption(self.config.adoption);
         world.rebuild_fields_now(&self.background);
         self.restart_with_world_prepared(world);
     }
 
     /// Like [`Simulation::restart_with_world`] for a world whose flow
-    /// fields are computed already.
+    /// fields are computed and whose adoption is set already.
     fn restart_with_world_prepared(&mut self, world: World) {
         self.session = self.session.wrapping_add(1).max(1);
         self.state = CoreState::Ready;
@@ -258,10 +235,6 @@ impl Simulation {
         self.last_command_id = 0;
         self.events = EventQueue::new();
         self.world = world;
-        self.fields = Adoption::new(self.config.adoption);
-        self.recompute_started = None;
-        self.pending_input = None;
-        self.last_recompute = None;
         if let Some(content) = self.next_content.take() {
             self.content = content;
         }
@@ -271,27 +244,10 @@ impl Simulation {
     /// cheap, the encoding ([`SaveSnapshot::encode`]) can run elsewhere.
     #[must_use]
     pub fn save_snapshot(&self) -> SaveSnapshot {
-        let fields = self.world.fields();
-        let grid = self.world.grid();
         SaveSnapshot {
             tick: self.tick,
             speed: self.speed,
-            grid: grid.snapshot(),
-            grid_version: grid.version(),
-            targets: self.world.targets().to_vec(),
-            networks: NetworkKind::ALL
-                .iter()
-                .map(|&kind| self.world.network(kind).clone())
-                .collect(),
-            persons: self.world.saved_persons(),
-            fields_revision: fields.revision(),
-            fields: fields.source().clone(),
-            next_revision: self.fields.next_revision(),
-            pending: self
-                .fields
-                .pending()
-                .zip(self.pending_input.clone())
-                .map(|((revision, due), input)| (revision, due, input)),
+            world: self.world.snapshot(),
             packs: self
                 .content
                 .packs()
@@ -319,19 +275,13 @@ impl Simulation {
     pub fn load_game(&mut self, game: LoadedGame) -> Result<(), Reason> {
         let content = Arc::clone(self.next_content.as_ref().unwrap_or(&self.content));
         check_packs(&game.meta.packs, &content)?;
-        let (world, rest) = game.restored.into_world(&self.background)?;
+        let (tick, speed) = (game.restored.tick, game.restored.speed);
+        let world = game
+            .restored
+            .into_world(&self.background, self.config.adoption)?;
         self.restart_with_world_prepared(world);
-        self.tick = rest.tick;
-        self.speed = rest.speed;
-        self.fields = Adoption::resumed(self.config.adoption, rest.next_revision);
-        if let Some((revision, due, input)) = rest.pending {
-            self.pending_input = Some(input.clone());
-            self.fields
-                .resume_request(&self.background, revision, due, move |revision| {
-                    FieldSet::compute(&input, revision)
-                });
-            self.recompute_started = Some((revision, Instant::now()));
-        }
+        self.tick = tick;
+        self.speed = speed;
         Ok(())
     }
 
@@ -475,28 +425,20 @@ impl Simulation {
     /// in the background and returns the revision. Building (step 3.1)
     /// triggers it after every change.
     pub fn request_recompute(&mut self) -> u32 {
-        let input = self.world.field_input();
-        self.pending_input = Some(input.clone());
-        let revision = self
-            .fields
-            .request(&self.background, self.tick, move |revision| {
-                FieldSet::compute(&input, revision)
-            });
-        self.recompute_started = Some((revision, Instant::now()));
-        revision
+        self.world.request_recompute(&self.background, self.tick)
     }
 
     /// `true` while a recomputation of the flow fields runs or waits for
     /// adoption.
     #[must_use]
     pub fn is_recomputing(&self) -> bool {
-        self.fields.is_pending()
+        self.world.wayfinding().is_recomputing()
     }
 
     /// Duration of the last adopted recomputation in this session.
     #[must_use]
     pub fn last_recompute(&self) -> Option<RecomputeStats> {
-        self.last_recompute
+        self.world.wayfinding().last_recompute()
     }
 
     /// World for building and for tests; changes take effect for the flow
@@ -517,8 +459,10 @@ impl Simulation {
     }
 
     /// One pass of the tick: takes over up to 4,096 waiting commands and
-    /// answers each, adopts background results that are due and, unless the
-    /// game is paused, computes one simulation step.
+    /// answers each, then runs the stages of the domain modules in their
+    /// order (ADR-039): each takes its internal events and, unless the game
+    /// is paused, computes its simulation step. Background results that are
+    /// due are adopted in the stage "Wegfindung".
     pub fn step(&mut self) {
         if let Some(previous) = self.backpressure {
             if self.events.pending_len() > MAX_IN_FLIGHT as usize {
@@ -543,37 +487,26 @@ impl Simulation {
             answers.push((id, result));
         }
 
-        if let Some((revision, fields)) = self.fields.poll(self.tick) {
-            self.pending_input = None;
-            // The old set holds large buffers; freeing them is left to a
-            // background thread so that the tick is not delayed.
-            let old = self.world.adopt_fields(fields);
-            self.background.spawn(move || drop(old));
-            if let Some((started, at)) = self.recompute_started
-                && started == revision
-            {
-                self.last_recompute = Some(RecomputeStats {
-                    revision,
-                    millis: u32::try_from(at.elapsed().as_millis()).unwrap_or(u32::MAX),
-                });
-            }
+        let at_limit = self.speed.is_running() && self.tick == Tick::MAX;
+        let running = self.speed.is_running() && !at_limit;
+        if let Some(revision) = self
+            .world
+            .step(&self.pool, &self.background, self.tick, running)
+        {
             others.push(Event::WaypointsAdopted { revision });
         }
 
-        if self.speed.is_running() {
-            if self.tick == Tick::MAX {
-                self.speed = Speed::Paused;
-                others.push(Event::SpeedChanged {
-                    speed: Speed::Paused,
-                    reason: None,
-                });
-                others.push(tick_limit_notice());
-            } else {
-                self.world.advance(&self.pool);
-                self.tick += 1;
-                if is_day_start(self.tick) {
-                    others.push(day_started(self.tick));
-                }
+        if at_limit {
+            self.speed = Speed::Paused;
+            others.push(Event::SpeedChanged {
+                speed: Speed::Paused,
+                reason: None,
+            });
+            others.push(tick_limit_notice());
+        } else if running {
+            self.tick += 1;
+            if is_day_start(self.tick) {
+                others.push(day_started(self.tick));
             }
         }
 
@@ -655,13 +588,12 @@ impl Simulation {
                 self.world.clear_persons();
                 Ok(())
             }
-            DebugAction::SetWalls { area, wall } => {
-                self.world
-                    .set_walls(*area, *wall)
-                    .map_err(|_| rejection(code::OUT_OF_MAP))?;
-                self.request_recompute();
-                Ok(())
-            }
+            // The flow fields follow through the internal event of the
+            // module "Welt & Bau" in the stage "Wegfindung" (ADR-039).
+            DebugAction::SetWalls { area, wall } => self
+                .world
+                .set_walls(*area, *wall)
+                .map_err(|_| rejection(code::OUT_OF_MAP)),
             DebugAction::LoadScenario { scenario, persons } => {
                 if *scenario == Scenario::ReferenceTerminal
                     && !crate::scenario::fits_reference_terminal(self.config.map)
@@ -679,7 +611,7 @@ impl Simulation {
             return Err(rejection(code::NOT_NIGHT));
         }
         // TODO(fahrplan-ref: 3.4): also block while aircraft are moving.
-        if self.world.has_active_persons() {
+        if self.world.persons().has_active() {
             return Err(rejection(code::NIGHT_SKIP_BLOCKED));
         }
         let morning = next_morning(self.tick).ok_or_else(|| rejection(TICK_LIMIT))?;
@@ -947,7 +879,7 @@ mod tests {
             1,
             DebugAction::SpawnPersons { count: 50 }
         )));
-        assert_eq!(sim.world().persons(), 50);
+        assert_eq!(sim.world().persons().len(), 50);
         let area = crate::geometry::CellRect {
             floor: 0,
             x0: 10,
@@ -965,15 +897,15 @@ mod tests {
             y: 15,
             floor: 0,
         };
-        assert!(!sim.world().grid().walkable(inside));
+        assert!(!sim.world().build().grid().walkable(inside));
         assert!(ok(&debug(
             &mut sim,
             3,
             DebugAction::SetWalls { area, wall: false }
         )));
-        assert!(sim.world().grid().walkable(inside));
+        assert!(sim.world().build().grid().walkable(inside));
         assert!(ok(&debug(&mut sim, 4, DebugAction::ClearPersons {})));
-        assert_eq!(sim.world().persons(), 0);
+        assert_eq!(sim.world().persons().len(), 0);
         let rejected = debug(&mut sim, 5, DebugAction::SpawnPersons { count: 10_001 });
         assert!(
             matches!(rejected, Event::CommandRejected { reason, .. } if reason.code == "limitExceeded")
