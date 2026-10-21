@@ -24,6 +24,12 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-21 23:25 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-039** Kernstruktur der Fachmodule mit interner Ereignis-Warteschlange, `[STRATEGISCH]`, nicht reaktiv. Freigabe des Projektinhabers per Auswahl „B freigeben“ (gegen die Empfehlung A; keine Begründung genannt). Reaktiv-Quote 7 / 10 → 6 / 10 (ADR-030 bis ADR-039).
+- **Drift behoben:** In `decisions.md` Teil B fehlte der Listeneintrag zu ADR-038; nachgetragen.
+- **Basis vor dem Umbau:** temporärer Test mit Referenz-Terminal 256², 3.000 Personen, Prüfmodus (Übernahme nach 20 Ticks), `setWalls` bei Schritt 50 und 300, Pause 120–130 mit `spawnPersons` 500: Prüfsumme nach 600 Schritten `f8580b54e3165422` (Tick 590), Zwischenwerte je 100 Schritte in der Session festgehalten. Muss nach dem Umbau gleich sein.
+
 ### 2026-10-21 23:10 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt:** 3.9 Kernstruktur der Fachmodule (Kategorie 1 und 4; Kategorie 5 nur für Rust-Pfade im Kern-Crate).

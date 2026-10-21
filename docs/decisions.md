@@ -51,10 +51,11 @@
 | 036 | 2026-10-19 | Aktiv | REAKTIV | MODUL, DATENMODELL, METHODIK | Architektur, Datenmodell, Methodik | Phasenabschluss 2 – gezielt umbauen vor dem vertikalen Schnitt |
 | 037 | 2026-10-20 | Aktiv | REAKTIV | DATENMODELL, MODUL | Datenmodell, Architektur | Personengruppen mit Zugangsprofilen, Flächenarten und Querungen |
 | 038 | 2026-10-20 | Aktiv | REAKTIV | SCHNITTSTELLE, MODUL, PERFORMANCE | API-Verträge, Architektur | Ruhende Welt als Blöcke im Bild, Zeichnung mit Datentextur, S-1 Layout 2 |
+| 039 | 2026-10-21 | Aktiv | STRATEGISCH | MODUL, DATENMODELL | Architektur, Datenmodell | Kernstruktur der Fachmodule mit interner Ereignis-Warteschlange |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 7 / 10 über die letzten 10 ADRs (ADR-029 bis ADR-038: ADR-029, ADR-030, ADR-031, ADR-032, ADR-036, ADR-037, ADR-038), 70 % – **über dem Schwellenwert**; gesamt 16 / 38. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-038, 2026-10-20, neues Muster nach Regel-009); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
+- **Aktueller Wert:** 6 / 10 über die letzten 10 ADRs (ADR-030 bis ADR-039: ADR-030, ADR-031, ADR-032, ADR-036, ADR-037, ADR-038), 60 % – **über dem Schwellenwert**; gesamt 16 / 39. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-038, 2026-10-20, neues Muster nach Regel-009); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -141,6 +142,8 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-035: Toolchain in den Workflows mit `rustup toolchain install`](decisions/ADR-035.md)
 - [ADR-036: Phasenabschluss 2 – gezielt umbauen vor dem vertikalen Schnitt](decisions/ADR-036.md)
 - [ADR-037: Personengruppen mit Zugangsprofilen, Flächenarten und Querungen](decisions/ADR-037.md)
+- [ADR-038: Ruhende Welt als Blöcke im Bild, Zeichnung mit Datentextur, S-1 Layout 2](decisions/ADR-038.md)
+- [ADR-039: Kernstruktur der Fachmodule mit interner Ereignis-Warteschlange](decisions/ADR-039.md)
 
 ---
 
