@@ -24,6 +24,14 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-21 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Anlass:** Frage des Projektinhabers, ob man sich Entwürfe von Bauelementen und Verkehrsmitteln zeigen lassen kann. Befund: Eine Abnahme der Spielgrafiken durch den Projektinhaber war nirgends vorgesehen; die bisherigen Grafiken (Bank, Boden, Wand, Ersatzgrafik, Symbol) waren Testmaterial der Pipeline aus 2.10.
+- **Vorgeschlagen und angenommen** („Ja, nimm das so auf“): Übersichtsseite mit zwei bis drei Varianten je Objekt in den drei Atlas-Stufen vor dem Commit; Regel in `docs/stilleitfaden.md` Abschnitt 7; Akzeptanzkriterium in 3.1, 3.2, 3.4, 3.5. Keine Kategorie aus `CLAUDE.md` Abschnitt 4, Dokumentationspflege.
+- **Probeentwürfe:** Wand, Boden, Check-in-Schalter, Bus und Flugzeug in je zwei Varianten (`docs/research/grafik-probeentwuerfe/`), alle bestehen `checkSvg`. Übersichtsseite als privates Artifact. Wahl des Projektinhabers steht aus.
+- **Offen:** Ausrichtung von Fahrzeugen und Flugzeugen bei Drehung 0 (Entwürfe: Front nach rechts); Festlegung mit 3.4.
+- **Branch:** `docs/grafik-abnahme` vom aktuellen `main` (`421781b`), Sessionende-Vermerk `c29a0fd` übernommen (`c3a2ce0`) nach `project-context.md` Abschnitt 10.
+
 ### 2026-10-20 23:15 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** rund 50 Minuten seit `[SESSIONSTART]` 22:24 UTC, davon etwa 10 Minuten Messlauf des Projektinhabers.

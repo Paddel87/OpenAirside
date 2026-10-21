@@ -69,3 +69,14 @@ Neue Farben kommen mit der ersten Grafik, die sie braucht, in Palette und Tabell
 - Attribute: Lage und Form (`x`, `y`, `width`, `height`, `rx`, `ry`, `cx`, `cy`, `r`, `x1` … `y2`, `d`, `points`, `transform`, `viewBox`, `xmlns`), Füllung und Linie (`fill`, `fill-rule`, `fill-opacity`, `stroke`, `stroke-width`, `stroke-linecap`, `stroke-linejoin`, `stroke-opacity`, `opacity`), Werte in doppelten Anführungszeichen. ✓
 - Nicht erlaubt: `text`, `image`, `use`, `script`, `style`, `foreignObject`, Verweise (`href`), DOCTYPE und Entitäten. ✓ Das Werkzeug liest keine Datei außerhalb der Quelle.
 - Kommentare sind erlaubt; jede Datei nennt in einem Kommentar Objekt-ID, Maße und „CC0".
+
+<!-- ANCHOR:abnahme -->
+## 7. Abnahme durch den Projektinhaber
+
+Ob eine Grafik ihr Objekt erkennbar zeigt und zu den übrigen passt, prüft kein Werkzeug. Deshalb gilt seit 2026-10-21 (Antwort des Projektinhabers):
+
+- **Vor dem Commit** einer neuen oder grundlegend geänderten Spielgrafik legt die KI dem Projektinhaber eine Übersichtsseite vor: je Objekt zwei bis drei Entwurfsvarianten, jede in den drei Stufen des Atlas (8, 16, 32 px je Zelle), dazu ein Ausschnitt, in dem die Objekte des Schritts nebeneinander stehen.
+- Die Entwürfe halten diesen Leitfaden bereits ein (Prüfung mit `checkSvg` aus `scripts/assets.mjs`).
+- Der Projektinhaber wählt eine Variante oder nennt Änderungen. Erst die gewählte Fassung kommt nach `assets/graphics/`. Wahl und Datum stehen im Logbuch.
+- **Ausgenommen:** reine Korrekturen ohne sichtbare Formänderung (Strichstärke, Rundung, Maße nach geänderter Grundfläche) und die Ersatzgrafik `missing`.
+- Jeder Fahrplan-Schritt, der Spielgrafiken einführt, nennt die Abnahme in seinen Akzeptanzkriterien.

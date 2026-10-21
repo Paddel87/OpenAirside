@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="608" height="576" viewBox="0 0 608 576">
+  <!-- Mittelstreckenflugzeug 38 m × 36 m (Klasse A320/737), Nase rechts, Akzentblau an Leitwerk, Rumpf und Flügelspitzen; CC0. Entwurf. -->
+  <polygon points="350,258 230,8 196,8 240,258" fill="#eef0f2" stroke="#262a30" stroke-width="1" stroke-linejoin="round" />
+  <polygon points="350,318 230,568 196,568 240,318" fill="#eef0f2" stroke="#262a30" stroke-width="1" stroke-linejoin="round" />
+  <path d="M244 240 L206 40 M244 336 L206 536" fill="none" stroke="#c4c9d0" stroke-width="1" />
+  <rect x="292" y="152" width="72" height="32" rx="8" fill="#c4c9d0" stroke="#262a30" stroke-width="1" />
+  <rect x="292" y="392" width="72" height="32" rx="8" fill="#c4c9d0" stroke="#262a30" stroke-width="1" />
+  <path d="M356 156 V180 M356 396 V420" fill="none" stroke="#4a515c" stroke-width="2" />
+  <polygon points="112,262 54,190 34,190 66,262" fill="#eef0f2" stroke="#262a30" stroke-width="1" stroke-linejoin="round" />
+  <polygon points="112,314 54,386 34,386 66,314" fill="#eef0f2" stroke="#262a30" stroke-width="1" stroke-linejoin="round" />
+  <path d="M64 256 H556 C588 258 604 272 604 288 C604 304 588 318 556 320 H64 L14 298 V278 Z" fill="#eef0f2" stroke="#262a30" stroke-width="1" stroke-linejoin="round" />
+  <path d="M574 270 L590 276 V300 L574 306 Z" fill="#9cc7e0" stroke="#262a30" stroke-width="0.5" />
+  <polygon points="14,284 110,282 110,294 14,292" fill="#2a5b8c" stroke="#262a30" stroke-width="0.5" />
+  <path d="M140 288 H560" fill="none" stroke="#2a5b8c" stroke-width="2" />
+  <polygon points="230,8 196,8 200,20 228,20" fill="#2a5b8c" />
+  <polygon points="230,568 196,568 200,556 228,556" fill="#2a5b8c" />
+</svg>
