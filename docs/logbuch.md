@@ -24,6 +24,20 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-21 23:20 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** rund 50 Minuten seit `[SESSIONSTART]` 22:30 UTC.
+- **Bearbeitet:** Schritt 3.9: Vorlage (`docs/research/3.9-kernstruktur.md`), Freigabe B, ADR-039, Umbau des Kerns, Dokumente; PR #33 nach Anweisung („Mach daraus ein PR und merge ihn bei grün“, dann „merge“) eröffnet und gemergt, Merge-Commit `ec5f349`, 39 Prüfungen grün auf `3790d2c`.
+- **Erreicht:** 3.9 erledigt; Takt & Weltzustand bleibt `[BELASTBAR]`, fortgeschrieben durch ADR-039; Reaktiv-Quote 6 / 10.
+- **Offen geblieben:** Wahl der Grafik-Probeentwürfe (vor 3.1); Ausrichtung bei Drehung 0 (3.4). Dieser Eintrag bleibt nach `project-context.md` Abschnitt 10 auf `refactor/3-9-kernstruktur-fachmodule` und geht mit dem PR des nächsten Schritts nach `main`.
+- **Nächster Schritt:** 3.10 Plattform: `main.ts` nach Zuständigkeiten teilen (Routine).
+- **Modell-Bilanz:** Entscheidungs-Klasse (`claude-opus-5-5`, eingestellt und bedient laut `get_session` 23:18 UTC). Ein Schritt mit Teilarbeit oberhalb der Empfehlung (Umbau 3.9: Routine). Abgegeben: keine Teilarbeiten, kein bestandener Probelauf.
+- **Kontextgröße:** 453.567 Token laut `get_session` 23:18 UTC, **über der Grenze von 400.000**. Empfehlung: 3.10 in einer neuen Session beginnen.
+- **Kontingent:** 5-Stunden-Fenster `allowed`.
+- **Ablaufdaten-Prüfung:** kein Eintrag mit erreichtem Vorlauf ohne Schritt.
+- **Archivierung und Größen:** keine Trigger; Logbuch rund 525 Zeilen (Grenze 800), `project-context.md` 375 Zeilen.
+- **Drift-Prüfung:** README nachgezogen (Phase, Reife, Nächste Schritte, Spielstand-Hinweis); Reifegrad Takt & Weltzustand passt zu ADR-039; ADR-039 verweist auf 3.9, 3.1, 3.2, 3.4, 3.5, 3.6, 5.6 (alle vorhanden); Modulnamen in 3.9 stimmen mit der Modul-Karte; keine Anforderungen und Blocker geändert; Phase 3 bei 15 Schritten; Reaktiv-Quote in Teil A = 6 `[REAKTIV]` in ADR-030 bis ADR-039.
+
 ### 2026-10-21 23:20 (UTC) – [BEOBACHTUNG]
 
 - **3.9 umgesetzt:** Kern nach ADR-039 umgebaut (`383f545`), Dokumente nachgezogen (`3308f96`); PR #33 nach Anweisung „Mach daraus ein PR und merge ihn bei grün“ eröffnet.
