@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="224" height="48" viewBox="0 0 224 48">
+  <!-- Shuttlebus 14 m × 3 m, Draufsicht aufs Dach, Front rechts, Dach in Akzentblau; CC0. Entwurf. -->
+  <rect x="2" y="2" width="218" height="44" rx="10" fill="#2a5b8c" stroke="#262a30" stroke-width="1" />
+  <path d="M206 5 Q217 6 217 16 V32 Q217 42 206 43 Z" fill="#9cc7e0" stroke="#262a30" stroke-width="0.5" />
+  <rect x="10" y="8" width="190" height="32" rx="6" fill="none" stroke="#eef0f2" stroke-width="1" />
+  <rect x="30" y="14" width="44" height="20" rx="3" fill="#c4c9d0" stroke="#262a30" stroke-width="0.5" />
+  <path d="M36 18 H68 M36 24 H68 M36 30 H68" fill="none" stroke="#8a929e" stroke-width="1" />
+  <rect x="212" y="0" width="6" height="3" fill="#262a30" />
+  <rect x="212" y="45" width="6" height="3" fill="#262a30" />
+</svg>

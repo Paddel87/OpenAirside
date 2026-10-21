@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Wand Beton, eine Zelle, nahtlos: Fugen nur links und oben; CC0. Entwurf. -->
+  <rect x="0" y="0" width="32" height="32" fill="#7d7a74" />
+  <rect x="3" y="3" width="26" height="26" fill="none" stroke="#4a515c" stroke-width="0.5" />
+  <path d="M0 0.25 H32 M0.25 0 V32" fill="none" stroke="#4a515c" stroke-width="0.5" />
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Wand Glasfassade, eine Zelle, nahtlos: Pfosten am linken Rand; CC0. Entwurf. -->
+  <rect x="0" y="0" width="32" height="32" fill="#9cc7e0" />
+  <rect x="0" y="0" width="2" height="32" fill="#8a929e" />
+  <path d="M0 16 H32" fill="none" stroke="#8a929e" stroke-width="1" />
+  <path d="M6 4 L12 10 M18 20 L24 26" fill="none" stroke="#eef0f2" stroke-width="1" stroke-linecap="round" />
+</svg>

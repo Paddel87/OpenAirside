@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Boden Fliesen 1 m × 1 m, eine Zelle, nahtlos; CC0. Entwurf. -->
+  <rect x="0" y="0" width="32" height="32" fill="#b3b0a8" />
+  <path d="M0 0.25 H32 M0 16 H32 M0.25 0 V32 M16 0 V32" fill="none" stroke="#8a929e" stroke-width="0.5" />
+</svg>

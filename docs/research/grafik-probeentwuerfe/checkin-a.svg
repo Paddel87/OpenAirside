@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="32" viewBox="0 0 64 32">
+  <!-- Check-in-Schalter 4 m × 2 m, Holztheke mit Gepäckwaage, Fluggastseite unten; CC0. Entwurf. -->
+  <rect x="1" y="17" width="40" height="12" rx="1" fill="#a8784a" stroke="#262a30" stroke-width="1" />
+  <path d="M3 20 H39" fill="none" stroke="#7a5434" stroke-width="0.5" />
+  <rect x="15" y="14" width="12" height="4" fill="#4a515c" stroke="#262a30" stroke-width="0.5" />
+  <circle cx="21" cy="7" r="5" fill="#3f6fa8" stroke="#262a30" stroke-width="1" />
+  <rect x="44" y="9" width="18" height="20" rx="1" fill="#c4c9d0" stroke="#262a30" stroke-width="1" />
+  <rect x="47" y="12" width="12" height="14" fill="#8a929e" stroke="#4a515c" stroke-width="0.5" />
+  <path d="M47 16 H59 M47 20 H59 M47 24 H59" fill="none" stroke="#4a515c" stroke-width="0.5" />
+</svg>
