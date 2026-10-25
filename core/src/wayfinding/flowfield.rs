@@ -280,7 +280,15 @@ fn dijkstra(topo: &Topology, seeds: &[u32], rules: Rules, dir: &mut [u8], dist: 
             if dist[c as usize] != cur {
                 continue;
             }
-            let mut relax = |p: u32, step: u32, d: u8| {
+            // The cheap test "is this way shorter" comes first: most
+            // neighbours of a cell are settled already, and the access rules
+            // (the dearest part of the step) are only asked for the others.
+            // The order of the tests does not change the result.
+            let mut relax = |p: u32, step: u32, d: u8, corner_open: &dyn Fn() -> bool| {
+                let nd = cur + step;
+                if nd >= dist[p as usize] || !corner_open() {
+                    return;
+                }
                 if !rules.step_allowed(
                     topo.flags[p as usize],
                     topo.zone[p as usize],
@@ -289,13 +297,10 @@ fn dijkstra(topo: &Topology, seeds: &[u32], rules: Rules, dir: &mut [u8], dist: 
                 ) {
                     return;
                 }
-                let nd = cur + step;
-                if nd < dist[p as usize] {
-                    dist[p as usize] = nd;
-                    dir[p as usize] = d;
-                    buckets[nd as usize % BUCKETS].push(p);
-                    pending += 1;
-                }
+                dist[p as usize] = nd;
+                dir[p as usize] = d;
+                buckets[nd as usize % BUCKETS].push(p);
+                pending += 1;
             };
             // All eight neighbours once; the corner rule reads the
             // orthogonal ones from this array instead of looking them up again.
@@ -305,12 +310,14 @@ fn dijkstra(topo: &Topology, seeds: &[u32], rules: Rules, dir: &mut [u8], dist: 
                 let Some(p) = around[j] else {
                     continue;
                 };
-                if dx != 0 && dy != 0 && !(open(dir_index(dx, 0)) && open(dir_index(0, dy))) {
-                    continue;
-                }
-                let base = if dx != 0 && dy != 0 { 14 } else { 10 };
+                let diagonal = dx != 0 && dy != 0;
+                let base = if diagonal { 14 } else { 10 };
                 let step = (base * u32::from(topo.cost[p as usize]) / 10).max(1);
-                relax(p, step, ((j + 4) % 8) as u8);
+                // The corner rule: a diagonal step needs both orthogonal
+                // neighbours of `c` to be walkable.
+                let corner_open =
+                    || !diagonal || (open(dir_index(dx, 0)) && open(dir_index(0, dy)));
+                relax(p, step, ((j + 4) % 8) as u8, &corner_open);
             }
             if topo.flags[c as usize] & STAIRS != 0 {
                 // From the floor above the step leads down to c, from the
@@ -318,12 +325,12 @@ fn dijkstra(topo: &Topology, seeds: &[u32], rules: Rules, dir: &mut [u8], dist: 
                 if let Some(p) = topo.vertical(c, UP)
                     && topo.flags[p as usize] & STAIRS != 0
                 {
-                    relax(p, STAIR_COST, DOWN);
+                    relax(p, STAIR_COST, DOWN, &|| true);
                 }
                 if let Some(p) = topo.vertical(c, DOWN)
                     && topo.flags[p as usize] & STAIRS != 0
                 {
-                    relax(p, STAIR_COST, UP);
+                    relax(p, STAIR_COST, UP, &|| true);
                 }
             }
         }
