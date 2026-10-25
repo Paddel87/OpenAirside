@@ -59,7 +59,9 @@ export function isPlatformError(value: unknown): value is Reason {
  */
 export function describeError(error: unknown): string {
   if (isPlatformError(error)) {
-    const params = Object.entries(error.params).map(([k, v]) => `${k}=${String(v)}`);
+    const params = Object.entries(error.params).map(
+      ([k, v]) => `${k}=${typeof v === "object" ? v.key : String(v)}`,
+    );
     return params.length === 0 ? error.code : `${error.code} (${params.join(", ")})`;
   }
   return error instanceof Error ? error.message : String(error);

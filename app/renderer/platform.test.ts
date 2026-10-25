@@ -43,6 +43,13 @@ describe("error form of S-6", () => {
     expect(describeError({ code: "busy", textKey: "platform.error.busy", params: {} })).toBe(
       "busy",
     );
+    expect(
+      describeError({
+        code: "blocked",
+        textKey: "command.rejected.blocked",
+        params: { object: { key: "object.bench" } },
+      }),
+    ).toBe("blocked (object=object.bench)");
     expect(isPlatformError({ code: "busy" })).toBe(false);
     expect(describeError(new Error("boom"))).toBe("boom");
     expect(describeError("text")).toBe("text");
