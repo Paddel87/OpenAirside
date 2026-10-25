@@ -2,6 +2,7 @@
 //! exists in the schema and targets can serve it; there are no game
 //! mechanics for it yet (FR-048, after 1.0).
 
+use openairside_core::build::access::AccessProfile;
 use openairside_core::build::grid::{Cell, Zone};
 use openairside_core::build::target::{LoadKind, Target};
 use openairside_core::geometry::{CellPos, CellRect, MapSize};
@@ -45,6 +46,7 @@ fn a_world_holds_freight_targets_next_to_passenger_targets() {
         .add_target(Target {
             cells: vec![cell],
             load: LoadKind::Freight,
+            profile: AccessProfile::Passenger,
         })
         .unwrap();
     assert_eq!(

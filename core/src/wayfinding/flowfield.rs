@@ -11,9 +11,8 @@
 
 use rayon::prelude::*;
 
-use crate::build::grid::{
-    BLOCK, BLOCK_CELLS, FLOORS, GridSnapshot, STAIRS, WALL, Zone, floor_index,
-};
+use crate::build::access::Rules;
+use crate::build::grid::{BLOCK, BLOCK_CELLS, FLOORS, GridSnapshot, STAIRS, floor_index};
 use crate::build::target::Target;
 use crate::geometry::CellPos;
 
@@ -148,8 +147,9 @@ impl Topology {
         self.flags.len()
     }
 
-    fn walkable(&self, c: u32) -> bool {
-        self.flags[c as usize] & WALL == 0
+    /// `true` if a person with `rules` may stand on cell `c`.
+    fn walkable(&self, c: u32, rules: Rules) -> bool {
+        rules.walkable(self.flags[c as usize])
     }
 
     /// Compact index of a cell, `None` if its block holds no walkable cell.
@@ -190,14 +190,15 @@ impl Topology {
 
     /// Neighbour across the corner rule: a diagonal step needs both
     /// orthogonal neighbours of `c` to be walkable.
-    fn diagonal_open(&self, c: u32, j: usize) -> bool {
+    fn diagonal_open(&self, c: u32, j: usize, rules: Rules) -> bool {
         let (dx, dy) = DIRS[j];
         if dx == 0 || dy == 0 {
             return true;
         }
-        [dir_index(dx, 0), dir_index(0, dy)]
-            .into_iter()
-            .all(|k| self.neighbour(c, k).is_some_and(|n| self.walkable(n)))
+        [dir_index(dx, 0), dir_index(0, dy)].into_iter().all(|k| {
+            self.neighbour(c, k)
+                .is_some_and(|n| self.walkable(n, rules))
+        })
     }
 
     fn vertical(&self, c: u32, direction: u8) -> Option<u32> {
@@ -211,8 +212,8 @@ impl Topology {
     }
 
     /// Cell reached by the step `direction` from `p` and its cost, if the
-    /// step is allowed (walls, corners, zone rules, stairs).
-    fn step(&self, p: u32, direction: u8) -> Option<(u32, u32)> {
+    /// step is allowed (walls, corners, access rules, stairs).
+    fn step(&self, p: u32, direction: u8, rules: Rules) -> Option<(u32, u32)> {
         let n = match direction {
             UP | DOWN => {
                 let n = self.vertical(p, direction)?;
@@ -223,17 +224,19 @@ impl Topology {
             }
             0..=7 => {
                 let j = usize::from(direction);
-                if !self.diagonal_open(p, j) {
+                if !self.diagonal_open(p, j, rules) {
                     return None;
                 }
                 self.neighbour(p, j)?
             }
             _ => return None,
         };
-        if !self.walkable(p)
-            || !self.walkable(n)
-            || !Zone::step_allowed(self.zone[p as usize], self.zone[n as usize])
-        {
+        if !rules.step_allowed(
+            self.flags[p as usize],
+            self.zone[p as usize],
+            self.flags[n as usize],
+            self.zone[n as usize],
+        ) {
             return None;
         }
         let cost = match direction {
@@ -248,13 +251,14 @@ impl Topology {
     }
 }
 
-/// Backwards Dijkstra from `seeds`: `dir[p]` becomes the step from `p`
-/// towards the nearest seed. `dist` is scratch space of the same length.
-fn dijkstra(topo: &Topology, seeds: &[u32], dir: &mut [u8], dist: &mut [u32]) {
+/// Backwards Dijkstra from `seeds` with the access `rules`: `dir[p]` becomes
+/// the step from `p` towards the nearest seed. `dist` is scratch space of the
+/// same length.
+fn dijkstra(topo: &Topology, seeds: &[u32], rules: Rules, dir: &mut [u8], dist: &mut [u32]) {
     let mut buckets: Vec<Vec<u32>> = vec![Vec::new(); BUCKETS];
     let mut pending = 0usize;
     for &s in seeds {
-        if topo.walkable(s) && dist[s as usize] != 0 {
+        if topo.walkable(s, rules) && dist[s as usize] != 0 {
             dist[s as usize] = 0;
             dir[s as usize] = ARRIVED;
             buckets[0].push(s);
@@ -277,9 +281,12 @@ fn dijkstra(topo: &Topology, seeds: &[u32], dir: &mut [u8], dist: &mut [u32]) {
                 continue;
             }
             let mut relax = |p: u32, step: u32, d: u8| {
-                if !topo.walkable(p)
-                    || !Zone::step_allowed(topo.zone[p as usize], topo.zone[c as usize])
-                {
+                if !rules.step_allowed(
+                    topo.flags[p as usize],
+                    topo.zone[p as usize],
+                    topo.flags[c as usize],
+                    topo.zone[c as usize],
+                ) {
                     return;
                 }
                 let nd = cur + step;
@@ -293,7 +300,7 @@ fn dijkstra(topo: &Topology, seeds: &[u32], dir: &mut [u8], dist: &mut [u32]) {
             // All eight neighbours once; the corner rule reads the
             // orthogonal ones from this array instead of looking them up again.
             let around: [Option<u32>; 8] = std::array::from_fn(|j| topo.neighbour(c, j));
-            let open = |k: usize| around[k].is_some_and(|n| topo.walkable(n));
+            let open = |k: usize| around[k].is_some_and(|n| topo.walkable(n, rules));
             for (j, &(dx, dy)) in DIRS.iter().enumerate() {
                 let Some(p) = around[j] else {
                     continue;
@@ -367,16 +374,17 @@ impl FieldSet {
                 .iter()
                 .map(|t| t.cells.iter().filter_map(|&p| topo.index_of(p)).collect())
                 .collect();
+            let rules: Vec<Rules> = input.targets.iter().map(|t| t.profile.rules()).collect();
             data.par_chunks_mut(cells)
                 .zip(unreachable.par_iter_mut())
-                .zip(seeds.par_iter())
+                .zip(seeds.par_iter().zip(rules.par_iter()))
                 .for_each_init(
                     || vec![u32::MAX; cells],
-                    |dist, ((dir, count), seeds)| {
+                    |dist, ((dir, count), (seeds, &rules))| {
                         dist.fill(u32::MAX);
-                        dijkstra(&topo, seeds, dir, dist);
+                        dijkstra(&topo, seeds, rules, dir, dist);
                         *count = (0..cells as u32)
-                            .filter(|&c| topo.walkable(c) && dir[c as usize] == UNREACHABLE)
+                            .filter(|&c| topo.walkable(c, rules) && dir[c as usize] == UNREACHABLE)
                             .count() as u32;
                     },
                 );
@@ -466,6 +474,7 @@ impl FieldSet {
         if field >= self.targets {
             return None;
         }
+        let rules = self.rules_of(field);
         let base = field * self.topo.cell_count();
         let mut c = self.topo.index_of(pos)?;
         let mut total = 0u32;
@@ -475,7 +484,7 @@ impl FieldSet {
                 ARRIVED => return Some(total),
                 UNREACHABLE => return None,
                 d => {
-                    let (next, cost) = self.topo.step(c, d)?;
+                    let (next, cost) = self.topo.step(c, d, rules)?;
                     total += cost;
                     c = next;
                 }
@@ -484,12 +493,22 @@ impl FieldSet {
         None
     }
 
-    /// Cell reached by the step `direction` from `pos`, if the step is
-    /// allowed.
+    /// Access rules of the persons walking to field `field`.
+    fn rules_of(&self, field: usize) -> Rules {
+        self.source.targets[field].profile.rules()
+    }
+
+    /// Cell reached by the step `direction` from `pos` for a person walking
+    /// to `target`, if the step is allowed under the access rules of that
+    /// target (`None` for an unknown target).
     #[must_use]
-    pub fn step_target(&self, pos: CellPos, direction: u8) -> Option<CellPos> {
+    pub fn step_target(&self, target: u8, pos: CellPos, direction: u8) -> Option<CellPos> {
+        let field = usize::from(target);
+        if field >= self.targets {
+            return None;
+        }
         let c = self.topo.index_of(pos)?;
-        self.topo.step(c, direction)?;
+        self.topo.step(c, direction, self.rules_of(field))?;
         let (dx, dy, df) = match direction {
             UP => (0, 0, 1),
             DOWN => (0, 0, -1),
@@ -519,7 +538,10 @@ mod tests {
     use std::collections::BinaryHeap;
 
     use super::*;
-    use crate::build::grid::{COST_AVOID, COST_MARKED, COST_NORMAL, Cell, Grid};
+    use crate::build::access::AccessProfile;
+    use crate::build::grid::{
+        AreaKind, COST_AVOID, COST_MARKED, COST_NORMAL, Cell, Grid, WALL, Zone,
+    };
     use crate::geometry::MapSize;
     use crate::hash::StateHasher;
 
@@ -862,12 +884,12 @@ mod tests {
         assert_eq!(set.path_cost(1, pos(45, 2, 1)), None);
         assert_eq!(set.dir(1, pos(31, 2, 0)), UNREACHABLE);
         // Stairs step helper.
-        assert_eq!(set.step_target(pos(40, 2, 0), UP), Some(pos(40, 2, 1)));
-        assert_eq!(set.step_target(pos(40, 2, 1), DOWN), Some(pos(40, 2, 0)));
-        assert_eq!(set.step_target(pos(5, 2, 0), 0), Some(pos(6, 2, 0)));
-        assert_eq!(set.step_target(pos(5, 2, 0), UP), None);
-        assert_eq!(set.step_target(pos(5, 2, 0), 200), None);
-        assert_eq!(set.step_target(pos(5, 5, 0), 0), None);
+        assert_eq!(set.step_target(0, pos(40, 2, 0), UP), Some(pos(40, 2, 1)));
+        assert_eq!(set.step_target(0, pos(40, 2, 1), DOWN), Some(pos(40, 2, 0)));
+        assert_eq!(set.step_target(0, pos(5, 2, 0), 0), Some(pos(6, 2, 0)));
+        assert_eq!(set.step_target(0, pos(5, 2, 0), UP), None);
+        assert_eq!(set.step_target(0, pos(5, 2, 0), 200), None);
+        assert_eq!(set.step_target(0, pos(5, 5, 0), 0), None);
     }
 
     #[test]
@@ -905,6 +927,105 @@ mod tests {
         let void = compute(&grid, vec![Target::passengers(vec![pos(1, 1, 0)])], 1);
         assert_eq!(void.cells(), 0);
         assert_eq!(void.dir(0, pos(1, 1, 0)), UNREACHABLE);
+    }
+
+    /// One row of 40 cells on the ground floor: hall (0 … 9), apron walkway
+    /// (10 … 19), stand area (20 … 29), runway (30 … 39).
+    fn apron_row() -> Grid {
+        let mut grid = Grid::new(MapSize::new(64, 8).unwrap());
+        for x in 0..40u16 {
+            let kind = match x / 10 {
+                0 => AreaKind::PublicWalk,
+                1 => AreaKind::ApronWalkway,
+                2 => AreaKind::StandArea,
+                _ => AreaKind::Runway,
+            };
+            grid.set(pos(x, 3, 0), Cell::floor(Zone::Landside).with_kind(kind))
+                .unwrap();
+        }
+        grid
+    }
+
+    #[test]
+    fn each_target_is_computed_with_the_rules_of_its_profile() {
+        let grid = apron_row();
+        let at = |x| vec![pos(x, 3, 0)];
+        let set = compute(
+            &grid,
+            vec![
+                Target::passengers(at(0)),
+                Target::passengers(at(25)).with_profile(AccessProfile::ApronStaff),
+                Target::passengers(at(25)),
+                Target::passengers(at(35)).with_profile(AccessProfile::Worker),
+                Target::passengers(at(0)).with_profile(AccessProfile::Worker),
+            ],
+            2,
+        );
+        // Passengers reach the hall from the apron walkway, not from the stand.
+        assert_eq!(set.dir(0, pos(15, 3, 0)), 4);
+        assert_eq!(set.path_cost(0, pos(15, 3, 0)), Some(150));
+        assert_eq!(
+            set.dir(0, pos(25, 3, 0)),
+            UNREACHABLE,
+            "stand is no walkway"
+        );
+        // Apron staff walk from the hall to the stand; the stand cell itself
+        // is a legal seed, passengers have none there.
+        assert_eq!(set.dir(1, pos(5, 3, 0)), 0);
+        assert_eq!(set.path_cost(1, pos(5, 3, 0)), Some(200));
+        assert_eq!(
+            set.dir(2, pos(5, 3, 0)),
+            UNREACHABLE,
+            "seed on a stand: no field"
+        );
+        assert_eq!(set.dir(2, pos(25, 3, 0)), UNREACHABLE);
+        // Workers cross the stand area but not the runway they walk to.
+        assert_eq!(set.dir(3, pos(5, 3, 0)), UNREACHABLE, "seed on a runway");
+        assert_eq!(set.dir(4, pos(29, 3, 0)), 4, "workers walk the stand area");
+        assert_eq!(set.dir(4, pos(35, 3, 0)), UNREACHABLE, "runway");
+        assert_eq!(
+            set.unreachable_cells(2),
+            40 - 20,
+            "walkway cells cut off from the missing seed"
+        );
+        // Stepping checks the rules of the target as well.
+        assert_eq!(set.step_target(1, pos(19, 3, 0), 0), Some(pos(20, 3, 0)));
+        assert_eq!(set.step_target(0, pos(19, 3, 0), 0), None);
+    }
+
+    #[test]
+    fn a_staff_zone_is_left_by_everyone_and_entered_by_staff_only() {
+        // Hall 0 … 9, staff zone 10 … 19, hall 20 … 29.
+        let mut grid = Grid::new(MapSize::new(64, 8).unwrap());
+        for x in 0..30u16 {
+            let cell = Cell::floor(Zone::Landside).with_staff_zone((10..20).contains(&x));
+            grid.set(pos(x, 3, 0), cell).unwrap();
+        }
+        // The only way between the halls leads through the staff zone.
+        let set = compute(
+            &grid,
+            vec![
+                Target::passengers(vec![pos(25, 3, 0)]),
+                Target::passengers(vec![pos(25, 3, 0)]).with_profile(AccessProfile::Staff),
+                Target::passengers(vec![pos(15, 3, 0)]),
+                Target::passengers(vec![pos(15, 3, 0)]).with_profile(AccessProfile::Staff),
+            ],
+            2,
+        );
+        assert_eq!(
+            set.dir(0, pos(5, 3, 0)),
+            UNREACHABLE,
+            "passengers do not cross"
+        );
+        assert_eq!(set.dir(1, pos(5, 3, 0)), 0, "staff cross");
+        assert_eq!(set.dir(0, pos(15, 3, 0)), 0, "passengers inside leave");
+        assert_eq!(
+            set.dir(2, pos(5, 3, 0)),
+            UNREACHABLE,
+            "passengers cannot enter"
+        );
+        assert_eq!(set.dir(2, pos(15, 3, 0)), ARRIVED, "inside the zone");
+        assert_eq!(set.dir(3, pos(5, 3, 0)), 0, "staff enter");
     }
 
     #[test]

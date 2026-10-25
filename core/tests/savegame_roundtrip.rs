@@ -9,7 +9,9 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use openairside_core::adoption::AdoptionMode;
-use openairside_core::build::grid::{Cell, Zone};
+use openairside_core::build::access::AccessProfile;
+use openairside_core::build::grid::{AreaKind, Cell, Zone};
+use openairside_core::build::target::Target;
 use openairside_core::command::{Command, DebugAction};
 use openairside_core::datapack::{self, Catalog, game_version};
 use openairside_core::geometry::{CellPos, CellRect, MapSize};
@@ -231,6 +233,70 @@ fn a_remembered_follow_up_request_survives_saving_and_continues_bit_for_bit() {
     assert_eq!(sim.world().wayfinding().fields_revision(), 2);
     assert_eq!(loaded.world().wayfinding().fields_revision(), 2);
     assert_eq!(loaded.state_hash(), sim.state_hash());
+}
+
+#[test]
+fn area_kinds_staff_zones_and_access_profiles_survive_saving() {
+    let mut sim = terminal(AdoptionMode::WhenReady);
+    let apron = CellPos {
+        x: 10,
+        y: 10,
+        floor: 0,
+    };
+    let staff_door = CellPos {
+        x: 11,
+        y: 10,
+        floor: 0,
+    };
+    let build = sim.world_mut().build_mut();
+    build
+        .grid_mut()
+        .set(
+            apron,
+            Cell::floor(Zone::Landside).with_kind(AreaKind::StandArea),
+        )
+        .unwrap();
+    build
+        .grid_mut()
+        .set(staff_door, Cell::floor(Zone::Airside).with_staff_zone(true))
+        .unwrap();
+    let target = build
+        .add_target(Target::passengers(vec![apron]).with_profile(AccessProfile::ApronStaff))
+        .unwrap();
+    steps(&mut sim, 5);
+    let before = sim.state_hash();
+
+    let mut loaded = other(AdoptionMode::WhenReady, base_content());
+    loaded
+        .load_game(decode(&save(&sim), &TEST_LIMITS).unwrap())
+        .unwrap();
+    assert_eq!(loaded.state_hash(), before);
+    let build = loaded.world().build();
+    assert_eq!(
+        build.grid().cell(apron).unwrap().kind(),
+        AreaKind::StandArea
+    );
+    assert!(build.grid().cell(staff_door).unwrap().staff_zone());
+    assert_eq!(
+        build.targets()[usize::from(target)].profile,
+        AccessProfile::ApronStaff
+    );
+
+    // Another profile on the same cells is another state.
+    let mut changed = terminal(AdoptionMode::WhenReady);
+    let same = changed.world_mut().build_mut();
+    same.grid_mut()
+        .set(
+            apron,
+            Cell::floor(Zone::Landside).with_kind(AreaKind::StandArea),
+        )
+        .unwrap();
+    same.grid_mut()
+        .set(staff_door, Cell::floor(Zone::Airside).with_staff_zone(true))
+        .unwrap();
+    same.add_target(Target::passengers(vec![apron])).unwrap();
+    steps(&mut changed, 5);
+    assert_ne!(changed.state_hash(), before);
 }
 
 #[test]

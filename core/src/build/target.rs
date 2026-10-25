@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::geometry::CellPos;
 
+use super::access::AccessProfile;
+
 /// Most targets of one world; a target is addressed by one byte.
 pub const MAX_TARGETS: usize = 255;
 
@@ -28,6 +30,9 @@ pub struct Target {
     pub cells: Vec<CellPos>,
     /// Kind of load this target serves.
     pub load: LoadKind,
+    /// Access of the persons that walk to this target; the flow field is
+    /// computed with the rules of this profile (ADR-037).
+    pub profile: AccessProfile,
 }
 
 impl Target {
@@ -37,6 +42,14 @@ impl Target {
         Self {
             cells,
             load: LoadKind::Passengers,
+            profile: AccessProfile::Passenger,
         }
+    }
+
+    /// The target for persons with another access profile.
+    #[must_use]
+    pub fn with_profile(mut self, profile: AccessProfile) -> Self {
+        self.profile = profile;
+        self
     }
 }

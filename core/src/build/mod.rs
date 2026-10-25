@@ -5,6 +5,7 @@
 //! The module reads no other domain module. Changes that other modules
 //! react to are laid down as internal events (`internal`).
 
+pub mod access;
 pub mod grid;
 pub mod network;
 pub mod target;
@@ -19,6 +20,7 @@ use crate::hash::StateHasher;
 use crate::internal::{InternalEvent, InternalEvents, Stage};
 use crate::savegame::{invalid, limit};
 use crate::text::Reason;
+use access::AccessProfile;
 use grid::{BLOCK_CELLS, Block, Cell, Grid, GridError, GridSnapshot, WALL, floor_index};
 use network::{Network, NetworkKind, NodeId};
 use target::{LoadKind, MAX_TARGETS, Target};
@@ -151,6 +153,7 @@ impl Build {
         hasher.u32(u32::from(self.map().height));
         self.grid.hash_into(hasher);
         for target in &self.targets {
+            hasher.u32(target.profile as u32);
             hasher.u32(u32::try_from(target.cells.len()).unwrap_or(u32::MAX));
             for c in &target.cells {
                 hasher.u32(u32::from(c.x));
@@ -272,6 +275,7 @@ pub(crate) struct SavedBuild {
 pub(crate) struct SavedTarget {
     pub cells: Vec<CellPos>,
     pub load: LoadKind,
+    pub profile: AccessProfile,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -287,6 +291,7 @@ pub(crate) fn saved_targets(targets: &[Target]) -> Vec<SavedTarget> {
         .map(|t| SavedTarget {
             cells: t.cells.clone(),
             load: t.load,
+            profile: t.profile,
         })
         .collect()
 }
@@ -305,6 +310,7 @@ pub(crate) fn restore_targets(saved: Vec<SavedTarget>) -> Result<Vec<Target>, Re
         .map(|t| Target {
             cells: t.cells,
             load: t.load,
+            profile: t.profile,
         })
         .collect())
 }
