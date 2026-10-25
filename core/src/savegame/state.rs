@@ -235,6 +235,7 @@ mod tests {
             .map(|v| match v {
                 crate::text::ParamValue::Text(t) => t.clone(),
                 crate::text::ParamValue::Number(n) => n.to_string(),
+                crate::text::ParamValue::Key { key } => key.clone(),
             });
         (reason.code, part)
     }

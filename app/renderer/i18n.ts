@@ -48,7 +48,9 @@ export function textMap(texts: Readonly<Record<string, string>>): TextMap {
 
 /**
  * Inserts `params` into `text`: `{name}` becomes the parameter as text,
- * numbers formatted for `language`; unknown placeholders stay as written.
+ * numbers formatted for `language`, a key `{ key }` as the key itself
+ * (translate it first, see {@link Localizer.t}); unknown placeholders stay as
+ * written.
  */
 export function format(
   text: string,
@@ -64,7 +66,8 @@ export function format(
   return text.replace(/\{([A-Za-z0-9_]+)\}/g, (whole, name: string) => {
     const value = Object.hasOwn(params, name) ? params[name] : undefined;
     if (value === undefined) return whole;
-    return typeof value === "number" ? numbers.format(value) : value;
+    if (typeof value === "number") return numbers.format(value);
+    return typeof value === "string" ? value : value.key;
   });
 }
 
@@ -105,17 +108,29 @@ export class Localizer {
     this.listeners.push(listener);
   }
 
-  /** Text of `key` with `params` inserted. */
+  /**
+   * Text of `key` with `params` inserted. A parameter `{ key }` is
+   * translated first, one level deep: its text does not insert parameters
+   * itself (ADR-032, L-5).
+   */
   t(key: string, params: Readonly<Record<string, ParamValue | undefined>> = {}): string {
-    const text = this.primary.get(key) ?? this.fallback.get(key);
-    if (text === undefined) {
-      if (!this.reported.has(key)) {
-        this.reported.add(key);
-        this.onMissing(key);
-      }
-      return key;
+    const text = this.lookup(key);
+    if (text === undefined) return key;
+    const plain: Record<string, number | string | undefined> = {};
+    for (const [name, value] of Object.entries(params)) {
+      plain[name] = typeof value === "object" ? (this.lookup(value.key) ?? value.key) : value;
     }
-    return format(text, params, this.language);
+    return format(text, plain, this.language);
+  }
+
+  /** Text of `key` in the current or the fallback language; reports a missing key once. */
+  private lookup(key: string): string | undefined {
+    const text = this.primary.get(key) ?? this.fallback.get(key);
+    if (text === undefined && !this.reported.has(key)) {
+      this.reported.add(key);
+      this.onMissing(key);
+    }
+    return text;
   }
 
   /** Text of a reason `{ code, textKey, params }` of the core or the platform. */

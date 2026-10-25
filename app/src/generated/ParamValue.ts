@@ -2,6 +2,15 @@
 
 /**
  * Value of a text parameter. Numbers stay numbers so that the presentation
- * can format them for the chosen language (FR-006).
+ * can format them for the chosen language (FR-006); a localisation key is
+ * translated by the presentation before it is inserted (ADR-032, L-5).
  */
-export type ParamValue = number | string;
+export type ParamValue =
+  | number
+  | string
+  | {
+      /**
+       * The key, e.g. `object.bench`.
+       */
+      key: string;
+    };
