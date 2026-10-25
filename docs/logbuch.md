@@ -17,12 +17,23 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, 3.1a ist zu einem Teil umgesetzt (Teilaufgaben 1, 2, 5, 7, 8), weiter mit 3.1a Teilaufgaben 3, 4, 6 nach der Entscheidung zur Wirkung der Objekte.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, 3.1a ist erledigt (CI grün, PR offen), weiter mit 3.1b.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-25 19:55 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung 19:00 bis 19:55 UTC (Session ab 18:55 UTC).
+- **Bearbeitet:** 3.1a Teilaufgaben 3, 4, 6 nach ADR-042 und die Kosten der Profil-Prüfung; Pflichtlektüre, `[SESSIONSTART]`.
+- **Erreicht:** Commits `0229cad`, `0c68b9a`, `b14eb98`, `d8ee3ff`, `160628b` (Datenpaket `effect`/`blocks`; Bodenbelag und Wandart; Objekte, Bau-Befehle, Spielstand; schnellere Neuberechnung; Dokumente). CI-Lauf 40227300244 auf `160628b`: alle 17 Jobs grün; Runner-Werte: Neuberechnung 2357 ms (Grenze 4000), Dauerbau längster Abstand 2700 ms und letzter Stand 4584 ms (Grenze 8000), 229 MB. 3.1a `[ERLEDIGT]`. PR „feat: 3.1a Kern – Bauen mit Wirkung und Dauerbau“ eröffnet.
+- **Offen geblieben:** Merge des PR nach Freigabe des Projektinhabers; 3.1b, 3.1c. Die Senkung der Profil-Prüfung ist nur im Container belegt (−15 %), die Runner-Werte schwanken (3219 → 2357 ms zwischen zwei Läufen); 3.1c prüft die Reserve erneut mit dem Feldsatz der Bauarbeiter.
+- **Nächster Schritt:** PR mergen (nach Freigabe), dann 3.1b (Darstellung und Bedienung; Layout 2 von S-1 mit Umsetzungstabelle Typtabelle → Katalog-Index). Empfohlene Klasse laut Fahrplan 3.1: Entscheidung für Bewertungen, Umsetzung Routine.
+- **Aktive Klasse und Bilanz:** Routine (Sonnet 5.5 laut `get_session` 19:00 und 19:55 UTC); 0 Schritte oberhalb der Empfehlung (Umsetzung = Routine); nichts abgegeben (Probelauf der Unteragenten-Klassen offen, nichts Abgabefähiges).
+- **Kontextgröße:** 459.863 Token laut `get_session` – **über der Grenze von 400.000**; nächste Arbeit in neuer Session beginnen.
+- **Ablaufdaten-Prüfung und Drift-Check:** Register geprüft, kein Eintrag am Vorlauf. ADR-042 → 3.1a (existiert), Reaktiv-Quote unverändert 4 / 10, Anforderungen FR-010/FR-011 bleiben `OFFEN` bis 3.1 vollständig, Blocker keine, Phasenumfang unverändert (Stufen zählen als ein Schritt), README „Nächste Schritte“ und Konsolenbeschreibung nachgezogen.
 
 ### 2026-10-25 19:40 (UTC) – [PROBLEM-GELÖST]
 
