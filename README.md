@@ -95,7 +95,8 @@ Sprache und Einstellungen: Die Oberfläche gibt es auf Deutsch und Englisch, bei
 
 ## Nächste Schritte
 
-- 3.1: Bauen im Raster mit sofort sichtbaren Bauaufträgen, auch bei schnellem Dauerbau
+- 3.1a: Bauen im Kern mit Wirkung, schneller Dauerbau ohne Hängen der Wegweiser (mit CI-Gate)
+- 3.1b: Bauen im Spielfeld sichtbar, Bau-Werkzeug; 3.1c: Bauarbeiter
 
 → Vollständiger Fahrplan: [`docs/fahrplan.md`](docs/fahrplan.md)
 
