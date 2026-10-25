@@ -24,6 +24,17 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 18:25 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung 18:05 bis 18:25 UTC nach dem `[SESSIONENDE]` 17:54 UTC (gesamt 17:25 bis 18:25 UTC).
+- **Bearbeitet:** Vorlage `docs/research/3.1a-objekte-vorlage.md`, Entscheidung, ADR-042, Reflexion mit Maßnahme (12).
+- **Erreicht:** ADR-042 freigegeben (1A, 2A, 3A, Festlegungen übernommen); Fahrplan, Decisions Teil A, Architektur Abschnitt 8 nachgezogen.
+- **Offen geblieben:** 3.1a Teilaufgaben 3, 4, 6 (Code), dann PR für 3.1a und CI-Lauf mit dem Dauerbau-Schritt.
+- **Nächster Schritt:** neue Session, Routine-Klasse genügt: 3.1a Teilaufgaben 3, 4, 6 nach ADR-042 auf dem Branch `feat/3-1a-bauen-mit-wirkung-dauerbau`.
+- **Aktive Klasse und Bilanz:** Entscheidung (Opus 5.5 nach `/model`), passend zur Empfehlung (Auslöser 1); 0 Schritte oberhalb der Empfehlung; nichts abgegeben.
+- **Kontextgröße:** 439.802 Token bei Wiederanlauf laut `get_session` – **über der Grenze von 400.000**; nächste Arbeit in neuer Session beginnen.
+- **Ablaufdaten-Prüfung und Drift-Check:** keine Änderung gegenüber 17:54 UTC; ADR-042 in Teil A und als Datei, Reaktiv-Quote in Teil A und Fahrplan gleich (4 / 10).
+
 ### 2026-10-25 18:20 (UTC) – [ADR-ANGELEGT]
 
 - **ADR-042** Wirkung der Objekttypen (Feld `effect` im Objekttyp), Möbel sperren ihre Zellen, Abriss entfernt alles Berührte; Festlegungen aus Abschnitt 4 der Vorlage übernommen. `[REAKTIV]`, Reaktiv-Quote 4 / 10 (ADR-033 bis ADR-042). Freigabe: „1A, 2A, 3A, Übernehmen“.
