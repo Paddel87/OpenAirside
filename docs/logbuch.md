@@ -24,6 +24,18 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 17:05 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 15:58 bis 17:05 UTC (rund 1 Stunde 10 Minuten).
+- **Bearbeitet:** Orientierung („was ist als nächstes dran?“), 3.10 (`main.ts` nach Zuständigkeiten geteilt), Q.4 (Audit-Advisories: `undici`, `fast-uri`, Electron 44.9.3), PR [#34](https://github.com/Paddel87/OpenAirside/pull/34) eröffnet und bei grüner CI gemergt (`f4341c6`).
+- **Erreicht:** 3.10 und Q.4 `[ERLEDIGT]`; CI auf dem PR komplett grün (17 Jobs, CodeQL, beide wöchentlichen Audits), Rauchtest auf drei Plattformen. Phase 3: 3.7, 3.8, 3.14, 3.15, 3.9, 3.10 erledigt.
+- **Offen geblieben:** Ein `[SESSIONENDE]` zur 3.9-Session (22:30 UTC am 2026-10-21) wurde nie geschrieben und wird nicht rekonstruiert; der Stand steht im `[BEOBACHTUNG]` 23:20 UTC. Probeläufe für Mechanik- und Routine-Klasse (`project-context.md` Abschnitt 6) bleiben offen.
+- **Nächster Schritt:** 3.1 Bauen im Raster, Bauaufträge sofort sichtbar, Dauerbau, in neuer Session auf Anweisung des Projektinhabers („Weiter mit 3.1 in neuer Session“). Empfohlene Klasse laut Fahrplan: Entscheidung (Bewertung der NFR „Bauaktion im nächsten Bild“, Frist und Grenze des Dauerbau-Benchmarks in der Vorlage vor dem Code, ggf. neues CI-Gate = Kategorie 7); Umsetzung ist Routine und abgebbar. Neuer Branch vom aktuellen `main` (`f4341c6`); der Branch dieser Session ist gemergt.
+- **Aktive Klasse und Bilanz:** Routine-Klasse (Sonnet 5.5 laut `get_session`, bedient und eingestellt gleich). Schritte oberhalb der Empfehlung: 0 (3.10 und Q.4 sind Routine). Abgegebene Teilarbeiten: keine, Probelauf offen.
+- **Kontextgröße:** 364.016 Token (Grenze 400.000, nicht überschritten); neue Session für 3.1 trotzdem sinnvoll, da 3.1 groß ist.
+- **Ablaufdaten-Prüfung:** Electron 44 (Lebensende 2027-03-02, Vorlauf ab 2027-01-02) noch nicht erreicht, Q.1 offen mit Frist 2027-01-02; keine neuen Einträge fällig. Drift-Check: Fahrplan, Architektur (Modul Plattform), README, `project-context.md` abgeglichen; Archivierungs-Trigger nicht erreicht (Logbuch unter 800 Zeilen).
+- **Beobachtung:** Der Container-npm (10.9.4) schreibt Lockfiles anders als das npm zu Node 26 (entfernt `libc`-Felder); Lockfile-Änderungen im Container deshalb gezielt vornehmen oder im Container Node 26 nutzen.
+
 ### 2026-10-25 16:45 (UTC) – [GELÖST]
 
 - **CI grün:** Push-Lauf 40212258539 auf `7197730` (Q.4 und 3.10) erfolgreich, auch der Job „TS Dependency-Audit & Lizenzen“. Damit sind 3.10 und Q.4 `[ERLEDIGT]`.
