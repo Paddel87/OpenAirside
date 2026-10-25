@@ -112,7 +112,7 @@ export class Playfield {
   readonly #persons: ParticleContainer;
   readonly #pool: Particle[] = [];
   readonly #texture: Texture;
-  readonly #person: PersonRecord = { x: 0, y: 0, floor: 0, heading: 0 };
+  readonly #person: PersonRecord = { x: 0, y: 0, floor: 0, heading: 0, group: 0, state: 0 };
   #camera: Camera = { zoom: 1, x: 0, y: 0 };
   #floor = 0;
   #map = { width: 0, height: 0 };

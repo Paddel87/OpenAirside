@@ -18,7 +18,7 @@ use crate::time::Tick;
 
 /// Protocol version of the port (S-1, S-2, S-3, S-7); raised by every
 /// non-additive change.
-pub const PROTOCOL: u32 = 1;
+pub const PROTOCOL: u32 = 2;
 /// Largest message to the core in bytes of its JSON form.
 pub const MAX_MESSAGE_BYTES: usize = 1 << 20;
 
@@ -53,6 +53,10 @@ pub enum ClientMessage {
         filter: FrameFilter,
         /// Highest `seq` received so far, 0 for none.
         ack: u32,
+        /// World revision (S-1 header) of the newest frame the renderer
+        /// processed in this session, 0 for none.
+        #[serde(default)]
+        world_ack: u32,
     },
     /// Acknowledges events without asking for a frame (S-3).
     EventsAck {
@@ -236,6 +240,8 @@ pub enum Action {
         filter: FrameFilter,
         /// Highest received `seq`.
         ack: u32,
+        /// World revision of the newest frame processed, 0 for none.
+        world_ack: u32,
     },
     /// Acknowledge events up to `seq`.
     Ack {
@@ -381,7 +387,16 @@ impl Port {
                 id,
                 command,
             },
-            ClientMessage::FrameRequest { filter, ack, .. } => Action::Frame { filter, ack },
+            ClientMessage::FrameRequest {
+                filter,
+                ack,
+                world_ack,
+                ..
+            } => Action::Frame {
+                filter,
+                ack,
+                world_ack,
+            },
             ClientMessage::EventsAck { seq, .. } => Action::Ack { seq },
             ClientMessage::Query { id, query, .. } => Action::Query { id, query },
         }
@@ -468,13 +483,15 @@ mod tests {
                     session: 4,
                     filter: FrameFilter::default(),
                     ack: 7,
+                    world_ack: 3,
                 },
                 4,
                 core_info()
             ),
             Action::Frame {
                 filter: FrameFilter::default(),
-                ack: 7
+                ack: 7,
+                world_ack: 3
             }
         );
         assert_eq!(

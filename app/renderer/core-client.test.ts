@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ClientMessage } from "../src/generated/ClientMessage.js";
 import type { Query } from "../src/generated/Query.js";
 import { type ClientHandlers, CoreClient, FRAME_TIMEOUT_MS, PROTOCOL } from "./core-client.js";
-import { HEADER_BYTES } from "./frame-reader.js";
+import { HEADER_BYTES, WORLD_HEADER_BYTES } from "./frame-reader.js";
 
 function setup() {
   const sent: ClientMessage[] = [];
@@ -39,14 +39,17 @@ function setup() {
 
 const core = { name: "openairside-core", version: "0.0.0" };
 
-function frameBuf(session: number): ArrayBuffer {
-  const buf = new ArrayBuffer(HEADER_BYTES);
+/** A frame without persons and with an empty world section of revision `worldRevision`. */
+function frameBuf(session: number, worldRevision = 0): ArrayBuffer {
+  const buf = new ArrayBuffer(HEADER_BYTES + WORLD_HEADER_BYTES);
   const v = new DataView(buf);
-  v.setUint16(0, 1, true);
-  v.setUint16(2, 32, true);
+  v.setUint16(0, 2, true);
+  v.setUint16(2, HEADER_BYTES, true);
   v.setUint32(4, session, true);
   v.setInt8(24, 127);
-  v.setUint8(25, 6);
+  v.setUint8(25, 8);
+  v.setUint32(32, worldRevision, true);
+  v.setUint32(HEADER_BYTES, WORLD_HEADER_BYTES, true);
   return buf;
 }
 
@@ -96,10 +99,54 @@ describe("CoreClient", () => {
     expect(handlers.events).toHaveBeenCalledWith(1, [record(1), record(2)]);
     expect(handlers.frame).toHaveBeenCalledOnce();
     expect(client.requestFrame({})).toBe(true);
-    expect(sent.at(-1)).toEqual({ type: "frameRequest", session: 1, filter: {}, ack: 2 });
+    expect(sent.at(-1)).toEqual({
+      type: "frameRequest",
+      session: 1,
+      filter: {},
+      ack: 2,
+      worldAck: 0,
+    });
     // A lost answer does not block forever.
     advance(FRAME_TIMEOUT_MS);
     expect(client.requestFrame({})).toBe(true);
+  });
+
+  it("acknowledges the world revision of a processed frame, per session", () => {
+    const { client, sent, handlers } = setup();
+    client.handle({ type: "welcome", protocol: 2, core, session: 1 });
+    const frame = (session: number, revision: number): void => {
+      client.handle({
+        type: "frame",
+        session,
+        tick: 1,
+        events: [],
+        buf: frameBuf(session, revision),
+      });
+    };
+    const ack = (): number => {
+      client.requestFrame({});
+      return (sent.at(-1) as unknown as { worldAck: number }).worldAck;
+    };
+    expect(ack()).toBe(0);
+    frame(1, 4);
+    expect(ack()).toBe(4);
+    // A frame without blocks (revision 0) keeps the last acknowledgement.
+    frame(1, 0);
+    expect(ack()).toBe(4);
+    // A frame of another session is not acknowledged.
+    frame(7, 9);
+    expect(ack()).toBe(4);
+    // A frame the handler could not process is not acknowledged.
+    handlers.frame.mockImplementationOnce(() => {
+      throw new Error("draw failed");
+    });
+    expect(() => {
+      frame(1, 5);
+    }).toThrow("draw failed");
+    expect(ack()).toBe(4);
+    // A new session starts counting again.
+    client.handle({ type: "sessionStarted", session: 2, tick: 0 });
+    expect(ack()).toBe(0);
   });
 
   it("acknowledges events that come without a frame and counts gaps", () => {
