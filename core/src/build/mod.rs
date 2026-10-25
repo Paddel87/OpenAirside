@@ -315,13 +315,16 @@ pub(crate) fn restore_targets(saved: Vec<SavedTarget>) -> Result<Vec<Target>, Re
         .collect())
 }
 
-/// One block as stored: the three cell fields in row order, 1,024 bytes
-/// each.
+/// One block as stored: the cell fields in row order, 1,024 values each.
+/// `floor_kind` and `wall_kind` refer to the type table of the module
+/// ([`SavedBuild::types`], 0 for none).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct SavedBlock {
     pub flags: Vec<u8>,
     pub zone: Vec<u8>,
     pub cost: Vec<u8>,
+    pub floor_kind: Vec<u16>,
+    pub wall_kind: Vec<u16>,
 }
 
 /// Collects the distinct blocks of several grid snapshots (the grid, the
@@ -348,6 +351,8 @@ impl BlockPool {
                             flags: block.flags().to_vec(),
                             zone: block.zones().to_vec(),
                             cost: block.costs().to_vec(),
+                            floor_kind: block.floor_kinds().to_vec(),
+                            wall_kind: block.wall_kinds().to_vec(),
                         });
                         u32::try_from(self.blocks.len()).unwrap_or(u32::MAX)
                     })
@@ -404,7 +409,9 @@ fn block(saved: SavedBlock) -> Option<Arc<Block>> {
     let flags: [u8; BLOCK_CELLS] = saved.flags.try_into().ok()?;
     let zone: [u8; BLOCK_CELLS] = saved.zone.try_into().ok()?;
     let cost: [u8; BLOCK_CELLS] = saved.cost.try_into().ok()?;
-    Block::from_fields(flags, zone, cost).map(Arc::new)
+    let floor_kind: [u16; BLOCK_CELLS] = saved.floor_kind.try_into().ok()?;
+    let wall_kind: [u16; BLOCK_CELLS] = saved.wall_kind.try_into().ok()?;
+    Block::from_fields(flags, zone, cost, floor_kind, wall_kind).map(Arc::new)
 }
 
 #[cfg(test)]

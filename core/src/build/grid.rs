@@ -145,6 +145,12 @@ pub struct Cell {
     pub zone: u8,
     /// Cost factor in tenths, 1 … [`MAX_COST`].
     pub cost: u8,
+    /// Floor covering: 0 for none, else the number of an object type in the
+    /// type table of the module plus 1 (ADR-042).
+    pub floor_kind: u16,
+    /// Wall type: 0 for none, else like `floor_kind`. A cell with the
+    /// [`WALL`] flag and no wall type is blocked by an object or void.
+    pub wall_kind: u16,
 }
 
 impl Cell {
@@ -153,6 +159,8 @@ impl Cell {
         flags: WALL,
         zone: Zone::Landside as u8,
         cost: COST_NORMAL,
+        floor_kind: 0,
+        wall_kind: 0,
     };
 
     /// Walkable floor in the given zone with the normal cost.
@@ -162,6 +170,8 @@ impl Cell {
             flags: 0,
             zone: zone as u8,
             cost: COST_NORMAL,
+            floor_kind: 0,
+            wall_kind: 0,
         }
     }
 
@@ -223,6 +233,8 @@ pub struct Block {
     flags: [u8; BLOCK_CELLS],
     zone: [u8; BLOCK_CELLS],
     cost: [u8; BLOCK_CELLS],
+    floor_kind: [u16; BLOCK_CELLS],
+    wall_kind: [u16; BLOCK_CELLS],
     walkable: u16,
 }
 
@@ -232,6 +244,8 @@ impl Block {
             flags: [Cell::VOID.flags; BLOCK_CELLS],
             zone: [Cell::VOID.zone; BLOCK_CELLS],
             cost: [Cell::VOID.cost; BLOCK_CELLS],
+            floor_kind: [0; BLOCK_CELLS],
+            wall_kind: [0; BLOCK_CELLS],
             walkable: 0,
         }
     }
@@ -254,18 +268,33 @@ impl Block {
         &self.cost
     }
 
+    /// Floor coverings in row order (see [`Cell::floor_kind`]).
+    #[must_use]
+    pub fn floor_kinds(&self) -> &[u16; BLOCK_CELLS] {
+        &self.floor_kind
+    }
+
+    /// Wall types in row order (see [`Cell::wall_kind`]).
+    #[must_use]
+    pub fn wall_kinds(&self) -> &[u16; BLOCK_CELLS] {
+        &self.wall_kind
+    }
+
     /// Number of walkable cells.
     #[must_use]
     pub fn walkable_cells(&self) -> usize {
         usize::from(self.walkable)
     }
 
-    /// Block from the three cell fields of a save game; `None` if a cell
-    /// carries an unused flag bit, an unknown zone or a cost out of range.
+    /// Block from the cell fields of a save game; `None` if a cell carries
+    /// an unused flag bit, an unknown zone or a cost out of range. The type
+    /// numbers are checked against the type table by the module.
     pub(crate) fn from_fields(
         flags: [u8; BLOCK_CELLS],
         zone: [u8; BLOCK_CELLS],
         cost: [u8; BLOCK_CELLS],
+        floor_kind: [u16; BLOCK_CELLS],
+        wall_kind: [u16; BLOCK_CELLS],
     ) -> Option<Self> {
         let valid = (0..BLOCK_CELLS).all(|i| {
             flags[i] & !FLAG_BITS == 0
@@ -280,6 +309,8 @@ impl Block {
             flags,
             zone,
             cost,
+            floor_kind,
+            wall_kind,
             walkable: u16::try_from(walkable).ok()?,
         })
     }
@@ -289,6 +320,8 @@ impl Block {
             flags: self.flags[local],
             zone: self.zone[local],
             cost: self.cost[local],
+            floor_kind: self.floor_kind[local],
+            wall_kind: self.wall_kind[local],
         }
     }
 
@@ -298,6 +331,8 @@ impl Block {
         self.flags[local] = cell.flags;
         self.zone[local] = cell.zone;
         self.cost[local] = cell.cost;
+        self.floor_kind[local] = cell.floor_kind;
+        self.wall_kind[local] = cell.wall_kind;
         match (was, is) {
             (false, true) => self.walkable += 1,
             (true, false) => self.walkable -= 1,
@@ -543,6 +578,9 @@ impl Grid {
                 hasher.bytes(&block.flags);
                 hasher.bytes(&block.zone);
                 hasher.bytes(&block.cost);
+                for kind in block.floor_kind.iter().chain(&block.wall_kind) {
+                    hasher.bytes(&kind.to_le_bytes());
+                }
             }
         }
     }
@@ -666,9 +704,53 @@ mod tests {
             .flags; BLOCK_CELLS];
         let zones = [0; BLOCK_CELLS];
         let costs = [COST_NORMAL; BLOCK_CELLS];
-        assert!(Block::from_fields(kinds, zones, costs).is_some());
+        let none = [0; BLOCK_CELLS];
+        assert!(Block::from_fields(kinds, zones, costs, none, none).is_some());
         let unused = [1 << 6; BLOCK_CELLS];
-        assert!(Block::from_fields(unused, zones, costs).is_none());
+        assert!(Block::from_fields(unused, zones, costs, none, none).is_none());
+    }
+
+    #[test]
+    fn floor_covering_and_wall_type_are_part_of_the_cell_and_the_hash() {
+        let hash = |g: &Grid| {
+            let mut h = StateHasher::new();
+            g.hash_into(&mut h);
+            h.finish()
+        };
+        let mut g = grid();
+        let plain = hash(&g);
+        let cell = Cell {
+            floor_kind: 3,
+            wall_kind: 0,
+            ..Cell::floor(Zone::Landside)
+        };
+        g.set(pos(2, 2, 0), cell).unwrap();
+        assert_eq!(g.cell(pos(2, 2, 0)), Some(cell));
+        let with_floor = hash(&g);
+        assert_ne!(with_floor, plain);
+        // Only the covering differs: the version still rises, the hash changes.
+        let version = g.version();
+        g.set(
+            pos(2, 2, 0),
+            Cell {
+                floor_kind: 4,
+                ..cell
+            },
+        )
+        .unwrap();
+        assert_eq!(g.version(), version + 1);
+        assert_ne!(hash(&g), with_floor);
+        let walled = Cell {
+            flags: WALL,
+            wall_kind: 9,
+            ..cell
+        };
+        g.set(pos(2, 2, 0), walled).unwrap();
+        let snap = g.snapshot();
+        let block = snap.block(GROUND).unwrap();
+        assert_eq!(block.floor_kinds()[2 * BLOCK + 2], 3);
+        assert_eq!(block.wall_kinds()[2 * BLOCK + 2], 9);
+        assert_eq!(block.walkable_cells(), 0);
     }
 
     #[test]

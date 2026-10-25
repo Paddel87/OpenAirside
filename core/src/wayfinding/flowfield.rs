@@ -600,6 +600,7 @@ mod tests {
                             flags,
                             zone: zone as u8,
                             cost,
+                            ..Cell::VOID
                         },
                     )
                     .unwrap();
