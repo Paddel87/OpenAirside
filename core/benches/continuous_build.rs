@@ -275,7 +275,7 @@ fn run() -> Result<bool, String> {
     let json = format!(
         concat!(
             "{{\"benchmark\":\"continuousBuild\",\"persons\":{},\"actions\":{},\"periodMs\":{},",
-            "\"threads\":{},\"backgroundThreads\":{},\"os\":\"{}\",",
+            "\"threads\":{},\"backgroundThreads\":{},\"cpus\":{},\"os\":\"{}\",\"ticks\":{},",
             "\"adoptionsWhileBuilding\":{},\"adoptionsTotal\":{},\"maxGapMs\":{:.0},\"settleMs\":{:.0},",
             "\"jobsPeak\":{},\"fieldSetsPeak\":{},\"snapshotsPeak\":{},",
             "\"peakMemoryMb\":{},\"stepP99Ms\":{:.4},\"aborted\":{},\"timedOut\":{},",
@@ -287,7 +287,9 @@ fn run() -> Result<bool, String> {
         period_ms,
         sim_threads,
         background_threads,
+        std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
         std::env::consts::OS,
+        step_index,
         building_adoptions,
         adoptions.len(),
         max_gap,

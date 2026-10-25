@@ -72,6 +72,38 @@ describe("renderReport for the flow field benchmark", () => {
   });
 });
 
+describe("renderReport for the continuous building benchmark", () => {
+  const continuousBuild = {
+    benchmark: "continuousBuild",
+    persons: 10000,
+    threads: 2,
+    backgroundThreads: 2,
+    cpus: 4,
+    os: "linux",
+    ticks: 7000,
+    adoptionsWhileBuilding: 13,
+    maxGapMs: 2428,
+    settleMs: 3567,
+    jobsPeak: 1,
+    fieldSetsPeak: 3,
+    snapshotsPeak: 2,
+    peakMemoryMb: 223,
+    stepP99Ms: 1.136,
+    limits: { gapMs: 8000, settleMs: 8000, jobs: 2, fieldSets: 3, snapshots: 2 },
+    passed: true,
+  };
+
+  it("shows gaps, peaks and their limits", () => {
+    const text = renderReport(continuousBuild, { ...continuousBuild, maxGapMs: 2000 });
+    expect(text).toContain("### Dauerbau-Benchmark: bestanden");
+    expect(text).toContain(
+      "| Längster Abstand zwischen Übernahmen (ms) | 2428 | 8000 | 2000 | +21.4 % |",
+    );
+    expect(text).toContain("| Neuberechnungen gleichzeitig (Spitze) | 1 | 2 | 1 | +0.0 % |");
+    expect(text).toContain("| Schnappschuss-Kopien gleichzeitig (Spitze) | 2 | 2 |");
+  });
+});
+
 describe("readResult and main", () => {
   const files = { "now.json": JSON.stringify(current), "bad.json": "{" };
   const read = (path) => {

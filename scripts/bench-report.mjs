@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Writes the result of a core benchmark (core/benches/tick.rs, ADR-022, or
-// core/benches/flowfield.rs, ADR-023) as a Markdown table for the job summary of the CI,
+// core/benches/flowfield.rs, ADR-023, or core/benches/continuous_build.rs, ADR-041) as a Markdown table for the job summary of the CI,
 // compared with the last result on main if one is given (trend display only). The limits
 // are enforced by the benchmark programs themselves.
 //
@@ -38,6 +38,19 @@ const LAYOUTS = {
       ["p99Ms", "Schritt während Neuberechnung, p99 (ms)", "p99Ms", 3, 1],
       ["maxMs", "Schritt, Höchstwert (ms)", null, 3, 1],
       ["adoptionMaxMs", "Schritt mit Übernahme (ms)", null, 3, 1],
+    ],
+  },
+  continuousBuild: {
+    title: "Dauerbau-Benchmark",
+    rows: [
+      ["maxGapMs", "Längster Abstand zwischen Übernahmen (ms)", "gapMs", 0, 1],
+      ["settleMs", "Letzte Bauaktion bis Übernahme ihres Stands (ms)", "settleMs", 0, 1],
+      ["adoptionsWhileBuilding", "Übernahmen während des Bauens", null, 0, 1],
+      ["jobsPeak", "Neuberechnungen gleichzeitig (Spitze)", "jobs", 0, 1],
+      ["fieldSetsPeak", "Wegweiser-Sätze gleichzeitig (Spitze)", "fieldSets", 0, 1],
+      ["snapshotsPeak", "Schnappschuss-Kopien gleichzeitig (Spitze)", "snapshots", 0, 1],
+      ["peakMemoryMb", "Prozessspeicher, Spitze (MB, nicht bewertet)", null, 0, 1],
+      ["stepP99Ms", "Schritt während des Bauens, p99 (ms, nicht bewertet)", null, 3, 1],
     ],
   },
 };
@@ -89,7 +102,7 @@ export function renderReport(current, previous) {
   }
   lines.push(
     "",
-    "Die Änderung ist nur eine Anzeige; rot wird der Lauf allein über die Grenzen (ADR-022, ADR-023).",
+    "Die Änderung ist nur eine Anzeige; rot wird der Lauf allein über die Grenzen (ADR-022, ADR-023, ADR-041).",
   );
   return `${lines.join("\n")}\n`;
 }
