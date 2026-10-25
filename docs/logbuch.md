@@ -24,6 +24,17 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 21:50 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 20:54 bis 21:50 UTC.
+- **Bearbeitet:** 3.1b: S-1 Layout 2 mit `worldAck`, `game.new`, Weltdarstellung (Z-1), Bau-Werkzeug, möbliertes Szenario und Messreihe, Rauchtest über vier Sitzungswechsel, Dokumente, Messanleitung.
+- **Erreicht:** Commits `0634e65`, `9edb236`, `0b2c685`, `7c97219`, `a21643d` auf `feat/3-1b-darstellung-und-bedienung` (gepusht, CI-Lauf 40236604271 zum Zeitpunkt des Eintrags in der Warteschlange, Ergebnis nicht abgewartet). Lokal grün: Rust-Tests (Kern 167 Lib-Tests, alle Integrationstests), clippy, Vitest 480+ Tests, ESLint, Prettier, `tsc`, Rauchtests `smoke` und `world` unter xvfb, `measure 1` im Container. 3.1b bleibt `[IN ARBEIT]`.
+- **Offen geblieben:** CI-Ergebnis eintragen; Release-Pakete starten (Workflow „Release“ auf dem Branch, die KI hat ihn nicht gestartet); Messungen auf Referenz-PC und Mac und Grafik-Abnahme (Wand A/B, Boden A/B, Sitzbank) durch den Projektinhaber nach `docs/research/3.1b-messung.md`; danach Auswertung, Reifegrade, PR (nicht eröffnet: keine Anweisung dazu in dieser Session), `[ERLEDIGT]`. Coverage der Kern-Änderung nicht gemessen (CI-Gate prüft).
+- **Nächster Schritt:** Ergebnisse des Projektinhabers auswerten; danach 3.1c.
+- **Aktive Klasse und Bilanz:** Routine (Sonnet 5.5 laut `get_session` 20:54 und 21:45 UTC); 0 Schritte oberhalb der Empfehlung; nichts abgegeben (Probelauf der Unteragenten-Klassen offen).
+- **Kontextgröße:** laut `get_session` nicht feststellbar (meldet 0 von 1.000.000); die Session war sehr umfangreich, die nächste Arbeit sollte in einer neuen Session beginnen.
+- **Ablaufdaten-Prüfung und Drift-Check:** Register geprüft, kein Eintrag am Vorlauf. Keine neuen ADRs; Reaktiv-Quote unverändert 4 / 10; Fahrplan-Stand, README und Runbook nachgezogen; Landeplatz der 253-Typen-Grenze in 6.1 eingetragen; kein CHANGELOG vorhanden (Version 0.0.0). Onboarding-Pfad: Quick-Start-Befehle unverändert, daher keine Neu-Validierung des Klons; die Rauchtests liefen im Arbeitsbaum.
+
 ### 2026-10-25 21:40 (UTC) – [PROBLEM-GELÖST]
 
 - **Reibungen in 3.1b, je mit Lösung:**
