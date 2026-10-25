@@ -24,14 +24,14 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
-### 2026-10-25 17:20 (UTC) – [SESSIONENDE]
+### 2026-10-25 17:19 (UTC) – [SESSIONENDE]
 
-- **Session-Dauer:** Fortsetzung 17:10 bis 17:20 UTC nach dem `[SESSIONENDE]` 17:05 UTC (gesamt 15:58 bis 17:20 UTC).
+- **Session-Dauer:** Fortsetzung 17:06 bis 17:19 UTC nach dem `[SESSIONENDE]` 17:05 UTC (gesamt 15:58 bis 17:19 UTC). Zeiten der Einträge dieser Fortsetzung nach den Commit-Zeiten berichtigt (`[ENTSCHEIDUNG-VORGELEGT]` war mit 17:35 geschätzt).
 - **Bearbeitet:** `[SESSIONENDE]` der 3.9-Session nachgetragen; Pflichtlektüre Architektur 1/2/9 und Decisions A/C nachgeholt; Vorlage 3.1 (`docs/research/3.1-vorlage.md`) vorgelegt und freigegeben.
 - **Erreicht:** ADR-040 (3.1 in drei Stufen 3.1a/3.1b/3.1c) und ADR-041 (Dauerbau-Benchmark im Job „Kern-Benchmark“, Frist 8 s, gezählte Grenze), beide freigegeben vom Projektinhaber am 2026-10-25 („E1 A und E2 A freigeben“). Reaktiv-Quote 4 / 10 (ADR-032 bis ADR-041), weiter über der Schwelle; Reflexion nach Regel-009 gilt. Gate in `project-context.md` Abschnitt 7 eingetragen, README „Nächste Schritte“ nachgezogen.
 - **Offen geblieben:** Umsetzung 3.1a; Code nicht begonnen.
 - **Nächster Schritt:** 3.1a in neuer Session (Anweisung „weiter in neuer Session“), zuerst Dauerbau-Benchmark gegen den heutigen Code (Reproduktion, ADR-041), dann Teilaufgaben nach Vorlage Abschnitt 2. Empfohlene Klasse für die Umsetzung: Routine (die Entscheidungen sind gefallen); neuer Branch vom aktuellen `main` bzw. Übernahme der Sessionende-Commits dieses Branches nach `project-context.md` Abschnitt 10.
-- **Aktive Klasse und Bilanz:** Teil 1 (bis 17:05) Routine (Sonnet 5.5), 0 Schritte oberhalb der Empfehlung; Teil 2 (ab 17:10) Entscheidung (Opus 5.5 nach `/model`), Vorlage 3.1 passend zur Empfehlung. Abgabe: Faktensammlung für die Vorlage an einen Unteragenten (Explore, gleiches Modell, kein günstigeres, da Probelauf offen), Ergebnis geprüft und in die Vorlage übernommen.
+- **Aktive Klasse und Bilanz:** Teil 1 (bis 17:05) Routine (Sonnet 5.5), 0 Schritte oberhalb der Empfehlung; Teil 2 (ab 17:06) Entscheidung (Opus 5.5 nach `/model`), Vorlage 3.1 passend zur Empfehlung. Abgabe: Faktensammlung für die Vorlage an einen Unteragenten (Explore, gleiches Modell, kein günstigeres, da Probelauf offen), Ergebnis geprüft und in die Vorlage übernommen.
 - **Kontextgröße:** 426.947 Token laut `get_session` – **über der Grenze von 400.000**; Empfehlung: nächste Arbeit in neuer Session beginnen (vom Projektinhaber bereits so angewiesen).
 - **Ablaufdaten-Prüfung:** keine Änderung gegenüber 17:05 UTC.
 - **Drift-Check:** ADR-040/041 in Teil A und B, Fahrplan 3.1 mit Stufen und ADR-Verweisen, `project-context.md` Gate-Liste, README; Phasenumfang unverändert (Stufen zählen als ein Schritt).
@@ -40,7 +40,7 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 
 - **ADR-040** Schritt 3.1 in drei Stufen (`[OPERATIV]`, Methodik) und **ADR-041** Dauerbau-Benchmark als Schritt im CI-Job „Kern-Benchmark“ (`[OPERATIV]`, Kategorie 7); beide nicht `[REAKTIV]`. Freigabe: „E1 A und E2 A freigeben, weiter in neuer Session“.
 
-### 2026-10-25 17:35 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+### 2026-10-25 17:12 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt:** 3.1, Vorlage `docs/research/3.1-vorlage.md`.
 - **E1:** Aufteilung in 3.1a (Kern: Bauen mit Wirkung, Dauerbau, Format 3, `catalog`), 3.1b (S-1 Layout 2, Spielfeld, Bau-Werkzeug, `game.new`, Messungen, Grafik-Abnahme), 3.1c (Bauarbeiter); Empfehlung A.
@@ -48,7 +48,7 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 - **Faktenlage:** von einem Unteragenten (Explore, gleiches Modell) aus Fahrplan, ADR-036 bis ADR-039, Schnittstellen, Research und Code zusammengetragen; Befunde (u. a. Korrektur auch in `wayfinding/mod.rs`, abweichender Bezug der Speicherschwelle in 3.8) in Abschnitt 1 und 4 der Vorlage.
 - **Klassifikation:** in der Phasenplanung vorgesehen (Fahrplan 3.1 nennt Kategorie 7) → nicht `[REAKTIV]`.
 
-### 2026-10-25 17:10 (UTC) – [SESSIONSTART]
+### 2026-10-25 17:06 (UTC) – [SESSIONSTART]
 
 - **Anlass:** Fortsetzung derselben Claude-Code-Session nach dem `[SESSIONENDE]` 17:05 UTC; der Projektinhaber hat per `/model` gewechselt und angewiesen: „Modellwechsel durchgeführt, Sessionende nachholen, dann weiter mit 3.1“ (statt neuer Session).
 - **Modell:** eingestellt laut `get_session` `claude-sonnet-5-5` (Sessionanlage), aktuell `claude-opus-5-5` (`user_switched_model`), bedient `claude-opus-5-5` → Entscheidungs-Klasse. Passt zur Empfehlung von 3.1.
