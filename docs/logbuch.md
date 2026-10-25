@@ -24,12 +24,22 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 17:10 (UTC) – [SESSIONSTART]
+
+- **Anlass:** Fortsetzung derselben Claude-Code-Session nach dem `[SESSIONENDE]` 17:05 UTC; der Projektinhaber hat per `/model` gewechselt und angewiesen: „Modellwechsel durchgeführt, Sessionende nachholen, dann weiter mit 3.1“ (statt neuer Session).
+- **Modell:** eingestellt laut `get_session` `claude-sonnet-5-5` (Sessionanlage), aktuell `claude-opus-5-5` (`user_switched_model`), bedient `claude-opus-5-5` → Entscheidungs-Klasse. Passt zur Empfehlung von 3.1.
+- **Erledigt vorab:** `[SESSIONENDE]` der 3.9-Session nachgetragen (2026-10-22 01:18 UTC).
+- **Pflichtlektüre:** project-context vollständig (diese Session), Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und 3.1, Architektur 1/2/9, Decisions Teil A und C (jetzt nachgeholt), aktive Blocker: keine.
+- **Vorabprüfung 3.1:** Eingangskriterien erfüllt (Weltdarstellung `[BELASTBAR]` seit ADR-038, Kernstruktur 3.9 erledigt); Reaktiv-Quote 6 / 10 über der Schwelle, Reflexion nach Regel-009 gilt (Anlass ADR-038).
+- **Kontext:** 370.649 Token bei Wiederanlauf (Grenze 400.000); Hinweis an den Projektinhaber gegeben.
+- **Branch:** `claude/admiring-mayer-u95tfm` auf `main` (`f4341c6`) plus Sessionende-Commit `cd5d8ab`.
+
 ### 2026-10-25 17:05 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** 15:58 bis 17:05 UTC (rund 1 Stunde 10 Minuten).
 - **Bearbeitet:** Orientierung („was ist als nächstes dran?“), 3.10 (`main.ts` nach Zuständigkeiten geteilt), Q.4 (Audit-Advisories: `undici`, `fast-uri`, Electron 44.9.3), PR [#34](https://github.com/Paddel87/OpenAirside/pull/34) eröffnet und bei grüner CI gemergt (`f4341c6`).
 - **Erreicht:** 3.10 und Q.4 `[ERLEDIGT]`; CI auf dem PR komplett grün (17 Jobs, CodeQL, beide wöchentlichen Audits), Rauchtest auf drei Plattformen. Phase 3: 3.7, 3.8, 3.14, 3.15, 3.9, 3.10 erledigt.
-- **Offen geblieben:** Ein `[SESSIONENDE]` zur 3.9-Session (22:30 UTC am 2026-10-21) wurde nie geschrieben und wird nicht rekonstruiert; der Stand steht im `[BEOBACHTUNG]` 23:20 UTC. Probeläufe für Mechanik- und Routine-Klasse (`project-context.md` Abschnitt 6) bleiben offen.
+- **Offen geblieben:** Ein `[SESSIONENDE]` zur 3.9-Session (22:30 UTC am 2026-10-21) fehlte; am 2026-10-25 auf Anweisung nachgetragen (unten, 2026-10-22 01:18 UTC). Probeläufe für Mechanik- und Routine-Klasse (`project-context.md` Abschnitt 6) bleiben offen.
 - **Nächster Schritt:** 3.1 Bauen im Raster, Bauaufträge sofort sichtbar, Dauerbau, in neuer Session auf Anweisung des Projektinhabers („Weiter mit 3.1 in neuer Session“). Empfohlene Klasse laut Fahrplan: Entscheidung (Bewertung der NFR „Bauaktion im nächsten Bild“, Frist und Grenze des Dauerbau-Benchmarks in der Vorlage vor dem Code, ggf. neues CI-Gate = Kategorie 7); Umsetzung ist Routine und abgebbar. Neuer Branch vom aktuellen `main` (`f4341c6`); der Branch dieser Session ist gemergt.
 - **Aktive Klasse und Bilanz:** Routine-Klasse (Sonnet 5.5 laut `get_session`, bedient und eingestellt gleich). Schritte oberhalb der Empfehlung: 0 (3.10 und Q.4 sind Routine). Abgegebene Teilarbeiten: keine, Probelauf offen.
 - **Kontextgröße:** 364.016 Token (Grenze 400.000, nicht überschritten); neue Session für 3.1 trotzdem sinnvoll, da 3.1 groß ist.
@@ -57,6 +67,18 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 - **Modell:** eingestellt `claude-sonnet-5-5`, bedient `claude-sonnet-5-5` laut `get_session` 16:00 UTC → Routine-Klasse. Passt zur Empfehlung von 3.10 (Routine).
 - **Pflichtlektüre:** vollständig (project-context, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Schritt 3.10, Blocker: keine aktiven; Architektur und Decisions für die reine Orientierung nicht nötig).
 - **Branch:** `claude/admiring-mayer-u95tfm` auf dem Stand von `main` (`ec5f349`), vom Werkzeug vergeben.
+
+### 2026-10-22 01:18 (UTC) – [SESSIONENDE] (nachgetragen am 2026-10-25)
+
+- **Hinweis:** Nachgetragen in der Session vom 2026-10-25 auf Anweisung des Projektinhabers („Sessionende nachholen“). Quellen: Commits `3431e91` bis `ec5f349` und der `[BEOBACHTUNG]`-Eintrag 2026-10-21 23:20 UTC. Was diese Quellen nicht hergeben, steht als „nicht überliefert“.
+- **Session-Dauer:** 2026-10-21 22:30 UTC (Sessionstart) bis 23:10 UTC (letzter Commit `3790d2c`); Merge von PR #33 am 2026-10-22 01:18 UTC (`ec5f349`).
+- **Bearbeitet:** 3.9 Kernstruktur der Fachmodule: Vorlage (`3431e91`), ADR-039 (`fd2e6e4`, Option B gegen Empfehlung A), Umbau (`383f545`), Dokumente (`3308f96`), Abschluss (`3790d2c`).
+- **Erreicht:** 3.9 `[ERLEDIGT]` (ADR-039), Zustands-Prüfsumme vor und nach dem Umbau gleich (`f8580b54e3165422`), CI auf PR #33 grün, gemergt.
+- **Offen geblieben:** nicht überliefert über den Fahrplan hinaus; nächster Schritt laut Fahrplan war 3.10.
+- **Nächster Schritt:** 3.10 (erledigt am 2026-10-25).
+- **Aktive Klasse und Bilanz:** Entscheidungs-Klasse (Opus 5.5 laut `[SESSIONSTART]`); Umbau (Routine) lief oberhalb seiner Empfehlung, keine Abgabe (laut `[BEOBACHTUNG]`). Zahl der Schritte oberhalb der Empfehlung: 1 Teilarbeit (Umbau in 3.9; der Schritt selbst ist Entscheidung).
+- **Kontextgröße:** nicht überliefert (zum Zeitpunkt nicht erfasst).
+- **Ablaufdaten-Prüfung:** nicht überliefert; bei der Prüfung am 2026-10-25 war kein Eintrag fällig.
 
 ### 2026-10-21 23:20 (UTC) – [BEOBACHTUNG]
 
