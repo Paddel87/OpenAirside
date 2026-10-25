@@ -24,6 +24,14 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 16:00 (UTC) – [SESSIONSTART]
+
+- **Anlass:** Frage des Projektinhabers „Neue Session, was ist als nächstes dran?“; bisher nur Orientierung, keine Umsetzung.
+- **Letzter Stand:** 3.9 erledigt (ADR-039, PR #33 gemergt, `ec5f349`). Ein `[SESSIONENDE]`-Eintrag zur 3.9-Session fehlt; letzter vorhandener ist 2026-10-21 01:17 UTC, danach nur `[BEOBACHTUNG]` 23:20 UTC.
+- **Modell:** eingestellt `claude-sonnet-5-5`, bedient `claude-sonnet-5-5` laut `get_session` 16:00 UTC → Routine-Klasse. Passt zur Empfehlung von 3.10 (Routine).
+- **Pflichtlektüre:** vollständig (project-context, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Schritt 3.10, Blocker: keine aktiven; Architektur und Decisions für die reine Orientierung nicht nötig).
+- **Branch:** `claude/admiring-mayer-u95tfm` auf dem Stand von `main` (`ec5f349`), vom Werkzeug vergeben.
+
 ### 2026-10-21 23:20 (UTC) – [BEOBACHTUNG]
 
 - **3.9 umgesetzt:** Kern nach ADR-039 umgebaut (`383f545`), Dokumente nachgezogen (`3308f96`); PR #33 nach Anweisung „Mach daraus ein PR und merge ihn bei grün“ eröffnet.
