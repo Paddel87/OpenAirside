@@ -591,6 +591,8 @@ async function start(): Promise<void> {
     const s = perf.snapshot(performance.now());
     const world = playfield.worldFigures();
     root.dataset.worldBlocks = String(world.blocks);
+    root.dataset.worldObjects = String(world.objects);
+    root.dataset.worldComplete = String(playfield.worldComplete());
     if (hud !== null) {
       hud.textContent = [
         `${String(s.fps)} fps · frame ${s.rttMs.toFixed(1)} ms (max ${s.rttMaxMs.toFixed(1)})`,

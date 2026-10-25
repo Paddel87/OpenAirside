@@ -139,6 +139,7 @@ export class BuildTool {
       case "up": {
         const start = this.#start;
         this.#start = undefined;
+        this.#hover = cell;
         if (start === undefined) return false;
         this.#issue(mode, start, cell);
         this.#draw();
