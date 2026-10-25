@@ -24,6 +24,18 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 18:10 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 3.1a, Vorlage `docs/research/3.1a-objekte-vorlage.md`: Wirkung der Objekttypen (Frage 1: Feld `effect` im Objekttyp, Empfehlung A), Sperren durch Möbel (Frage 2, A), Abriss mit Rahmen (Frage 3, A); Festlegungen ohne eigene Frage in Abschnitt 4.
+- **Klassifikation:** `[REAKTIV]` (in der Planung von 3.1 nicht als Entscheidung vorgesehen); Regel-009 neues Muster (Code in Welt & Bau) → Reflexion mit Stopp, Entwurf in Abschnitt 6 der Vorlage.
+
+### 2026-10-25 18:05 (UTC) – [SESSIONSTART]
+
+- **Anlass:** Fortsetzung derselben Session nach `STOPP – MODELLWECHSEL ERFORDERLICH`; der Projektinhaber hat per `/model` gewechselt („Modellwechsel durchgeführt, weiter mit Entscheidung zu 3.1a“).
+- **Modell:** eingestellt bei Anlage `claude-sonnet-5-5`, umgestellt (`user_switched_model`) und bedient `claude-opus-5-5` laut `get_session` → Entscheidungs-Klasse. Stopp aufgehoben.
+- **Kontext:** 439.802 Token laut `get_session`, über der Grenze von 400.000; Empfehlung, die Umsetzung nach der Entscheidung in einer neuen Session zu beginnen.
+- **Vertiefung:** `templates/architektur-heuristiken.md`, `architecture.md` Abschnitt 8, `3.8-weltdarstellung.md` (Objekte je Block), `core/src/pool.rs`.
+
 ### 2026-10-25 17:54 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** 17:25 bis 17:54 UTC.
