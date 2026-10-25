@@ -11,9 +11,9 @@
 - **Stand vom:** 2026-10-25 (Session ab 17:25 UTC, 3.1a zu einem Teil umgesetzt, Modellwechsel für die Entscheidung zur Wirkung der Objekte angefordert)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 3.1a `[IN ARBEIT]` (Teilaufgaben 1, 2, 5, 7, 8 erledigt; 3, 4, 6 warten auf die Entscheidung zur Wirkung der Objekte, siehe Schritt 3.1)
-- **Nächster Schritt:** 3.1a Teilaufgaben 3, 4 und 6 (Objekte im Weltzustand, Wirkung von `build`, `buildArea`, `demolish`, Vertragsabgleich S-5 für Format 3) nach der Entscheidung (`ENTSCHEIDUNG ERFORDERLICH`, Kategorien 4 und 5)
-- **Offene STOPP-Situationen:** `STOPP – MODELLWECHSEL ERFORDERLICH` für die Entscheidung zur Wirkung der Objekte (3.1a, Auslöser 1). Reaktiv-Quote 4 / 10 (ADR-032 bis ADR-041) über dem Schwellenwert; Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
+- **Aktiver Schritt:** 3.1a `[IN ARBEIT]` (Teilaufgaben 1, 2, 5, 7, 8 erledigt; 3, 4, 6 nach ADR-042, Vorlage `docs/research/3.1a-objekte-vorlage.md`)
+- **Nächster Schritt:** 3.1a Teilaufgaben 3, 4 und 6 (Objekte im Weltzustand, Wirkung von `build`, `buildArea`, `demolish`, Vertragsabgleich S-4, S-2 und S-5) nach ADR-042, in neuer Session (Kontext über der Grenze); empfohlene Klasse Routine
+- **Offene STOPP-Situationen:** keine. Reaktiv-Quote 4 / 10 (ADR-033 bis ADR-042) über dem Schwellenwert; Reflexion zu ADR-042 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-25, Maßnahme (12); Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
 ## Phasen-Typen
@@ -220,7 +220,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Stufen (ADR-040):** 3.1a Kern: Bauen mit Wirkung und Dauerbau `[IN ARBEIT]` → 3.1b Darstellung und Bedienung `[OFFEN]` → 3.1c Bauaufträge und Bauarbeiter `[OFFEN]`; Inhalt, Prüfbarkeit und Akzeptanz je Stufe in `docs/research/3.1-vorlage.md` Abschnitt 2; Frist und Grenze des Dauerbau-Benchmarks in ADR-041. Jede Stufe mit eigenem PR.
 - **Stand 3.1a (2026-10-25, Branch `feat/3-1a-bauen-mit-wirkung-dauerbau`):**
   - **Erledigt:** (1) Dauerbau-Benchmark `core/benches/continuous_build.rs` samt Zählern, gegen den unkorrigierten Code: 0 Übernahmen in 210 s, bis zu 110 Neuberechnungen gleichzeitig, 810 MB (Commit `a454f70`); als Schritt im CI-Job „Kern-Benchmark“ (`05c2b4c`, noch nicht in der CI gelaufen). (5) Dauerbau-Korrektur, danach 13 Übernahmen beim Bauen, längster Abstand 2,4 s, letzter Stand nach 3,6 s, 1 Neuberechnung, 3 Feldsätze, 2 Schnappschuss-Kopien, 223 MB (`67d6bfe`). (2) Flächenart, Personalzone, Zugangsprofil am Ziel mit Regeln der Wegweiser (`d86e3c1`). (8) `{ key }` in `ParamValue` (`b19d25b`, `9eb36c9`). (7) S-7 `catalog` (`8370f91`). Spielstand Format 3 trägt bisher `dirty` der Wegfindung und das Profil je Ziel.
-  - **Offen:** (3) Objekte im Weltzustand mit Handles, Abriss, `MAX_OBJECTS`; (4) Wirkung von `build`, `buildArea`, `demolish` und `core/tests/build.rs`; (6) Objekte im Spielstand (Format 3) und Vertragsabgleich S-5 nach Maßnahme (7) und (8). Dazu fehlt eine Festlegung, die weder die Vorlage noch ADR-037 trifft: was ein Objekttyp aus einem Datenpaket im Raster bewirkt (siehe Logbuch, `[SESSIONENDE]` 2026-10-25 Fortsetzung) – Kategorien 4 und 5, daher Entscheidungs-Klasse.
+  - **Offen:** (3) Objekte im Weltzustand mit Handles, Abriss, `MAX_OBJECTS`; (4) Wirkung von `build`, `buildArea`, `demolish` und `core/tests/build.rs`; (6) Objekte im Spielstand (Format 3) und Vertragsabgleich S-5 nach Maßnahme (7) und (8). Festlegungen dazu in ADR-042 (freigegeben 2026-10-25), Einzelheiten in `docs/research/3.1a-objekte-vorlage.md` Abschnitt 3 und 4. Mit ADR-042 kommen in 3.1a dazu: `effect` im Basispaket und JSON-Schema, Codes `blocked`, `needsFloor`, `floorLocked` mit Texten, Abgleich S-4 und S-2.
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 3.7, 3.8, 3.9, 3.10, 3.14
 - **Freigabepflichtig:** ja, falls der Dauerbau-Benchmark als CI-Gate kommt (Kategorie 7); sonst nein (Verträge aus ADR-032)
@@ -652,6 +652,17 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Maßnahme (11):** Ein Messprototyp mit neuem Nachrichtenweg wird im Container mit mindestens drei Sitzungswechseln geprüft, bevor Pakete an den Projektinhaber gehen.
 - **Ausblick:** Sind die folgenden ADRs nicht reaktiv, sinkt die Quote auf 6 / 10 ab ADR-039 und auf 2 / 10 (Schwellenwert eingehalten) ab ADR-046; ADR-038 fällt ab ADR-048 aus dem Fenster.
 - **Kenntnisnahme:** Projektinhaber am 2026-10-20 per Auswahl: „Kenntnis + Maßnahme 11“; kein Umbau, Maßnahme (11) gilt.
+
+### Ergänzung Reaktiv-Quote (2026-10-25, Anlass ADR-042; neues Muster nach Regel-009)
+
+- **Befund:** 4 / 10 `[REAKTIV]` (ADR-036, ADR-037, ADR-038, ADR-042) über ADR-033 bis ADR-042, 40 %.
+- **Ursache von ADR-042:** Fahrplan-Schritt 3.1 sah außer dem CI-Gate keine Freigabe vor; beim Code fiel auf, dass S-4 nicht festlegt, was ein Objekttyp im Raster bewirkt.
+- **Neues Muster nach Regel-009:** ADR-042 führt zu Code in Welt & Bau. Deshalb neue Reflexion mit Stopp.
+- **Muster:** Ein Vertrag mit „Mindestfeldern, spätere Schritte ergänzen additiv“ (S-4, 2.4) hatte keinen Schritt für die Felder, die das Bauen braucht; die Vorlage 3.1 zählte Teilaufgaben auf, ohne zu prüfen, welche Daten jede liest.
+- **Architektur-Refactoring nötig?** Nein: Die Entscheidung füllt eine Lücke im bestehenden Muster (`placement` → `effect`) und nutzt den Baustein `Pool<T>` aus 3.9.
+- **Maßnahme (12):** Eine Vorlage vor dem Code nennt je Teilaufgabe die gelesenen Daten mit ihrer Fundstelle (ADR oder Vertragssatz); fehlt eine, ist sie Teil der Vorlage und ihrer Entscheidung, nicht des Codes.
+- **Ausblick:** Sind die folgenden ADRs nicht reaktiv, sinkt die Quote auf 3 / 10 ab ADR-046 und auf 2 / 10 (Schwellenwert eingehalten) ab ADR-047; ADR-042 fällt ab ADR-052 aus dem Fenster.
+- **Kenntnisnahme:** Projektinhaber am 2026-10-25 per Auswahl („Übernehmen“ für Festlegungen, Einstufung und Maßnahme (12)); kein Umbau, Maßnahme (12) gilt.
 
 <!-- ANCHOR:parallelisierbarkeit -->
 ## Parallelisierbarkeit

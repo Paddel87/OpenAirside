@@ -421,6 +421,7 @@ Flugzeugtyp, Objekttyp, Fahrzeugtyp und Airline stammen aus Datenpaketen (S-4). 
 - **Wirkungen zwischen Fachmodulen als Rückgabewerte, die der Takt weiterreicht:** Empfehlung der KI, vom Projektinhaber zugunsten der internen Ereignis-Warteschlange nicht gewählt; als Ergänzung jederzeit möglich – siehe ADR-039
 - **Einzelweg-Suche (A*) je Fahrt für Personal:** im Terminal Median 18–61 ms, p99 bis 272 ms je Fahrt, weit über dem Zeitbudget eines Simulationsschritts – siehe ADR-037
 - **Ein Feldsatz für alle Personengruppen:** Bauarbeiter-Flächen ziehen jedes Feld über das ganze Erdgeschoss (444 MB, 9–11 s) – siehe ADR-037
+- **Wirkung eines Objekttyps aus seiner ID im Code** oder aus dem Namen der Inhaltsdatei: verstößt gegen Regel-003 (Inhalte sind Daten), Mods könnten keine eigenen Böden anlegen, die Regel wäre nicht im Schema prüfbar – siehe ADR-042
 - **Kern als WebAssembly mit einem Thread:** nur ein Prozessorkern, bei schwerer Last 3,9 × langsamer als nativ mit 4 Threads – siehe ADR-009
 - **Kern als WebAssembly mit mehreren Threads:** derzeit nur mit Nightly-Rust baubar, 1,37–1,50 × langsamer als nativ; nicht endgültig verworfen, sondern zurückgestellt: Neubewertung in Fahrplan-Schritt Q.2 – siehe ADR-009
 

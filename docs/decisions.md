@@ -54,10 +54,11 @@
 | 039 | 2026-10-21 | Aktiv | STRATEGISCH | MODUL, DATENMODELL | Architektur, Datenmodell | Kernstruktur der Fachmodule mit interner Ereignis-Warteschlange |
 | 040 | 2026-10-25 | Aktiv | OPERATIV | METHODIK | Methodik | Schritt 3.1 in drei Stufen |
 | 041 | 2026-10-25 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Dauerbau-Benchmark als Schritt im CI-Job „Kern-Benchmark“ |
+| 042 | 2026-10-25 | Aktiv | REAKTIV | DATENMODELL, SCHNITTSTELLE | Datenmodell, API-Verträge | Wirkung der Objekttypen, Möbel sperren, Abriss berührter Objekte |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 4 / 10 über die letzten 10 ADRs (ADR-032 bis ADR-041: ADR-032, ADR-036, ADR-037, ADR-038), 40 % – **über dem Schwellenwert**; gesamt 16 / 41. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-038, 2026-10-20, neues Muster nach Regel-009); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
+- **Aktueller Wert:** 4 / 10 über die letzten 10 ADRs (ADR-033 bis ADR-042: ADR-036, ADR-037, ADR-038, ADR-042), 40 % – **über dem Schwellenwert**; gesamt 17 / 42. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-042, 2026-10-25, neues Muster nach Regel-009); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -148,6 +149,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-039: Kernstruktur der Fachmodule mit interner Ereignis-Warteschlange](decisions/ADR-039.md)
 - [ADR-040: Schritt 3.1 in drei Stufen](decisions/ADR-040.md)
 - [ADR-041: Dauerbau-Benchmark als Schritt im CI-Job „Kern-Benchmark“](decisions/ADR-041.md)
+- [ADR-042: Wirkung der Objekttypen, Möbel sperren, Abriss berührter Objekte](decisions/ADR-042.md)
 
 ---
 

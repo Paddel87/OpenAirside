@@ -24,6 +24,11 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 18:20 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-042** Wirkung der Objekttypen (Feld `effect` im Objekttyp), Möbel sperren ihre Zellen, Abriss entfernt alles Berührte; Festlegungen aus Abschnitt 4 der Vorlage übernommen. `[REAKTIV]`, Reaktiv-Quote 4 / 10 (ADR-033 bis ADR-042). Freigabe: „1A, 2A, 3A, Übernehmen“.
+- **Regel-009:** neues Muster (Code in Welt & Bau) → Reflexion in `fahrplan.md` „Iterations-Reflexion“ mit Maßnahme (12), vom Projektinhaber mit „Übernehmen“ zur Kenntnis genommen; kein Umbau.
+
 ### 2026-10-25 18:10 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
 
 - **Schritt:** 3.1a, Vorlage `docs/research/3.1a-objekte-vorlage.md`: Wirkung der Objekttypen (Frage 1: Feld `effect` im Objekttyp, Empfehlung A), Sperren durch Möbel (Frage 2, A), Abriss mit Rahmen (Frage 3, A); Festlegungen ohne eigene Frage in Abschnitt 4.
