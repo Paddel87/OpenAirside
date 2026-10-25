@@ -11,6 +11,8 @@ use std::fmt;
 use serde::de::{MapAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::build::grid::{AreaKind, COST_NORMAL};
+
 /// `manifest.json` of a data pack.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -63,7 +65,8 @@ pub struct ObjectsFile {
 }
 
 /// An object type: something the player builds (step 2.4 defines the
-/// minimal fields; later steps add fields additively).
+/// minimal fields; later steps add fields additively; `effect` and `blocks`
+/// came with ADR-042).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -77,10 +80,75 @@ pub struct ObjectEntry {
     /// How the object is placed.
     #[cfg_attr(feature = "schema", schemars(with = "Placement"))]
     pub placement: PlacementSpec,
+    /// What an `area` object does to the cells it is drawn over; required
+    /// for `area`, not allowed for `single` (ADR-042).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<Effect>"))]
+    pub effect: Option<EffectSpec>,
+    /// Whether a `single` object keeps persons from walking over its cells;
+    /// default `true`, not allowed for `area` (ADR-042).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub blocks: Option<bool>,
     /// Entry of another pack that this entry replaces (`<pack>:<entry>`);
     /// allowed only if this pack depends on that pack.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub replaces: Option<String>,
+}
+
+/// `effect` as read from the file: a plain struct for the same reason as
+/// [`PlacementSpec`]. Stage 2 turns it into [`Effect`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EffectSpec {
+    /// `floor` or `wall`.
+    pub kind: EffectKind,
+    /// What the floor is used for, only for `floor`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub area_kind: Option<AreaKind>,
+    /// Cost factor of the floor in tenths, only for `floor`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cost: Option<u8>,
+}
+
+/// Kind of an [`EffectSpec`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum EffectKind {
+    /// See [`Effect::Floor`].
+    Floor,
+    /// See [`Effect::Wall`].
+    Wall,
+}
+
+/// What an `area` object type does to the cells it is drawn over. Further
+/// kinds (zone, stairs, marking) come with the steps that build them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum Effect {
+    /// Walkable floor: the cell shows this object type as floor covering.
+    Floor {
+        /// What the floor is used for, which decides who may walk on it
+        /// (ADR-037); default `publicWalk`.
+        #[serde(default)]
+        area_kind: AreaKind,
+        /// Cost factor in tenths, 1 to 40; default 10 (normal floor).
+        #[serde(default = "default_floor_cost")]
+        #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 40)))]
+        cost: u8,
+    },
+    /// Wall: the cell cannot be walked on and shows this object type as
+    /// wall.
+    Wall {},
+}
+
+fn default_floor_cost() -> u8 {
+    COST_NORMAL
 }
 
 /// `placement` as read from the file: a plain struct, so that errors name

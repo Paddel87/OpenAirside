@@ -4,12 +4,14 @@
     {
       "id": "floor_concrete",
       "name": "object.floor_concrete",
-      "placement": { "kind": "area" }
+      "placement": { "kind": "area" },
+      "effect": { "kind": "floor" }
     },
     {
       "id": "wall_concrete",
       "name": "object.wall_concrete",
-      "placement": { "kind": "area" }
+      "placement": { "kind": "area" },
+      "effect": { "kind": "wall" }
     }
   ]
 }

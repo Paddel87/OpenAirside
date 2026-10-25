@@ -8,6 +8,8 @@
 
 use std::sync::Arc;
 
+use serde::{Deserialize, Serialize};
+
 use crate::geometry::{CellPos, CellRect, MAX_FLOOR, MIN_FLOOR, MapSize, is_valid_floor};
 use crate::hash::StateHasher;
 
@@ -79,11 +81,17 @@ impl Zone {
 
 /// What a cell is used for, which decides who may walk on it (ADR-037). Part
 /// of the flag byte; 0 (public walkway) is what older cells and floors
-/// without a kind mean.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+/// without a kind mean. In data packs it is written in camel case
+/// (`publicWalk`, `standArea`, ADR-042).
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default, Serialize, Deserialize,
+)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
 #[repr(u8)]
 pub enum AreaKind {
     /// Public walkway: halls, corridors, plazas.
+    #[default]
     PublicWalk = 0,
     /// Walkway across the apron (walk-out, apron staff).
     ApronWalkway = 1,

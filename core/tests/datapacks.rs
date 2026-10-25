@@ -7,7 +7,8 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 use openairside_core::datapack::{
     self, BASE_PACK_ID, Catalog, LoadOutcome, MAX_LIST_LEN, PackFolder, PackReport, PackSource,
-    PackState, code, game_version, model::Placement,
+    PackState, code, game_version,
+    model::{Effect, Placement},
 };
 use openairside_core::text::ParamValue;
 
@@ -62,7 +63,9 @@ fn objects(entries: &[&str]) -> String {
 }
 
 fn area(id: &str) -> String {
-    format!(r#"{{"id": "{id}", "name": "object.{id}", "placement": {{"kind": "area"}}}}"#)
+    format!(
+        r#"{{"id": "{id}", "name": "object.{id}", "placement": {{"kind": "area"}}, "effect": {{"kind": "floor"}}}}"#
+    )
 }
 
 /// Writes a pack `id` with the given object entries into `dir/folder`.
@@ -187,7 +190,7 @@ fn replace_errors_and_conflicts_fail_the_later_pack() {
     let replace = |id: &str, target: &str| {
         format!(
             r#"{{"id": "{id}", "name": "object.{id}", "placement": {{"kind": "area"}},
-                "replaces": "{target}"}}"#
+                "effect": {{"kind": "floor"}}, "replaces": "{target}"}}"#
         )
     };
     pack(
@@ -280,6 +283,144 @@ fn syntax_and_structure_errors_name_file_line_column_and_path() {
             .as_deref()
             .is_some_and(|p| p.starts_with("objects[0].placement"))
     );
+}
+
+#[test]
+fn effect_and_blocks_follow_the_placement() {
+    use openairside_core::build::grid::AreaKind;
+    let user = TempDir::new("effects");
+    pack(
+        &user,
+        "good",
+        &manifest("good", "1.0.0", &[]),
+        &[
+            r#"{"id": "road", "name": "n", "placement": {"kind": "area"},
+                "effect": {"kind": "floor", "areaKind": "road", "cost": 20}}"#,
+            r#"{"id": "plain", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "floor"}}"#,
+            r#"{"id": "wall", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "wall"}}"#,
+            r#"{"id": "plant", "name": "n", "placement": {"kind": "single", "width": 2, "depth": 2}, "blocks": false}"#,
+            r#"{"id": "desk", "name": "n", "placement": {"kind": "single", "width": 2, "depth": 2}}"#,
+        ],
+    );
+    let bad = |name: &str, entry: &str| {
+        pack(&user, name, &manifest(name, "1.0.0", &[]), &[entry]);
+    };
+    bad(
+        "noeffect",
+        r#"{"id": "a", "name": "n", "placement": {"kind": "area"}}"#,
+    );
+    bad(
+        "singleeffect",
+        r#"{"id": "a", "name": "n", "placement": {"kind": "single", "width": 2, "depth": 2}, "effect": {"kind": "wall"}}"#,
+    );
+    bad(
+        "areablocks",
+        r#"{"id": "a", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "wall"}, "blocks": true}"#,
+    );
+    bad(
+        "wallcost",
+        r#"{"id": "a", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "wall", "cost": 5}}"#,
+    );
+    bad(
+        "cost0",
+        r#"{"id": "a", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "floor", "cost": 0}}"#,
+    );
+    bad(
+        "cost41",
+        r#"{"id": "a", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "floor", "cost": 41}}"#,
+    );
+    bad(
+        "unknownkind",
+        r#"{"id": "a", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "stairs"}}"#,
+    );
+    bad(
+        "unknownarea",
+        r#"{"id": "a", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "floor", "areaKind": "lava"}}"#,
+    );
+    let all = [
+        "good",
+        "noeffect",
+        "singleeffect",
+        "areablocks",
+        "wallcost",
+        "cost0",
+        "cost41",
+        "unknownkind",
+        "unknownarea",
+    ];
+    let outcome = load_user(&user, &all);
+    assert_eq!(
+        report(&outcome, "good").state,
+        PackState::Active,
+        "{:?}",
+        report(&outcome, "good").errors
+    );
+    let catalog = &outcome.catalog;
+    let road = catalog.object("good:road").expect("road");
+    assert_eq!(
+        road.effect,
+        Some(Effect::Floor {
+            area_kind: AreaKind::Road,
+            cost: 20
+        })
+    );
+    assert!(!road.blocks);
+    assert_eq!(
+        catalog.object("good:plain").and_then(|o| o.effect),
+        Some(Effect::Floor {
+            area_kind: AreaKind::PublicWalk,
+            cost: 10
+        })
+    );
+    assert_eq!(
+        catalog.object("good:wall").and_then(|o| o.effect),
+        Some(Effect::Wall {})
+    );
+    assert!(!catalog.object("good:plant").expect("plant").blocks);
+    let desk = catalog.object("good:desk").expect("desk");
+    assert!(desk.blocks && desk.effect.is_none());
+    // Order of the catalog: the index is the position by full id.
+    assert_eq!(catalog.index_of("good:desk"), Some(0));
+    assert_eq!(catalog.id_at(1), Some("good:plain"));
+
+    let path_of = |name: &str| -> (String, Option<String>) {
+        let err = &report(&outcome, name).errors[0];
+        (err.reason.code.clone(), err.path.clone())
+    };
+    let structure = code::INVALID_STRUCTURE.to_owned();
+    let value = code::INVALID_VALUE.to_owned();
+    assert_eq!(
+        path_of("noeffect"),
+        (structure.clone(), Some("objects[0]".into()))
+    );
+    assert_eq!(
+        path_of("singleeffect"),
+        (structure.clone(), Some("objects[0].effect".into()))
+    );
+    assert_eq!(
+        path_of("areablocks"),
+        (structure.clone(), Some("objects[0].blocks".into()))
+    );
+    assert_eq!(
+        path_of("wallcost"),
+        (structure.clone(), Some("objects[0].effect.cost".into()))
+    );
+    assert_eq!(
+        path_of("cost0"),
+        (value.clone(), Some("objects[0].effect.cost".into()))
+    );
+    assert_eq!(
+        path_of("cost41"),
+        (value, Some("objects[0].effect.cost".into()))
+    );
+    for name in ["unknownkind", "unknownarea"] {
+        let (code, path) = path_of(name);
+        assert_eq!(code, structure, "{name}");
+        assert!(
+            path.is_some_and(|p| p.starts_with("objects[0].effect")),
+            "{name}"
+        );
+    }
 }
 
 #[test]
@@ -523,7 +664,7 @@ fn json_limits_are_checked_before_parsing() {
         "long",
         &manifest("long", "1.0.0", &[]),
         &[&format!(
-            r#"{{"id": "a", "name": "{long_name}", "placement": {{"kind": "area"}}}}"#
+            r#"{{"id": "a", "name": "{long_name}", "placement": {{"kind": "area"}}, "effect": {{"kind": "wall"}}}}"#
         )],
     );
     let many: Vec<String> = (0..=MAX_LIST_LEN).map(|i| area(&format!("e{i}"))).collect();

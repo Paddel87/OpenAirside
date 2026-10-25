@@ -24,6 +24,14 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 19:00 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 18:25 UTC, `[BEOBACHTUNG]` 18:45 UTC (erster CI-Lauf mit Dauerbau-Schritt grün). ADR-042 freigegeben, Code für 3.1a Teilaufgaben 3, 4, 6 nicht begonnen.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Schritt 3.1, Architektur 1/2/9, Decisions Teil A und C, Requirements-Übersicht, aktive Blocker: keine); Vertiefung: ADR-042, `docs/research/3.1a-objekte-vorlage.md`.
+- **Modell:** eingestellt `claude-sonnet-5-5`, bedient `claude-sonnet-5-5` laut `get_session` 19:00 UTC → Routine-Klasse; passt zur Empfehlung (Entscheidungen gefallen, ADR-042). Kontingent: 5-Stunden-Fenster `allowed`. Kontextgröße laut `get_session` 0 von 1.000.000 (frische Session).
+- **Branch:** `feat/3-1a-bauen-mit-wirkung-dauerbau` auf `8258e70`, weitergeführt (Anweisung des Projektinhabers).
+- **Vorhaben:** Teilaufgaben 3, 4, 6 nach ADR-042 und die Kosten der Profil-Prüfung; danach CI und PR „feat: 3.1a Kern – Bauen mit Wirkung und Dauerbau“. Eine freigabepflichtige Entscheidung außerhalb von ADR-042 → Stopp.
+
 ### 2026-10-25 18:45 (UTC) – [BEOBACHTUNG]
 
 - **Erster CI-Lauf mit Dauerbau-Schritt** (Lauf 40219644818, Job „Kern-Benchmark“, grün): Tick Mittel 0,072 ms, p99 0,145 ms; Wegweiser-Neuberechnung **3219 ms** (Grenze 4000 ms), Schritt p99 0,46 ms; Dauerbau 120 Bauaktionen, **8 Übernahmen** beim Bauen, längster Abstand **3645 ms** (Grenze 8000), letzter Stand nach **5250 ms** (Grenze 8000), Spitzen 1 Neuberechnung / 3 Feldsätze / 2 Schnappschuss-Kopien, 223 MB, Schritt p99 0,65 ms. Die Frist aus ADR-041 trägt auf dem Runner, der Spielraum beim letzten Stand ist 2,75 s.

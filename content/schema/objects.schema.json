@@ -1,9 +1,111 @@
 {
   "$defs": {
+    "AreaKind": {
+      "description": "What a cell is used for, which decides who may walk on it (ADR-037). Part\nof the flag byte; 0 (public walkway) is what older cells and floors\nwithout a kind mean. In data packs it is written in camel case\n(`publicWalk`, `standArea`, ADR-042).",
+      "oneOf": [
+        {
+          "const": "publicWalk",
+          "description": "Public walkway: halls, corridors, plazas.",
+          "type": "string"
+        },
+        {
+          "const": "apronWalkway",
+          "description": "Walkway across the apron (walk-out, apron staff).",
+          "type": "string"
+        },
+        {
+          "const": "crossing",
+          "description": "Crossing of a walkway with a service road or taxiway (zebra crossing).",
+          "type": "string"
+        },
+        {
+          "const": "standArea",
+          "description": "Aircraft stand area.",
+          "type": "string"
+        },
+        {
+          "const": "apron",
+          "description": "Apron and taxiway.",
+          "type": "string"
+        },
+        {
+          "const": "runway",
+          "description": "Runway.",
+          "type": "string"
+        },
+        {
+          "const": "road",
+          "description": "Road for vehicles.",
+          "type": "string"
+        },
+        {
+          "const": "terrain",
+          "description": "Terrain without use.",
+          "type": "string"
+        }
+      ]
+    },
+    "Effect": {
+      "description": "What an `area` object type does to the cells it is drawn over. Further\nkinds (zone, stairs, marking) come with the steps that build them.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Walkable floor: the cell shows this object type as floor covering.",
+          "properties": {
+            "areaKind": {
+              "$ref": "#/$defs/AreaKind",
+              "default": "publicWalk",
+              "description": "What the floor is used for, which decides who may walk on it\n(ADR-037); default `publicWalk`."
+            },
+            "cost": {
+              "default": 10,
+              "description": "Cost factor in tenths, 1 to 40; default 10 (normal floor).",
+              "format": "uint8",
+              "maximum": 40,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "kind": {
+              "const": "floor",
+              "type": "string"
+            }
+          },
+          "required": ["kind"],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Wall: the cell cannot be walked on and shows this object type as\nwall.",
+          "properties": {
+            "kind": {
+              "const": "wall",
+              "type": "string"
+            }
+          },
+          "required": ["kind"],
+          "type": "object"
+        }
+      ]
+    },
     "ObjectEntry": {
       "additionalProperties": false,
-      "description": "An object type: something the player builds (step 2.4 defines the\nminimal fields; later steps add fields additively).",
+      "description": "An object type: something the player builds (step 2.4 defines the\nminimal fields; later steps add fields additively; `effect` and `blocks`\ncame with ADR-042).",
       "properties": {
+        "blocks": {
+          "description": "Whether a `single` object keeps persons from walking over its cells;\ndefault `true`, not allowed for `area` (ADR-042).",
+          "type": ["boolean", "null"]
+        },
+        "effect": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Effect"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What an `area` object does to the cells it is drawn over; required\nfor `area`, not allowed for `single` (ADR-042)."
+        },
         "id": {
           "description": "Identifier within the pack: 1 to 64 characters `a-z`, `0-9`, `_`, `-`.",
           "pattern": "^[a-z0-9_-]{1,64}$",
