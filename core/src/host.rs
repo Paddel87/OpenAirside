@@ -167,19 +167,23 @@ impl PortHost {
     /// (S-7 "Konsistenz"), outside the simulation step.
     fn query(&self, id: u32, query: &Query) -> Outgoing {
         let session = self.announced;
-        let result = |dictionary, detail| ServerMessage::QueryResult {
+        let result = |dictionary, detail, catalog| ServerMessage::QueryResult {
             session,
             id,
             dictionary,
             detail,
+            catalog,
         };
         match answer(query, &self.front) {
             Ok(Answer::Table(buf)) => Outgoing::Binary {
-                message: result(None, None),
+                message: result(None, None, None),
                 buf,
             },
-            Ok(Answer::Dictionary(dictionary)) => Outgoing::Message(result(Some(dictionary), None)),
-            Ok(Answer::Detail(detail)) => Outgoing::Message(result(None, Some(detail))),
+            Ok(Answer::Dictionary(dictionary)) => {
+                Outgoing::Message(result(Some(dictionary), None, None))
+            }
+            Ok(Answer::Detail(detail)) => Outgoing::Message(result(None, Some(detail), None)),
+            Ok(Answer::Catalog(catalog)) => Outgoing::Message(result(None, None, Some(catalog))),
             Err(code) => Outgoing::Message(ServerMessage::QueryError {
                 session,
                 id,
@@ -564,6 +568,15 @@ mod tests {
                 detail: Some(_),
                 ..
             })]
+        ));
+        let out = ask(&mut host, 11, Query::Catalog {});
+        assert!(matches!(
+            out.as_slice(),
+            [Outgoing::Message(ServerMessage::QueryResult {
+                id: 11,
+                catalog: Some(entries),
+                ..
+            })] if entries.is_empty()
         ));
         let out = ask(
             &mut host,

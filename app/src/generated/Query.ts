@@ -48,4 +48,5 @@ export type Query =
        * The object.
        */
       about: Handle;
-    };
+    }
+  | { kind: "catalog" };

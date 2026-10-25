@@ -72,6 +72,19 @@ impl Catalog {
         self.objects.keys().map(String::as_str)
     }
 
+    /// All object types, replaced ones included, in the order of their full
+    /// ids. The order is fixed for the session: S-7 `catalog` lists the
+    /// entries in it and S-1 refers to an entry by its index.
+    pub fn objects(&self) -> impl Iterator<Item = &ObjectType> {
+        self.objects.values()
+    }
+
+    /// The entry that replaces `id` directly, if any.
+    #[must_use]
+    pub fn replaced_by(&self, id: &str) -> Option<&str> {
+        self.replaced.get(id).map(String::as_str)
+    }
+
     /// Active packs in load order.
     #[must_use]
     pub fn packs(&self) -> &[ActivePack] {

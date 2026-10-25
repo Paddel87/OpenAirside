@@ -288,7 +288,7 @@ impl Runner {
 
     fn spawn(sim: Simulation) -> Result<Self, SimulationError> {
         let mut middle = Snapshot::default();
-        middle.capture(sim.session(), sim.tick(), sim.world());
+        middle.capture(sim.session(), sim.tick(), sim.world(), sim.content_arc());
         let shared = Arc::new(Mutex::new(Shared {
             status: status_of(&sim, Measured::default()),
             events: Vec::new(),
@@ -605,7 +605,7 @@ fn drive(mut sim: Simulation, inbox: &Receiver<Input>, shared: &Arc<Mutex<Shared
 /// Publishes the events and a snapshot of the current state.
 fn publish(sim: &mut Simulation, back: &mut Snapshot, shared: &Mutex<Shared>, measured: Measured) {
     let records = sim.take_events(MAX_IN_FLIGHT as usize);
-    back.capture(sim.session(), sim.tick(), sim.world());
+    back.capture(sim.session(), sim.tick(), sim.world(), sim.content_arc());
     let mut out = lock(shared);
     out.push_events(sim.session(), records);
     std::mem::swap(&mut out.middle, back);

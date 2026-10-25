@@ -7,6 +7,7 @@
 import type { ClientMessage } from "../src/generated/ClientMessage.js";
 import type { Command } from "../src/generated/Command.js";
 import type { CoreInfo } from "../src/generated/CoreInfo.js";
+import type { CatalogEntry } from "../src/generated/CatalogEntry.js";
 import type { Detail } from "../src/generated/Detail.js";
 import type { Dictionary } from "../src/generated/Dictionary.js";
 import type { EventRecord } from "../src/generated/EventRecord.js";
@@ -33,7 +34,7 @@ export interface ClientHandlers {
   /** Events in stream order; `session` may be an ended one (answers sent before a switch). */
   events(session: number, events: readonly EventRecord[]): void;
   frame(frame: Frame): void;
-  /** Answer of query `id`: a table buffer, a dictionary or a detail (S-7). */
+  /** Answer of query `id`: a table buffer, a dictionary, a detail or the catalog (S-7). */
   queryResult(id: number, answer: QueryAnswer): void;
   /** Query `id` failed with an S-7 error code. */
   queryError(id: number, code: string): void;
@@ -43,11 +44,13 @@ export interface ClientHandlers {
   dropped(reason: string): void;
 }
 
-/** Answer of a query; exactly one field is set. */
+/** Answer of a query; at most one field is set. */
 export interface QueryAnswer {
   readonly buf?: ArrayBuffer;
   readonly dictionary?: Dictionary;
   readonly detail?: Detail;
+  /** Entries of the session in their fixed order; the index is the number S-1 uses. */
+  readonly catalog?: readonly CatalogEntry[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -235,7 +238,9 @@ export class CoreClient {
                 ? { dictionary: data.dictionary as unknown as Dictionary }
                 : isRecord(data.detail)
                   ? { detail: data.detail as unknown as Detail }
-                  : {};
+                  : Array.isArray(data.catalog) && data.catalog.every(isRecord)
+                    ? { catalog: data.catalog as unknown as CatalogEntry[] }
+                    : {};
           this.handlers.queryResult(data.id, answer);
           return;
         }

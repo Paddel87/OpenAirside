@@ -33,6 +33,7 @@ use std::cmp::Ordering;
 
 use serde::{Deserialize, Serialize};
 
+use crate::datapack::model::Placement;
 use crate::frame::Snapshot;
 use crate::geometry::Handle;
 
@@ -193,6 +194,36 @@ pub enum Query {
         /// The object.
         about: Handle,
     },
+    /// All entries of the loaded packs in the session (ab 3.1, ADR-032,
+    /// L-2). The catalog changes only with the session.
+    Catalog {},
+}
+
+/// An entry of the catalog of the session. The entries come in a fixed
+/// order, the index in the list is the number S-1 uses to refer to an entry
+/// (ADR-038).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS), ts(export))]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
+pub enum CatalogEntry {
+    /// An object type of a data pack: something the player builds.
+    Object {
+        /// Full id `<pack>:<entry>`.
+        id: String,
+        /// Localisation key of the name.
+        name: String,
+        /// How the object is placed.
+        placement: Placement,
+        /// Full id of the entry that replaces this one; the entry stays in
+        /// the list, because the indices must not change.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        replaced_by: Option<String>,
+    },
 }
 
 /// Texts of a table's text columns with their version.
@@ -237,6 +268,8 @@ pub enum Answer {
     Dictionary(Dictionary),
     /// Detail; `None` would mean a stale handle, which is an error instead.
     Detail(Detail),
+    /// The catalog of the session.
+    Catalog(Vec<CatalogEntry>),
 }
 
 /// Error codes of S-7.
@@ -363,6 +396,18 @@ pub fn answer(query: &Query, snapshot: &Snapshot) -> Result<Answer, &'static str
                 entries: PERSON_STATES.iter().map(|&s| s.to_owned()).collect(),
             }))
         }
+        Query::Catalog {} => Ok(Answer::Catalog(
+            snapshot
+                .content()
+                .objects()
+                .map(|o| CatalogEntry::Object {
+                    id: o.id.clone(),
+                    name: o.name.clone(),
+                    placement: o.placement,
+                    replaced_by: snapshot.content().replaced_by(&o.id).map(str::to_owned),
+                })
+                .collect(),
+        )),
         Query::Detail { about } => {
             let index = usize::try_from(about.index).map_err(|_| code::STALE_HANDLE)?;
             let p = snapshot
@@ -477,7 +522,7 @@ mod tests {
             3,
         );
         let mut snap = Snapshot::default();
-        snap.capture(4, 50, &world);
+        snap.capture(4, 50, &world, &std::sync::Arc::default());
         snap
     }
 
@@ -667,6 +712,42 @@ mod tests {
             },
             code::STALE_HANDLE,
         );
+    }
+
+    #[test]
+    fn the_catalog_lists_the_entries_of_the_session_in_a_fixed_order() {
+        use crate::datapack::{discover, game_version, load};
+        let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../content/base");
+        let loaded = load(&discover(Some(&base), None), &[], &game_version());
+        let mut snap = Snapshot::default();
+        assert_eq!(
+            answer(&Query::Catalog {}, &snap),
+            Ok(Answer::Catalog(Vec::new())),
+            "no content before the first capture"
+        );
+        let content = std::sync::Arc::new(loaded.catalog);
+        snap.capture(4, 50, &World::new(MapSize::new(64, 64).unwrap()), &content);
+        let Ok(Answer::Catalog(entries)) = answer(&Query::Catalog {}, &snap) else {
+            panic!("no catalog");
+        };
+        let ids: Vec<&str> = entries
+            .iter()
+            .map(|CatalogEntry::Object { id, .. }| id.as_str())
+            .collect();
+        assert_eq!(
+            ids,
+            ["base:bench", "base:floor_concrete", "base:wall_concrete"]
+        );
+        assert_eq!(
+            serde_json::to_string(&entries[0]).unwrap(),
+            r#"{"kind":"object","id":"base:bench","name":"object.bench","placement":{"kind":"single","width":4,"depth":2}}"#
+        );
+        assert_eq!(
+            serde_json::to_string(&entries[1]).unwrap(),
+            r#"{"kind":"object","id":"base:floor_concrete","name":"object.floor_concrete","placement":{"kind":"area"}}"#
+        );
+        let query: Query = serde_json::from_str(r#"{"kind":"catalog"}"#).unwrap();
+        assert_eq!(query, Query::Catalog {});
     }
 
     #[test]

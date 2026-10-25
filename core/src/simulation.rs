@@ -206,6 +206,13 @@ impl Simulation {
         &self.content
     }
 
+    /// Content of the current session as a shared reference, for the
+    /// snapshots handed to the presentation (S-7 `catalog`).
+    #[must_use]
+    pub fn content_arc(&self) -> &Arc<Catalog> {
+        &self.content
+    }
+
     /// Starts a new session with a fresh world: ids, `seq` and the tick
     /// (at `start_tick`) begin anew; unprocessed commands and events of the old session are
     /// discarded.

@@ -113,6 +113,7 @@ pub enum PlacementKind {
 /// How an object type is placed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS), ts(export))]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum Placement {
     /// Drawn over an area of cells, such as floors, walls and zones
