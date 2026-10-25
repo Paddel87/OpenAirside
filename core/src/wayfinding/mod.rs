@@ -8,7 +8,9 @@
 //! recomputation and adopts finished results in its stage of the step.
 
 pub mod flowfield;
+pub mod gauge;
 
+use std::sync::Arc;
 use std::time::Instant;
 
 use rayon::ThreadPool;
@@ -23,6 +25,7 @@ use crate::savegame::invalid;
 use crate::text::Reason;
 use crate::time::Tick;
 use flowfield::{FieldInput, FieldSet};
+use gauge::{GaugeReading, Gauges, Token};
 
 /// Duration of the last adopted recomputation of the flow fields, from the
 /// request to the adoption at the start of a tick (measurement tool of step
@@ -41,11 +44,15 @@ pub struct RecomputeStats {
 pub struct Wayfinding {
     fields: FieldSet,
     adoption: Adoption<FieldSet>,
-    /// Input of the open request, kept for save games (S-5).
-    pending_input: Option<FieldInput>,
+    /// Input of the open request, kept for save games (S-5), counted as a
+    /// snapshot copy while it lives.
+    pending_input: Option<(FieldInput, Token)>,
     /// Revision and time of the newest request.
     recompute_started: Option<(u32, Instant)>,
     last_recompute: Option<RecomputeStats>,
+    /// Counts of the background work, for the continuous-building benchmark
+    /// (ADR-041).
+    gauges: Gauges,
 }
 
 impl Wayfinding {
@@ -57,12 +64,39 @@ impl Wayfinding {
     }
 
     fn with_fields(fields: FieldSet) -> Self {
+        let gauges = Gauges::default();
+        let fields = Self::counted(fields, &gauges);
         Self {
             fields,
             adoption: Adoption::new(AdoptionMode::WhenReady),
             pending_input: None,
             recompute_started: None,
             last_recompute: None,
+            gauges,
+        }
+    }
+
+    /// `fields`, counted as a flow field set if they are not yet.
+    fn counted(fields: FieldSet, gauges: &Gauges) -> FieldSet {
+        if fields.is_tracked() {
+            fields
+        } else {
+            let token = gauges.field_sets.acquire();
+            fields.tracked(token)
+        }
+    }
+
+    /// The job of a recomputation of `input`: counted as a recomputation in
+    /// flight and as a snapshot copy until it is done, and its result as a
+    /// flow field set from the start of its computation.
+    fn job(&self, input: FieldInput) -> impl FnOnce(u32) -> FieldSet + Send + 'static {
+        let job = self.gauges.jobs.acquire();
+        let snapshot = self.gauges.snapshots.acquire();
+        let sets = Arc::clone(&self.gauges.field_sets);
+        move |revision| {
+            let _counted = (job, snapshot);
+            let set = sets.acquire();
+            FieldSet::compute(&input, revision).tracked(set)
         }
     }
 
@@ -91,6 +125,7 @@ impl Wayfinding {
     /// Takes over a new set of flow fields as a whole and returns the old
     /// one, so that the caller can drop its large buffers off the tick.
     pub fn adopt_fields(&mut self, fields: FieldSet) -> FieldSet {
+        let fields = Self::counted(fields, &self.gauges);
         std::mem::replace(&mut self.fields, fields)
     }
 
@@ -106,7 +141,8 @@ impl Wayfinding {
     /// Computes the flow fields of `build` now, on `pool`, with revision 0.
     pub(crate) fn rebuild_now(&mut self, build: &Build, pool: &ThreadPool) {
         let input = Self::input(build);
-        self.fields = pool.install(|| FieldSet::compute(&input, 0));
+        let fields = pool.install(|| FieldSet::compute(&input, 0));
+        self.fields = Self::counted(fields, &self.gauges);
     }
 
     /// Starts recomputing the flow fields of `build` on `background` at
@@ -114,10 +150,9 @@ impl Wayfinding {
     /// one.
     pub fn request(&mut self, build: &Build, background: &ThreadPool, tick: Tick) -> u32 {
         let input = Self::input(build);
-        self.pending_input = Some(input.clone());
-        let revision = self.adoption.request(background, tick, move |revision| {
-            FieldSet::compute(&input, revision)
-        });
+        self.pending_input = Some((input.clone(), self.gauges.snapshots.acquire()));
+        let job = self.job(input);
+        let revision = self.adoption.request(background, tick, job);
         self.recompute_started = Some((revision, Instant::now()));
         revision
     }
@@ -132,6 +167,13 @@ impl Wayfinding {
     #[must_use]
     pub fn last_recompute(&self) -> Option<RecomputeStats> {
         self.last_recompute
+    }
+
+    /// Counts of recomputations in flight, flow field sets and snapshot
+    /// copies, with their peaks since the module was created (ADR-041).
+    #[must_use]
+    pub fn gauges(&self) -> GaugeReading {
+        self.gauges.read()
     }
 
     /// Stage of the module in a step (ADR-039): requests a recomputation for
@@ -184,7 +226,7 @@ impl Wayfinding {
             pending: self
                 .adoption
                 .pending()
-                .zip(self.pending_input.clone())
+                .zip(self.pending_input.as_ref().map(|(input, _)| input.clone()))
                 .map(|((revision, due), input)| (revision, due, input)),
         }
     }
@@ -333,12 +375,11 @@ impl Prepared {
         let mut wayfinding = self.wayfinding;
         wayfinding.adoption = Adoption::resumed(mode, self.next_revision);
         if let Some((revision, due, input)) = self.pending {
-            wayfinding.pending_input = Some(input.clone());
+            wayfinding.pending_input = Some((input.clone(), wayfinding.gauges.snapshots.acquire()));
+            let job = wayfinding.job(input);
             wayfinding
                 .adoption
-                .resume_request(background, revision, due, move |revision| {
-                    FieldSet::compute(&input, revision)
-                });
+                .resume_request(background, revision, due, job);
             wayfinding.recompute_started = Some((revision, Instant::now()));
         }
         wayfinding

@@ -17,6 +17,8 @@ use crate::build::grid::{
 use crate::build::target::Target;
 use crate::geometry::CellPos;
 
+use super::gauge::Token;
+
 /// Planar directions 0 … 7 as (dx, dy): east, south-east, south, …
 pub const DIRS: [(i32, i32); 8] = [
     (1, 0),
@@ -332,6 +334,8 @@ pub struct FieldSet {
     targets: usize,
     data: Vec<u8>,
     unreachable: Vec<u32>,
+    /// Counts the set in a [`super::gauge::Gauge`] while it lives (ADR-041).
+    token: Option<Token>,
 }
 
 impl FieldSet {
@@ -384,7 +388,21 @@ impl FieldSet {
             targets,
             data,
             unreachable,
+            token: None,
         }
+    }
+
+    /// The set, counted by `token` for as long as it lives.
+    #[must_use]
+    pub fn tracked(mut self, token: Token) -> Self {
+        self.token = Some(token);
+        self
+    }
+
+    /// `true` if the set is counted by a gauge.
+    #[must_use]
+    pub fn is_tracked(&self) -> bool {
+        self.token.is_some()
     }
 
     /// Input this set was computed from.
