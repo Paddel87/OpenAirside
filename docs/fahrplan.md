@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-25 (Session ab 17:25 UTC, 3.1a zu einem Teil umgesetzt, Modellwechsel für die Entscheidung zur Wirkung der Objekte angefordert)
+- **Stand vom:** 2026-10-25 (Fortsetzung ab 19:00 UTC: 3.1a im Code vollständig, PR und CI stehen aus bzw. laufen)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** 3.1a `[IN ARBEIT]` (Teilaufgaben 1, 2, 5, 7, 8 erledigt; 3, 4, 6 nach ADR-042, Vorlage `docs/research/3.1a-objekte-vorlage.md`)
-- **Nächster Schritt:** 3.1a Teilaufgaben 3, 4 und 6 (Objekte im Weltzustand, Wirkung von `build`, `buildArea`, `demolish`, Vertragsabgleich S-4, S-2 und S-5) nach ADR-042, in neuer Session (Kontext über der Grenze); empfohlene Klasse Routine
+- **Aktiver Schritt:** 3.1a `[IN ARBEIT]` (alle Teilaufgaben umgesetzt; Definition of Done erst mit grüner CI auf dem PR)
+- **Nächster Schritt:** CI auf dem Branch beobachten, PR „feat: 3.1a Kern – Bauen mit Wirkung und Dauerbau“ eröffnen, bei grüner CI 3.1a `[ERLEDIGT]` setzen (Messwerte des Runners eintragen); danach 3.1b (Darstellung und Bedienung, Entscheidung zum Layout 2 und zum Bau-Werkzeug nach Vorlage 3.1); empfohlene Klasse laut Schritt
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 4 / 10 (ADR-033 bis ADR-042) über dem Schwellenwert; Reflexion zu ADR-042 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-25, Maßnahme (12); Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
@@ -220,7 +220,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Stufen (ADR-040):** 3.1a Kern: Bauen mit Wirkung und Dauerbau `[IN ARBEIT]` → 3.1b Darstellung und Bedienung `[OFFEN]` → 3.1c Bauaufträge und Bauarbeiter `[OFFEN]`; Inhalt, Prüfbarkeit und Akzeptanz je Stufe in `docs/research/3.1-vorlage.md` Abschnitt 2; Frist und Grenze des Dauerbau-Benchmarks in ADR-041. Jede Stufe mit eigenem PR.
 - **Stand 3.1a (2026-10-25, Branch `feat/3-1a-bauen-mit-wirkung-dauerbau`):**
   - **Erledigt:** (1) Dauerbau-Benchmark `core/benches/continuous_build.rs` samt Zählern, gegen den unkorrigierten Code: 0 Übernahmen in 210 s, bis zu 110 Neuberechnungen gleichzeitig, 810 MB (Commit `a454f70`); als Schritt im CI-Job „Kern-Benchmark“ (`05c2b4c`, noch nicht in der CI gelaufen). (5) Dauerbau-Korrektur, danach 13 Übernahmen beim Bauen, längster Abstand 2,4 s, letzter Stand nach 3,6 s, 1 Neuberechnung, 3 Feldsätze, 2 Schnappschuss-Kopien, 223 MB (`67d6bfe`). (2) Flächenart, Personalzone, Zugangsprofil am Ziel mit Regeln der Wegweiser (`d86e3c1`). (8) `{ key }` in `ParamValue` (`b19d25b`, `9eb36c9`). (7) S-7 `catalog` (`8370f91`). Spielstand Format 3 trägt bisher `dirty` der Wegfindung und das Profil je Ziel.
-  - **Offen:** (3) Objekte im Weltzustand mit Handles, Abriss, `MAX_OBJECTS`; (4) Wirkung von `build`, `buildArea`, `demolish` und `core/tests/build.rs`; (6) Objekte im Spielstand (Format 3) und Vertragsabgleich S-5 nach Maßnahme (7) und (8). Festlegungen dazu in ADR-042 (freigegeben 2026-10-25), Einzelheiten in `docs/research/3.1a-objekte-vorlage.md` Abschnitt 3 und 4. Dazu (Befund aus dem ersten CI-Lauf, Logbuch 18:45 UTC): Die Profil-Prüfung kostet in der Neuberechnung rund 18 % (Runner 3219 ms bei Grenze 4000 ms); Kosten senken oder begründet hinnehmen, gemessen vor 3.1c. Mit ADR-042 kommen in 3.1a dazu: `effect` im Basispaket und JSON-Schema, Codes `blocked`, `needsFloor`, `floorLocked` mit Texten, Abgleich S-4 und S-2.
+  - **Erledigt in der Fortsetzung (2026-10-25, Sonnet 5.5 nach ADR-042):** (3) und (4) Einzelobjekte (`build/objects.rs`: `PlacedObject` im `Pool`, Handle als Seriennummer, Typtabelle, Belegungsverzeichnis je Block), Bodenbelag und Wandart als zwei `u16` je Zelle, `build`, `buildArea`, `demolish` mit Sofortwirkung, Codes `blocked`, `needsFloor`, `floorLocked` samt Texten (`0229cad`, `0c68b9a`, `b14eb98`); `core/tests/build.rs` mit 17 Tests (Boden, Wand, Möbel, Drehung, Überlappung, Abriss ganzer Objekte, Erdgeschoss-Sperre, Art des Typs, Neuberechnung nach dem Bauen, Rundlauf über den Spielstand). (6) Objekte, Typtabelle und Handle-Zähler im Spielstand (Format 3) mit den Prüfungen `types`, `blockKind`, `objects`, `objectHandles`, `objectCells`, `objectType`; Abgleich S-2, S-4, S-5 im Änderungsprotokoll. Profil-Prüfung (Befund Logbuch 18:45 UTC): im inneren Schritt der Neuberechnung wird die kürzere Distanz vor den Zugangsregeln geprüft (`d8ee3ff`), in vier abwechselnden Messungen im selben Container 1618 statt 1898 ms im Mittel (rund −15 %), Ergebnis unverändert (Tests gegen die dichte Referenz, Prüfsumme). Der Wert auf dem Runner steht nach dem CI-Lauf des PR unten.
+  - **Hinweise für 3.1b:** Zellen und Objekte tragen Nummern der Typtabelle des Moduls, nicht Katalog-Indizes; S-1 rechnet beim Zusammenstellen der Blöcke über eine Umsetzungstabelle um (`Catalog::index_of` liegt bereit). Der Objektzustand entfällt bis ein Schritt Zustände einführt (S-1 sendet 0). Das Bau-Werkzeug zeigt Ablehnungen mit dem Namen des Typs (`{ key }`-Parameter `object`).
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 3.7, 3.8, 3.9, 3.10, 3.14
 - **Freigabepflichtig:** ja, falls der Dauerbau-Benchmark als CI-Gate kommt (Kategorie 7); sonst nein (Verträge aus ADR-032)
@@ -247,6 +248,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Personen, Welt & Bau, Wegfindung & Passagierführung, Takt & Weltzustand, Spielfeld, Oberfläche
 - **Reifegrad-Wirkung:** Modul Personen → `[BELASTBAR]` im umgesetzten Umfang
 - **Artefakte:** Kern-Code, Datenpaket-Inhalte, Tests
+- **Notizen:** Aus 3.1a (Landeplatz): Wird eine Zelle, auf der Personen stehen, durch Bauen unbegehbar (sperrendes Objekt, Wand), bleiben diese Personen mit der Richtung „unerreichbar“ stehen; das Verhalten (versetzen, weitergehen lassen) legt dieser Schritt mit den Personen fest. Zonen und Flächenart malen (ZON-01) sind keine Objekte von 3.1a und kommen hier mit dem Terminal.
 
 #### 3.11: Erkundung Suchen ohne Schilder und Feinwege
 

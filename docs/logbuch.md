@@ -24,6 +24,23 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 19:40 (UTC) – [PROBLEM-GELÖST]
+
+- **Kosten der Profil-Prüfung gesenkt (3.1a):** Im inneren Schritt der Neuberechnung (`dijkstra` in `wayfinding/flowfield.rs`) wird jetzt zuerst die billige Frage „ist der Weg kürzer“ gestellt und erst danach die Eckenregel und die Zugangsregeln; die meisten Nachbarn einer Zelle sind schon abgeschlossen. Ergebnis unverändert (Tests gegen die dichte Referenz, Zustands-Prüfsumme). Messung im selben Container, abwechselnd alt/neu mit je einem Binärpaar aus `cargo bench --no-run`, vier Paare: alt 2010 / 1872 / 1921 / 1789 ms, neu 1512 / 1640 / 1749 / 1571 ms, Mittel **1898 → 1618 ms (−15 %)**, in jedem Paar schneller. Die Maschine dieser Session ist langsamer als die der Vorsession (alt 1727–1926 ms statt 1462 ms), die Werte sind daher nur untereinander vergleichbar. Zwei frühere Versuche (Tabelle je Flag-Byte, Prüfungen der Zielzelle herausgezogen) hatten nichts gebracht; die Reihenfolge der Prüfungen war die Ursache. Der Wert auf dem Runner steht nach dem CI-Lauf des PR im Fahrplan.
+- **Reibung (Test):** Der Vergleich der Zustands-Prüfsumme vor und nach einem abgelehnten Befehl schlug fehl, weil die vorherige Bauaktion im selben Schritt die Neuberechnung anstieß (`dirty` der Wegfindung). Der Test vergleicht jetzt nur den Beitrag von Welt & Bau. Außerdem baut `Simulation::new` eine offene Halle, nicht eine leere Welt; die Bau-Tests nehmen `World::new`.
+
+### 2026-10-25 19:35 (UTC) – [BEOBACHTUNG]
+
+- **3.1a Teilaufgaben 3, 4, 6 umgesetzt** (Commits `0229cad`, `0c68b9a`, `b14eb98`, `d8ee3ff`). Entscheidungen im Rahmen von ADR-042 („Technisch, Entscheidung der KI“), die vom Wortlaut des Entwurfs abweichen oder ihn präzisieren, ohne eine Kategorie aus Abschnitt 4 zu berühren:
+  1. **Typtabelle statt Katalog-Index im Kern.** Bodenbelag und Wandart je Zelle sowie der Typ jedes Objekts sind Nummern (≥ 1) einer Tabelle voller IDs im Modul Welt & Bau, die beim ersten Bauen eines Typs wächst. Damit ist die Tabelle im Spielstand genau das, was ADR-042 für die Datei verlangt, und der Kern braucht keine Umrechnung aller Blöcke beim Speichern und Laden. S-1 (3.1b) rechnet beim Zusammenstellen der Blöcke über eine Umsetzungstabelle auf den Katalog-Index um (`Catalog::index_of` und `id_at` liegen mit Tests bereit). Vermerkt in `architecture.md` (Modul Welt & Bau, Datenmodell, verworfene Alternativen) und im Hinweis von S-1.
+  2. **Handle = Seriennummer** (aufsteigend, nie wiederverwendet) statt Slot und Generation: Datensätze liegen in Handle-Reihenfolge, die Suche ist eine Halbierung, ein veraltetes Handle findet nichts. Der Weg über `geometry::Handle` für die Präsentation (S-7) bleibt für 3.1b offen und braucht keine Änderung des Kerns.
+  3. **Kein Feld „Zustand“** im Objekt: Kein Schritt schreibt oder liest es, ein Platzhalter ohne Schritt wäre eine stille Verschiebung (`CLAUDE.md` Abschnitt 6). S-1 sendet 0, bis ein Schritt Zustände einführt (Hinweis in `architecture-schnittstellen.md` und im Fahrplan für 3.1b).
+  4. **`at` = Zelle mit den kleinsten Koordinaten des Fußabdrucks**, Drehung 1 und 3 tauschen Breite und Tiefe. Der Vertrag S-2 sagte dazu nichts; steht jetzt in S-2. Wer eine andere Lage des Ankers will (Mitte), ändert es mit dem Bau-Werkzeug in 3.1b.
+  5. **Sperrende Objekte setzen `WALL` ohne Wandart.** So bleiben Wegweiser, Zugangsregeln und Personen unverändert; ob eine Zelle eine Wand ist, sagt die Wandart (≠ 0), ob ein Objekt darauf steht, das Belegungsverzeichnis. Beim Abriss eines sperrenden Objekts wird `WALL` auf den Zellen außerhalb des Rahmens wieder entfernt; innerhalb des Rahmens wird die Zelle Leere.
+  6. **Boden über Wandzellen:** die Wandzelle bleibt unverändert (auch ihr Bodenbelag). Boden über einem sperrenden Objekt ändert Bodenbelag, Flächenart und Kostenfaktor, die Zelle bleibt gesperrt.
+- **Landeplatz:** Personen auf Zellen, die durch Bauen unbegehbar werden, bleiben stehen (Richtung „unerreichbar“); das Verhalten legt 3.2 mit den Personen fest (Notiz im Fahrplan, Schritt 3.2).
+- **Werkzeuge im Container:** Node 22, `npm ci --ignore-scripts`, `pre-commit`, `cargo-llvm-cov` 0.9.1 nachinstalliert; `check:types` und `check:schema` laufen auch unter Node 22 und sind unverändert bzw. aktualisiert.
+
 ### 2026-10-25 19:00 (UTC) – [SESSIONSTART]
 
 - **Letzter Stand:** `[SESSIONENDE]` 18:25 UTC, `[BEOBACHTUNG]` 18:45 UTC (erster CI-Lauf mit Dauerbau-Schritt grün). ADR-042 freigegeben, Code für 3.1a Teilaufgaben 3, 4, 6 nicht begonnen.
