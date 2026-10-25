@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 20:05 (UTC) – [PROBLEM-GELÖST]
+
+- **CI rot auf `1f7a35c` (Läufe 40228076332 und 40228097329):** `core/tests/build.rs`, Test `the_buildings_survive_a_save_game_and_go_on_identically`, letzter Vergleich der Zustands-Prüfsumme des ganzen Weltzustands schlug auf Linux, Windows und in der Coverage fehl. Ursache: Die Prüfsumme enthält den Zustand der Wegfindung (offene Neuberechnung, Übernahme); die beiden Simulationen laufen im Modus „sobald fertig“ und übernehmen zu verschiedenen Zeitpunkten. Der Lauf davor (`160628b`) war zufällig grün. Es ist ein Fehler des Tests, nicht des Kerns: Der Rundlauf selbst (Prüfsumme direkt nach dem Laden) bleibt unverändert geprüft. Der Test vergleicht danach nur den Beitrag von Welt & Bau und die Objekte. Der Beleg „CI grün“ für 3.1a im Fahrplan gilt damit für `160628b`; die Läufe mit der Korrektur folgen.
+
 ### 2026-10-25 19:55 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** Fortsetzung 19:00 bis 19:55 UTC (Session ab 18:55 UTC).
