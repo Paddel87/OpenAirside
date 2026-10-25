@@ -17,12 +17,35 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, 3.1a ist erledigt (CI grün, PR offen), weiter mit 3.1b.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, 3.1a ist erledigt und gemergt (PR #35), 3.1b ist im Code fertig und wartet auf Messungen und Grafik-Abnahme des Projektinhabers (`docs/research/3.1b-messung.md`), danach 3.1c.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-25 21:40 (UTC) – [PROBLEM-GELÖST]
+
+- **Reibungen in 3.1b, je mit Lösung:**
+  1. `pre-commit` war im neuen Container nicht installiert und der Hook hat drei Commits wegen ESLint und `tsc` gestoppt (`prefer-function-type` bei `game.new`: In einem Typ-Literal ist `new(…)` eine Konstruktor-Signatur, kein Methodenname; Lösung: Eigenschaft `readonly new: (…) => …`; `no-unnecessary-condition` bei einem `let`, das nur einmal gesetzt wird: Lösung: `const` vor die Handler gezogen). `pip install pre-commit` und `pre-commit install` im Container.
+  2. Der Budget-Test des Welt-Senders baute sein Muster aus `floor_kind`-Nummern, die ohne Typtabelle alle zu „fehlt“ übersetzt werden und damit gleichförmig sind; Muster stattdessen aus Zone, Kostenfaktor und Flächenart.
+  3. `Build::build_floor` über Leerzellen **pflastert** sie (Semantik von `buildArea`). Das möblierte Terminal setzt den Boden deshalb je Lauf begehbarer Zellen einer Zeile; die Wände folgen auf den Leerzellen daneben.
+  4. `npm ci --ignore-scripts` lädt das Electron-Paket nicht; `node node_modules/electron/install.js` holt es über den Proxy. Der Test der Messreihe mit Playwright muss auf `data-session` warten, nicht auf `data-ready` (der Port kommt später); sonst meldet die Konsole „measure: not connected“.
+  5. Ein neuer Stempel je Block (`Block::stamp`, Änderungszähler des Rasters beim Ändern) ersetzt das Festhalten gesendeter Blöcke im Sender; sonst hätte jede Änderung eines gesendeten Blocks ihn kopieren müssen (einer der Posten für den Speicher auf dem Mac in 3.8).
+
+### 2026-10-25 21:40 (UTC) – [BEOBACHTUNG]
+
+- **3.1b umgesetzt** (Commits `0634e65`, `9edb236`, `0b2c685`, `7c97219`). Entscheidungen im Rahmen von ADR-038 und ADR-040 („Technisch, Entscheidung der KI“), die den Wortlaut des Entwurfs präzisieren, ohne eine Kategorie aus Abschnitt 4 zu berühren:
+  1. **Kopf und Abschnitt von Layout 2:** Kopf zu 48 Byte mit Welt-Revision und den Zahlen der Fahrzeuge, Flugzeuge und Gepäckstücke (je `u32`); die Zahl der Welt-Blöcke und die Bytes des Abschnitts stehen im 16-Byte-Kopf des Welt-Abschnitts, der immer da ist. Beschrieben in `architecture-schnittstellen.md` (S-1, Umsetzung 3.1b).
+  2. **Typen in Welt-Blöcken** sind Katalog-Index plus 1 (0 keiner, `0xFFFF` unbekannt oder über 16 Bit); Objekte gehören zum Block ihres Ankers.
+  3. **`worldAck`** quittiert die Welt-Revision des zuletzt **gezeichneten** Bildes; ohne Quittung bietet der Kern dieselben Blöcke wieder an. Ein Bild einer fremden Sitzung oder ein Handler, der wirft, quittiert nichts.
+  4. **Kachelblatt:** höchstens 253 Boden- und Wandtypen, darüber Ersatzkachel; Landeplatz Schritt 6.1 (Grafiken in Mods).
+  5. **Zonentönung** nur für Zone 1 bis 3 (Luftseite, Kontrolle, Ausgang); die Landseite bleibt ungetönt, bis 3.2 Zonen als Spielerwerkzeug einführt.
+  6. **Bedienung:** Ist ein Werkzeug gewählt, baut die linke Maustaste; rechte und mittlere Taste verschieben die Ansicht; R dreht, Esc beendet das Werkzeug. Der Katalog wird mit dem ersten Bild einer Sitzung abgefragt (S-7 antwortet aus dem jüngsten übergebenen Bild).
+  7. **Neues Szenario `furnishedTerminal`** (S-2 Debug-Aktion, additiv nach Regel-008): Das Referenz-Terminal mit Boden, Wänden und 20.000 Bänken (ohne Sperrwirkung) für die Messung; ein Feld der Halle bleibt frei für die Bauaktionen der Messreihe. Das Szenario `referenceTerminal` und seine Benchmarks bleiben unverändert.
+  8. **Messreihe, Ergebnisformat 2:** echte Befehle `buildArea` (Wand) und `demolish`, Zeit bis zur Zeichnung der Vorschau und bis zum Bild mit dem geänderten Block, Erstübertragung der Welt (Ausschnitt, ganz), Zahl abgelehnter Bauaktionen.
+- **Container-Prüfung nach Maßnahme (11):** `e2e/world.spec.ts` (neues Spiel 1536, möbliertes Szenario, neues Spiel 2048, neues Spiel 1536, Ablehnung mit Hinweis) und die vollständige Messreihe `measure 1` über das echte Programm: Welt in einem Bild (4.988 Blöcke, 0,84 MB, 20.000 Objekte), 26 Datentexturen (26,1 MB), Bauaktionen 6 von 6 angenommen, 179–180 Ticks/s. Bildraten ohne Aussage (SwiftShader). Alle bisherigen Rauchtests unverändert grün.
+- **Abgrenzung zu ADR-038:** Der Entwurf nennt „Kopf 48 Byte“ mit „Zahl der Welt-Blöcke, Bytes des Welt-Abschnitts“ im Kopf; die Einzelheit steht jetzt im Abschnittskopf (gleiche Information, ein Feld weniger im Hauptkopf). Kein Vertragsbruch, weil Layout 2 vorher nirgends umgesetzt war.
 
 ### 2026-10-25 20:55 (UTC) – [SESSIONSTART]
 
