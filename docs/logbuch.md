@@ -17,12 +17,17 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 ist umgesetzt (CI-Abschluss offen wegen eines Audit-Befunds), nächster Schritt danach 3.1.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, nächster Schritt 3.1.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-25 16:45 (UTC) – [GELÖST]
+
+- **CI grün:** Push-Lauf 40212258539 auf `7197730` (Q.4 und 3.10) erfolgreich, auch der Job „TS Dependency-Audit & Lizenzen“. Damit sind 3.10 und Q.4 `[ERLEDIGT]`.
+- **Q.4:** Electron 44.9.3, `undici` 7.30.1/6.29.1, `fast-uri` 3.1.9; Lockfile gezielt angepasst, weil npm 10.9.4 die `libc`-Felder entfernt hätte (Container-npm älter als das npm zu Node 26). Spike-Ordner bleiben bei 44.7.0.
 
 ### 2026-10-25 16:30 (UTC) – [BEOBACHTUNG]
 
