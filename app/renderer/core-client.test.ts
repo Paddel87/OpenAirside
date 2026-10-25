@@ -181,6 +181,13 @@ describe("CoreClient", () => {
     expect(handlers.queryResult).toHaveBeenLastCalledWith(4, { detail });
     client.handle({ type: "queryResult", session: 1, id: 5 });
     expect(handlers.queryResult).toHaveBeenLastCalledWith(5, {});
+    const catalog = [
+      { kind: "object", id: "base:bench", name: "object.bench", placement: { kind: "area" } },
+    ];
+    client.handle({ type: "queryResult", session: 1, id: 6, catalog });
+    expect(handlers.queryResult).toHaveBeenLastCalledWith(6, { catalog });
+    client.handle({ type: "queryResult", session: 1, id: 7, catalog: [1] });
+    expect(handlers.queryResult).toHaveBeenLastCalledWith(7, {});
     client.handle({ type: "queryError", session: 1, id: 3, code: "unknownTable", textKey: "x" });
     expect(handlers.queryError).toHaveBeenCalledWith(3, "unknownTable");
     expect(client.query(table)).toBe(4);

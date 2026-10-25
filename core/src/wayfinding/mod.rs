@@ -5,10 +5,15 @@
 //!
 //! The module reads the module "Welt & Bau" (grid and targets are the input
 //! of the flow fields). It reacts to [`InternalEvent::GridChanged`] with a
-//! recomputation and adopts finished results in its stage of the step.
+//! recomputation and adopts finished results in its stage of the step. At
+//! most one recomputation runs at a time; changes that arrive meanwhile are
+//! remembered as one follow-up request, so that continuous building neither
+//! piles up background work nor starves the adoption (ADR-041).
 
 pub mod flowfield;
+pub mod gauge;
 
+use std::sync::Arc;
 use std::time::Instant;
 
 use rayon::ThreadPool;
@@ -23,6 +28,7 @@ use crate::savegame::invalid;
 use crate::text::Reason;
 use crate::time::Tick;
 use flowfield::{FieldInput, FieldSet};
+use gauge::{GaugeReading, Gauges, Token};
 
 /// Duration of the last adopted recomputation of the flow fields, from the
 /// request to the adoption at the start of a tick (measurement tool of step
@@ -41,11 +47,19 @@ pub struct RecomputeStats {
 pub struct Wayfinding {
     fields: FieldSet,
     adoption: Adoption<FieldSet>,
-    /// Input of the open request, kept for save games (S-5).
-    pending_input: Option<FieldInput>,
+    /// Input of the open request, kept for save games (S-5), counted as a
+    /// snapshot copy while it lives.
+    pending_input: Option<(FieldInput, Token)>,
+    /// The grid changed since the newest request and no recomputation has
+    /// been started for it yet (the remembered follow-up request). Part of
+    /// the save game and the state hash.
+    dirty: bool,
     /// Revision and time of the newest request.
     recompute_started: Option<(u32, Instant)>,
     last_recompute: Option<RecomputeStats>,
+    /// Counts of the background work, for the continuous-building benchmark
+    /// (ADR-041).
+    gauges: Gauges,
 }
 
 impl Wayfinding {
@@ -57,12 +71,40 @@ impl Wayfinding {
     }
 
     fn with_fields(fields: FieldSet) -> Self {
+        let gauges = Gauges::default();
+        let fields = Self::counted(fields, &gauges);
         Self {
             fields,
             adoption: Adoption::new(AdoptionMode::WhenReady),
             pending_input: None,
+            dirty: false,
             recompute_started: None,
             last_recompute: None,
+            gauges,
+        }
+    }
+
+    /// `fields`, counted as a flow field set if they are not yet.
+    fn counted(fields: FieldSet, gauges: &Gauges) -> FieldSet {
+        if fields.is_tracked() {
+            fields
+        } else {
+            let token = gauges.field_sets.acquire();
+            fields.tracked(token)
+        }
+    }
+
+    /// The job of a recomputation of `input`: counted as a recomputation in
+    /// flight and as a snapshot copy until it is done, and its result as a
+    /// flow field set from the start of its computation.
+    fn job(&self, input: FieldInput) -> impl FnOnce(u32) -> FieldSet + Send + 'static {
+        let job = self.gauges.jobs.acquire();
+        let snapshot = self.gauges.snapshots.acquire();
+        let sets = Arc::clone(&self.gauges.field_sets);
+        move |revision| {
+            let _counted = (job, snapshot);
+            let set = sets.acquire();
+            FieldSet::compute(&input, revision).tracked(set)
         }
     }
 
@@ -91,6 +133,7 @@ impl Wayfinding {
     /// Takes over a new set of flow fields as a whole and returns the old
     /// one, so that the caller can drop its large buffers off the tick.
     pub fn adopt_fields(&mut self, fields: FieldSet) -> FieldSet {
+        let fields = Self::counted(fields, &self.gauges);
         std::mem::replace(&mut self.fields, fields)
     }
 
@@ -99,6 +142,7 @@ impl Wayfinding {
     pub(crate) fn reset(&mut self, mode: AdoptionMode) {
         self.adoption = Adoption::new(mode);
         self.pending_input = None;
+        self.dirty = false;
         self.recompute_started = None;
         self.last_recompute = None;
     }
@@ -106,26 +150,30 @@ impl Wayfinding {
     /// Computes the flow fields of `build` now, on `pool`, with revision 0.
     pub(crate) fn rebuild_now(&mut self, build: &Build, pool: &ThreadPool) {
         let input = Self::input(build);
-        self.fields = pool.install(|| FieldSet::compute(&input, 0));
+        let fields = pool.install(|| FieldSet::compute(&input, 0));
+        self.fields = Self::counted(fields, &self.gauges);
     }
 
     /// Starts recomputing the flow fields of `build` on `background` at
     /// `tick` and returns the revision. A newer request replaces an older
-    /// one.
+    /// one, which still runs to its end but is never adopted; the reaction
+    /// to [`InternalEvent::GridChanged`] therefore starts a request only when
+    /// none is open.
     pub fn request(&mut self, build: &Build, background: &ThreadPool, tick: Tick) -> u32 {
+        self.dirty = false;
         let input = Self::input(build);
-        self.pending_input = Some(input.clone());
-        let revision = self.adoption.request(background, tick, move |revision| {
-            FieldSet::compute(&input, revision)
-        });
+        self.pending_input = Some((input.clone(), self.gauges.snapshots.acquire()));
+        let job = self.job(input);
+        let revision = self.adoption.request(background, tick, job);
         self.recompute_started = Some((revision, Instant::now()));
         revision
     }
 
-    /// `true` while a recomputation runs or waits for adoption.
+    /// `true` while a recomputation runs or waits for adoption, or a change
+    /// of the grid waits for the next one.
     #[must_use]
     pub fn is_recomputing(&self) -> bool {
-        self.adoption.is_pending()
+        self.adoption.is_pending() || self.dirty
     }
 
     /// Duration of the last adopted recomputation in this session.
@@ -134,10 +182,18 @@ impl Wayfinding {
         self.last_recompute
     }
 
-    /// Stage of the module in a step (ADR-039): requests a recomputation for
-    /// every [`InternalEvent::GridChanged`], then adopts a result that is
-    /// due. Runs in every step, also while the game is paused. Returns the
-    /// revision of adopted flow fields.
+    /// Counts of recomputations in flight, flow field sets and snapshot
+    /// copies, with their peaks since the module was created (ADR-041).
+    #[must_use]
+    pub fn gauges(&self) -> GaugeReading {
+        self.gauges.read()
+    }
+
+    /// Stage of the module in a step (ADR-039, ADR-041): remembers every
+    /// [`InternalEvent::GridChanged`], however many arrive in the step,
+    /// adopts a result that is due, then starts one recomputation if the
+    /// grid changed and none is open. Runs in every step, also while the
+    /// game is paused. Returns the revision of adopted flow fields.
     pub(crate) fn step(
         &mut self,
         build: &Build,
@@ -147,11 +203,19 @@ impl Wayfinding {
     ) -> Option<u32> {
         for event in events.for_stage(Stage::Wayfinding) {
             match event {
-                InternalEvent::GridChanged => {
-                    self.request(build, background, tick);
-                }
+                InternalEvent::GridChanged => self.dirty = true,
             }
         }
+        let adopted = self.adopt(background, tick);
+        if self.dirty && !self.adoption.is_pending() {
+            self.request(build, background, tick);
+        }
+        adopted
+    }
+
+    /// Takes over the result that is due at `tick`, if any, and returns its
+    /// revision.
+    fn adopt(&mut self, background: &ThreadPool, tick: Tick) -> Option<u32> {
         let (revision, fields) = self.adoption.poll(tick)?;
         self.pending_input = None;
         // The old set holds large buffers; freeing them is left to a
@@ -172,6 +236,7 @@ impl Wayfinding {
     /// Feeds the flow fields in use into `hasher`.
     pub fn hash_into(&self, hasher: &mut StateHasher) {
         self.fields.hash_into(hasher);
+        hasher.u32(u32::from(self.dirty));
     }
 
     /// State of the module for a save game, taken in one tick.
@@ -181,10 +246,11 @@ impl Wayfinding {
             fields_revision: self.fields.revision(),
             fields: self.fields.source().clone(),
             next_revision: self.adoption.next_revision(),
+            dirty: self.dirty,
             pending: self
                 .adoption
                 .pending()
-                .zip(self.pending_input.clone())
+                .zip(self.pending_input.as_ref().map(|(input, _)| input.clone()))
                 .map(|((revision, due), input)| (revision, due, input)),
         }
     }
@@ -220,6 +286,7 @@ impl Wayfinding {
             fields_revision: saved.fields_revision,
             fields,
             next_revision: saved.next_revision,
+            dirty: saved.dirty,
             pending,
         })
     }
@@ -231,6 +298,7 @@ pub struct WayfindingSnapshot {
     fields_revision: u32,
     fields: FieldInput,
     next_revision: u32,
+    dirty: bool,
     pending: Option<(u32, Tick, FieldInput)>,
 }
 
@@ -255,6 +323,7 @@ impl WayfindingSnapshot {
             fields_revision: self.fields_revision,
             fields,
             next_revision: self.next_revision,
+            dirty: self.dirty,
             pending,
         }
     }
@@ -269,6 +338,9 @@ pub(crate) struct SavedWayfinding {
     /// Input of the flow fields in use (grid and targets at that revision).
     pub fields: SavedInput,
     pub next_revision: u32,
+    /// The grid changed since the newest request and no recomputation has
+    /// been started for it yet (ADR-041).
+    pub dirty: bool,
     pub pending: Option<SavedPending>,
 }
 
@@ -294,6 +366,7 @@ pub(crate) struct RestoredWayfinding {
     fields_revision: u32,
     fields: FieldInput,
     next_revision: u32,
+    dirty: bool,
     pending: Option<(u32, Tick, FieldInput)>,
 }
 
@@ -311,6 +384,7 @@ impl RestoredWayfinding {
         Ok(Prepared {
             wayfinding: Wayfinding::with_fields(fields),
             next_revision: self.next_revision,
+            dirty: self.dirty,
             pending: self.pending,
         })
     }
@@ -322,6 +396,7 @@ impl RestoredWayfinding {
 pub(crate) struct Prepared {
     wayfinding: Wayfinding,
     next_revision: u32,
+    dirty: bool,
     pending: Option<(u32, Tick, FieldInput)>,
 }
 
@@ -332,13 +407,13 @@ impl Prepared {
     pub fn resume(self, mode: AdoptionMode, background: &ThreadPool) -> Wayfinding {
         let mut wayfinding = self.wayfinding;
         wayfinding.adoption = Adoption::resumed(mode, self.next_revision);
+        wayfinding.dirty = self.dirty;
         if let Some((revision, due, input)) = self.pending {
-            wayfinding.pending_input = Some(input.clone());
+            wayfinding.pending_input = Some((input.clone(), wayfinding.gauges.snapshots.acquire()));
+            let job = wayfinding.job(input);
             wayfinding
                 .adoption
-                .resume_request(background, revision, due, move |revision| {
-                    FieldSet::compute(&input, revision)
-                });
+                .resume_request(background, revision, due, job);
             wayfinding.recompute_started = Some((revision, Instant::now()));
         }
         wayfinding
@@ -439,5 +514,42 @@ mod tests {
         later.end_step();
         wayfinding.step(&build, &later, &pool, 11);
         assert!(wayfinding.is_recomputing());
+    }
+
+    #[test]
+    fn changes_during_a_recomputation_become_one_follow_up_request() {
+        let pool = pool(2);
+        let mut build = corridor();
+        let mut wayfinding = Wayfinding::new(&build);
+        wayfinding.reset(AdoptionMode::FixedTick { delay: 3 });
+        wayfinding.rebuild_now(&build, &pool);
+        let mut events = InternalEvents::default();
+        // Three changes in one step make one request.
+        for x in [10, 11, 12] {
+            build.grid_mut().set(pos(x, 3), Cell::VOID).unwrap();
+            events.push(Stage::Commands, InternalEvent::GridChanged);
+        }
+        assert_eq!(wayfinding.step(&build, &events, &pool, 0), None);
+        assert_eq!(wayfinding.gauges().jobs_peak, 1);
+        events.end_step();
+        // More changes while it runs are remembered, not started.
+        for (tick, x) in [(1, 13), (2, 14)] {
+            build.grid_mut().set(pos(x, 3), Cell::VOID).unwrap();
+            let mut more = InternalEvents::default();
+            more.push(Stage::Commands, InternalEvent::GridChanged);
+            assert_eq!(wayfinding.step(&build, &more, &pool, tick), None);
+        }
+        assert_eq!(wayfinding.gauges().jobs_peak, 1, "no second job meanwhile");
+        assert!(wayfinding.is_recomputing());
+        // The first result is adopted, and the follow-up starts at once.
+        let quiet = InternalEvents::default();
+        assert_eq!(wayfinding.step(&build, &quiet, &pool, 3), Some(1));
+        assert!(wayfinding.is_recomputing(), "follow-up request is open");
+        assert_eq!(wayfinding.step(&build, &quiet, &pool, 5), None);
+        assert_eq!(wayfinding.step(&build, &quiet, &pool, 6), Some(2));
+        assert!(!wayfinding.is_recomputing());
+        assert!(wayfinding.gauges().jobs_peak <= 2);
+        assert!(wayfinding.gauges().snapshots_peak <= 2);
+        assert!(wayfinding.gauges().field_sets_peak <= 3);
     }
 }

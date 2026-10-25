@@ -23,9 +23,12 @@
 //! Then n persons of [`PERSON_BYTES`] bytes: x and y as u16 in 1/32 cell
 //! ([`SUBCELL`]), floor as i8, heading as u8.
 
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 
 use crate::build::grid::floor_index;
+use crate::datapack::Catalog;
 use crate::geometry::MapSize;
 use crate::time::Tick;
 use crate::world::World;
@@ -126,6 +129,9 @@ pub struct Snapshot {
     height: u16,
     fields_revision: u32,
     persons: Vec<Packed>,
+    /// Content of the session (S-7 `catalog`); it changes only with the
+    /// session, so a capture only counts a reference.
+    content: Arc<Catalog>,
 }
 
 fn fixed(cells: f32, limit: u16) -> u16 {
@@ -137,10 +143,13 @@ fn fixed(cells: f32, limit: u16) -> u16 {
 }
 
 impl Snapshot {
-    /// Overwrites the snapshot with the state of `world`, reusing the
-    /// buffer.
-    pub fn capture(&mut self, session: u32, tick: Tick, world: &World) {
+    /// Overwrites the snapshot with the state of `world` and the content of
+    /// the session, reusing the buffer.
+    pub fn capture(&mut self, session: u32, tick: Tick, world: &World, content: &Arc<Catalog>) {
         let map = world.map();
+        if !Arc::ptr_eq(&self.content, content) {
+            self.content = Arc::clone(content);
+        }
         self.session = session;
         self.tick = tick;
         self.width = map.width;
@@ -157,6 +166,13 @@ impl Snapshot {
                 heading: p.heading,
             });
         });
+    }
+
+    /// Content of the session of the snapshot; empty before the first
+    /// capture.
+    #[must_use]
+    pub fn content(&self) -> &Catalog {
+        &self.content
     }
 
     /// Session of the snapshot; 0 before the first capture.
@@ -306,7 +322,7 @@ mod tests {
     fn header_describes_the_frame() {
         let mut snap = Snapshot::default();
         assert_eq!(snap.map(), None);
-        snap.capture(3, 99, &world());
+        snap.capture(3, 99, &world(), &Arc::default());
         let mut out = Vec::new();
         snap.encode(&FrameFilter::default(), &mut out);
         assert_eq!(out.len(), HEADER_BYTES + 3 * PERSON_BYTES);
@@ -328,7 +344,7 @@ mod tests {
     #[test]
     fn positions_are_cell_centres_in_fixed_point() {
         let mut snap = Snapshot::default();
-        snap.capture(1, 0, &world());
+        snap.capture(1, 0, &world(), &Arc::default());
         let mut out = Vec::new();
         snap.encode(&FrameFilter::default(), &mut out);
         let got = persons(&out);
@@ -343,7 +359,7 @@ mod tests {
     #[test]
     fn filter_selects_floor_and_view_with_margin() {
         let mut snap = Snapshot::default();
-        snap.capture(1, 0, &world());
+        snap.capture(1, 0, &world(), &Arc::default());
         let mut out = Vec::new();
         let view = ViewRect {
             x0: 30.0,
@@ -375,7 +391,7 @@ mod tests {
     #[test]
     fn invalid_filter_yields_no_persons() {
         let mut snap = Snapshot::default();
-        snap.capture(1, 0, &world());
+        snap.capture(1, 0, &world(), &Arc::default());
         let mut out = Vec::new();
         for filter in [
             FrameFilter {

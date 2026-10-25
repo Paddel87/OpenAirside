@@ -1,7 +1,7 @@
 # CI für OpenAirside (Klasse G). Abgeleitet aus templates/github-workflows/ci-typescript.yml,
 # ergänzt um Rust-Jobs (keine Rust-Vorlage vorhanden), eine Plattform-Matrix und den
 # Electron-Rauchtest (ADR-018), seit Schritt 2.2 um Kern-Benchmark und Prüfung der erzeugten
-# TypeScript-Typen (ADR-022), seit Schritt 2.3 um den Wegweiser-Benchmark (ADR-023). Pflichtkategorien nach CLAUDE.md Abschnitt 15; Werte aus
+# TypeScript-Typen (ADR-022), seit Schritt 2.3 um den Wegweiser-Benchmark (ADR-023), seit Schritt 3.1a um den Dauerbau-Benchmark (ADR-041). Pflichtkategorien nach CLAUDE.md Abschnitt 15; Werte aus
 # docs/project-context.md Abschnitt 7. Lokale Hooks (.pre-commit-config.yaml) führen dieselben
 # Checks aus — diese Pipeline ist die unabhängige Diagnoseschicht, kein Ersatz.
 # Änderungen an dieser Datei sind freigabepflichtig (CLAUDE.md 4.7).
@@ -88,6 +88,12 @@ jobs:
       - name: Wegweiser im Referenz-Terminal
         if: always()
         run: cargo bench -p openairside-core --bench flowfield --locked -- --output "$GITHUB_WORKSPACE/bench-flowfield.json"
+      # Rot bei mehr als 8 s zwischen zwei Übernahmen neuer Wegweiser beim Dauerbau, mehr als 8 s von der
+      # letzten Bauaktion bis zur Übernahme ihres Stands, mehr als 2 Neuberechnungen, 3 Feldsätzen oder
+      # 2 Schnappschuss-Kopien gleichzeitig (ADR-041). Läuft auch, wenn ein früherer Schritt rot ist.
+      - name: Dauerbau im Referenz-Terminal
+        if: always()
+        run: cargo bench -p openairside-core --bench continuous_build --locked -- --output "$GITHUB_WORKSPACE/bench-continuous-build.json"
       - name: Vergleichswert vom letzten Lauf auf main holen
         if: always()
         env:
@@ -96,7 +102,7 @@ jobs:
           run_id=$(gh run list --repo "${{ github.repository }}" --workflow ci.yml --branch main \
             --status success --limit 1 --json databaseId --jq '.[0].databaseId' || true)
           if [ -n "$run_id" ]; then
-            for name in bench-tick bench-flowfield; do
+            for name in bench-tick bench-flowfield bench-continuous-build; do
               gh run download "$run_id" --repo "${{ github.repository }}" --name "$name" --dir previous \
                 || echo "Kein Ergebnis $name im Lauf $run_id"
             done
@@ -112,6 +118,7 @@ jobs:
         run: |
           node scripts/bench-report.mjs bench-tick.json previous/bench-tick.json >> "$GITHUB_STEP_SUMMARY"
           node scripts/bench-report.mjs bench-flowfield.json previous/bench-flowfield.json >> "$GITHUB_STEP_SUMMARY"
+          node scripts/bench-report.mjs bench-continuous-build.json previous/bench-continuous-build.json >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7.0.1
         if: always()
         with:
@@ -123,6 +130,12 @@ jobs:
         with:
           name: bench-flowfield
           path: bench-flowfield.json
+          retention-days: 90
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: bench-continuous-build
+          path: bench-continuous-build.json
           retention-days: 90
 
   rust-security:

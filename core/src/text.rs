@@ -7,7 +7,8 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 /// Value of a text parameter. Numbers stay numbers so that the presentation
-/// can format them for the chosen language (FR-006).
+/// can format them for the chosen language (FR-006); a localisation key is
+/// translated by the presentation before it is inserted (ADR-032, L-5).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(ts_rs::TS), ts(export))]
 #[serde(untagged)]
@@ -16,6 +17,12 @@ pub enum ParamValue {
     Number(f64),
     /// A plain text, never interpreted as markup.
     Text(String),
+    /// A localisation key, e.g. the name of an object type of a data pack.
+    /// One level deep: the translated text does not insert parameters itself.
+    Key {
+        /// The key, e.g. `object.bench`.
+        key: String,
+    },
 }
 
 /// Every localisation key the core produces (FR-006): rejections of S-2,
@@ -77,6 +84,19 @@ impl Reason {
         self
     }
 
+    /// Adds a localisation key as parameter; the presentation inserts its
+    /// translation.
+    #[must_use]
+    pub fn with_key(mut self, name: &str, key: &str) -> Self {
+        self.params.insert(
+            name.to_owned(),
+            ParamValue::Key {
+                key: key.to_owned(),
+            },
+        );
+        self
+    }
+
     /// Adds a text parameter.
     #[must_use]
     pub fn with_text(mut self, name: &str, value: &str) -> Self {
@@ -114,6 +134,22 @@ mod tests {
             reason.params.get("id"),
             Some(&ParamValue::Text("base:bench".into()))
         );
+    }
+
+    #[test]
+    fn a_key_parameter_is_an_object_on_the_wire() {
+        let reason = Reason::new("command.rejected", "blocked")
+            .with_key("object", "object.bench")
+            .with_number("x", 3.0)
+            .with_text("id", "base:bench");
+        let json = serde_json::to_string(&reason.params).unwrap();
+        assert_eq!(
+            json,
+            r#"{"id":"base:bench","object":{"key":"object.bench"},"x":3.0}"#
+        );
+        let back: Params = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, reason.params);
+        assert!(serde_json::from_str::<ParamValue>(r#"{"text":"x"}"#).is_err());
     }
 
     #[test]

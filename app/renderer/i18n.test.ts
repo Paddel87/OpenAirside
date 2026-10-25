@@ -20,6 +20,7 @@ describe("format", () => {
   it("keeps unknown placeholders and never interprets markup", () => {
     expect(format("{a} {missing}", { a: "<b>x</b>" }, "en")).toBe("<b>x</b> {missing}");
     expect(format("{toString}", {}, "en")).toBe("{toString}");
+    expect(format("{o}", { o: { key: "object.bench" } }, "en")).toBe("object.bench");
   });
 
   it("falls back to English number formats for an unknown language tag", () => {
@@ -46,6 +47,23 @@ describe("Localizer", () => {
     expect(i18n.t("c")).toBe("c");
     expect(missing).toEqual(["c"]);
     expect(i18n.reason({ code: "x", textKey: "a", params: { n: 3 } })).toBe("A-de 3");
+  });
+
+  it("translates key parameters one level deep", () => {
+    const missing: string[] = [];
+    const texts = new Map([
+      ["blocked", "{object} passt nicht nach {x}"],
+      ["object.bench", "Bank {x}"],
+    ]);
+    const i18n = new Localizer("de", texts, new Map(), (key) => missing.push(key));
+    expect(i18n.t("blocked", { object: { key: "object.bench" }, x: 3 })).toBe(
+      "Bank {x} passt nicht nach 3",
+    );
+    // An unknown key stays visible as the key and is reported once.
+    expect(i18n.t("blocked", { object: { key: "object.gone" }, x: 1 })).toBe(
+      "object.gone passt nicht nach 1",
+    );
+    expect(missing).toEqual(["object.gone"]);
   });
 
   it("switches the language without restart and tells the views", () => {

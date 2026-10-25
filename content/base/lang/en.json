@@ -6,8 +6,11 @@
       "name": "English",
       "texts": {
         "command.rejected.areaTooLarge": "The area is too large (at most {max} × {max} cells).",
+        "command.rejected.blocked": "{object} cannot be built there: the area is already occupied.",
+        "command.rejected.floorLocked": "For now you can only build on the ground floor.",
         "command.rejected.invalidArgument": "The command has an invalid value.",
         "command.rejected.limitExceeded": "A limit of the game has been reached.",
+        "command.rejected.needsFloor": "{object} needs floor under its whole area.",
         "command.rejected.nightSkipBlocked": "The night cannot be skipped while passengers or aircraft are on the way.",
         "command.rejected.notNight": "The night can only be skipped between 18:00 and 06:00.",
         "command.rejected.notReady": "The game is still loading.",

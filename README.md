@@ -87,7 +87,7 @@ Noch nicht spielbar. `npm start` öffnet das Spielfenster mit leerer Karte; der 
 
 Grafiken sind eigene SVG-Dateien unter `assets/` (eine je Objekt in `assets/graphics/base/`, Regeln im [Stilleitfaden](docs/stilleitfaden.md)); `npm run build` rastert sie zu Atlanten und zum Programmsymbol, `npm run check:graphics` prüft sie gegen den Leitfaden.
 
-Inhalte kommen aus Datenpaketen: Das Basispaket liegt in `content/base/`, eigene Pakete gehören in den Ordner `packs` im Datenordner des Spiels (eins je Unterordner, Aufbau und Fehlercodes in [`docs/architecture-schnittstellen.md`](docs/architecture-schnittstellen.md), S-4). Editoren prüfen die Dateien mit den Schemas aus `content/schema/`, wenn die Datei `"$schema"` setzt. In der Konsole zeigt `packs` alle gefundenen Pakete mit Fehlern, `packs set <id> …` wählt die aktiven Pakete ab der nächsten Sitzung (z. B. nach `scenario hall`), `build <paket:eintrag> <x> <y>` prüft eine Inhalts-ID im Kern.
+Inhalte kommen aus Datenpaketen: Das Basispaket liegt in `content/base/`, eigene Pakete gehören in den Ordner `packs` im Datenordner des Spiels (eins je Unterordner, Aufbau und Fehlercodes in [`docs/architecture-schnittstellen.md`](docs/architecture-schnittstellen.md), S-4). Editoren prüfen die Dateien mit den Schemas aus `content/schema/`, wenn die Datei `"$schema"` setzt. In der Konsole zeigt `packs` alle gefundenen Pakete mit Fehlern, `packs set <id> …` wählt die aktiven Pakete ab der nächsten Sitzung (z. B. nach `scenario hall`), `build <paket:eintrag> <x> <y>` schickt den Bau-Befehl an den Kern, der seit Schritt 3.1a Möbel (Boden darunter nötig, Antwort `blocked` oder `needsFloor` sonst) im Weltzustand platziert; sichtbar wird das Gebaute erst mit Schritt 3.1b. Böden und Wände (`buildArea`) und Abriss (`demolish`) wirken im Kern ebenso, bisher nur über den Befehlskanal.
 
 Spielstände: `save [Name]` speichert, F5 oder `quicksave` speichert schnell, alle 10 Minuten laufender Spielzeit entsteht ein Autosave (5 Plätze im Wechsel; beides einstellbar, siehe unten). `saves` zeigt die Liste mit Vorschaubildern zum Laden und Löschen, `load <id>` und `delete <id>` gehen auch in der Konsole. Endet der Simulationskern unerwartet, startet das Spiel ihn neu und bietet an, den letzten Autosave zu laden. Spielstände liegen im Ordner `saves`, die Logdatei im Ordner `logs` des Datenordners. Spielstände von Ständen vor Schritt 3.9 (Format-Version 1) lassen sich nicht mehr laden; vor Version 1.0 ist das zulässig (Vertrag S-5).
 
@@ -95,7 +95,7 @@ Sprache und Einstellungen: Die Oberfläche gibt es auf Deutsch und Englisch, bei
 
 ## Nächste Schritte
 
-- 3.1: Bauen im Raster mit sofort sichtbaren Bauaufträgen, auch bei schnellem Dauerbau
+- 3.1b: Bauen im Spielfeld sichtbar, Bau-Werkzeug; 3.1c: Bauarbeiter
 
 → Vollständiger Fahrplan: [`docs/fahrplan.md`](docs/fahrplan.md)
 

@@ -63,7 +63,14 @@ describe("error form of S-6", () => {
       textKey: "b",
       params: { n: 1, t: "x" },
     });
+    expect(
+      parseReason({ code: "a", textKey: "b", params: { o: { key: "object.bench" } } }),
+    ).toEqual({ code: "a", textKey: "b", params: { o: { key: "object.bench" } } });
     expect(parseReason({ code: "a", textKey: "b", params: { n: {} } })).toBeUndefined();
+    expect(parseReason({ code: "a", textKey: "b", params: { n: { key: 1 } } })).toBeUndefined();
+    expect(
+      parseReason({ code: "a", textKey: "b", params: { n: { key: "k", other: 1 } } }),
+    ).toBeUndefined();
     expect(parseReason({ code: "a", textKey: "b", params: { n: Infinity } })).toBeUndefined();
     expect(parseReason({ code: "a", params: {} })).toBeUndefined();
     expect(parseReason([])).toBeUndefined();

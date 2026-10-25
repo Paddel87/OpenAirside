@@ -29,7 +29,7 @@ pub const CONTAINER_VERSION: u16 = 1;
 /// Version of the world state format; rises with every change that is not
 /// additive. Before version 1.0 older save games are rejected with
 /// `migrationFailed` (S-5).
-pub const FORMAT_VERSION: u32 = 2;
+pub const FORMAT_VERSION: u32 = 3;
 
 /// Largest save game file (512 MB, ADR-030).
 pub const MAX_FILE_BYTES: u64 = 1 << 29;

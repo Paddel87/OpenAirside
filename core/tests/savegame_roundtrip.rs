@@ -9,10 +9,12 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use openairside_core::adoption::AdoptionMode;
-use openairside_core::build::grid::{Cell, Zone};
-use openairside_core::command::Command;
+use openairside_core::build::access::AccessProfile;
+use openairside_core::build::grid::{AreaKind, Cell, Zone};
+use openairside_core::build::target::Target;
+use openairside_core::command::{Command, DebugAction};
 use openairside_core::datapack::{self, Catalog, game_version};
-use openairside_core::geometry::{CellPos, MapSize};
+use openairside_core::geometry::{CellPos, CellRect, MapSize};
 use openairside_core::hash::StateHasher;
 use openairside_core::savegame::{
     self, Limits, MAX_INFO_BYTES, SaveKind, SaveRequest, code, decode, read_info,
@@ -182,6 +184,122 @@ fn loading_during_a_recomputation_restores_the_hash_and_continues_bit_for_bit() 
 }
 
 #[test]
+fn a_remembered_follow_up_request_survives_saving_and_continues_bit_for_bit() {
+    let mode = AdoptionMode::FixedTick { delay: 20 };
+    let mut sim = terminal(mode);
+    steps(&mut sim, 60);
+    // The first change starts a recomputation; the second one, made while it
+    // runs, is only remembered (ADR-041).
+    let area = |x| CellRect {
+        floor: 0,
+        x0: x,
+        y0: EDGE / 2 + 30,
+        x1: x + 1,
+        y1: EDGE / 2 + 31,
+    };
+    for (id, x) in [(2, 30), (3, 31)] {
+        sim.submit(
+            sim.session(),
+            id,
+            Command::Debug {
+                action: DebugAction::SetWalls {
+                    area: area(x),
+                    wall: true,
+                },
+            },
+        );
+        steps(&mut sim, 3);
+    }
+    assert!(sim.is_recomputing());
+    let before = sim.state_hash();
+    let bytes = save(&sim);
+
+    let mut loaded = other(mode, base_content());
+    loaded
+        .load_game(decode(&bytes, &TEST_LIMITS).unwrap())
+        .unwrap();
+    assert_eq!(
+        loaded.state_hash(),
+        before,
+        "the remembered request is hashed"
+    );
+    assert!(loaded.is_recomputing());
+
+    // Both adopt the first result and then the follow-up, at the same ticks.
+    steps(&mut sim, 100);
+    steps(&mut loaded, 100);
+    assert!(!sim.is_recomputing());
+    assert!(!loaded.is_recomputing());
+    assert_eq!(sim.world().wayfinding().fields_revision(), 2);
+    assert_eq!(loaded.world().wayfinding().fields_revision(), 2);
+    assert_eq!(loaded.state_hash(), sim.state_hash());
+}
+
+#[test]
+fn area_kinds_staff_zones_and_access_profiles_survive_saving() {
+    let mut sim = terminal(AdoptionMode::WhenReady);
+    let apron = CellPos {
+        x: 10,
+        y: 10,
+        floor: 0,
+    };
+    let staff_door = CellPos {
+        x: 11,
+        y: 10,
+        floor: 0,
+    };
+    let build = sim.world_mut().build_mut();
+    build
+        .grid_mut()
+        .set(
+            apron,
+            Cell::floor(Zone::Landside).with_kind(AreaKind::StandArea),
+        )
+        .unwrap();
+    build
+        .grid_mut()
+        .set(staff_door, Cell::floor(Zone::Airside).with_staff_zone(true))
+        .unwrap();
+    let target = build
+        .add_target(Target::passengers(vec![apron]).with_profile(AccessProfile::ApronStaff))
+        .unwrap();
+    steps(&mut sim, 5);
+    let before = sim.state_hash();
+
+    let mut loaded = other(AdoptionMode::WhenReady, base_content());
+    loaded
+        .load_game(decode(&save(&sim), &TEST_LIMITS).unwrap())
+        .unwrap();
+    assert_eq!(loaded.state_hash(), before);
+    let build = loaded.world().build();
+    assert_eq!(
+        build.grid().cell(apron).unwrap().kind(),
+        AreaKind::StandArea
+    );
+    assert!(build.grid().cell(staff_door).unwrap().staff_zone());
+    assert_eq!(
+        build.targets()[usize::from(target)].profile,
+        AccessProfile::ApronStaff
+    );
+
+    // Another profile on the same cells is another state.
+    let mut changed = terminal(AdoptionMode::WhenReady);
+    let same = changed.world_mut().build_mut();
+    same.grid_mut()
+        .set(
+            apron,
+            Cell::floor(Zone::Landside).with_kind(AreaKind::StandArea),
+        )
+        .unwrap();
+    same.grid_mut()
+        .set(staff_door, Cell::floor(Zone::Airside).with_staff_zone(true))
+        .unwrap();
+    same.add_target(Target::passengers(vec![apron])).unwrap();
+    steps(&mut changed, 5);
+    assert_ne!(changed.state_hash(), before);
+}
+
+#[test]
 fn loading_while_recomputing_in_normal_play_restores_the_hash() {
     let mut sim = terminal(AdoptionMode::WhenReady);
     steps(&mut sim, 30);
@@ -284,9 +402,9 @@ fn damaged_files_are_rejected_in_the_order_of_the_contract() {
     longer.push(0);
     assert_eq!(code_of(&longer), code::CHECKSUM_MISMATCH);
 
-    assert_eq!(bytes[8], 2, "world state format 2 (ADR-039)");
+    assert_eq!(bytes[8], 3, "world state format 3 (ADR-039, ADR-041)");
     let mut newer = bytes.clone();
-    newer[8] = 3; // world state format 3
+    newer[8] = 4; // world state format 4
     assert_eq!(code_of(&newer), code::VERSION_TOO_NEW);
     let mut container = bytes.clone();
     container[6] = 9;

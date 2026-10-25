@@ -11,10 +11,12 @@ use rayon::ThreadPool;
 use serde::{Deserialize, Serialize};
 
 use crate::adoption::AdoptionMode;
+use crate::build::objects::BuildRefusal;
 use crate::command::{
     self, Command, DebugAction, MAX_COMMANDS_PER_STEP, Scenario, code, rejection,
 };
-use crate::datapack::Catalog;
+use crate::datapack::model::{Effect, Placement};
+use crate::datapack::{Catalog, ObjectType};
 use crate::event::{Event, EventQueue, EventRecord, MAX_IN_FLIGHT, SpeedChangeReason};
 use crate::geometry::MapSize;
 use crate::hash::StateHasher;
@@ -206,6 +208,13 @@ impl Simulation {
         &self.content
     }
 
+    /// Content of the current session as a shared reference, for the
+    /// snapshots handed to the presentation (S-7 `catalog`).
+    #[must_use]
+    pub fn content_arc(&self) -> &Arc<Catalog> {
+        &self.content
+    }
+
     /// Starts a new session with a fresh world: ids, `seq` and the tick
     /// (at `start_tick`) begin anew; unprocessed commands and events of the old session are
     /// discarded.
@@ -271,10 +280,21 @@ impl Simulation {
     /// # Errors
     ///
     /// `packMissing` or `packVersionMismatch` with the pack ids in
-    /// `packs`, `invalidState` for a world that breaks an invariant.
+    /// `packs`, `invalidState` for a world that breaks an invariant or
+    /// refers to an object type the content does not have (`objectType`).
     pub fn load_game(&mut self, game: LoadedGame) -> Result<(), Reason> {
         let content = Arc::clone(self.next_content.as_ref().unwrap_or(&self.content));
         check_packs(&game.meta.packs, &content)?;
+        // A type that cells and objects refer to must exist in the content
+        // of the next session, also if its pack is there (ADR-042).
+        if game
+            .restored
+            .type_ids()
+            .iter()
+            .any(|id| content.object(id).is_none())
+        {
+            return Err(savegame::invalid("objectType"));
+        }
         let (tick, speed) = (game.restored.tick, game.restored.speed);
         let world = game
             .restored
@@ -422,8 +442,11 @@ impl Simulation {
     }
 
     /// Starts recomputing the flow fields from the current grid and targets
-    /// in the background and returns the revision. Building (step 3.1)
-    /// triggers it after every change.
+    /// in the background and returns the revision, replacing an open
+    /// request. Building does not use it: changes reach the flow fields
+    /// through the internal event of the module "Welt & Bau", at most one
+    /// recomputation runs and later changes are remembered as one follow-up
+    /// request (ADR-041).
     pub fn request_recompute(&mut self) -> u32 {
         self.world.request_recompute(&self.background, self.tick)
     }
@@ -559,21 +582,48 @@ impl Simulation {
                 Ok(())
             }
             Command::SkipNight {} => self.skip_night(others),
-            // Content ids are full ids of the loaded data packs (S-4).
-            // TODO(fahrplan-ref: 3.1): build the object; check that its
-            // placement fits the command (`single` for `build`, `area` for
-            // `buildArea`).
-            Command::Build { object, .. } | Command::BuildArea { object, .. } => {
-                if self.content.object(object).is_none() {
-                    return Err(rejection(code::UNKNOWN_CONTENT));
-                }
-                Ok(())
+            // Content ids are full ids of the loaded data packs (S-4). The
+            // placement of the type must fit the command: `single` for
+            // `build`, `area` for `buildArea` (ADR-042). The effect is
+            // immediate; construction orders with workers follow in 3.1c.
+            Command::Build {
+                object,
+                at,
+                rotation,
+            } => {
+                let ty = self.object_type(object)?;
+                let Placement::Single { width, depth } = ty.placement else {
+                    return Err(rejection(code::INVALID_ARGUMENT));
+                };
+                self.world
+                    .build_object(&ty.id, (width / 2, depth / 2), ty.blocks, *at, *rotation)
+                    .map(drop)
+                    .map_err(|r| refusal(r, Some(&ty.name)))
             }
-            // The world holds no buildings yet, so there is nothing to remove.
-            // TODO(fahrplan-ref: 3.1): remove the objects in the area.
-            Command::Demolish { .. } => Ok(()),
+            Command::BuildArea { object, area } => {
+                let ty = self.object_type(object)?;
+                let built = match (ty.placement, ty.effect) {
+                    (Placement::Area {}, Some(Effect::Floor { area_kind, cost })) => {
+                        self.world.build_floor(&ty.id, area_kind, cost, *area)
+                    }
+                    (Placement::Area {}, Some(Effect::Wall {})) => {
+                        self.world.build_wall(&ty.id, *area)
+                    }
+                    _ => return Err(rejection(code::INVALID_ARGUMENT)),
+                };
+                built.map_err(|r| refusal(r, Some(&ty.name)))
+            }
+            Command::Demolish { area } => self.world.demolish(*area).map_err(|r| refusal(r, None)),
             Command::Debug { action } => self.debug(action),
         }
+    }
+
+    /// The object type with the full id `id` of the content of the session.
+    fn object_type(&self, id: &str) -> Result<ObjectType, Reason> {
+        self.content
+            .object(id)
+            .cloned()
+            .ok_or_else(|| rejection(code::UNKNOWN_CONTENT))
     }
 
     fn debug(&mut self, action: &DebugAction) -> Result<(), Reason> {
@@ -622,6 +672,21 @@ impl Simulation {
         }
         Ok(())
     }
+}
+
+/// Rejection of a building command; names the object type if there is one.
+fn refusal(refusal: BuildRefusal, object: Option<&str>) -> Reason {
+    let reason = match refusal {
+        BuildRefusal::OutOfMap => rejection(code::OUT_OF_MAP),
+        BuildRefusal::FloorLocked => rejection(code::FLOOR_LOCKED),
+        BuildRefusal::Blocked => rejection(code::BLOCKED),
+        BuildRefusal::NeedsFloor => rejection(code::NEEDS_FLOOR),
+        #[allow(clippy::cast_precision_loss)] // limits are far below 2^52
+        BuildRefusal::LimitExceeded { max } => {
+            rejection(code::LIMIT_EXCEEDED).with_number("max", max as f64)
+        }
+    };
+    object.map_or(reason.clone(), |name| reason.with_key("object", name))
 }
 
 fn day_started(tick: Tick) -> Event {

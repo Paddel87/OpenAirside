@@ -12,7 +12,7 @@ use crate::CoreInfo;
 use crate::command::{COMMAND_KINDS, Command};
 use crate::event::EventRecord;
 use crate::frame::FrameFilter;
-use crate::query::{Detail, Dictionary, Query};
+use crate::query::{CatalogEntry, Detail, Dictionary, Query};
 use crate::runner::TickStats;
 use crate::time::Tick;
 
@@ -135,6 +135,10 @@ pub enum ServerMessage {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         detail: Option<Detail>,
+        /// Answer of a catalog query.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        catalog: Option<Vec<CatalogEntry>>,
     },
     /// Figures of the tick, about once per second while the port is open
     /// (performance display and measurement tool, step 2.7; additive).

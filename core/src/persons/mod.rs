@@ -350,7 +350,7 @@ fn step_person(mut p: Person, fields: &FieldSet, targets: usize) -> Person {
         WALK_SPEED
     };
     if p.progress >= 1.0 {
-        if let Some(next) = fields.step_target(p.pos(), p.heading) {
+        if let Some(next) = fields.step_target(p.target, p.pos(), p.heading) {
             p.x = next.x;
             p.y = next.y;
             p.floor = next.floor;

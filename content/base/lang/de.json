@@ -6,8 +6,11 @@
       "name": "Deutsch",
       "texts": {
         "command.rejected.areaTooLarge": "Die Fläche ist zu groß (höchstens {max} × {max} Zellen).",
+        "command.rejected.blocked": "{object} kann dort nicht gebaut werden: Die Fläche ist schon belegt.",
+        "command.rejected.floorLocked": "Gebaut werden kann vorerst nur im Erdgeschoss.",
         "command.rejected.invalidArgument": "Der Befehl enthält einen ungültigen Wert.",
         "command.rejected.limitExceeded": "Eine Grenze des Spiels ist erreicht.",
+        "command.rejected.needsFloor": "{object} braucht Boden unter der ganzen Fläche.",
         "command.rejected.nightSkipBlocked": "Die Nacht lässt sich nicht überspringen, solange Passagiere oder Flugzeuge unterwegs sind.",
         "command.rejected.notNight": "Die Nacht lässt sich nur zwischen 18:00 und 06:00 überspringen.",
         "command.rejected.notReady": "Das Spiel lädt noch.",

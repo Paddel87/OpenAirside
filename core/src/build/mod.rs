@@ -5,8 +5,10 @@
 //! The module reads no other domain module. Changes that other modules
 //! react to are laid down as internal events (`internal`).
 
+pub mod access;
 pub mod grid;
 pub mod network;
+pub mod objects;
 pub mod target;
 
 use std::collections::HashMap;
@@ -17,10 +19,13 @@ use serde::{Deserialize, Serialize};
 use crate::geometry::{CellPos, CellRect, MapSize};
 use crate::hash::StateHasher;
 use crate::internal::{InternalEvent, InternalEvents, Stage};
+use crate::pool::Pool;
 use crate::savegame::{invalid, limit};
 use crate::text::Reason;
+use access::AccessProfile;
 use grid::{BLOCK_CELLS, Block, Cell, Grid, GridError, GridSnapshot, WALL, floor_index};
 use network::{Network, NetworkKind, NodeId};
+use objects::{MAX_OBJECTS, MAX_TYPES, ObjectContext, Occupancy, PlacedObject, TypeTable};
 use target::{LoadKind, MAX_TARGETS, Target};
 
 /// Why a target could not be added.
@@ -37,6 +42,14 @@ pub struct Build {
     grid: Grid,
     targets: Vec<Target>,
     networks: [Network; 3],
+    /// Single objects (ADR-042), in the order of their handles.
+    objects: Pool<PlacedObject>,
+    /// Which objects touch which block; derived from `objects`.
+    occupancy: Occupancy,
+    /// Object types that cells and objects refer to.
+    types: TypeTable,
+    /// Handle of the next object placed.
+    next_handle: u32,
 }
 
 impl Build {
@@ -47,6 +60,10 @@ impl Build {
             grid: Grid::new(map),
             targets: Vec::new(),
             networks: NetworkKind::ALL.map(Network::new),
+            objects: Pool::default(),
+            occupancy: Occupancy::default(),
+            types: TypeTable::default(),
+            next_handle: 0,
         }
     }
 
@@ -151,6 +168,7 @@ impl Build {
         hasher.u32(u32::from(self.map().height));
         self.grid.hash_into(hasher);
         for target in &self.targets {
+            hasher.u32(target.profile as u32);
             hasher.u32(u32::try_from(target.cells.len()).unwrap_or(u32::MAX));
             for c in &target.cells {
                 hasher.u32(u32::from(c.x));
@@ -161,6 +179,9 @@ impl Build {
         for network in &self.networks {
             network.hash_into(hasher);
         }
+        self.types.hash_into(hasher);
+        hasher.u32(self.next_handle);
+        self.objects.hash_into(hasher);
     }
 
     /// State of the module for a save game, taken in one tick; cheap
@@ -172,6 +193,9 @@ impl Build {
             grid_version: self.grid.version(),
             targets: self.targets.clone(),
             networks: self.networks.to_vec(),
+            types: self.types.ids().to_vec(),
+            objects: self.objects.saved(),
+            next_handle: self.next_handle,
         }
     }
 
@@ -180,14 +204,28 @@ impl Build {
     /// # Errors
     ///
     /// `invalidState` naming the broken invariant: `blockIndex`, `table`,
-    /// `targetCells`, `networks`, `edges` or `networkNodes`; `limitExceeded`
-    /// for too many targets.
+    /// `targetCells`, `networks`, `edges`, `networkNodes`, `types`,
+    /// `blockKind`, `objects`, `objectHandles` or `objectCells`;
+    /// `limitExceeded` for too many targets, types or objects.
     pub(crate) fn restore(
         saved: SavedBuild,
         map: MapSize,
         blocks: &Blocks,
     ) -> Result<Self, Reason> {
         let grid = Grid::from_snapshot(blocks.snapshot(map, &saved.grid)?, saved.grid_version);
+        let types = restore_types(saved.types)?;
+        if blocks.highest_kind() > types.ids().len() {
+            return Err(invalid("blockKind"));
+        }
+        let (objects, occupancy) = restore_objects(saved.objects, saved.next_handle, map, &types)?;
+        if objects
+            .as_slice()
+            .iter()
+            .filter(|o| o.blocks)
+            .any(|o| !blocked_under(&grid, o))
+        {
+            return Err(invalid("objectCells"));
+        }
         let targets = restore_targets(saved.targets)?;
         let on_map = |p: CellPos| map.contains(p) && floor_index(p.floor).is_some();
         if targets
@@ -221,8 +259,60 @@ impl Build {
             grid,
             targets,
             networks,
+            objects,
+            occupancy,
+            types,
+            next_handle: saved.next_handle,
         })
     }
+}
+
+/// The type table of a save game.
+fn restore_types(saved: Vec<String>) -> Result<TypeTable, Reason> {
+    if saved.len() > MAX_TYPES {
+        return Err(limit("types", MAX_TYPES as f64));
+    }
+    TypeTable::from_ids(saved).ok_or_else(|| invalid("types"))
+}
+
+/// The objects of a save game with the occupancy derived from them.
+fn restore_objects(
+    saved: Vec<PlacedObject>,
+    next_handle: u32,
+    map: MapSize,
+    types: &TypeTable,
+) -> Result<(Pool<PlacedObject>, Occupancy), Reason> {
+    if !Pool::<PlacedObject>::fits(saved.len()) {
+        return Err(limit("objects", MAX_OBJECTS as f64));
+    }
+    let context = ObjectContext {
+        map,
+        types: types.ids().len(),
+    };
+    let pool = Pool::restore(saved, &context).map_err(invalid)?;
+    let objects = pool.as_slice();
+    if !objects.windows(2).all(|w| w[0].handle < w[1].handle)
+        || objects.last().is_some_and(|o| o.handle >= next_handle)
+    {
+        return Err(invalid("objectHandles"));
+    }
+    let occupancy = Build::occupancy_of(objects).ok_or_else(|| invalid("objectCells"))?;
+    Ok((pool, occupancy))
+}
+
+/// A blocking object has impassable cells under its whole footprint.
+fn blocked_under(grid: &Grid, object: &PlacedObject) -> bool {
+    let rect = object.rect();
+    (rect.y0..rect.y1).all(|y| {
+        (rect.x0..rect.x1).all(|x| {
+            grid.cell(CellPos {
+                x,
+                y,
+                floor: rect.floor,
+            })
+            .is_some_and(|c| !c.walkable())
+        })
+    })
 }
 
 /// State of the module taken for a save game.
@@ -232,6 +322,9 @@ pub struct BuildSnapshot {
     grid_version: u32,
     targets: Vec<Target>,
     networks: Vec<Network>,
+    types: Vec<String>,
+    objects: Vec<PlacedObject>,
+    next_handle: u32,
 }
 
 impl BuildSnapshot {
@@ -254,6 +347,9 @@ impl BuildSnapshot {
                     edges: n.edges().iter().map(|(a, b)| (a.0, b.0)).collect(),
                 })
                 .collect(),
+            types: self.types.clone(),
+            objects: self.objects.clone(),
+            next_handle: self.next_handle,
         }
     }
 }
@@ -266,12 +362,18 @@ pub(crate) struct SavedBuild {
     pub grid_version: u32,
     pub targets: Vec<SavedTarget>,
     pub networks: Vec<SavedNetwork>,
+    /// Full ids of the object types that cells and objects refer to; a
+    /// type number n is entry n − 1.
+    pub types: Vec<String>,
+    pub objects: Vec<PlacedObject>,
+    pub next_handle: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct SavedTarget {
     pub cells: Vec<CellPos>,
     pub load: LoadKind,
+    pub profile: AccessProfile,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -287,6 +389,7 @@ pub(crate) fn saved_targets(targets: &[Target]) -> Vec<SavedTarget> {
         .map(|t| SavedTarget {
             cells: t.cells.clone(),
             load: t.load,
+            profile: t.profile,
         })
         .collect()
 }
@@ -305,17 +408,21 @@ pub(crate) fn restore_targets(saved: Vec<SavedTarget>) -> Result<Vec<Target>, Re
         .map(|t| Target {
             cells: t.cells,
             load: t.load,
+            profile: t.profile,
         })
         .collect())
 }
 
-/// One block as stored: the three cell fields in row order, 1,024 bytes
-/// each.
+/// One block as stored: the cell fields in row order, 1,024 values each.
+/// `floor_kind` and `wall_kind` refer to the type table of the module
+/// ([`SavedBuild::types`], 0 for none).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct SavedBlock {
     pub flags: Vec<u8>,
     pub zone: Vec<u8>,
     pub cost: Vec<u8>,
+    pub floor_kind: Vec<u16>,
+    pub wall_kind: Vec<u16>,
 }
 
 /// Collects the distinct blocks of several grid snapshots (the grid, the
@@ -342,6 +449,8 @@ impl BlockPool {
                             flags: block.flags().to_vec(),
                             zone: block.zones().to_vec(),
                             cost: block.costs().to_vec(),
+                            floor_kind: block.floor_kinds().to_vec(),
+                            wall_kind: block.wall_kinds().to_vec(),
                         });
                         u32::try_from(self.blocks.len()).unwrap_or(u32::MAX)
                     })
@@ -375,6 +484,16 @@ impl Blocks {
             .ok_or_else(|| invalid("block"))
     }
 
+    /// Highest floor covering or wall type number in any block.
+    fn highest_kind(&self) -> usize {
+        self.0
+            .iter()
+            .flat_map(|b| b.floor_kinds().iter().chain(b.wall_kinds()))
+            .copied()
+            .max()
+            .map_or(0, usize::from)
+    }
+
     /// Grid snapshot of a block table.
     ///
     /// # Errors
@@ -398,7 +517,9 @@ fn block(saved: SavedBlock) -> Option<Arc<Block>> {
     let flags: [u8; BLOCK_CELLS] = saved.flags.try_into().ok()?;
     let zone: [u8; BLOCK_CELLS] = saved.zone.try_into().ok()?;
     let cost: [u8; BLOCK_CELLS] = saved.cost.try_into().ok()?;
-    Block::from_fields(flags, zone, cost).map(Arc::new)
+    let floor_kind: [u16; BLOCK_CELLS] = saved.floor_kind.try_into().ok()?;
+    let wall_kind: [u16; BLOCK_CELLS] = saved.wall_kind.try_into().ok()?;
+    Block::from_fields(flags, zone, cost, floor_kind, wall_kind).map(Arc::new)
 }
 
 #[cfg(test)]

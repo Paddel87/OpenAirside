@@ -8,6 +8,8 @@
 
 use std::sync::Arc;
 
+use serde::{Deserialize, Serialize};
+
 use crate::geometry::{CellPos, CellRect, MAX_FLOOR, MIN_FLOOR, MapSize, is_valid_floor};
 use crate::hash::StateHasher;
 
@@ -25,6 +27,15 @@ pub const WALL: u8 = 1;
 /// Cell flag: stairs or escalator; connects to the floor above and below
 /// where that cell has this flag as well.
 pub const STAIRS: u8 = 2;
+/// Position of the [`AreaKind`] in the flag byte (3 bits, ADR-037).
+pub const KIND_SHIFT: u8 = 2;
+/// Bits of the flag byte that hold the [`AreaKind`].
+pub const KIND_MASK: u8 = 0b111 << KIND_SHIFT;
+/// Cell flag: staff zone (ZON-02); passengers and visitors may only leave
+/// it, never enter (ADR-037).
+pub const STAFF_ZONE: u8 = 1 << 5;
+/// All flag bits in use; the others must be 0.
+pub const FLAG_BITS: u8 = WALL | STAIRS | KIND_MASK | STAFF_ZONE;
 
 /// Cost factor of a cell in tenths: 10 = normal floor.
 pub const COST_NORMAL: u8 = 10;
@@ -68,15 +79,78 @@ impl Zone {
     }
 }
 
+/// What a cell is used for, which decides who may walk on it (ADR-037). Part
+/// of the flag byte; 0 (public walkway) is what older cells and floors
+/// without a kind mean. In data packs it is written in camel case
+/// (`publicWalk`, `standArea`, ADR-042).
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default, Serialize, Deserialize,
+)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[repr(u8)]
+pub enum AreaKind {
+    /// Public walkway: halls, corridors, plazas.
+    #[default]
+    PublicWalk = 0,
+    /// Walkway across the apron (walk-out, apron staff).
+    ApronWalkway = 1,
+    /// Crossing of a walkway with a service road or taxiway (zebra crossing).
+    Crossing = 2,
+    /// Aircraft stand area.
+    StandArea = 3,
+    /// Apron and taxiway.
+    Apron = 4,
+    /// Runway.
+    Runway = 5,
+    /// Road for vehicles.
+    Road = 6,
+    /// Terrain without use.
+    Terrain = 7,
+}
+
+impl AreaKind {
+    /// All kinds in the order of their numbers.
+    pub const ALL: [Self; 8] = [
+        Self::PublicWalk,
+        Self::ApronWalkway,
+        Self::Crossing,
+        Self::StandArea,
+        Self::Apron,
+        Self::Runway,
+        Self::Road,
+        Self::Terrain,
+    ];
+
+    /// The kind stored in `flags`.
+    #[must_use]
+    pub fn of_flags(flags: u8) -> Self {
+        Self::ALL[usize::from((flags & KIND_MASK) >> KIND_SHIFT)]
+    }
+
+    /// The kind with number `n` (0 … 7), `None` above.
+    #[must_use]
+    pub fn from_number(n: u8) -> Option<Self> {
+        Self::ALL.get(usize::from(n)).copied()
+    }
+}
+
 /// Content of one cell.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Cell {
-    /// [`WALL`] and [`STAIRS`].
+    /// [`WALL`], [`STAIRS`], the [`AreaKind`] in [`KIND_MASK`] and
+    /// [`STAFF_ZONE`].
     pub flags: u8,
     /// A [`Zone`] as number.
     pub zone: u8,
     /// Cost factor in tenths, 1 … [`MAX_COST`].
     pub cost: u8,
+    /// Floor covering: 0 for none, else the number of an object type in the
+    /// type table of the module plus 1 (ADR-042).
+    pub floor_kind: u16,
+    /// Wall type: 0 for none, else like `floor_kind`. A cell with the
+    /// [`WALL`] flag and no wall type is blocked by an object or void.
+    pub wall_kind: u16,
 }
 
 impl Cell {
@@ -85,6 +159,8 @@ impl Cell {
         flags: WALL,
         zone: Zone::Landside as u8,
         cost: COST_NORMAL,
+        floor_kind: 0,
+        wall_kind: 0,
     };
 
     /// Walkable floor in the given zone with the normal cost.
@@ -94,7 +170,39 @@ impl Cell {
             flags: 0,
             zone: zone as u8,
             cost: COST_NORMAL,
+            floor_kind: 0,
+            wall_kind: 0,
         }
+    }
+
+    /// The cell with the given kind.
+    #[must_use]
+    pub fn with_kind(mut self, kind: AreaKind) -> Self {
+        self.flags = (self.flags & !KIND_MASK) | ((kind as u8) << KIND_SHIFT);
+        self
+    }
+
+    /// The cell inside or outside a staff zone.
+    #[must_use]
+    pub fn with_staff_zone(mut self, staff_zone: bool) -> Self {
+        if staff_zone {
+            self.flags |= STAFF_ZONE;
+        } else {
+            self.flags &= !STAFF_ZONE;
+        }
+        self
+    }
+
+    /// What the cell is used for.
+    #[must_use]
+    pub fn kind(self) -> AreaKind {
+        AreaKind::of_flags(self.flags)
+    }
+
+    /// `true` if the cell belongs to a staff zone.
+    #[must_use]
+    pub fn staff_zone(self) -> bool {
+        self.flags & STAFF_ZONE != 0
     }
 
     /// Returns `true` if the cell can be walked on.
@@ -115,6 +223,8 @@ pub enum GridError {
     InvalidZone,
     /// The cost factor is 0 or above [`MAX_COST`].
     InvalidCost,
+    /// The flag byte has a bit that is not in [`FLAG_BITS`].
+    InvalidFlags,
 }
 
 /// 32 × 32 cells of one floor, stored by field.
@@ -123,6 +233,8 @@ pub struct Block {
     flags: [u8; BLOCK_CELLS],
     zone: [u8; BLOCK_CELLS],
     cost: [u8; BLOCK_CELLS],
+    floor_kind: [u16; BLOCK_CELLS],
+    wall_kind: [u16; BLOCK_CELLS],
     walkable: u16,
 }
 
@@ -132,6 +244,8 @@ impl Block {
             flags: [Cell::VOID.flags; BLOCK_CELLS],
             zone: [Cell::VOID.zone; BLOCK_CELLS],
             cost: [Cell::VOID.cost; BLOCK_CELLS],
+            floor_kind: [0; BLOCK_CELLS],
+            wall_kind: [0; BLOCK_CELLS],
             walkable: 0,
         }
     }
@@ -154,21 +268,36 @@ impl Block {
         &self.cost
     }
 
+    /// Floor coverings in row order (see [`Cell::floor_kind`]).
+    #[must_use]
+    pub fn floor_kinds(&self) -> &[u16; BLOCK_CELLS] {
+        &self.floor_kind
+    }
+
+    /// Wall types in row order (see [`Cell::wall_kind`]).
+    #[must_use]
+    pub fn wall_kinds(&self) -> &[u16; BLOCK_CELLS] {
+        &self.wall_kind
+    }
+
     /// Number of walkable cells.
     #[must_use]
     pub fn walkable_cells(&self) -> usize {
         usize::from(self.walkable)
     }
 
-    /// Block from the three cell fields of a save game; `None` if a cell
-    /// carries an unknown flag, an unknown zone or a cost out of range.
+    /// Block from the cell fields of a save game; `None` if a cell carries
+    /// an unused flag bit, an unknown zone or a cost out of range. The type
+    /// numbers are checked against the type table by the module.
     pub(crate) fn from_fields(
         flags: [u8; BLOCK_CELLS],
         zone: [u8; BLOCK_CELLS],
         cost: [u8; BLOCK_CELLS],
+        floor_kind: [u16; BLOCK_CELLS],
+        wall_kind: [u16; BLOCK_CELLS],
     ) -> Option<Self> {
         let valid = (0..BLOCK_CELLS).all(|i| {
-            flags[i] & !(WALL | STAIRS) == 0
+            flags[i] & !FLAG_BITS == 0
                 && zone[i] <= Zone::Exit as u8
                 && (1..=MAX_COST).contains(&cost[i])
         });
@@ -180,6 +309,8 @@ impl Block {
             flags,
             zone,
             cost,
+            floor_kind,
+            wall_kind,
             walkable: u16::try_from(walkable).ok()?,
         })
     }
@@ -189,6 +320,8 @@ impl Block {
             flags: self.flags[local],
             zone: self.zone[local],
             cost: self.cost[local],
+            floor_kind: self.floor_kind[local],
+            wall_kind: self.wall_kind[local],
         }
     }
 
@@ -198,6 +331,8 @@ impl Block {
         self.flags[local] = cell.flags;
         self.zone[local] = cell.zone;
         self.cost[local] = cell.cost;
+        self.floor_kind[local] = cell.floor_kind;
+        self.wall_kind[local] = cell.wall_kind;
         match (was, is) {
             (false, true) => self.walkable += 1,
             (true, false) => self.walkable -= 1,
@@ -369,8 +504,12 @@ impl Grid {
     /// # Errors
     ///
     /// Fails if the position is not on the map, the floor or the zone is
-    /// invalid or the cost factor is out of range; the grid stays unchanged.
+    /// invalid, the flags have an unused bit or the cost factor is out of
+    /// range; the grid stays unchanged.
     pub fn set(&mut self, pos: CellPos, cell: Cell) -> Result<(), GridError> {
+        if cell.flags & !FLAG_BITS != 0 {
+            return Err(GridError::InvalidFlags);
+        }
         if cell.zone > Zone::Exit as u8 {
             return Err(GridError::InvalidZone);
         }
@@ -439,6 +578,9 @@ impl Grid {
                 hasher.bytes(&block.flags);
                 hasher.bytes(&block.zone);
                 hasher.bytes(&block.cost);
+                for kind in block.floor_kind.iter().chain(&block.wall_kind) {
+                    hasher.bytes(&kind.to_le_bytes());
+                }
             }
         }
     }
@@ -515,6 +657,100 @@ mod tests {
         );
         assert_eq!(g.version(), 0);
         assert_eq!(g.stored_blocks(), 12);
+    }
+
+    #[test]
+    fn area_kind_and_staff_zone_live_in_the_flag_byte() {
+        let cell = Cell::floor(Zone::Airside)
+            .with_kind(AreaKind::StandArea)
+            .with_staff_zone(true);
+        assert_eq!(cell.kind(), AreaKind::StandArea);
+        assert!(cell.staff_zone() && cell.walkable());
+        assert_eq!(cell.flags, (3 << KIND_SHIFT) | STAFF_ZONE);
+        let plain = cell.with_kind(AreaKind::PublicWalk).with_staff_zone(false);
+        assert_eq!(plain, Cell::floor(Zone::Airside), "0 means public walkway");
+        for (n, kind) in AreaKind::ALL.into_iter().enumerate() {
+            assert_eq!(kind as usize, n);
+            assert_eq!(AreaKind::from_number(n as u8), Some(kind));
+            assert_eq!(Cell::floor(Zone::Landside).with_kind(kind).kind(), kind);
+        }
+        assert_eq!(AreaKind::from_number(8), None);
+        // Walls keep their kind.
+        let wall = Cell::VOID.with_kind(AreaKind::Runway);
+        assert!(!wall.walkable() && wall.kind() == AreaKind::Runway);
+    }
+
+    #[test]
+    fn cells_with_unused_flag_bits_are_rejected() {
+        let mut g = grid();
+        let bad = Cell {
+            flags: 1 << 6,
+            ..Cell::floor(Zone::Landside)
+        };
+        assert_eq!(g.set(pos(0, 0, 0), bad), Err(GridError::InvalidFlags));
+        let rect = CellRect {
+            floor: 0,
+            x0: 0,
+            y0: 0,
+            x1: 4,
+            y1: 4,
+        };
+        assert_eq!(g.fill(rect, bad), Err(GridError::InvalidFlags));
+        assert_eq!(g.version(), 0);
+        // The kind bits and the staff zone are valid in a block of a save game.
+        let kinds = [Cell::floor(Zone::Landside)
+            .with_kind(AreaKind::Terrain)
+            .with_staff_zone(true)
+            .flags; BLOCK_CELLS];
+        let zones = [0; BLOCK_CELLS];
+        let costs = [COST_NORMAL; BLOCK_CELLS];
+        let none = [0; BLOCK_CELLS];
+        assert!(Block::from_fields(kinds, zones, costs, none, none).is_some());
+        let unused = [1 << 6; BLOCK_CELLS];
+        assert!(Block::from_fields(unused, zones, costs, none, none).is_none());
+    }
+
+    #[test]
+    fn floor_covering_and_wall_type_are_part_of_the_cell_and_the_hash() {
+        let hash = |g: &Grid| {
+            let mut h = StateHasher::new();
+            g.hash_into(&mut h);
+            h.finish()
+        };
+        let mut g = grid();
+        let plain = hash(&g);
+        let cell = Cell {
+            floor_kind: 3,
+            wall_kind: 0,
+            ..Cell::floor(Zone::Landside)
+        };
+        g.set(pos(2, 2, 0), cell).unwrap();
+        assert_eq!(g.cell(pos(2, 2, 0)), Some(cell));
+        let with_floor = hash(&g);
+        assert_ne!(with_floor, plain);
+        // Only the covering differs: the version still rises, the hash changes.
+        let version = g.version();
+        g.set(
+            pos(2, 2, 0),
+            Cell {
+                floor_kind: 4,
+                ..cell
+            },
+        )
+        .unwrap();
+        assert_eq!(g.version(), version + 1);
+        assert_ne!(hash(&g), with_floor);
+        let walled = Cell {
+            flags: WALL,
+            wall_kind: 9,
+            ..cell
+        };
+        g.set(pos(2, 2, 0), walled).unwrap();
+        let snap = g.snapshot();
+        let block = snap.block(GROUND).unwrap();
+        assert_eq!(block.floor_kinds()[2 * BLOCK + 2], 3);
+        assert_eq!(block.wall_kinds()[2 * BLOCK + 2], 9);
+        assert_eq!(block.walkable_cells(), 0);
     }
 
     #[test]

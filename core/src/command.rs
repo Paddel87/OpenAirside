@@ -138,6 +138,12 @@ pub mod code {
     pub const NIGHT_SKIP_BLOCKED: &str = "nightSkipBlocked";
     /// A quantity above its limit.
     pub const LIMIT_EXCEEDED: &str = "limitExceeded";
+    /// A cell of the building is occupied by an object or a wall (ADR-042).
+    pub const BLOCKED: &str = "blocked";
+    /// A cell of an object has no floor (ADR-042).
+    pub const NEEDS_FLOOR: &str = "needsFloor";
+    /// Built on a floor other than the ground floor (ADR-042, step 5.2).
+    pub const FLOOR_LOCKED: &str = "floorLocked";
 
     /// Every code above, plus `tickLimit` of the simulation; the base pack
     /// has a text for each (`core/tests/lang.rs`).
@@ -150,6 +156,9 @@ pub mod code {
         NOT_NIGHT,
         NIGHT_SKIP_BLOCKED,
         LIMIT_EXCEEDED,
+        BLOCKED,
+        NEEDS_FLOOR,
+        FLOOR_LOCKED,
         crate::simulation::TICK_LIMIT,
     ];
 }

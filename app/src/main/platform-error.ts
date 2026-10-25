@@ -68,6 +68,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isParam(value: unknown): value is ParamValue {
+  if (isRecord(value)) {
+    // A localisation key `{ key }` (ADR-032, L-5): exactly one text member.
+    return Object.keys(value).length === 1 && typeof value.key === "string";
+  }
   return typeof value === "string" || (typeof value === "number" && Number.isFinite(value));
 }
 

@@ -327,6 +327,7 @@ pub fn reference_terminal(
                         flags: dense.flags[i],
                         zone: dense.zone[i],
                         cost: dense.cost[i],
+                        ..Cell::VOID
                     };
                     world
                         .build_mut()

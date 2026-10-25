@@ -17,12 +17,182 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, nächster Schritt 3.1.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, 3.1a ist erledigt (CI grün, PR offen), weiter mit 3.1b.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-25 20:05 (UTC) – [PROBLEM-GELÖST]
+
+- **CI rot auf `1f7a35c` (Läufe 40228076332 und 40228097329):** `core/tests/build.rs`, Test `the_buildings_survive_a_save_game_and_go_on_identically`, letzter Vergleich der Zustands-Prüfsumme des ganzen Weltzustands schlug auf Linux, Windows und in der Coverage fehl. Ursache: Die Prüfsumme enthält den Zustand der Wegfindung (offene Neuberechnung, Übernahme); die beiden Simulationen laufen im Modus „sobald fertig“ und übernehmen zu verschiedenen Zeitpunkten. Der Lauf davor (`160628b`) war zufällig grün. Es ist ein Fehler des Tests, nicht des Kerns: Der Rundlauf selbst (Prüfsumme direkt nach dem Laden) bleibt unverändert geprüft. Der Test vergleicht danach nur den Beitrag von Welt & Bau und die Objekte. Behoben in `2b386a4`; die Läufe auf diesem Stand sind grün (Push 40231648278, PR 40231652631, Security 40231652556).
+
+### 2026-10-25 19:55 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung 19:00 bis 19:55 UTC (Session ab 18:55 UTC).
+- **Bearbeitet:** 3.1a Teilaufgaben 3, 4, 6 nach ADR-042 und die Kosten der Profil-Prüfung; Pflichtlektüre, `[SESSIONSTART]`.
+- **Erreicht:** Commits `0229cad`, `0c68b9a`, `b14eb98`, `d8ee3ff`, `160628b` (Datenpaket `effect`/`blocks`; Bodenbelag und Wandart; Objekte, Bau-Befehle, Spielstand; schnellere Neuberechnung; Dokumente). CI-Lauf 40227300244 auf `160628b`: alle 17 Jobs grün; Runner-Werte: Neuberechnung 2357 ms (Grenze 4000), Dauerbau längster Abstand 2700 ms und letzter Stand 4584 ms (Grenze 8000), 229 MB. 3.1a `[ERLEDIGT]`. PR „feat: 3.1a Kern – Bauen mit Wirkung und Dauerbau“ eröffnet.
+- **Offen geblieben:** Merge des PR nach Freigabe des Projektinhabers; 3.1b, 3.1c. Die Senkung der Profil-Prüfung ist nur im Container belegt (−15 %), die Runner-Werte schwanken (3219 → 2357 ms zwischen zwei Läufen); 3.1c prüft die Reserve erneut mit dem Feldsatz der Bauarbeiter.
+- **Nächster Schritt:** PR mergen (nach Freigabe), dann 3.1b (Darstellung und Bedienung; Layout 2 von S-1 mit Umsetzungstabelle Typtabelle → Katalog-Index). Empfohlene Klasse laut Fahrplan 3.1: Entscheidung für Bewertungen, Umsetzung Routine.
+- **Aktive Klasse und Bilanz:** Routine (Sonnet 5.5 laut `get_session` 19:00 und 19:55 UTC); 0 Schritte oberhalb der Empfehlung (Umsetzung = Routine); nichts abgegeben (Probelauf der Unteragenten-Klassen offen, nichts Abgabefähiges).
+- **Kontextgröße:** 459.863 Token laut `get_session` – **über der Grenze von 400.000**; nächste Arbeit in neuer Session beginnen.
+- **Ablaufdaten-Prüfung und Drift-Check:** Register geprüft, kein Eintrag am Vorlauf. ADR-042 → 3.1a (existiert), Reaktiv-Quote unverändert 4 / 10, Anforderungen FR-010/FR-011 bleiben `OFFEN` bis 3.1 vollständig, Blocker keine, Phasenumfang unverändert (Stufen zählen als ein Schritt), README „Nächste Schritte“ und Konsolenbeschreibung nachgezogen.
+
+### 2026-10-25 19:40 (UTC) – [PROBLEM-GELÖST]
+
+- **Kosten der Profil-Prüfung gesenkt (3.1a):** Im inneren Schritt der Neuberechnung (`dijkstra` in `wayfinding/flowfield.rs`) wird jetzt zuerst die billige Frage „ist der Weg kürzer“ gestellt und erst danach die Eckenregel und die Zugangsregeln; die meisten Nachbarn einer Zelle sind schon abgeschlossen. Ergebnis unverändert (Tests gegen die dichte Referenz, Zustands-Prüfsumme). Messung im selben Container, abwechselnd alt/neu mit je einem Binärpaar aus `cargo bench --no-run`, vier Paare: alt 2010 / 1872 / 1921 / 1789 ms, neu 1512 / 1640 / 1749 / 1571 ms, Mittel **1898 → 1618 ms (−15 %)**, in jedem Paar schneller. Die Maschine dieser Session ist langsamer als die der Vorsession (alt 1727–1926 ms statt 1462 ms), die Werte sind daher nur untereinander vergleichbar. Zwei frühere Versuche (Tabelle je Flag-Byte, Prüfungen der Zielzelle herausgezogen) hatten nichts gebracht; die Reihenfolge der Prüfungen war die Ursache. Der Wert auf dem Runner steht nach dem CI-Lauf des PR im Fahrplan.
+- **Reibung (Test):** Der Vergleich der Zustands-Prüfsumme vor und nach einem abgelehnten Befehl schlug fehl, weil die vorherige Bauaktion im selben Schritt die Neuberechnung anstieß (`dirty` der Wegfindung). Der Test vergleicht jetzt nur den Beitrag von Welt & Bau. Außerdem baut `Simulation::new` eine offene Halle, nicht eine leere Welt; die Bau-Tests nehmen `World::new`.
+
+### 2026-10-25 19:35 (UTC) – [BEOBACHTUNG]
+
+- **3.1a Teilaufgaben 3, 4, 6 umgesetzt** (Commits `0229cad`, `0c68b9a`, `b14eb98`, `d8ee3ff`). Entscheidungen im Rahmen von ADR-042 („Technisch, Entscheidung der KI“), die vom Wortlaut des Entwurfs abweichen oder ihn präzisieren, ohne eine Kategorie aus Abschnitt 4 zu berühren:
+  1. **Typtabelle statt Katalog-Index im Kern.** Bodenbelag und Wandart je Zelle sowie der Typ jedes Objekts sind Nummern (≥ 1) einer Tabelle voller IDs im Modul Welt & Bau, die beim ersten Bauen eines Typs wächst. Damit ist die Tabelle im Spielstand genau das, was ADR-042 für die Datei verlangt, und der Kern braucht keine Umrechnung aller Blöcke beim Speichern und Laden. S-1 (3.1b) rechnet beim Zusammenstellen der Blöcke über eine Umsetzungstabelle auf den Katalog-Index um (`Catalog::index_of` und `id_at` liegen mit Tests bereit). Vermerkt in `architecture.md` (Modul Welt & Bau, Datenmodell, verworfene Alternativen) und im Hinweis von S-1.
+  2. **Handle = Seriennummer** (aufsteigend, nie wiederverwendet) statt Slot und Generation: Datensätze liegen in Handle-Reihenfolge, die Suche ist eine Halbierung, ein veraltetes Handle findet nichts. Der Weg über `geometry::Handle` für die Präsentation (S-7) bleibt für 3.1b offen und braucht keine Änderung des Kerns.
+  3. **Kein Feld „Zustand“** im Objekt: Kein Schritt schreibt oder liest es, ein Platzhalter ohne Schritt wäre eine stille Verschiebung (`CLAUDE.md` Abschnitt 6). S-1 sendet 0, bis ein Schritt Zustände einführt (Hinweis in `architecture-schnittstellen.md` und im Fahrplan für 3.1b).
+  4. **`at` = Zelle mit den kleinsten Koordinaten des Fußabdrucks**, Drehung 1 und 3 tauschen Breite und Tiefe. Der Vertrag S-2 sagte dazu nichts; steht jetzt in S-2. Wer eine andere Lage des Ankers will (Mitte), ändert es mit dem Bau-Werkzeug in 3.1b.
+  5. **Sperrende Objekte setzen `WALL` ohne Wandart.** So bleiben Wegweiser, Zugangsregeln und Personen unverändert; ob eine Zelle eine Wand ist, sagt die Wandart (≠ 0), ob ein Objekt darauf steht, das Belegungsverzeichnis. Beim Abriss eines sperrenden Objekts wird `WALL` auf den Zellen außerhalb des Rahmens wieder entfernt; innerhalb des Rahmens wird die Zelle Leere.
+  6. **Boden über Wandzellen:** die Wandzelle bleibt unverändert (auch ihr Bodenbelag). Boden über einem sperrenden Objekt ändert Bodenbelag, Flächenart und Kostenfaktor, die Zelle bleibt gesperrt.
+- **Landeplatz:** Personen auf Zellen, die durch Bauen unbegehbar werden, bleiben stehen (Richtung „unerreichbar“); das Verhalten legt 3.2 mit den Personen fest (Notiz im Fahrplan, Schritt 3.2).
+- **Werkzeuge im Container:** Node 22, `npm ci --ignore-scripts`, `pre-commit`, `cargo-llvm-cov` 0.9.1 nachinstalliert; `check:types` und `check:schema` laufen auch unter Node 22 und sind unverändert bzw. aktualisiert.
+
+### 2026-10-25 19:00 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 18:25 UTC, `[BEOBACHTUNG]` 18:45 UTC (erster CI-Lauf mit Dauerbau-Schritt grün). ADR-042 freigegeben, Code für 3.1a Teilaufgaben 3, 4, 6 nicht begonnen.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Schritt 3.1, Architektur 1/2/9, Decisions Teil A und C, Requirements-Übersicht, aktive Blocker: keine); Vertiefung: ADR-042, `docs/research/3.1a-objekte-vorlage.md`.
+- **Modell:** eingestellt `claude-sonnet-5-5`, bedient `claude-sonnet-5-5` laut `get_session` 19:00 UTC → Routine-Klasse; passt zur Empfehlung (Entscheidungen gefallen, ADR-042). Kontingent: 5-Stunden-Fenster `allowed`. Kontextgröße laut `get_session` 0 von 1.000.000 (frische Session).
+- **Branch:** `feat/3-1a-bauen-mit-wirkung-dauerbau` auf `8258e70`, weitergeführt (Anweisung des Projektinhabers).
+- **Vorhaben:** Teilaufgaben 3, 4, 6 nach ADR-042 und die Kosten der Profil-Prüfung; danach CI und PR „feat: 3.1a Kern – Bauen mit Wirkung und Dauerbau“. Eine freigabepflichtige Entscheidung außerhalb von ADR-042 → Stopp.
+
+### 2026-10-25 18:45 (UTC) – [BEOBACHTUNG]
+
+- **Erster CI-Lauf mit Dauerbau-Schritt** (Lauf 40219644818, Job „Kern-Benchmark“, grün): Tick Mittel 0,072 ms, p99 0,145 ms; Wegweiser-Neuberechnung **3219 ms** (Grenze 4000 ms), Schritt p99 0,46 ms; Dauerbau 120 Bauaktionen, **8 Übernahmen** beim Bauen, längster Abstand **3645 ms** (Grenze 8000), letzter Stand nach **5250 ms** (Grenze 8000), Spitzen 1 Neuberechnung / 3 Feldsätze / 2 Schnappschuss-Kopien, 223 MB, Schritt p99 0,65 ms. Die Frist aus ADR-041 trägt auf dem Runner, der Spielraum beim letzten Stand ist 2,75 s.
+- **Korrektur einer eigenen Aussage:** Im `[SESSIONENDE]` 17:54 UTC, in `architecture.md` und im Commit `d86e3c1` stand „kein Rückgang, Neuberechnung 1457 ms“. Das war nur gegen alte Dokumentwerte verglichen. Abwechselnde Messung im Container: **1234 ms vor, 1462 ms nach `d86e3c1`, rund +18 %** durch die Prüfung der Zugangsprofile im inneren Schritt. Auf dem Runner bleiben 0,78 s Abstand zur Grenze von 4 s; 3.1c (Feldsatz der Bauarbeiter, +0,57 s auf 4 vCPU nach ADR-037) und mehr Ziele (3.2) verkleinern ihn.
+- **Zwei Optimierungsversuche** (Tabelle „begehbar je Flag-Byte“, Prüfungen der Zielzelle aus dem inneren Schritt gezogen) brachten nur 1435 ms, im Rauschen; verworfen, nicht committet. Ein Lauf ohne Profil-Prüfung ergab 1283–1329 ms, die Kosten liegen also im inneren Schritt.
+- **Landeplatz:** 3.1a (noch offen) bekommt die Teilaufgabe „Kosten der Profil-Prüfung senken oder begründet hinnehmen“, mit Messung vor 3.1c; Eintrag im Fahrplan.
+
+### 2026-10-25 18:25 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung 18:05 bis 18:25 UTC nach dem `[SESSIONENDE]` 17:54 UTC (gesamt 17:25 bis 18:25 UTC).
+- **Bearbeitet:** Vorlage `docs/research/3.1a-objekte-vorlage.md`, Entscheidung, ADR-042, Reflexion mit Maßnahme (12).
+- **Erreicht:** ADR-042 freigegeben (1A, 2A, 3A, Festlegungen übernommen); Fahrplan, Decisions Teil A, Architektur Abschnitt 8 nachgezogen.
+- **Offen geblieben:** 3.1a Teilaufgaben 3, 4, 6 (Code), dann PR für 3.1a und CI-Lauf mit dem Dauerbau-Schritt.
+- **Nächster Schritt:** neue Session, Routine-Klasse genügt: 3.1a Teilaufgaben 3, 4, 6 nach ADR-042 auf dem Branch `feat/3-1a-bauen-mit-wirkung-dauerbau`.
+- **Aktive Klasse und Bilanz:** Entscheidung (Opus 5.5 nach `/model`), passend zur Empfehlung (Auslöser 1); 0 Schritte oberhalb der Empfehlung; nichts abgegeben.
+- **Kontextgröße:** 439.802 Token bei Wiederanlauf laut `get_session` – **über der Grenze von 400.000**; nächste Arbeit in neuer Session beginnen.
+- **Ablaufdaten-Prüfung und Drift-Check:** keine Änderung gegenüber 17:54 UTC; ADR-042 in Teil A und als Datei, Reaktiv-Quote in Teil A und Fahrplan gleich (4 / 10).
+
+### 2026-10-25 18:20 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-042** Wirkung der Objekttypen (Feld `effect` im Objekttyp), Möbel sperren ihre Zellen, Abriss entfernt alles Berührte; Festlegungen aus Abschnitt 4 der Vorlage übernommen. `[REAKTIV]`, Reaktiv-Quote 4 / 10 (ADR-033 bis ADR-042). Freigabe: „1A, 2A, 3A, Übernehmen“.
+- **Regel-009:** neues Muster (Code in Welt & Bau) → Reflexion in `fahrplan.md` „Iterations-Reflexion“ mit Maßnahme (12), vom Projektinhaber mit „Übernehmen“ zur Kenntnis genommen; kein Umbau.
+
+### 2026-10-25 18:10 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 3.1a, Vorlage `docs/research/3.1a-objekte-vorlage.md`: Wirkung der Objekttypen (Frage 1: Feld `effect` im Objekttyp, Empfehlung A), Sperren durch Möbel (Frage 2, A), Abriss mit Rahmen (Frage 3, A); Festlegungen ohne eigene Frage in Abschnitt 4.
+- **Klassifikation:** `[REAKTIV]` (in der Planung von 3.1 nicht als Entscheidung vorgesehen); Regel-009 neues Muster (Code in Welt & Bau) → Reflexion mit Stopp, Entwurf in Abschnitt 6 der Vorlage.
+
+### 2026-10-25 18:05 (UTC) – [SESSIONSTART]
+
+- **Anlass:** Fortsetzung derselben Session nach `STOPP – MODELLWECHSEL ERFORDERLICH`; der Projektinhaber hat per `/model` gewechselt („Modellwechsel durchgeführt, weiter mit Entscheidung zu 3.1a“).
+- **Modell:** eingestellt bei Anlage `claude-sonnet-5-5`, umgestellt (`user_switched_model`) und bedient `claude-opus-5-5` laut `get_session` → Entscheidungs-Klasse. Stopp aufgehoben.
+- **Kontext:** 439.802 Token laut `get_session`, über der Grenze von 400.000; Empfehlung, die Umsetzung nach der Entscheidung in einer neuen Session zu beginnen.
+- **Vertiefung:** `templates/architektur-heuristiken.md`, `architecture.md` Abschnitt 8, `3.8-weltdarstellung.md` (Objekte je Block), `core/src/pool.rs`.
+
+### 2026-10-25 17:54 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 17:25 bis 17:54 UTC.
+- **Bearbeitet:** 3.1a Teilaufgaben 1, 2, 5, 7 und 8 (Reihenfolge der Umsetzung 1, 5, 2, 8, 7). Pflichtlektüre, Branch (`feat/3-1a-bauen-mit-wirkung-dauerbau` auf `b1ef134`, Sessionende-Commits der Vorsession übernommen nach `project-context.md` Abschnitt 10).
+- **Erreicht:** sieben Code-Commits (`a454f70`, `67d6bfe`, `05c2b4c`, `d86e3c1`, `b19d25b`, `9eb36c9` als Korrektur zu `b19d25b`, `8370f91`) und Dokumentation:
+  - **Dauerbau (ADR-041):** Benchmark `core/benches/continuous_build.rs` als Schritt im Job „Kern-Benchmark“; gegen den unkorrigierten Code reproduziert (Ableitung aus ADR-036 bestätigt), nach der Korrektur innerhalb Frist und Grenze (Zahlen im Eintrag `[PROBLEM-GELÖST]` unten). Der CI-Lauf des neuen Schritts steht aus (Frist 8 s auf dem Runner nicht gemessen, Konfidenz mittel laut ADR-041).
+  - **Flächenart, Personalzone, Zugangsprofil (ADR-037):** im Flag-Byte bzw. am Ziel; Wegweiser pro Profil berechnet; Neuberechnung im Wegweiser-Benchmark unverändert (1457 ms), Tick-Mittel 0,093 ms.
+  - **`{ key }` in `ParamValue` (L-5)** und **S-7 `catalog` (L-2)** im Kern, in der Plattform-Prüfung und im Renderer-Client; TypeScript-Typen erzeugt.
+  - Dokumente nachgezogen: `architecture.md` (Wegfindung, Welt & Bau, CI-Test), `architecture-schnittstellen.md` (S-7, `ParamValue`, Änderungsprotokoll), `fahrplan.md` (Stand 3.1a).
+- **Offen geblieben:** 3.1a Teilaufgaben 3 (Objekte im Weltzustand), 4 (Wirkung von `build`, `buildArea`, `demolish`, `core/tests/build.rs`) und 6 (Objekte im Spielstand, Vertragsabgleich S-5). **Grund: Information fehlt** (`CLAUDE.md` Abschnitt 6, „Keine stillen Annahmen“; Stopp-Kriterium 1) – die Festlegungen stehen im Eintrag `[BEOBACHTUNG]` „Offene Festlegungen“ unten. Es sind Datenmodell (Kategorie 4) und Schnittstellen S-4/S-2/S-5 (Kategorie 5, additiv); damit steht ein `ENTSCHEIDUNG ERFORDERLICH`-Block an, Pflicht-Eskalation auf die Entscheidungs-Klasse (`CLAUDE.md` Abschnitt 0, Auslöser 1).
+- **Nächster Schritt:** Modellwechsel auf die Entscheidungs-Klasse (`/model`), dann den Entscheidungsblock zur Wirkung der Objekte vorlegen und nach Freigabe 3.1a Teilaufgaben 3, 4, 6 umsetzen (Routine-Klasse genügt wieder). Danach PR für 3.1a (Titel `feat: 3.1a Kern – Bauen mit Wirkung und Dauerbau`), CI-Lauf beobachten, insbesondere den Dauerbau-Schritt.
+- **Aktive Klasse und Bilanz:** Routine (Sonnet 5.5) die ganze Session; 0 Schritte oberhalb der Empfehlung (Empfehlung für die Umsetzung: Routine); nichts abgegeben (Probelauf der Unteragenten-Klassen steht aus, nichts Abgabefähiges nach `templates/wirtschaftlichkeit.md` angefallen). Beim Auslöser 1 wurde nicht auf der Routine-Klasse weitergearbeitet.
+- **Kontextgröße:** nicht feststellbar (`get_session` meldet `used_tokens` 0); Gesamtverbrauch laut Token-Zähler der Sitzung rund 0,43 Mio. Token. Falls der Kontext über der Grenze von 400.000 liegt: neue Session empfohlen. Hinweis dazu in der Abschlussmeldung.
+- **Ablaufdaten-Prüfung:** Register geprüft, kein Eintrag hat seinen Vorlauf erreicht (frühester: Electron 44, Lebensende 2027-03-02, Vorlauf ab 2027-01-02). Node 22 im Container (Werkzeug nur lokal, nicht die festgelegte Version 26.11.1), `npm ci --ignore-scripts` und `pre-commit` 4.6.2 wurden für die lokalen Prüfungen installiert und der pre-commit-Hook mit `pre-commit install` eingerichtet.
+- **Drift-Check:** `fahrplan.md` „Aktueller Stand“ nannte Reaktiv-Quote 6 / 10 (ADR-030 bis ADR-039), `decisions.md` 4 / 10 (ADR-032 bis ADR-041): auf 4 / 10 angeglichen. ADR → Schritt (ADR-040/041 → 3.1a), Anforderung → Schritt (FR-010/FR-011 → 3.1, Status OFFEN bis 3.1 vollständig), Blocker (keine), Phasenumfang (Stufen zählen als ein Schritt): ohne Befund. README: „Nächste Schritte“ (3.1a, 3.1b, 3.1c) unverändert gültig, Status-Block unverändert.
+- **Stimmung/Beobachtung:** Der Dauerbau-Fehler war so schwer, wie abgeleitet: Das letzte Ergebnis wird nie übernommen, weil die Warteschlange der Aufträge die jüngste Anfrage hinter 100 überholten einreiht.
+
+### 2026-10-25 17:53 (UTC) – [BEOBACHTUNG]
+
+**Offene Festlegungen zu 3.1a Teilaufgaben 3, 4 und 6** (für die Entscheidungs-Klasse; weder Vorlage 3.1 noch ADR-037 oder ADR-038 treffen sie):
+
+1. **Wirkung eines Objekttyps auf das Raster.** Der Objekttyp in S-4 hat nur `name` und `placement` (`area` oder `single` mit Breite und Tiefe). Nirgends steht, was `floor_concrete` (Boden), `wall_concrete` (Wand), eine Zone, eine Treppe oder `bench` im Raster bewirken: Zelle begehbar oder `WALL`, Flächenart und Personalzone, Zone (Land, Luft, Kontrolle, Ausgang), Kostenfaktor, Treppe, Bodenbelag und Wandart (Katalog-Index für S-1, 3.8). Ein Zusatzfeld im Objekttyp wäre eine additive Änderung von S-4 (Modformat und JSON-Schema); die Ordnung „Fläche setzt Zellwerte“ gegen „Objekt belegt Zellen“ ist offen.
+2. **Objekte im Weltzustand.** `Pool<T>` und das Merkmal `Kind` sind da (3.9), `MAX_OBJECTS` 1.000.000 nur als Konstante. Offen: Speicherung je Block (so 3.8, „Katalog-Index, Lage im Block, Drehung, Zustand“) oder als `Pool`; Bezug auf den Typ im Spielstand (volle ID gegen Katalog-Index; Pakete können sich ändern); Überlappung und Grenzen (nur Erdgeschoss in 3.1, Rand der Karte, Bau auf Leere/Gelände, Belegung); Drehung für `single`; Handle und Abfragbarkeit.
+3. **Abriss.** `demolish { area }`: entfernt Objekte, deren Fußabdruck die Fläche berührt oder nur vollständig enthaltene? Was geschieht mit Zellen von Boden und Wand (zurück zu Leere)? Kein Geld in 3.1 (Wirtschaft erst 3.6): Erstattung BAU-04 und `notEnoughMoney` entfallen bis dahin – zu bestätigen.
+4. **Ablehnungscodes** der Bau-Befehle (S-2 „fachliche Codes der Module“, additiv): z. B. `blocked` (Zelle belegt), `notBuildable` (außerhalb des Baubaren), `zoneNotAllowed`; der Objektname als `{ key }`-Parameter (L-5, jetzt vorhanden).
+5. **Dauer der Wirkung.** In 3.1a wirkt jeder angenommene Bau sofort im Weltzustand; die Bauaufträge mit Fortschritt durch Bauarbeiter (FR-011, Planungsmodus BAU-02) folgen in 3.1c – zu bestätigen, dass 3.1a die Sofortwirkung ohne Auftrag liefert und 3.1c sie auf Aufträge umstellt.
+
+Die Eingangsbedingung (Regel-007: berührte Bestandteile `[BELASTBAR]`, Datenmodell, S-2, S-4, S-5) ist erfüllt; die offenen Punkte sind Auslegung innerhalb der Verträge, deshalb kein Reifegrad-Rückschritt.
+
+### 2026-10-25 17:36 (UTC) – [PROBLEM-GELÖST]
+
+- **Dauerbau reproduziert und behoben (3.1a Teilaufgaben 1 und 5).** Gegen den unkorrigierten Code (nur mit Zählern, `a454f70`): 120 Bauaktionen alle 0,25 s, **0 Übernahmen in 210 s** (Zeitüberschreitung 180 s), bis zu **110 Neuberechnungen und 111 Schnappschuss-Kopien gleichzeitig**, 8 Feldsätze, **810 MB** Prozessspeicher. Ursache: Jedes `GridChanged` startete einen Auftrag, `Adoption` übernimmt nur die jüngste Revision, der Pool arbeitet in der Reihenfolge der Aufträge – die jüngste Anfrage steht immer hinter allen überholten, die zu Ende rechnen.
+- **Korrektur (`67d6bfe`):** `Wayfinding::step` merkt Änderungen als `dirty` und startet höchstens eine Neuberechnung zugleich; die Folgeanfrage startet mit der Übernahme. `dirty` in Spielstand (Format 3) und Prüfsumme. Danach: **13 Übernahmen** beim Bauen, längster Abstand **2,4 s**, letzter Stand nach **3,6 s**, **1** Neuberechnung, **3** Feldsätze, **2** Schnappschuss-Kopien, **223 MB**, Schritt p99 1,1 ms.
+- **Abweichung vom Entwurf:** Die Vorlage nennt als Ort der Korrektur auch `core/src/adoption.rs` („überholte Anfragen nicht weiterrechnen“). Eine überholte Anfrage entsteht jetzt gar nicht mehr, deshalb bleibt `Adoption` unverändert; seine Ersetzung gilt nur noch für ausdrückliche Anfragen (`Simulation::request_recompute`, Benchmarks und Tests).
+- **Einschränkung:** CI-Runner sind langsamer (Neuberechnung 2,5 s statt 1,5 s): Frist 8 s für den Abstand sind dort rechnerisch 2 × 2,5 s = 5 s; Spielraum vorhanden, aber nicht gemessen.
+
+### 2026-10-25 17:48 (UTC) – [BEOBACHTUNG]
+
+- **Lücke in der eigenen Prüfung:** Die Änderung von `ParamValue` (`b19d25b`) ließ `no-base-to-string` in `app/renderer/platform.ts` anschlagen, weil ich ESLint nur auf die geänderten Dateien statt auf das ganze Projekt laufen ließ. Behoben in `9eb36c9`. Seither läuft vor jedem Commit `npx eslint . --max-warnings 0`, `tsc --noEmit` und die gesamte Vitest-Suite; der pre-commit-Hook ist eingerichtet.
+- **Umgebung:** Container ohne `node_modules` und ohne `pre-commit`; beides nachinstalliert (Node 22.22.0 statt 26.11.1, nur für lokale Prüfungen; CI nutzt 26.11.1).
+
+### 2026-10-25 17:25 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 17:19 UTC (Vorlage 3.1 freigegeben, ADR-040/041). Code für 3.1a nicht begonnen.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Phase 3 mit Schritt 3.1, Vorlage `docs/research/3.1-vorlage.md`, Architektur 1/2/9, Decisions Teil A und C, aktive Blocker: keine).
+- **Modell:** eingestellt `claude-sonnet-5-5`, bedient `claude-sonnet-5-5` laut `get_session` 17:25 UTC → Routine-Klasse; passt zur Empfehlung für die Umsetzung von 3.1a (Entscheidungen gefallen, ADR-040/041). Kontingent: 5-Stunden-Fenster `allowed`.
+- **Branch:** `feat/3-1a-bauen-mit-wirkung-dauerbau` auf `b1ef134` (Sessionende-Commits der Vorsession übernommen nach `project-context.md` Abschnitt 10, `main` = `f4341c6` ist Vorfahre).
+- **Vorhaben:** 3.1a, Teilaufgabe 1 zuerst: Dauerbau-Benchmark gegen den heutigen Code (Reproduktion, ADR-041), dann Teilaufgaben 2–8 nach Vorlage Abschnitt 2.
+
+### 2026-10-25 17:19 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung 17:06 bis 17:19 UTC nach dem `[SESSIONENDE]` 17:05 UTC (gesamt 15:58 bis 17:19 UTC). Zeiten der Einträge dieser Fortsetzung nach den Commit-Zeiten berichtigt (`[ENTSCHEIDUNG-VORGELEGT]` war mit 17:35 geschätzt).
+- **Bearbeitet:** `[SESSIONENDE]` der 3.9-Session nachgetragen; Pflichtlektüre Architektur 1/2/9 und Decisions A/C nachgeholt; Vorlage 3.1 (`docs/research/3.1-vorlage.md`) vorgelegt und freigegeben.
+- **Erreicht:** ADR-040 (3.1 in drei Stufen 3.1a/3.1b/3.1c) und ADR-041 (Dauerbau-Benchmark im Job „Kern-Benchmark“, Frist 8 s, gezählte Grenze), beide freigegeben vom Projektinhaber am 2026-10-25 („E1 A und E2 A freigeben“). Reaktiv-Quote 4 / 10 (ADR-032 bis ADR-041), weiter über der Schwelle; Reflexion nach Regel-009 gilt. Gate in `project-context.md` Abschnitt 7 eingetragen, README „Nächste Schritte“ nachgezogen.
+- **Offen geblieben:** Umsetzung 3.1a; Code nicht begonnen.
+- **Nächster Schritt:** 3.1a in neuer Session (Anweisung „weiter in neuer Session“), zuerst Dauerbau-Benchmark gegen den heutigen Code (Reproduktion, ADR-041), dann Teilaufgaben nach Vorlage Abschnitt 2. Empfohlene Klasse für die Umsetzung: Routine (die Entscheidungen sind gefallen); neuer Branch vom aktuellen `main` bzw. Übernahme der Sessionende-Commits dieses Branches nach `project-context.md` Abschnitt 10.
+- **Aktive Klasse und Bilanz:** Teil 1 (bis 17:05) Routine (Sonnet 5.5), 0 Schritte oberhalb der Empfehlung; Teil 2 (ab 17:06) Entscheidung (Opus 5.5 nach `/model`), Vorlage 3.1 passend zur Empfehlung. Abgabe: Faktensammlung für die Vorlage an einen Unteragenten (Explore, gleiches Modell, kein günstigeres, da Probelauf offen), Ergebnis geprüft und in die Vorlage übernommen.
+- **Kontextgröße:** 426.947 Token laut `get_session` – **über der Grenze von 400.000**; Empfehlung: nächste Arbeit in neuer Session beginnen (vom Projektinhaber bereits so angewiesen).
+- **Ablaufdaten-Prüfung:** keine Änderung gegenüber 17:05 UTC.
+- **Drift-Check:** ADR-040/041 in Teil A und B, Fahrplan 3.1 mit Stufen und ADR-Verweisen, `project-context.md` Gate-Liste, README; Phasenumfang unverändert (Stufen zählen als ein Schritt).
+
+### 2026-10-25 17:18 (UTC) – [ADR-ANGELEGT]
+
+- **ADR-040** Schritt 3.1 in drei Stufen (`[OPERATIV]`, Methodik) und **ADR-041** Dauerbau-Benchmark als Schritt im CI-Job „Kern-Benchmark“ (`[OPERATIV]`, Kategorie 7); beide nicht `[REAKTIV]`. Freigabe: „E1 A und E2 A freigeben, weiter in neuer Session“.
+
+### 2026-10-25 17:12 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 3.1, Vorlage `docs/research/3.1-vorlage.md`.
+- **E1:** Aufteilung in 3.1a (Kern: Bauen mit Wirkung, Dauerbau, Format 3, `catalog`), 3.1b (S-1 Layout 2, Spielfeld, Bau-Werkzeug, `game.new`, Messungen, Grafik-Abnahme), 3.1c (Bauarbeiter); Empfehlung A.
+- **E2:** Dauerbau-Benchmark als Schritt im Job „Kern-Benchmark“ (Kategorie 7, Muster ADR-023), Frist 8 s zwischen Übernahmen (2 × Grenze der Neuberechnung), Grenze gezählt (1 laufende + 1 wartende Neuberechnung, ≤ 3 Feldsätze, ≤ 2 Schnappschüsse); Empfehlung A, Konfidenz mittel.
+- **Faktenlage:** von einem Unteragenten (Explore, gleiches Modell) aus Fahrplan, ADR-036 bis ADR-039, Schnittstellen, Research und Code zusammengetragen; Befunde (u. a. Korrektur auch in `wayfinding/mod.rs`, abweichender Bezug der Speicherschwelle in 3.8) in Abschnitt 1 und 4 der Vorlage.
+- **Klassifikation:** in der Phasenplanung vorgesehen (Fahrplan 3.1 nennt Kategorie 7) → nicht `[REAKTIV]`.
+
+### 2026-10-25 17:06 (UTC) – [SESSIONSTART]
+
+- **Anlass:** Fortsetzung derselben Claude-Code-Session nach dem `[SESSIONENDE]` 17:05 UTC; der Projektinhaber hat per `/model` gewechselt und angewiesen: „Modellwechsel durchgeführt, Sessionende nachholen, dann weiter mit 3.1“ (statt neuer Session).
+- **Modell:** eingestellt laut `get_session` `claude-sonnet-5-5` (Sessionanlage), aktuell `claude-opus-5-5` (`user_switched_model`), bedient `claude-opus-5-5` → Entscheidungs-Klasse. Passt zur Empfehlung von 3.1.
+- **Erledigt vorab:** `[SESSIONENDE]` der 3.9-Session nachgetragen (2026-10-22 01:18 UTC).
+- **Pflichtlektüre:** project-context vollständig (diese Session), Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und 3.1, Architektur 1/2/9, Decisions Teil A und C (jetzt nachgeholt), aktive Blocker: keine.
+- **Vorabprüfung 3.1:** Eingangskriterien erfüllt (Weltdarstellung `[BELASTBAR]` seit ADR-038, Kernstruktur 3.9 erledigt); Reaktiv-Quote 6 / 10 über der Schwelle, Reflexion nach Regel-009 gilt (Anlass ADR-038).
+- **Kontext:** 370.649 Token bei Wiederanlauf (Grenze 400.000); Hinweis an den Projektinhaber gegeben.
+- **Branch:** `claude/admiring-mayer-u95tfm` auf `main` (`f4341c6`) plus Sessionende-Commit `cd5d8ab`.
+
+### 2026-10-25 17:05 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 15:58 bis 17:05 UTC (rund 1 Stunde 10 Minuten).
+- **Bearbeitet:** Orientierung („was ist als nächstes dran?“), 3.10 (`main.ts` nach Zuständigkeiten geteilt), Q.4 (Audit-Advisories: `undici`, `fast-uri`, Electron 44.9.3), PR [#34](https://github.com/Paddel87/OpenAirside/pull/34) eröffnet und bei grüner CI gemergt (`f4341c6`).
+- **Erreicht:** 3.10 und Q.4 `[ERLEDIGT]`; CI auf dem PR komplett grün (17 Jobs, CodeQL, beide wöchentlichen Audits), Rauchtest auf drei Plattformen. Phase 3: 3.7, 3.8, 3.14, 3.15, 3.9, 3.10 erledigt.
+- **Offen geblieben:** Ein `[SESSIONENDE]` zur 3.9-Session (22:30 UTC am 2026-10-21) fehlte; am 2026-10-25 auf Anweisung nachgetragen (unten, 2026-10-22 01:18 UTC). Probeläufe für Mechanik- und Routine-Klasse (`project-context.md` Abschnitt 6) bleiben offen.
+- **Nächster Schritt:** 3.1 Bauen im Raster, Bauaufträge sofort sichtbar, Dauerbau, in neuer Session auf Anweisung des Projektinhabers („Weiter mit 3.1 in neuer Session“). Empfohlene Klasse laut Fahrplan: Entscheidung (Bewertung der NFR „Bauaktion im nächsten Bild“, Frist und Grenze des Dauerbau-Benchmarks in der Vorlage vor dem Code, ggf. neues CI-Gate = Kategorie 7); Umsetzung ist Routine und abgebbar. Neuer Branch vom aktuellen `main` (`f4341c6`); der Branch dieser Session ist gemergt.
+- **Aktive Klasse und Bilanz:** Routine-Klasse (Sonnet 5.5 laut `get_session`, bedient und eingestellt gleich). Schritte oberhalb der Empfehlung: 0 (3.10 und Q.4 sind Routine). Abgegebene Teilarbeiten: keine, Probelauf offen.
+- **Kontextgröße:** 364.016 Token (Grenze 400.000, nicht überschritten); neue Session für 3.1 trotzdem sinnvoll, da 3.1 groß ist.
+- **Ablaufdaten-Prüfung:** Electron 44 (Lebensende 2027-03-02, Vorlauf ab 2027-01-02) noch nicht erreicht, Q.1 offen mit Frist 2027-01-02; keine neuen Einträge fällig. Drift-Check: Fahrplan, Architektur (Modul Plattform), README, `project-context.md` abgeglichen; Archivierungs-Trigger nicht erreicht (Logbuch unter 800 Zeilen).
+- **Beobachtung:** Der Container-npm (10.9.4) schreibt Lockfiles anders als das npm zu Node 26 (entfernt `libc`-Felder); Lockfile-Änderungen im Container deshalb gezielt vornehmen oder im Container Node 26 nutzen.
 
 ### 2026-10-25 16:45 (UTC) – [GELÖST]
 
@@ -45,6 +215,18 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 - **Modell:** eingestellt `claude-sonnet-5-5`, bedient `claude-sonnet-5-5` laut `get_session` 16:00 UTC → Routine-Klasse. Passt zur Empfehlung von 3.10 (Routine).
 - **Pflichtlektüre:** vollständig (project-context, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Schritt 3.10, Blocker: keine aktiven; Architektur und Decisions für die reine Orientierung nicht nötig).
 - **Branch:** `claude/admiring-mayer-u95tfm` auf dem Stand von `main` (`ec5f349`), vom Werkzeug vergeben.
+
+### 2026-10-22 01:18 (UTC) – [SESSIONENDE] (nachgetragen am 2026-10-25)
+
+- **Hinweis:** Nachgetragen in der Session vom 2026-10-25 auf Anweisung des Projektinhabers („Sessionende nachholen“). Quellen: Commits `3431e91` bis `ec5f349` und der `[BEOBACHTUNG]`-Eintrag 2026-10-21 23:20 UTC. Was diese Quellen nicht hergeben, steht als „nicht überliefert“.
+- **Session-Dauer:** 2026-10-21 22:30 UTC (Sessionstart) bis 23:10 UTC (letzter Commit `3790d2c`); Merge von PR #33 am 2026-10-22 01:18 UTC (`ec5f349`).
+- **Bearbeitet:** 3.9 Kernstruktur der Fachmodule: Vorlage (`3431e91`), ADR-039 (`fd2e6e4`, Option B gegen Empfehlung A), Umbau (`383f545`), Dokumente (`3308f96`), Abschluss (`3790d2c`).
+- **Erreicht:** 3.9 `[ERLEDIGT]` (ADR-039), Zustands-Prüfsumme vor und nach dem Umbau gleich (`f8580b54e3165422`), CI auf PR #33 grün, gemergt.
+- **Offen geblieben:** nicht überliefert über den Fahrplan hinaus; nächster Schritt laut Fahrplan war 3.10.
+- **Nächster Schritt:** 3.10 (erledigt am 2026-10-25).
+- **Aktive Klasse und Bilanz:** Entscheidungs-Klasse (Opus 5.5 laut `[SESSIONSTART]`); Umbau (Routine) lief oberhalb seiner Empfehlung, keine Abgabe (laut `[BEOBACHTUNG]`). Zahl der Schritte oberhalb der Empfehlung: 1 Teilarbeit (Umbau in 3.9; der Schritt selbst ist Entscheidung).
+- **Kontextgröße:** nicht überliefert (zum Zeitpunkt nicht erfasst).
+- **Ablaufdaten-Prüfung:** nicht überliefert; bei der Prüfung am 2026-10-25 war kein Eintrag fällig.
 
 ### 2026-10-21 23:20 (UTC) – [BEOBACHTUNG]
 

@@ -10,10 +10,11 @@
 use rayon::ThreadPool;
 
 use crate::adoption::AdoptionMode;
-use crate::build::grid::{Cell, GridError, Zone};
+use crate::build::grid::{AreaKind, Cell, GridError, Zone};
+use crate::build::objects::BuildRefusal;
 use crate::build::target::Target;
 use crate::build::{Blocks, Build, BuildSnapshot, SavedBuild};
-use crate::geometry::{CellPos, CellRect, MapSize};
+use crate::geometry::{CellPos, CellRect, MapSize, Rotation};
 use crate::hash::StateHasher;
 use crate::internal::{Entry, InternalEvents, Stage};
 use crate::persons::{Person, Persons, SplitMix64};
@@ -146,6 +147,73 @@ impl World {
             .set_walls(rect, wall, &mut self.events, Stage::Commands)
     }
 
+    /// Places a single object as a command (S-2); with `blocks` the flow
+    /// fields follow through the internal event of the module "Welt & Bau".
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::build_object`].
+    #[allow(clippy::too_many_arguments)] // mirrors `Build::build_object`
+    pub fn build_object(
+        &mut self,
+        type_id: &str,
+        size: (u16, u16),
+        blocks: bool,
+        at: CellPos,
+        rotation: Rotation,
+    ) -> Result<u32, BuildRefusal> {
+        self.build.build_object(
+            type_id,
+            size,
+            blocks,
+            at,
+            rotation,
+            &mut self.events,
+            Stage::Commands,
+        )
+    }
+
+    /// Draws a floor as a command (S-2).
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::build_floor`].
+    pub fn build_floor(
+        &mut self,
+        type_id: &str,
+        area_kind: AreaKind,
+        cost: u8,
+        rect: CellRect,
+    ) -> Result<(), BuildRefusal> {
+        self.build.build_floor(
+            type_id,
+            area_kind,
+            cost,
+            rect,
+            &mut self.events,
+            Stage::Commands,
+        )
+    }
+
+    /// Draws a wall as a command (S-2).
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::build_wall`].
+    pub fn build_wall(&mut self, type_id: &str, rect: CellRect) -> Result<(), BuildRefusal> {
+        self.build
+            .build_wall(type_id, rect, &mut self.events, Stage::Commands)
+    }
+
+    /// Demolishes everything in `rect` as a command (S-2).
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::demolish`].
+    pub fn demolish(&mut self, rect: CellRect) -> Result<(), BuildRefusal> {
+        self.build.demolish(rect, &mut self.events, Stage::Commands)
+    }
+
     /// Starts a session: adoption of the flow fields with `mode`.
     pub(crate) fn reset_adoption(&mut self, mode: AdoptionMode) {
         self.wayfinding.reset(mode);
@@ -170,7 +238,8 @@ impl World {
     /// the simulation step of a module runs only if `running`. Returns the
     /// revision of adopted flow fields.
     ///
-    /// - "Welt & Bau": no events and no step of its own yet (3.1).
+    /// - "Welt & Bau": no events and no step of its own (building happens
+    ///   in the commands).
     /// - "Wegfindung": recomputation for changed grids, then adoption of a
     ///   result that is due.
     /// - "Personen": movement and target choice.
@@ -239,6 +308,11 @@ pub(crate) struct RestoredWorld {
 }
 
 impl RestoredWorld {
+    /// Full ids of the object types the world refers to.
+    pub fn type_ids(&self) -> &[String] {
+        self.build.types().ids()
+    }
+
     /// Structural checks of the modules in their order.
     ///
     /// # Errors

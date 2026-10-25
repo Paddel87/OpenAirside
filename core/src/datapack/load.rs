@@ -24,7 +24,8 @@ use super::catalog::{ActivePack, Catalog, ObjectType};
 use super::files::{ContentFile, Folder, Kind, MANIFEST};
 use super::languages::{Languages, is_language_code, is_text_key};
 use super::model::{
-    LangFile, LanguageEntry, Manifest, ObjectEntry, ObjectsFile, Placement, PlacementKind,
+    Effect, EffectKind, LangFile, LanguageEntry, Manifest, ObjectEntry, ObjectsFile, Placement,
+    PlacementKind,
 };
 use super::scan::{self, Limit, Limits, MAX_PATH_CHARS, truncate};
 use super::{
@@ -32,6 +33,7 @@ use super::{
     MAX_STRING_CHARS, PackError, PackReport, PackSource, PackState, code, error, is_entry_id,
     is_pack_id, limit_error,
 };
+use crate::build::grid::{COST_NORMAL, MAX_COST};
 use crate::text::Reason;
 
 /// Limits of a JSON document (S-4).
@@ -153,6 +155,7 @@ pub fn load(folders: &[PackFolder], active: &[String], game: &Version) -> LoadOu
         .iter()
         .any(|p| p.report.source == PackSource::Base && p.report.state != PackState::Active);
     catalog.set_base_failed(base_failed);
+    catalog.finish();
     LoadOutcome {
         catalog,
         languages,
@@ -822,6 +825,7 @@ impl Stage<'_> {
             self.at(file, &format!("{path}.name"), error(code::INVALID_VALUE));
         }
         let placement = self.check_placement(file, &format!("{path}.placement"), entry.placement);
+        let effect = self.check_effect(file, path, &entry, placement);
         if let Some(target) = &entry.replaces {
             self.check_replace(file, &format!("{path}.replaces"), target, &full);
         }
@@ -832,7 +836,76 @@ impl Stage<'_> {
                 id: full,
                 name: entry.name,
                 placement,
+                effect,
+                blocks: entry
+                    .blocks
+                    .unwrap_or(matches!(placement, Placement::Single { .. })),
             });
+        }
+    }
+
+    /// Stage 2 of `effect` and `blocks` (ADR-042): an `area` object has an
+    /// `effect` and no `blocks`, a `single` object the other way round; a
+    /// floor has `areaKind` and `cost` in range, a wall neither.
+    fn check_effect(
+        &mut self,
+        file: &str,
+        path: &str,
+        entry: &ObjectEntry,
+        placement: Option<Placement>,
+    ) -> Option<Effect> {
+        let misplaced = |this: &mut Self, field: &str, detail: &str| {
+            let reason = error(code::INVALID_STRUCTURE).with_text("detail", detail);
+            this.at(file, &format!("{path}.{field}"), reason);
+        };
+        match placement? {
+            Placement::Single { .. } => {
+                if entry.effect.is_some() {
+                    misplaced(self, "effect", "`effect` is only allowed for kind `area`");
+                }
+                None
+            }
+            Placement::Area {} => {
+                if entry.blocks.is_some() {
+                    misplaced(self, "blocks", "`blocks` is only allowed for kind `single`");
+                }
+                let Some(spec) = entry.effect else {
+                    let reason = error(code::INVALID_STRUCTURE)
+                        .with_text("detail", "missing field `effect`");
+                    self.at(file, path, reason);
+                    return None;
+                };
+                match spec.kind {
+                    EffectKind::Wall => {
+                        for (field, present) in [
+                            ("areaKind", spec.area_kind.is_some()),
+                            ("cost", spec.cost.is_some()),
+                        ] {
+                            if present {
+                                misplaced(
+                                    self,
+                                    &format!("effect.{field}"),
+                                    &format!("`{field}` is only allowed for kind `floor`"),
+                                );
+                            }
+                        }
+                        Some(Effect::Wall {})
+                    }
+                    EffectKind::Floor => {
+                        let cost = spec.cost.unwrap_or(COST_NORMAL);
+                        if !(1..=MAX_COST).contains(&cost) {
+                            let reason = error(code::INVALID_VALUE)
+                                .with_number("min", 1.0)
+                                .with_number("max", f64::from(MAX_COST));
+                            self.at(file, &format!("{path}.effect.cost"), reason);
+                        }
+                        Some(Effect::Floor {
+                            area_kind: spec.area_kind.unwrap_or_default(),
+                            cost,
+                        })
+                    }
+                }
+            }
         }
     }
 
