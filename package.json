@@ -44,7 +44,7 @@
     "@playwright/test": "1.62.1",
     "@types/node": "24.19.2",
     "@vitest/coverage-v8": "5.0.4",
-    "electron": "44.7.0",
+    "electron": "44.9.3",
     "electron-builder": "26.16.1",
     "eslint": "10.9.1",
     "prettier": "3.9.10",

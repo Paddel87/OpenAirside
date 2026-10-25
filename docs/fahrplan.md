@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-21 (Session ab 22:30 UTC, Schritt 3.9 erledigt)
+- **Stand vom:** 2026-10-25 (Session ab 16:00 UTC, Schritte 3.10 und Q.4 erledigt)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (3.9 erledigt am 2026-10-21, ADR-039)
-- **Nächster Schritt:** 3.10 Plattform: `main.ts` nach Zuständigkeiten teilen
+- **Aktiver Schritt:** keiner (3.10 und Q.4 erledigt am 2026-10-25)
+- **Nächster Schritt:** 3.1 Bauen im Raster, Bauaufträge sofort sichtbar, Dauerbau
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 6 / 10 (ADR-030 bis ADR-039) über dem Schwellenwert; Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
@@ -199,7 +199,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.10: Plattform: `main.ts` nach Zuständigkeiten teilen
 
-- **Status:** OFFEN
+- **Status:** ERLEDIGT (2026-10-25)
 - **Phasentyp-Kontext:** UMSETZUNG (Refactoring innerhalb des Moduls)
 - **Abhängigkeiten:** keine (vor 3.1, weil 3.1 `game.new` in `main.ts` hinzufügt)
 - **Freigabepflichtig:** nein (lokales Refactoring, öffentliche Schnittstellen S-6 und S-8 unverändert)
@@ -211,6 +211,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Plattform; Takt & Weltzustand nur für den Kommentar in `scenario.rs`
 - **Reifegrad-Wirkung:** keine
 - **Artefakte:** Plattform-Module, Tests
+- **Ergebnis (2026-10-25):** `main.ts` teilt sich von 1133 auf 522 Zeilen und enthält keinen Dateizugriff mehr (kein `node:fs`-Import). Neue Module ohne Electron-Import: `files.ts`, `save-files.ts`, `saves-service.ts`, `settings-file.ts`, `settings-service.ts`, `packs-file.ts`, `packs-service.ts`, `operation-lock.ts`; Handler und Zustand von `saves.*`, `settings.*`, `lang.*` und `packs.*` wanderten mit. Kern-Prozess-Anfragen, Fenster, Absenderprüfung, Messwerkzeug und Logdatei-Verdrahtung bleiben in `main.ts`. Begründungs-Kommentar an `#[allow(clippy::type_complexity)]` in `core/src/scenario.rs` nachgetragen. S-6 und S-8 unverändert. Eine kleine Härtung nebenbei: die offene Antwort von `packs.setActive` ist als behandelt markiert, damit ein Kern-Ende während des Schreibens der Auswahl keine unbehandelte Ablehnung erzeugt (gleiches Verhalten für den Aufrufer).
+- **Belege (lokal, 2026-10-25):** Vitest 433 Tests grün, gesamt 88,33 % Lines; neue Module: `files.ts` 100 %, `packs-service.ts` 100 %, `saves-service.ts` 98,73 %, `save-files.ts` 93,24 %, `settings-file.ts` 90 %, `settings-service.ts`, `packs-file.ts`, `operation-lock.ts` je 100 % Lines; ESLint, Prettier, `tsc`, rustfmt und clippy ohne Befund; Rauchtest (Playwright mit Electron 44, Linux, virtueller Bildschirm) grün. CI: Push-Lauf 40212258539 auf `7197730` grün (alle Jobs, darunter Rauchtest auf drei Plattformen, Rust- und TS-Tests auf drei Plattformen, Audit); der Audit-Job war vorher durch neue Advisories rot (Q.4).
 
 #### 3.1: Bauen im Raster, Bauaufträge sofort sichtbar, Dauerbau
 
@@ -418,6 +420,23 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** keine
 - **Artefakte:** Versions-Tabelle, Folge-ADR, aktualisierte Register
 - **Notizen:** Nach dem ersten Lauf wird ein neuer Q.1-Termin mit der nächsten Frist angelegt.
+
+#### Q.4: Audit-Advisories vom 2026-10-25 beheben (undici, fast-uri, Electron)
+
+- **Status:** ERLEDIGT (2026-10-25)
+- **Phasentyp-Kontext:** STABILISIERUNG (Querschnitt)
+- **Abhängigkeiten:** keine
+- **Freigabepflichtig:** nein (Versions-Updates ohne Major-Wechsel und ohne Breaking Changes, `CLAUDE.md` Abschnitt 4 Nr. 3); Auftrag des Projektinhabers vom 2026-10-25 („Ja, behebe die Audit-Advisories in einem eigenen Schritt“)
+- **Empfohlene Klasse:** Routine – klar umrissene Anhebung von Patch-Versionen mit Prüfung durch die vorhandenen Gates.
+- **Eingangskriterien:** Job „TS Dependency-Audit & Lizenzen“ rot durch neue Advisories (Lauf 40209477968 auf `2f76ec1`, Logbuch 2026-10-25)
+- **Anforderungen (ab Klasse M):** – (Wartung)
+- **Zu tun:** `undici` (high, Transitiv-Abhängigkeit, auch unter `node-gyp`) und `fast-uri` (moderate) im Lockfile anheben (`npm audit fix`, ohne Änderung von `package.json`); Electron 44.7.0 → 44.9.3 (Advisory GHSA-jr5w-w6x2-84p9, betroffen 44.0.0-alpha.1 bis 44.9.0) in `package.json` und `docs/project-context.md` Abschnitt 3; Hinweise zu Node- und Chromium-Version der neuen Electron-Version prüfen.
+- **Akzeptanzkriterien:** `npm audit --audit-level=high` ohne Befund; Lint, Typen, Tests, Lizenzprüfung und Rauchtest grün; CI grün auf drei Plattformen; Warnungs-Bestand in `project-context.md` Abschnitt 7 aktuell.
+- **Betroffene Module:** Build/CI, Plattform
+- **Reifegrad-Wirkung:** keine
+- **Artefakte:** `package.json`, `package-lock.json`, `docs/project-context.md`
+- **Ergebnis (2026-10-25):** `undici` 7.30.0 → 7.30.1 und 6.29.0 → 6.29.1 (unter `node-gyp`), `fast-uri` 3.1.8 → 3.1.9, Electron 44.7.0 → 44.9.3 (Node 24.21.0 → 24.22.0, Chromium 152 und Node-API 10 unverändert). Im Lockfile nur diese Einträge geändert (Versionen, `resolved`, `integrity`); `package.json` nur Electron. Der Container-npm 10.9.4 hätte beim Neuschreiben die `libc`-Felder des Lockfiles entfernt (Plattformwahl für native Pakete); deshalb wurde das Lockfile gezielt angepasst, nicht neu erzeugt. Die Spike-Ordner `spikes/*` bleiben bei 44.7.0 (eingefroren, Messprotokolle). Der frühere Hinweis auf 8 „moderate“-Meldungen zu `sprintf-js` entfällt, `npm audit` meldet jetzt nichts mehr.
+- **Belege (lokal, 2026-10-25):** `npm ci` aus dem geänderten Lockfile; `npm audit --audit-level=high`: 0 Schwachstellen; `scripts/check-licenses.mjs`: 546 Pakete ok; ESLint, `tsc`, Vitest (433 Tests) grün; Rauchtest mit Electron 44.9.3 (Linux, Xvfb) grün. CI: Push-Lauf 40212258539 auf `7197730` grün, Job „TS Dependency-Audit & Lizenzen“ eingeschlossen.
 
 #### Q.3: Toolchain in den Workflows mit `rustup toolchain install`
 

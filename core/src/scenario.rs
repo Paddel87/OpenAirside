@@ -75,6 +75,8 @@ impl Dense {
 
 /// Builds the dense terminal and the targets (as dense coordinates) and the
 /// entrance cells.
+// The three results of the one-off scenario builder are used once, by `reference_terminal`; a named
+// struct would only rename the tuple (fahrplan-ref: 3.10).
 #[allow(clippy::type_complexity)]
 fn build_dense(
     edge: usize,

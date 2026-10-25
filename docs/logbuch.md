@@ -17,12 +17,34 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, nächster Schritt 3.10.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, nächster Schritt 3.1.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-25 16:45 (UTC) – [GELÖST]
+
+- **CI grün:** Push-Lauf 40212258539 auf `7197730` (Q.4 und 3.10) erfolgreich, auch der Job „TS Dependency-Audit & Lizenzen“. Damit sind 3.10 und Q.4 `[ERLEDIGT]`.
+- **Q.4:** Electron 44.9.3, `undici` 7.30.1/6.29.1, `fast-uri` 3.1.9; Lockfile gezielt angepasst, weil npm 10.9.4 die `libc`-Felder entfernt hätte (Container-npm älter als das npm zu Node 26). Spike-Ordner bleiben bei 44.7.0.
+
+### 2026-10-25 16:30 (UTC) – [BEOBACHTUNG]
+
+- **3.10 umgesetzt (`6d62de4`, `615e63e`):** `main.ts` von 1133 auf 522 Zeilen, kein Dateizugriff mehr; acht neue Module mit Tests (Details und Belege im Fahrplan, Schritt 3.10). Verhalten von S-6 und S-8 unverändert; Rauchtest lokal (Linux, Xvfb, Electron 44) grün, vorher Kern, Atlanten, Hauptprozess und Oberfläche frisch gebaut.
+- **Reibung, gelöst:** Die ersten Service-Tests schlugen fehl, weil `save`, `load`, `delete`, `preview` und `setActive` bei ungültigem Argument synchron warfen statt abzulehnen; die ursprünglichen `async function` hatten das verdeckt. Die Methoden sind wieder `async`.
+- **Fund, behoben:** Wird die Antwort-Promise von `packs.setActive` abgelehnt (Kern-Ende, Zeitgrenze), solange die Auswahl-Datei noch geschrieben wird, war sie ohne Handler (unbehandelte Ablehnung im Hauptprozess). Kleine Härtung in `packs-service.ts`; der Aufrufer sieht dasselbe Ergebnis.
+- **Werkzeuge im Container:** `npm ci` unter Node 22.22.0 (Projekt verlangt ≥ 26.11.1) lief ohne Fehler für Lint, Typen, Tests, Build und Rauchtest; `check:types` und `check:schema` nicht ausgeführt (brauchen Node 26, nicht berührt). pre-commit installiert.
+- **CI rot, nicht durch diesen Schritt:** Der Job „TS Dependency-Audit & Lizenzen“ ist seit dem ersten Push dieser Session rot (auch beim reinen Logbuch-Commit `2f76ec1`, Lauf 40209477968). `npm audit --audit-level=high` meldet `undici` (high, 2 Pfade: `node_modules/undici`, `node-gyp/node_modules/undici`), dazu `fast-uri` (moderate) und eine Electron-Meldung; auf `main` war der Lauf am 2026-10-21 grün, die Advisories sind neu. Lockfile unverändert durch diese Session. Behebung ist ein eigener Schritt (Vorschlag an den Projektinhaber).
+- **Modell-Arbeit:** Umbau und Tests (Routine) liefen auf der Routine-Klasse (Sonnet 5.5), keine Abgabe, Probelauf offen.
+
+### 2026-10-25 16:00 (UTC) – [SESSIONSTART]
+
+- **Anlass:** Frage des Projektinhabers „Neue Session, was ist als nächstes dran?“; bisher nur Orientierung, keine Umsetzung.
+- **Letzter Stand:** 3.9 erledigt (ADR-039, PR #33 gemergt, `ec5f349`). Ein `[SESSIONENDE]`-Eintrag zur 3.9-Session fehlt; letzter vorhandener ist 2026-10-21 01:17 UTC, danach nur `[BEOBACHTUNG]` 23:20 UTC.
+- **Modell:** eingestellt `claude-sonnet-5-5`, bedient `claude-sonnet-5-5` laut `get_session` 16:00 UTC → Routine-Klasse. Passt zur Empfehlung von 3.10 (Routine).
+- **Pflichtlektüre:** vollständig (project-context, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Schritt 3.10, Blocker: keine aktiven; Architektur und Decisions für die reine Orientierung nicht nötig).
+- **Branch:** `claude/admiring-mayer-u95tfm` auf dem Stand von `main` (`ec5f349`), vom Werkzeug vergeben.
 
 ### 2026-10-21 23:20 (UTC) – [BEOBACHTUNG]
 
