@@ -30,7 +30,7 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 3: Vertikaler Schnitt „Kleiner Flughafen“ (UMSETZUNG), Entwurfsschritte 3.7 (Personengruppen, Begehbarkeit und Querungen, ADR-037) und 3.8 (Weltdarstellung im Spielfeld, ADR-038) sowie die Messung 3.14, die Korrektur 3.15 (Ruckeln unter Windows) und der Umbau 3.9 (Kernstruktur der Fachmodule, ADR-039) erledigt; Phase 2 (Fundament: Projektgerüst und CI, Weltmaßstab, Schnittstellenverträge, Takt, Raster und Wegweiser, Brücke und Plattform, Datenpakete, Spielstände, Lokalisierung, Grafik-Pipeline) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036); Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
+- **Projektphase:** Phase 3: Vertikaler Schnitt „Kleiner Flughafen“ (UMSETZUNG), Entwurfsschritte 3.7 (Personengruppen, Begehbarkeit und Querungen, ADR-037) und 3.8 (Weltdarstellung im Spielfeld, ADR-038) sowie die Messung 3.14, die Korrektur 3.15 (Ruckeln unter Windows) und die Umbauten 3.9 (Kernstruktur der Fachmodule, ADR-039) und 3.10 (Aufteilung der Plattform-Datei `main.ts`) erledigt; Phase 2 (Fundament: Projektgerüst und CI, Weltmaßstab, Schnittstellenverträge, Takt, Raster und Wegweiser, Brücke und Plattform, Datenpakete, Spielstände, Lokalisierung, Grafik-Pipeline) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036); Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-20
@@ -95,7 +95,6 @@ Sprache und Einstellungen: Die Oberfläche gibt es auf Deutsch und Englisch, bei
 
 ## Nächste Schritte
 
-- Umbau vor dem ersten Bauen: 3.10 (Aufteilung der Plattform-Datei `main.ts`)
 - 3.1: Bauen im Raster mit sofort sichtbaren Bauaufträgen, auch bei schnellem Dauerbau
 
 → Vollständiger Fahrplan: [`docs/fahrplan.md`](docs/fahrplan.md)

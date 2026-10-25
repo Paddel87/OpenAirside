@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-21 (Session ab 22:30 UTC, Schritt 3.9 erledigt)
+- **Stand vom:** 2026-10-25 (Session ab 16:00 UTC, Schritt 3.10 umgesetzt, CI-Abschluss offen)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (3.9 erledigt am 2026-10-21, ADR-039)
-- **Nächster Schritt:** 3.10 Plattform: `main.ts` nach Zuständigkeiten teilen
+- **Aktiver Schritt:** 3.10 Plattform: `main.ts` nach Zuständigkeiten teilen (begonnen 2026-10-25; umgesetzt, wartet auf grüne CI: Job „TS Dependency-Audit & Lizenzen“ rot durch neue Advisories, nicht durch den Schritt)
+- **Nächster Schritt:** nach 3.10: 3.1 Bauen im Raster
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 6 / 10 (ADR-030 bis ADR-039) über dem Schwellenwert; Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
@@ -199,7 +199,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.10: Plattform: `main.ts` nach Zuständigkeiten teilen
 
-- **Status:** OFFEN
+- **Status:** IN ARBEIT
 - **Phasentyp-Kontext:** UMSETZUNG (Refactoring innerhalb des Moduls)
 - **Abhängigkeiten:** keine (vor 3.1, weil 3.1 `game.new` in `main.ts` hinzufügt)
 - **Freigabepflichtig:** nein (lokales Refactoring, öffentliche Schnittstellen S-6 und S-8 unverändert)
@@ -211,6 +211,8 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Plattform; Takt & Weltzustand nur für den Kommentar in `scenario.rs`
 - **Reifegrad-Wirkung:** keine
 - **Artefakte:** Plattform-Module, Tests
+- **Ergebnis (2026-10-25):** `main.ts` teilt sich von 1133 auf 522 Zeilen und enthält keinen Dateizugriff mehr (kein `node:fs`-Import). Neue Module ohne Electron-Import: `files.ts`, `save-files.ts`, `saves-service.ts`, `settings-file.ts`, `settings-service.ts`, `packs-file.ts`, `packs-service.ts`, `operation-lock.ts`; Handler und Zustand von `saves.*`, `settings.*`, `lang.*` und `packs.*` wanderten mit. Kern-Prozess-Anfragen, Fenster, Absenderprüfung, Messwerkzeug und Logdatei-Verdrahtung bleiben in `main.ts`. Begründungs-Kommentar an `#[allow(clippy::type_complexity)]` in `core/src/scenario.rs` nachgetragen. S-6 und S-8 unverändert. Eine kleine Härtung nebenbei: die offene Antwort von `packs.setActive` ist als behandelt markiert, damit ein Kern-Ende während des Schreibens der Auswahl keine unbehandelte Ablehnung erzeugt (gleiches Verhalten für den Aufrufer).
+- **Belege (lokal, 2026-10-25):** Vitest 433 Tests grün, gesamt 88,33 % Lines; neue Module: `files.ts` 100 %, `packs-service.ts` 100 %, `saves-service.ts` 98,73 %, `save-files.ts` 93,24 %, `settings-file.ts` 90 %, `settings-service.ts`, `packs-file.ts`, `operation-lock.ts` je 100 % Lines; ESLint, Prettier, `tsc`, rustfmt und clippy ohne Befund; Rauchtest (Playwright mit Electron 44, Linux, virtueller Bildschirm) grün. Windows/macOS-Rauchtest und CI: siehe Stand unten.
 
 #### 3.1: Bauen im Raster, Bauaufträge sofort sichtbar, Dauerbau
 
