@@ -24,6 +24,14 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 17:35 (UTC) – [ENTSCHEIDUNG-VORGELEGT]
+
+- **Schritt:** 3.1, Vorlage `docs/research/3.1-vorlage.md`.
+- **E1:** Aufteilung in 3.1a (Kern: Bauen mit Wirkung, Dauerbau, Format 3, `catalog`), 3.1b (S-1 Layout 2, Spielfeld, Bau-Werkzeug, `game.new`, Messungen, Grafik-Abnahme), 3.1c (Bauarbeiter); Empfehlung A.
+- **E2:** Dauerbau-Benchmark als Schritt im Job „Kern-Benchmark“ (Kategorie 7, Muster ADR-023), Frist 8 s zwischen Übernahmen (2 × Grenze der Neuberechnung), Grenze gezählt (1 laufende + 1 wartende Neuberechnung, ≤ 3 Feldsätze, ≤ 2 Schnappschüsse); Empfehlung A, Konfidenz mittel.
+- **Faktenlage:** von einem Unteragenten (Explore, gleiches Modell) aus Fahrplan, ADR-036 bis ADR-039, Schnittstellen, Research und Code zusammengetragen; Befunde (u. a. Korrektur auch in `wayfinding/mod.rs`, abweichender Bezug der Speicherschwelle in 3.8) in Abschnitt 1 und 4 der Vorlage.
+- **Klassifikation:** in der Phasenplanung vorgesehen (Fahrplan 3.1 nennt Kategorie 7) → nicht `[REAKTIV]`.
+
 ### 2026-10-25 17:10 (UTC) – [SESSIONSTART]
 
 - **Anlass:** Fortsetzung derselben Claude-Code-Session nach dem `[SESSIONENDE]` 17:05 UTC; der Projektinhaber hat per `/model` gewechselt und angewiesen: „Modellwechsel durchgeführt, Sessionende nachholen, dann weiter mit 3.1“ (statt neuer Session).

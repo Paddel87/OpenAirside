@@ -8,10 +8,10 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-25 (Session ab 16:00 UTC, Schritte 3.10 und Q.4 erledigt)
+- **Stand vom:** 2026-10-25 (Session ab 16:00 UTC, 3.10 und Q.4 erledigt, Vorlage 3.1 vorgelegt)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner (3.10 und Q.4 erledigt am 2026-10-25)
+- **Aktiver Schritt:** 3.1 wartet auf Freigabe der Vorlage (E1, E2)
 - **Nächster Schritt:** 3.1 Bauen im Raster, Bauaufträge sofort sichtbar, Dauerbau
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 6 / 10 (ADR-030 bis ADR-039) über dem Schwellenwert; Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
@@ -216,7 +216,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### 3.1: Bauen im Raster, Bauaufträge sofort sichtbar, Dauerbau
 
-- **Status:** OFFEN
+- **Status:** WARTET-AUF-FREIGABE (Vorlage `docs/research/3.1-vorlage.md`, vorgelegt 2026-10-25: E1 Aufteilung in Stufen, E2 Dauerbau-Benchmark als CI-Gate)
 - **Phasentyp-Kontext:** UMSETZUNG
 - **Abhängigkeiten:** 3.7, 3.8, 3.9, 3.10, 3.14
 - **Freigabepflichtig:** ja, falls der Dauerbau-Benchmark als CI-Gate kommt (Kategorie 7); sonst nein (Verträge aus ADR-032)
