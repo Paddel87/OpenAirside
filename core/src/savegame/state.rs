@@ -117,6 +117,11 @@ pub(crate) struct Restored {
 }
 
 impl Restored {
+    /// Full ids of the object types the loaded world refers to.
+    pub fn type_ids(&self) -> &[String] {
+        self.world.type_ids()
+    }
+
     /// Computes the flow fields in use on `background` and builds the world;
     /// an open recomputation starts again with adoption in `mode`.
     ///
@@ -327,6 +332,98 @@ mod tests {
         fails(s.clone(), "invalidState", "table");
         s.wayfinding.pending.as_mut().unwrap().input.grid = pending_grid;
         assert!(restore(s, EDGES).is_ok());
+    }
+
+    /// The simulation of `simulation()` with a blocking bench at (10, 10)
+    /// and a fern that does not block at (20, 20).
+    fn furnished() -> SavedState {
+        use crate::geometry::Rotation;
+        use crate::internal::{InternalEvents, Stage};
+        let mut sim = simulation();
+        let mut events = InternalEvents::default();
+        let build = sim.world_mut().build_mut();
+        for (id, at, blocks) in [("base:bench", 10, true), ("plants:fern", 20, false)] {
+            build
+                .build_object(
+                    id,
+                    (2, 1),
+                    blocks,
+                    CellPos {
+                        x: at,
+                        y: at,
+                        floor: 0,
+                    },
+                    Rotation(0),
+                    &mut events,
+                    Stage::Commands,
+                )
+                .unwrap();
+        }
+        sim.save_snapshot().to_saved()
+    }
+
+    #[test]
+    fn objects_and_types_are_checked() {
+        let s = furnished();
+        assert_eq!(s.build.types, ["base:bench", "plants:fern"]);
+        assert_eq!(s.build.objects.len(), 2);
+        assert!(restore(s.clone(), EDGES).is_ok());
+
+        let mut bad = s.clone();
+        bad.build.types[1] = "base:bench".into();
+        fails(bad, "invalidState", "types");
+        let mut bad = s.clone();
+        bad.build.types[0].clear();
+        fails(bad, "invalidState", "types");
+        let mut bad = s.clone();
+        bad.build.types = vec!["x".into(); crate::build::objects::MAX_TYPES + 1];
+        fails(bad, "limitExceeded", "types");
+        // Cells may only refer to types of the table.
+        let mut bad = s.clone();
+        bad.blocks[0].floor_kind[0] = 3;
+        fails(bad, "invalidState", "blockKind");
+        let mut bad = s.clone();
+        bad.blocks[0].wall_kind[0] = 3;
+        fails(bad, "invalidState", "blockKind");
+
+        let mut bad = s.clone();
+        bad.build.objects[0].ty = 0;
+        fails(bad, "invalidState", "objects");
+        let mut bad = s.clone();
+        bad.build.objects[0].ty = 3;
+        fails(bad, "invalidState", "objects");
+        let mut bad = s.clone();
+        bad.build.objects[0].rotation = 4;
+        fails(bad, "invalidState", "objects");
+        let mut bad = s.clone();
+        bad.build.objects[0].x = 63;
+        fails(bad, "invalidState", "objects");
+        let mut bad = s.clone();
+        bad.build.objects[0].floor = 1;
+        fails(bad, "invalidState", "objects");
+        let mut bad = s.clone();
+        bad.build.objects[0].width = 0;
+        fails(bad, "invalidState", "objects");
+        let mut bad = s.clone();
+        bad.build.objects = vec![s.build.objects[0]; crate::build::objects::MAX_OBJECTS + 1];
+        fails(bad, "limitExceeded", "objects");
+
+        // Handles rise and stay below the counter.
+        let mut bad = s.clone();
+        bad.build.objects.swap(0, 1);
+        fails(bad, "invalidState", "objectHandles");
+        let mut bad = s.clone();
+        bad.build.next_handle = 1;
+        fails(bad, "invalidState", "objectHandles");
+
+        // Objects do not overlap, and a blocking object has impassable cells.
+        let mut bad = s.clone();
+        bad.build.objects[1].x = 10;
+        bad.build.objects[1].y = 10;
+        fails(bad, "invalidState", "objectCells");
+        let mut bad = s.clone();
+        bad.build.objects[1].blocks = true;
+        fails(bad, "invalidState", "objectCells");
     }
 
     #[test]
