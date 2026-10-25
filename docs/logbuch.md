@@ -24,6 +24,13 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-25 18:45 (UTC) – [BEOBACHTUNG]
+
+- **Erster CI-Lauf mit Dauerbau-Schritt** (Lauf 40219644818, Job „Kern-Benchmark“, grün): Tick Mittel 0,072 ms, p99 0,145 ms; Wegweiser-Neuberechnung **3219 ms** (Grenze 4000 ms), Schritt p99 0,46 ms; Dauerbau 120 Bauaktionen, **8 Übernahmen** beim Bauen, längster Abstand **3645 ms** (Grenze 8000), letzter Stand nach **5250 ms** (Grenze 8000), Spitzen 1 Neuberechnung / 3 Feldsätze / 2 Schnappschuss-Kopien, 223 MB, Schritt p99 0,65 ms. Die Frist aus ADR-041 trägt auf dem Runner, der Spielraum beim letzten Stand ist 2,75 s.
+- **Korrektur einer eigenen Aussage:** Im `[SESSIONENDE]` 17:54 UTC, in `architecture.md` und im Commit `d86e3c1` stand „kein Rückgang, Neuberechnung 1457 ms“. Das war nur gegen alte Dokumentwerte verglichen. Abwechselnde Messung im Container: **1234 ms vor, 1462 ms nach `d86e3c1`, rund +18 %** durch die Prüfung der Zugangsprofile im inneren Schritt. Auf dem Runner bleiben 0,78 s Abstand zur Grenze von 4 s; 3.1c (Feldsatz der Bauarbeiter, +0,57 s auf 4 vCPU nach ADR-037) und mehr Ziele (3.2) verkleinern ihn.
+- **Zwei Optimierungsversuche** (Tabelle „begehbar je Flag-Byte“, Prüfungen der Zielzelle aus dem inneren Schritt gezogen) brachten nur 1435 ms, im Rauschen; verworfen, nicht committet. Ein Lauf ohne Profil-Prüfung ergab 1283–1329 ms, die Kosten liegen also im inneren Schritt.
+- **Landeplatz:** 3.1a (noch offen) bekommt die Teilaufgabe „Kosten der Profil-Prüfung senken oder begründet hinnehmen“, mit Messung vor 3.1c; Eintrag im Fahrplan.
+
 ### 2026-10-25 18:25 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** Fortsetzung 18:05 bis 18:25 UTC nach dem `[SESSIONENDE]` 17:54 UTC (gesamt 17:25 bis 18:25 UTC).
