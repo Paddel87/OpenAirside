@@ -53,8 +53,25 @@ describe("parseConsoleLine", () => {
       "scenario hall",
       { kind: "debug", action: { kind: "loadScenario", scenario: "openHall", persons: 0 } },
     ],
+    [
+      "scenario furnished 10000",
+      {
+        kind: "debug",
+        action: { kind: "loadScenario", scenario: "furnishedTerminal", persons: 10_000 },
+      },
+    ],
   ])("parses %j", (line, command) => {
     expect(parseConsoleLine(line)).toEqual({ kind: "command", command });
+  });
+
+  it("parses a new game and the detail switch", () => {
+    expect(parseConsoleLine("newgame")).toEqual({ kind: "newGame", map: 1536 });
+    expect(parseConsoleLine("newgame 2048")).toEqual({ kind: "newGame", map: 2048 });
+    expect(parseConsoleLine("details on")).toEqual({ kind: "details", all: true });
+    expect(parseConsoleLine("details off")).toEqual({ kind: "details", all: false });
+    for (const line of ["newgame 64", "newgame 1536 1", "details", "details maybe"]) {
+      expect(parseConsoleLine(line).kind, line).toBe("error");
+    }
   });
 
   it("shows the help for an empty line", () => {

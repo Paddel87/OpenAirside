@@ -6,17 +6,16 @@ import {
   defaultConfig,
   type FrameInfo,
   type MeasureConfig,
-  type MeasureScene,
   MeasureSeries,
-  measureScene,
-  MISSING_IMAGE,
   quantile,
   REFERENCE_EDGE,
   type SeriesHost,
   summarize,
   type View,
+  WALL_TYPE,
   WindowRecorder,
 } from "./measure.js";
+import type { CellRect } from "../src/generated/CellRect.js";
 
 function stats(overrides: Partial<TickStats> = {}): TickStats {
   return {
@@ -78,6 +77,9 @@ describe("WindowRecorder", () => {
     rec.lag(5);
     rec.build(40, 3);
     rec.build(20, 1);
+    rec.preview(17);
+    rec.preview(9);
+    rec.rejected();
     rec.adopt(1300);
     rec.query(3);
     rec.query(5);
@@ -97,6 +99,7 @@ describe("WindowRecorder", () => {
     expect([w.recomputes, w.recomputeMsMax]).toEqual([1, 1100]);
     expect(known.has(2)).toBe(true);
     expect([w.builds, w.buildMsP50, w.buildMsMax, w.buildFramesMax]).toEqual([2, 20, 40, 3]);
+    expect([w.previewMsP50, w.previewMsMax, w.buildsRejected]).toEqual([9, 17, 1]);
     expect(w.adoptMsMax).toBe(1300);
     expect([w.queries, w.queryMsMax]).toEqual([2, 5]);
 
@@ -138,7 +141,7 @@ describe("buildArea", () => {
 });
 
 /** A simulated core and renderer around the series, on a fake clock. */
-function harness(config: MeasureConfig, options: { load?: boolean } = {}) {
+function harness(config: MeasureConfig, options: { load?: boolean; reject?: boolean } = {}) {
   let time = 0;
   let nextId = 1;
   let nextQuery = 1;
@@ -147,8 +150,11 @@ function harness(config: MeasureConfig, options: { load?: boolean } = {}) {
   const commands: Command[] = [];
   const views: View[] = [];
   const pendingQueries: number[] = [];
-  const accepted: { id: number; tick: number }[] = [];
-  const scenes: MeasureScene[] = [];
+  const accepted: { id: number; tick: number; area?: CellRect }[] = [];
+  const rejected: number[] = [];
+  const blocks = new Map<string, number>();
+  const previews: CellRect[] = [];
+  let worldFrom = Number.POSITIVE_INFINITY;
   const persons = config.persons;
   const ref: { series?: MeasureSeries } = {};
   const info = (): FrameInfo => ({
@@ -158,6 +164,8 @@ function harness(config: MeasureConfig, options: { load?: boolean } = {}) {
     mapWidth: 2048,
     mapHeight: 2048,
   });
+  const key = (x: number, y: number): string =>
+    `${String(Math.floor(x / 32))},${String(Math.floor(y / 32))}`;
   const host: SeriesHost = {
     now: () => time,
     sleep: (ms) => {
@@ -171,6 +179,22 @@ function harness(config: MeasureConfig, options: { load?: boolean } = {}) {
         for (const a of accepted.splice(0)) {
           s.onEvents(time, session, [
             { seq: a.id, tick: a.tick, event: { kind: "commandAccepted", id: a.id, tick: a.tick } },
+          ]);
+          // The block with the change arrives in the frame of the tick of the acceptance.
+          if (a.area !== undefined) blocks.set(key(a.area.x0, a.area.y0), time);
+        }
+        for (const id of rejected.splice(0)) {
+          s.onEvents(time, session, [
+            {
+              seq: id,
+              tick,
+              event: {
+                kind: "commandRejected",
+                id,
+                tick,
+                reason: { code: "blocked", textKey: "command.rejected.blocked", params: {} },
+              },
+            },
           ]);
         }
         for (const id of pendingQueries.splice(0)) s.onQuery(time, id);
@@ -192,6 +216,7 @@ function harness(config: MeasureConfig, options: { load?: boolean } = {}) {
         if (options.load !== false) {
           session = 2;
           nextId = 1;
+          worldFrom = time + 300;
           ref.series?.onSession(2);
         }
       } else {
@@ -210,49 +235,66 @@ function harness(config: MeasureConfig, options: { load?: boolean } = {}) {
     },
     hotspot: () => ({ x: 1000, y: 900 }),
     status: () => undefined,
-    imageNames: () => ["base:bench", "base:floor_concrete"],
-    scene: (scene) => {
-      scenes.push(scene);
-      return {
-        objects: scene.objects.length,
-        fallbacks: 1,
-        zones: scene.zones.length,
-        tiers: [8, 16, 32],
-        pages: 3,
-        textureMbMax: 0.1,
-      };
-    },
     tierPx: () => 16,
+    atlas: () => ({ tiers: [8, 16, 32], pages: 3, textureMbMax: 0.1 }),
+    build: (command, area) => {
+      commands.push(command);
+      previews.push(area);
+      const id = nextId;
+      nextId += 1;
+      if (options.reject === true) rejected.push(id);
+      else accepted.push({ id, tick: tick + 3, area });
+      return id;
+    },
+    nextFrame: () => host.sleep(16),
+    world: () => ({
+      figures: () => ({
+        blocks: 4988,
+        bytes: 2_900_000,
+        pending: 0,
+        objects: 20_000,
+        tiles: 16,
+        textureMb: 17,
+        cpuMb: 16,
+        slots: 3,
+      }),
+      // Part of the world arrives after 300 ms, all of it after 800 ms.
+      visibleComplete: () => time >= worldFrom,
+      complete: () => time >= worldFrom + 500,
+      updatedAt: (x, y) => blocks.get(key(x, y)),
+    }),
   };
   const series = new MeasureSeries(host, config);
   ref.series = series;
   series.onSession(1);
-  return { series, commands, views, scenes };
+  return { series, commands, views, previews };
 }
 
 describe("MeasureSeries", () => {
-  it("runs the long run with alternating views, builds and queries", async () => {
-    const config = { ...defaultConfig(1), loadTimeoutMs: 1000 };
-    const { series, commands, views, scenes } = harness({ ...config, objects: 300, zones: 4 });
+  it("runs the long run with alternating views, real builds and queries", async () => {
+    const config = { ...defaultConfig(1), loadTimeoutMs: 5000 };
+    const { series, commands, views, previews } = harness(config);
     series.onLongTask(55);
     const result = await series.run();
-    expect(result.version).toBe(1);
+    expect(result.version).toBe(2);
     expect(result.windows).toHaveLength(2);
     expect(result.windows.map((w) => w.view)).toEqual(["overview", "circle"]);
     expect(result.threads).toBe(2);
     expect(result.hotspot).toEqual({ x: 1000, y: 900 });
-    // The scene is placed once, on the map of the loaded scenario, and removed at the end.
-    expect(scenes).toHaveLength(2);
-    expect(scenes[1]).toEqual({ objects: [], zones: [] });
-    expect(scenes[0]?.objects).toHaveLength(300);
-    expect(scenes[0]?.zones).toHaveLength(4);
-    expect(result.scene).toMatchObject({ objects: 300, zones: 4, fallbacks: 1 });
+    expect(result.atlas).toEqual({ tiers: [8, 16, 32], pages: 3, textureMbMax: 0.1 });
+    // The first transfer: the visible part, then the whole world, counted from the start of the session.
+    expect(result.world.firstVisibleMs).toBeGreaterThanOrEqual(300);
+    expect(result.world.firstCompleteMs).toBeGreaterThanOrEqual(800);
+    expect(result.world.firstCompleteMs).toBeLessThan(900);
+    expect(result.world.figures).toMatchObject({ blocks: 4988, objects: 20_000 });
     expect(result.windows.map((w) => w.tierPx)).toEqual([16, 16]);
     const [first, second] = result.windows;
     expect(first?.fps).toBeGreaterThan(55);
     expect(first?.queries).toBeGreaterThan(100);
     expect(first?.builds).toBeGreaterThanOrEqual(2);
     expect(first?.buildMsMax).toBeGreaterThan(0);
+    expect(first?.previewMsMax).toBeGreaterThan(0);
+    expect(first?.buildsRejected).toBe(0);
     expect(first?.adoptMsMax).toBeGreaterThan(0);
     expect(first?.recomputes).toBeGreaterThan(0);
     expect(second?.ticksPerSecMin).toBe(180);
@@ -260,19 +302,33 @@ describe("MeasureSeries", () => {
 
     expect(commands[0]).toEqual({
       kind: "debug",
-      action: { kind: "loadScenario", scenario: "referenceTerminal", persons: 10_000 },
+      action: { kind: "loadScenario", scenario: "furnishedTerminal", persons: 10_000 },
     });
     expect(commands[1]).toEqual({ kind: "setSpeed", speed: "x3" });
     expect(commands.at(-1)).toEqual({ kind: "setSpeed", speed: "paused" });
-    const walls = commands.filter((c) => c.kind === "debug" && c.action.kind === "setWalls");
-    // Every wall is removed again: set and remove alternate and end with a removal.
-    expect(walls.length % 2).toBe(0);
-    expect(walls.at(-1)).toMatchObject({ action: { wall: false } });
+    // The builds are the real commands, a wall and its demolition alternating, ending with the demolition.
+    const builds = commands.filter((c) => c.kind === "buildArea" || c.kind === "demolish");
+    expect(builds.length).toBeGreaterThanOrEqual(2);
+    expect(builds.length % 2).toBe(0);
+    expect(builds[0]).toMatchObject({ kind: "buildArea", object: WALL_TYPE });
+    expect(builds.at(-1)?.kind).toBe("demolish");
+    expect(previews).toHaveLength(builds.length);
     expect(views.some((v) => v.kind === "circle" && v.angle > 0)).toBe(true);
+    // Before the scenario the camera looks closely at the middle of the map, so that the visible part arrives first.
+    expect(views[0]).toMatchObject({ kind: "circle", zoom: 4, x: 1024, y: 1024 });
     // Both views show the ground floor, where the persons are after the warm-up.
     expect(views.every((v) => v.floor === 0)).toBe(true);
-    expect(views.find((v) => v.kind === "circle")).toMatchObject({ x: 1000, y: 900, zoom: 4 });
+    expect(views.find((v) => v.kind === "circle" && v.x === 1000)).toMatchObject({ zoom: 4 });
     expect(views.at(-1)).toEqual({ kind: "overview", floor: 0 });
+  });
+
+  it("counts refused builds and does not time them", async () => {
+    const config = { ...defaultConfig(1), loadTimeoutMs: 5000 };
+    const { series } = harness(config, { reject: true });
+    const result = await series.run();
+    const rejected = result.windows.reduce((a, w) => a + w.buildsRejected, 0);
+    expect(rejected).toBeGreaterThanOrEqual(2);
+    expect(result.windows.reduce((a, w) => a + w.builds, 0)).toBe(0);
   });
 
   it("gives up when the scenario does not load", async () => {
@@ -290,39 +346,26 @@ describe("MeasureSeries", () => {
       view: () => undefined,
       hotspot: () => ({ x: 0, y: 0 }),
       status: () => undefined,
-      imageNames: () => [],
-      scene: () => ({ objects: 0, fallbacks: 0, zones: 0, tiers: [], pages: 0, textureMbMax: 0 }),
       tierPx: () => 0,
+      atlas: () => ({ tiers: [], pages: 0, textureMbMax: 0 }),
+      build: () => 0,
+      nextFrame: () => Promise.resolve(),
+      world: () => ({
+        figures: () => ({
+          blocks: 0,
+          bytes: 0,
+          pending: 0,
+          objects: 0,
+          tiles: 0,
+          textureMb: 0,
+          cpuMb: 0,
+          slots: 0,
+        }),
+        visibleComplete: () => false,
+        complete: () => false,
+        updatedAt: () => undefined,
+      }),
     };
     await expect(new MeasureSeries(host, defaultConfig(1)).run()).rejects.toThrow("not connected");
-  });
-});
-
-describe("measureScene", () => {
-  it("places the objects on a grid over the terminal, cycling through the names", () => {
-    const scene = measureScene(10_000, 9, 2048, 2048, ["base:a", "base:b"]);
-    const origin = (2048 - REFERENCE_EDGE) / 2;
-    expect(scene.objects).toHaveLength(10_000);
-    expect(scene.objects[0]).toEqual({ name: "base:a", x: origin, y: origin });
-    expect(scene.objects[1]).toMatchObject({ name: "base:b", y: origin });
-    expect(scene.objects[99]?.name).toBe(MISSING_IMAGE);
-    expect(scene.objects.filter((o) => o.name === MISSING_IMAGE)).toHaveLength(100);
-    for (const o of scene.objects) {
-      expect(o.x).toBeGreaterThanOrEqual(origin);
-      expect(o.x).toBeLessThan(origin + REFERENCE_EDGE);
-      expect(o.y).toBeGreaterThanOrEqual(origin);
-      expect(o.y).toBeLessThan(origin + REFERENCE_EDGE);
-    }
-    expect(new Set(scene.objects.map((o) => `${String(o.x)},${String(o.y)}`)).size).toBe(10_000);
-    expect(measureScene(10_000, 9, 2048, 2048, ["base:a", "base:b"])).toEqual(scene);
-  });
-
-  it("tiles the terminal with zones and uses the fallback without atlas", () => {
-    const scene = measureScene(3, 4, 2048, 2048, []);
-    expect(scene.objects.every((o) => o.name === MISSING_IMAGE)).toBe(true);
-    expect(scene.zones.map((z) => z.colour)).toEqual([0, 1, 2, 3]);
-    const origin = (2048 - REFERENCE_EDGE) / 2;
-    expect(scene.zones[0]).toEqual({ x: origin + 2, y: origin + 2, w: 380, h: 380, colour: 0 });
-    expect(scene.zones[3]).toMatchObject({ x: origin + 386, y: origin + 386 });
   });
 });

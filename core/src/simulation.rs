@@ -667,8 +667,10 @@ impl Simulation {
                 .set_walls(*area, *wall)
                 .map_err(|_| rejection(code::OUT_OF_MAP)),
             DebugAction::LoadScenario { scenario, persons } => {
-                if *scenario == Scenario::ReferenceTerminal
-                    && !crate::scenario::fits_reference_terminal(self.config.map)
+                if matches!(
+                    scenario,
+                    Scenario::ReferenceTerminal | Scenario::FurnishedTerminal
+                ) && !crate::scenario::fits_reference_terminal(self.config.map)
                 {
                     return Err(rejection(code::OUT_OF_MAP));
                 }

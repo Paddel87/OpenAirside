@@ -3,4 +3,4 @@
 /**
  * Test scenarios of the debug action `loadScenario`.
  */
-export type Scenario = "openHall" | "referenceTerminal";
+export type Scenario = "openHall" | "referenceTerminal" | "furnishedTerminal";
