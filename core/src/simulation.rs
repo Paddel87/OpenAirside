@@ -422,8 +422,11 @@ impl Simulation {
     }
 
     /// Starts recomputing the flow fields from the current grid and targets
-    /// in the background and returns the revision. Building (step 3.1)
-    /// triggers it after every change.
+    /// in the background and returns the revision, replacing an open
+    /// request. Building does not use it: changes reach the flow fields
+    /// through the internal event of the module "Welt & Bau", at most one
+    /// recomputation runs and later changes are remembered as one follow-up
+    /// request (ADR-041).
     pub fn request_recompute(&mut self) -> u32 {
         self.world.request_recompute(&self.background, self.tick)
     }
