@@ -159,6 +159,23 @@ export function parseSaveArgs(value: unknown): { name: string; kind: SaveKind } 
   return { name, kind: kind as SaveKind };
 }
 
+/** Map edges of a new game in cells (S-6 `game.new`, core `savegame::MAP_EDGES`). */
+export const MAP_EDGES: readonly number[] = [1536, 2048];
+
+/**
+ * Checks the argument of `game.new({ map })` (ADR-032, L-3): exactly the
+ * field `map`, one of {@link MAP_EDGES}.
+ *
+ * @returns the edge, or `undefined` if the argument is invalid.
+ */
+export function parseNewGameArgs(value: unknown): { map: number } | undefined {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
+  const keys = Object.keys(value);
+  const { map } = value as Record<string, unknown>;
+  if (keys.length !== 1 || typeof map !== "number" || !MAP_EDGES.includes(map)) return undefined;
+  return { map };
+}
+
 /**
  * Id for a new save game of `kind`: a fresh random id for a manual save,
  * the single slot for a quick save, and for an autosave the first free

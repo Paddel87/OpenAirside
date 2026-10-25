@@ -216,6 +216,31 @@ describe("saves service: save", () => {
   });
 });
 
+describe("saves service: new game (S-6 game.new)", () => {
+  it("asks the core for an empty game on the chosen map", async () => {
+    const { service, requests, lines } = setup({}, (request) =>
+      request.type === "game:new" ? null : undefined,
+    );
+    expect(await service.newGame({ map: 1536 })).toBeNull();
+    expect(requests).toEqual([{ type: "game:new", request: 1, map: 1536 }]);
+    expect(lines).toContain("info: new game on a map of 1536 cells");
+  });
+
+  it("refuses a bad argument without asking the core, and a bad answer", async () => {
+    const { service, requests } = setup({}, () => "nonsense");
+    await expect(service.newGame({ map: 100 })).rejects.toMatchObject({
+      reason: { code: "invalidArgument" },
+    });
+    await expect(service.newGame(undefined)).rejects.toMatchObject({
+      reason: { code: "invalidArgument" },
+    });
+    expect(requests).toEqual([]);
+    await expect(service.newGame({ map: 2048 })).rejects.toMatchObject({
+      reason: { code: "invalidAnswer" },
+    });
+  });
+});
+
 describe("saves service: load, delete, preview", () => {
   it("loads a save through the core and returns its meta", async () => {
     const { service, requests } = setup({ quick: "content" }, (request) =>

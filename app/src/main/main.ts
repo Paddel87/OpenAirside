@@ -501,6 +501,7 @@ void app.whenReady().then(() => {
   handle("saves:list", () => saves.list());
   handle("saves:save", (arg) => saves.save(arg));
   handle("saves:load", (arg) => saves.load(arg));
+  handle("game:new", (arg) => saves.newGame(arg));
   handle("saves:delete", (arg) => saves.delete(arg));
   handle("saves:preview", (arg) => saves.preview(arg));
   handle("logs:write", writeLog);

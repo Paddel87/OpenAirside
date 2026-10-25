@@ -267,6 +267,20 @@ describe("invalid save game requests", () => {
   });
 });
 
+describe("new game request (step 3.1b)", () => {
+  it("parses a request with one of the two map sizes", () => {
+    expect(parseSavesRequest({ type: "game:new", request: 3, map: 2048 })).toEqual({
+      type: "game:new",
+      request: 3,
+      map: 2048,
+    });
+    expect(parseSavesRequest({ type: "game:new", request: 3, map: 1536 })?.type).toBe("game:new");
+    expect(parseSavesRequest({ type: "game:new", request: 3, map: 64 })).toBeUndefined();
+    expect(parseSavesRequest({ type: "game:new", map: 2048 })).toBeUndefined();
+    expect(savesRequestNumber({ type: "game:new", request: 4, map: 7 })).toBe(4);
+  });
+});
+
 describe("language messages (step 2.6)", () => {
   it("parses a request for the texts of a language", () => {
     expect(parseSavesRequest({ type: "lang:texts", request: 7, code: "pt-br" })).toEqual({
