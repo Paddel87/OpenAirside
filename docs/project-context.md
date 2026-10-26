@@ -247,7 +247,7 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 - **Konfigurationsdatei:** `.pre-commit-config.yaml`
 - **CI-Plattform:** GitHub Actions
 - **Workflow-Dateien (Klasse G):** `.github/workflows/ci.yml` (Prüfungen auf Linux, Windows, macOS), `security.yml` (CodeQL, Audits, wöchentlich), `release.yml` (Builds bei Tag `v*`)
-- **Trigger:** `push` auf alle Branches, `pull_request` auf `main`
+- **Trigger:** `push` auf `main`, `pull_request` auf `main`, `workflow_dispatch` von Hand (seit Q.5, ADR-043; vorher `push` auf alle Branches). Bei reinen Doku-Änderungen (`docs/`, `*.md`) auf einem Stand mit bestandenen Checks laufen nur „Änderungsart“ und „Dokumentation“, die übrigen Jobs melden übersprungen (`scripts/ci-changes.mjs`)
 - **Verpflichtende CI-Gates (Merge-Block bei Rot):**
   - Lint (clippy, ESLint, markdownlint)
   - Format-Check (rustfmt, Prettier; kein Auto-Fix in CI)

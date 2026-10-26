@@ -24,6 +24,17 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-26 15:05 (UTC) – [PROBLEM-GELÖST]
+
+- **Q.5 erledigt:** Nachweise auf PR #37: (1) Code-Push `0c59ece` nur als PR-Lauf, 23 Checks grün; (2) Doku-Push `f5e6269` auf grünem Stand in rund 20 s, Pflicht-Checks des Rulesets bestanden, PR mergebar; (3) erzwungener Fehlerfall: roter Rust-Test `ff1cfab`, Doku-Push `adcfc91` darauf → volle Pipeline, rot; Revert `312c9c6`, danach `c79c1b1` grün. Dieser Eintrag selbst ist der erste Doku-Commit, der nach dem grünen Stand nur den Doku-Weg nehmen soll.
+
+### 2026-10-26 14:45 (UTC) – [ADR]
+
+- **ADR-043 (Q.5):** CI-Trigger nur für `main` und PRs, Code-Jobs nicht bei reinen Doku-Änderungen; Option B, freigegeben vom Projektinhaber per Auswahl. Anlass: rund 270 CI-Jobs für acht Pushes auf PR #36, davon sieben reine Doku.
+- **Fund beim Entwurf:** Der Ruleset „main-schutz“ (öffentlich lesbar über die API) verlangt 19 Checks namentlich, darunter die Matrix-Jobs je Betriebssystem. Ein auf Job-Ebene übersprungener Matrix-Job meldet nicht unter seinem vollen Namen; deshalb überspringen die Matrix-Jobs ihre Schritte. Zweiter Fund: Scheitert der Entscheidungs-Job, würden abhängige Jobs übersprungen und als bestanden gelten; deshalb laufen die Code-Jobs, außer die Entscheidung ist ausdrücklich `false`.
+- **Lokal geprüft:** `scripts/ci-changes.test.mjs` (10 Tests, darunter Doku auf rotem, laufendem und unlesbarem Stand); echter Diff im Repo: zwei Doku-Commits → `false`, Bereich mit Code → `true`, ohne Token (HTTP 401) → `true`.
+- **Modell:** Entscheidungs-Klasse (Opus 5.5, laut `get_session`), passt zur Empfehlung von Q.5.
+
 ### 2026-10-25 20:05 (UTC) – [PROBLEM-GELÖST]
 
 - **CI rot auf `1f7a35c` (Läufe 40228076332 und 40228097329):** `core/tests/build.rs`, Test `the_buildings_survive_a_save_game_and_go_on_identically`, letzter Vergleich der Zustands-Prüfsumme des ganzen Weltzustands schlug auf Linux, Windows und in der Coverage fehl. Ursache: Die Prüfsumme enthält den Zustand der Wegfindung (offene Neuberechnung, Übernahme); die beiden Simulationen laufen im Modus „sobald fertig“ und übernehmen zu verschiedenen Zeitpunkten. Der Lauf davor (`160628b`) war zufällig grün. Es ist ein Fehler des Tests, nicht des Kerns: Der Rundlauf selbst (Prüfsumme direkt nach dem Laden) bleibt unverändert geprüft. Der Test vergleicht danach nur den Beitrag von Welt & Bau und die Objekte. Behoben in `2b386a4`; die Läufe auf diesem Stand sind grün (Push 40231648278, PR 40231652631, Security 40231652556).
