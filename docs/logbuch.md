@@ -24,6 +24,17 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-26 15:25 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung 14:30 bis 15:25 UTC (Session ab 2026-10-25 20:54 UTC).
+- **Bearbeitet:** 3.1b (Nachmessung, ADR-044, Abschluss); Q.5 CI-Trigger (ADR-043, Option B, Nachweise einschließlich erzwungenem Fehlerfall).
+- **Erreicht:** PR #37 gemergt (`56bdc8c`), PR #36 gemergt (`568af2c`), beide nach Freigabe des Projektinhabers; CI grün auf beiden Köpfen (`ebc7067`: 23 Checks, davon 7 übersprungen; `eb01161`: 23 Checks). 3.1b und Q.5 `[ERLEDIGT]`.
+- **Offen geblieben:** 3.1b-N1 Grafik-Abnahme (Zeitpunkt nennt der Projektinhaber); Schrittzeit-Spitzen am Mac bei 3.13; `security.yml` läuft weiter bei jedem PR-Ereignis voll (nicht Teil von Q.5).
+- **Nächster Schritt:** 3.1c (Bauaufträge und Bauarbeiter) auf neuem Branch vom aktuellen `main`; diesen Sessionende-Eintrag übernehmen (`project-context.md` Abschnitt 10).
+- **Modell-Bilanz:** Entscheidungs-Klasse (Opus 5.5, laut `get_session` 15:20 UTC) für die ganze Fortsetzung; Q.5 und die Bewertung von 3.1b empfehlen Entscheidung; Routine-Teilarbeiten (Eintragen von Messzahlen, Doku-Nachzug) liefen oberhalb ihrer Empfehlung, nicht abgegeben (Probelauf offen).
+- **Kontextgröße:** 496.382 von 1.000.000 Token laut `get_session`, **über der Grenze von 400.000** – Empfehlung: 3.1c in einer neuen Session beginnen.
+- **Ablaufdaten-Register:** keine neue Abkündigung, kein Eintrag mit erreichtem Vorlauf. **Archiv-Trigger Logbuch:** 840 Zeilen, über dem Trigger von 800 (Klasse G, `CLAUDE.md` Abschnitt 14); alle Einträge stammen aus 2026-10, eine vorletzte Monats-Scheibe zum Auslagern gibt es nicht. Der Trigger lässt sich nach seinem Verfahren erst mit dem Monatswechsel oder der Verdichtung am Phasenwechsel 3 erfüllen; dem Projektinhaber gemeldet.
+
 ### 2026-10-26 15:15 (UTC) – [BEOBACHTUNG]
 
 - **Merges nach Freigabe des Projektinhabers** („Merge du beide, erst #37, dann #36“): PR #37 (Q.5, ADR-043) gemergt als `56bdc8c`; `main` in den Branch von 3.1b geholt. Konflikte nur in `docs/decisions.md` (Teil A: Zeilen ADR-043 und ADR-044, Reaktiv-Quote jetzt 4 / 10 über ADR-035 bis ADR-044, gesamt 17 / 44) und `docs/logbuch.md` (Einträge beider Branches nach Zeit geordnet).
