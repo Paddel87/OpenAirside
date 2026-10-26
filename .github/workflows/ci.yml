@@ -1,7 +1,8 @@
 # CI für OpenAirside (Klasse G). Abgeleitet aus templates/github-workflows/ci-typescript.yml,
 # ergänzt um Rust-Jobs (keine Rust-Vorlage vorhanden), eine Plattform-Matrix und den
 # Electron-Rauchtest (ADR-018), seit Schritt 2.2 um Kern-Benchmark und Prüfung der erzeugten
-# TypeScript-Typen (ADR-022), seit Schritt 2.3 um den Wegweiser-Benchmark (ADR-023), seit Schritt 3.1a um den Dauerbau-Benchmark (ADR-041). Pflichtkategorien nach CLAUDE.md Abschnitt 15; Werte aus
+# TypeScript-Typen (ADR-022), seit Schritt 2.3 um den Wegweiser-Benchmark (ADR-023), seit Schritt 3.1a um den Dauerbau-Benchmark (ADR-041), seit Q.5 mit Trigger nur für main und PRs
+# und ohne Code-Jobs bei reinen Doku-Änderungen auf grünem Stand (ADR-043). Pflichtkategorien nach CLAUDE.md Abschnitt 15; Werte aus
 # docs/project-context.md Abschnitt 7. Lokale Hooks (.pre-commit-config.yaml) führen dieselben
 # Checks aus — diese Pipeline ist die unabhängige Diagnoseschicht, kein Ersatz.
 # Änderungen an dieser Datei sind freigabepflichtig (CLAUDE.md 4.7).
@@ -13,10 +14,12 @@
 name: CI
 
 on:
+  # Feature-Branches laufen über ihren PR; ohne PR von Hand über „Run workflow“ (ADR-043).
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -27,6 +30,31 @@ env:
   RUSTFLAGS: "-D warnings" # Warnungen sind Fehler (CLAUDE.md Abschnitt 15)
 
 jobs:
+  # Entscheidet, ob die Code-Jobs laufen: nicht bei reinen Doku-Änderungen (docs/, *.md) auf einem
+  # Stand, dessen Checks alle bestanden haben (scripts/ci-changes.mjs, ADR-043). Übersprungene Jobs
+  # zählen für die Pflicht-Checks des Rulesets „main-schutz“ als bestanden; die Matrix-Jobs
+  # überspringen ihre Schritte statt des Jobs, damit sie unter ihrem vollen Namen melden. Die Code-Jobs
+  # laufen, außer die Entscheidung lautet ausdrücklich `false`: scheitert dieser Job, laufen sie alle.
+  changes:
+    name: Änderungsart (Code oder nur Doku)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: read # Checks des vorigen Commits
+    outputs:
+      code: ${{ steps.decide.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ci-changes.mjs
+
   docs:
     name: Dokumentation (pre-commit)
     runs-on: ubuntu-latest
@@ -48,6 +76,8 @@ jobs:
 
   rust-lint:
     name: Rust Lint & Format
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -71,6 +101,8 @@ jobs:
 
   rust-bench:
     name: Kern-Benchmark
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -140,6 +172,8 @@ jobs:
 
   rust-security:
     name: Rust Security & Audit (cargo-deny)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -151,19 +185,30 @@ jobs:
 
   rust-test:
     name: Rust Tests (${{ matrix.os }})
+    needs: changes
+    if: ${{ !cancelled() }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      # Reine Doku-Änderung auf grünem Stand: Schritte überspringen, Job meldet bestanden (ADR-043).
+      - if: needs.changes.outputs.code == 'false'
+        run: echo "Nur Dokumentation geändert, Code-Prüfung übersprungen (ADR-043)"
       - uses: actions/checkout@v7.0.1
+        if: needs.changes.outputs.code != 'false'
       - run: rustup toolchain install
+        if: needs.changes.outputs.code != 'false'
       - uses: Swatinem/rust-cache@v2.9.2
+        if: needs.changes.outputs.code != 'false'
       - run: cargo test --workspace --locked
+        if: needs.changes.outputs.code != 'false'
 
   rust-coverage:
     name: Rust Coverage (Kern ≥ 85 %, gesamt ≥ 70 %)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -186,6 +231,8 @@ jobs:
 
   ts-lint:
     name: TS Lint & Format
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -202,6 +249,8 @@ jobs:
 
   ts-typecheck:
     name: TS Type-Check
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -214,6 +263,8 @@ jobs:
 
   ts-security:
     name: TS Dependency-Audit & Lizenzen
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -229,22 +280,31 @@ jobs:
 
   ts-test:
     name: TS Tests & Coverage (${{ matrix.os }})
+    needs: changes
+    if: ${{ !cancelled() }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      # Reine Doku-Änderung auf grünem Stand: Schritte überspringen, Job meldet bestanden (ADR-043).
+      - if: needs.changes.outputs.code == 'false'
+        run: echo "Nur Dokumentation geändert, Code-Prüfung übersprungen (ADR-043)"
       - uses: actions/checkout@v7.0.1
+        if: needs.changes.outputs.code != 'false'
       - uses: actions/setup-node@v7.0.0
+        if: needs.changes.outputs.code != 'false'
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
+        if: needs.changes.outputs.code != 'false'
       - name: Vitest mit Coverage
+        if: needs.changes.outputs.code != 'false'
         # Mindestwert 70 % Lines in vitest.config.ts (coverage.thresholds), project-context.md Abschnitt 7.
         run: npm test
-      - if: matrix.os == 'ubuntu-latest'
+      - if: needs.changes.outputs.code != 'false' && matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v7.0.1
         with:
           name: coverage-ts
@@ -255,26 +315,37 @@ jobs:
 
   e2e:
     name: Rauchtest Electron (${{ matrix.os }})
+    needs: changes
+    if: ${{ !cancelled() }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      # Reine Doku-Änderung auf grünem Stand: Schritte überspringen, Job meldet bestanden (ADR-043).
+      - if: needs.changes.outputs.code == 'false'
+        run: echo "Nur Dokumentation geändert, Code-Prüfung übersprungen (ADR-043)"
       - uses: actions/checkout@v7.0.1
+        if: needs.changes.outputs.code != 'false'
       - uses: actions/setup-node@v7.0.0
+        if: needs.changes.outputs.code != 'false'
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: rustup toolchain install
+        if: needs.changes.outputs.code != 'false'
       - uses: Swatinem/rust-cache@v2.9.2
+        if: needs.changes.outputs.code != 'false'
       - run: npm ci
+        if: needs.changes.outputs.code != 'false'
       - run: npm run build
+        if: needs.changes.outputs.code != 'false'
       - name: Playwright (Linux, virtueller Bildschirm)
-        if: runner.os == 'Linux'
+        if: needs.changes.outputs.code != 'false' && runner.os == 'Linux'
         run: xvfb-run -a npm run test:e2e
       - name: Playwright
-        if: runner.os != 'Linux'
+        if: needs.changes.outputs.code != 'false' && runner.os != 'Linux'
         run: npm run test:e2e
       - if: failure()
         uses: actions/upload-artifact@v7.0.1
