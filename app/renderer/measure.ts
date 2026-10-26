@@ -26,7 +26,7 @@ import type { TickStats } from "../src/generated/TickStats.js";
 import type { WorldFigures } from "./world-view.js";
 
 /** Version of the result format; raised by every non-additive change. */
-export const RESULT_VERSION = 2;
+export const RESULT_VERSION = 3;
 /** Edge of the reference terminal in cells (core/src/scenario.rs `REFERENCE_EDGE`). */
 export const REFERENCE_EDGE = 768;
 /** Panel id of the measurement's table query. */
@@ -104,10 +104,21 @@ export interface SeriesHost {
    * like the build tool (S-2); returns the command id, 0 if not connected.
    */
   build(command: Command, area: CellRect): number;
-  /** Resolves after the next frame was rendered. */
-  nextFrame(): Promise<void>;
+  /**
+   * Resolves after the first rendered frame that holds the provisional drawing set by the
+   * last {@link build}: frames rendered since then (1 = the next frame) and the time after that render.
+   */
+  previewDrawn(): Promise<PreviewDrawn>;
   /** The resting world as the playfield holds it. */
   world(): WorldReadout;
+}
+
+/** The first rendered frame with a provisional drawing. */
+export interface PreviewDrawn {
+  /** Frames rendered since the drawing was set, 1 = the next frame. */
+  readonly frames: number;
+  /** Time after the render of that frame (same clock as {@link SeriesHost.now}). */
+  readonly at: number;
 }
 
 /** What the playfield knows of the resting world. */
@@ -190,9 +201,13 @@ export interface WindowResult {
   readonly buildMsP50: number;
   readonly buildMsMax: number;
   readonly buildFramesMax: number;
-  /** Command to the next rendered frame with the provisional drawing (step 3.1b, NFR "Bauaktion im nächsten Bild"). */
+  /**
+   * Command to the end of the render of the first frame with the provisional drawing, and the
+   * number of frames rendered until then (1 = the next frame; NFR "Bauaktion im nächsten Bild", step 3.1b).
+   */
   readonly previewMsP50: number;
   readonly previewMsMax: number;
+  readonly previewFramesMax: number;
   /** Build actions the core refused. */
   readonly buildsRejected: number;
   readonly adoptMsMax: number;
@@ -269,7 +284,7 @@ export class WindowRecorder {
   readonly #lags: number[] = [];
   readonly #recomputes = new Map<number, number>();
   readonly #builds: { ms: number; frames: number }[] = [];
-  readonly #previews: number[] = [];
+  readonly #previews: { ms: number; frames: number }[] = [];
   #rejected = 0;
   readonly #adopts: number[] = [];
   readonly #queries: number[] = [];
@@ -303,9 +318,9 @@ export class WindowRecorder {
     this.#builds.push({ ms, frames });
   }
 
-  /** The provisional drawing of a build action was rendered `ms` after the command. */
-  preview(ms: number): void {
-    this.#previews.push(ms);
+  /** The provisional drawing of a build action was rendered `ms` after the command, in the `frames`-th frame. */
+  preview(ms: number, frames: number): void {
+    this.#previews.push({ ms, frames });
   }
 
   /** The core refused a build action. */
@@ -334,7 +349,7 @@ export class WindowRecorder {
     // One display tick: the median interval between drawn frames.
     const tick = quantile(frames, 0.5);
     const builds = ascending(this.#builds.map((b) => b.ms));
-    const previews = ascending(this.#previews);
+    const previews = ascending(this.#previews.map((p) => p.ms));
     const queries = ascending(this.#queries);
     const tps = this.#stats.map((s) => s.ticksPerSecond);
     const recomputes: number[] = [];
@@ -375,6 +390,7 @@ export class WindowRecorder {
       buildFramesMax: max(this.#builds.map((b) => b.frames)),
       previewMsP50: round(quantile(previews, 0.5)),
       previewMsMax: round(max(previews)),
+      previewFramesMax: max(this.#previews.map((p) => p.frames)),
       buildsRejected: this.#rejected,
       adoptMsMax: round(max(this.#adopts)),
       queries: queries.length,
@@ -690,8 +706,8 @@ export class MeasureSeries {
     this.#build = { id, sentAt: now, frames: 0, cell: { x: area.x0, y: area.y0 } };
     this.#lastBuildAt = now;
     const recorder = this.#recorder;
-    void host.nextFrame().then(() => {
-      recorder.preview(host.now() - now);
+    void host.previewDrawn().then(({ frames, at }) => {
+      recorder.preview(at - now, frames);
     });
   }
 

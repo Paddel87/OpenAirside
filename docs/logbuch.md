@@ -24,6 +24,14 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-26 14:25 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Modellwechsel:** Stopp „Modellwechsel erforderlich“ (Beförderung nach `[BELASTBAR]`) aufgehoben; laut `get_session` eingestellt und bedient `claude-opus-5-5` → Entscheidungs-Klasse.
+- **Speicher der Weltdarstellung:** `[VORLÄUFIG]` → `[BELASTBAR]`. Kriterium aus ADR-038 (höchstens +256 MB gegenüber 2.10) auf beiden Rechnern eingehalten: Referenz-PC höchstens 671 MB (Schwelle 811), Mac höchstens 849 MB (Schwelle 930).
+- **Nicht befördert:** „NFR Bauaktion im nächsten Bild“ bleibt `[VORLÄUFIG]` (Zeit bis zur Vorschau im Maximum über einem Bildtakt; Messgröße sagt nicht, in welchem Bild die Vorschau stand). „NFR Performance unter Windows“ bleibt `[BELASTBAR]` bis zur Nachmessung: Fenster 9 (59,4 Bilder/s) fällt zeitlich auf einen Bildschirm-Standby (Abschaltung nach 5 Minuten, Angabe des Projektinhabers; 300 s nach der letzten Eingabe ≈ 289 s Fensterzeit, Fenster 9 von 271 bis 301 s).
+- **Entscheidung des Projektinhabers (Option C von A/B/C):** 3.1b bleibt `[IN ARBEIT]`; Bildzählung der Vorschau ins Messwerkzeug (`previewFramesMax`, Messergebnis Version 3), neue Pakete, Nachmessung auf beiden Rechnern mit Bildschirm-Abschaltung aus. Schwellen vorab festgelegt in `docs/research/3.1b-messung.md` Abschnitt 4a. Container-Prüfung: `measure 1` mit Version 3, `previewFramesMax` 1 in beiden Fenstern.
+- **CI auf `ee59a4d`:** „TS Tests & Coverage (ubuntu-latest)“ rot nur im Schritt `upload-artifact` (`ENOTFOUND`), alle 473 Tests grün; PR-Kommentar, Neustart abgelehnt, solange der Lauf lief.
+
 ### 2026-10-26 14:20 (UTC) – [BEOBACHTUNG]
 
 - **Messungen 3.1b eingetroffen:** Referenz-PC (Windows, 13:48 UTC) und Mac (14:03 UTC), Rohdateien in `docs/research/3.1b-ergebnisse/`, Auswertung gegen die Schwellen in `docs/research/3.1b-messung.md` Abschnitt 5 (Commits `c7cab0c`, `868fd07`). Nur Zahlen aus den Dateien, keine Schätzung. Auffällig: Referenz-PC Fenster 9 mit 59,4 Bildern/s und einem Bild von 160,5 ms; Mac `ticksPerSecMin` 162 (Fenster 16, längster Schritt 110,5 ms) und 179 (Fenster 10), 7 Verzögerungsereignisse, ohne Wirkung auf das Bild; Vorschau der Bauaktion am Referenz-PC im Median meist ein Bildtakt (16,6–17,7 ms), im Maximum bis 28,6 ms. Notizen zum Zuschauen: Referenz-PC: Bildschirm einmal kurz im Standby (siehe Messdokument 5.1); Mac: keine.

@@ -20,6 +20,7 @@ import {
   Rectangle,
   Sprite,
   Texture,
+  UPDATE_PRIORITY,
 } from "pixi.js";
 // Replaces the eval-based particle upload, so that the CSP needs no 'unsafe-eval' (spike 1.3).
 import "pixi.js/unsafe-eval";
@@ -120,6 +121,10 @@ export class Playfield {
   readonly #world = new Container();
   readonly #bounds = new Graphics();
   readonly #preview = new Container();
+  /** Frames rendered so far. */
+  #renders = 0;
+  #previewWaiters: { since: number; resolve: (drawn: { frames: number; at: number }) => void }[] =
+    [];
   readonly #view: WorldView;
   readonly #atlas: Atlas | undefined;
   readonly #textures = new Map<string, { texture: Texture; scale: number }>();
@@ -159,6 +164,29 @@ export class Playfield {
     this.#applyTier();
     app.ticker.add(() => {
       this.#view.update(this.#worldCamera());
+    });
+    // After the render of the application (priority LOW): counts rendered frames for previewDrawn().
+    app.ticker.add(
+      () => {
+        this.#renders += 1;
+        const waiting = this.#previewWaiters;
+        if (waiting.length === 0) return;
+        this.#previewWaiters = [];
+        const at = performance.now();
+        for (const w of waiting) w.resolve({ frames: this.#renders - w.since, at });
+      },
+      undefined,
+      UPDATE_PRIORITY.UTILITY,
+    );
+  }
+
+  /**
+   * Resolves after the first frame rendered since the call, which holds the provisional drawing
+   * set before it (for the measurement series, NFR "Bauaktion im nächsten Bild").
+   */
+  previewDrawn(): Promise<{ frames: number; at: number }> {
+    return new Promise((resolve) => {
+      this.#previewWaiters.push({ since: this.#renders, resolve });
     });
   }
 

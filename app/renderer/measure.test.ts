@@ -77,8 +77,8 @@ describe("WindowRecorder", () => {
     rec.lag(5);
     rec.build(40, 3);
     rec.build(20, 1);
-    rec.preview(17);
-    rec.preview(9);
+    rec.preview(17, 1);
+    rec.preview(9, 2);
     rec.rejected();
     rec.adopt(1300);
     rec.query(3);
@@ -99,7 +99,9 @@ describe("WindowRecorder", () => {
     expect([w.recomputes, w.recomputeMsMax]).toEqual([1, 1100]);
     expect(known.has(2)).toBe(true);
     expect([w.builds, w.buildMsP50, w.buildMsMax, w.buildFramesMax]).toEqual([2, 20, 40, 3]);
-    expect([w.previewMsP50, w.previewMsMax, w.buildsRejected]).toEqual([9, 17, 1]);
+    expect([w.previewMsP50, w.previewMsMax, w.previewFramesMax, w.buildsRejected]).toEqual([
+      9, 17, 2, 1,
+    ]);
     expect(w.adoptMsMax).toBe(1300);
     expect([w.queries, w.queryMsMax]).toEqual([2, 5]);
 
@@ -246,7 +248,7 @@ function harness(config: MeasureConfig, options: { load?: boolean; reject?: bool
       else accepted.push({ id, tick: tick + 3, area });
       return id;
     },
-    nextFrame: () => host.sleep(16),
+    previewDrawn: () => host.sleep(16).then(() => ({ frames: 1, at: host.now() })),
     world: () => ({
       figures: () => ({
         blocks: 4988,
@@ -276,7 +278,7 @@ describe("MeasureSeries", () => {
     const { series, commands, views, previews } = harness(config);
     series.onLongTask(55);
     const result = await series.run();
-    expect(result.version).toBe(2);
+    expect(result.version).toBe(3);
     expect(result.windows).toHaveLength(2);
     expect(result.windows.map((w) => w.view)).toEqual(["overview", "circle"]);
     expect(result.threads).toBe(2);
@@ -294,6 +296,7 @@ describe("MeasureSeries", () => {
     expect(first?.builds).toBeGreaterThanOrEqual(2);
     expect(first?.buildMsMax).toBeGreaterThan(0);
     expect(first?.previewMsMax).toBeGreaterThan(0);
+    expect(first?.previewFramesMax).toBe(1);
     expect(first?.buildsRejected).toBe(0);
     expect(first?.adoptMsMax).toBeGreaterThan(0);
     expect(first?.recomputes).toBeGreaterThan(0);
@@ -349,7 +352,7 @@ describe("MeasureSeries", () => {
       tierPx: () => 0,
       atlas: () => ({ tiers: [], pages: 0, textureMbMax: 0 }),
       build: () => 0,
-      nextFrame: () => Promise.resolve(),
+      previewDrawn: () => Promise.resolve({ frames: 1, at: 0 }),
       world: () => ({
         figures: () => ({
           blocks: 0,

@@ -409,12 +409,7 @@ async function start(): Promise<void> {
       }
       return id;
     },
-    nextFrame: () =>
-      new Promise((resolve) => {
-        requestAnimationFrame(() => {
-          resolve();
-        });
-      }),
+    previewDrawn: () => playfield.previewDrawn(),
     world: () => ({
       figures: () => playfield.worldFigures(),
       visibleComplete: () => playfield.worldVisibleComplete(),
