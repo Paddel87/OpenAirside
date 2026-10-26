@@ -32,7 +32,11 @@ export interface BridgeOutgoing {
   readonly buf?: Uint8Array | null;
 }
 
-const SCENARIOS: ReadonlySet<string> = new Set<Scenario>(["openHall", "referenceTerminal"]);
+const SCENARIOS: ReadonlySet<string> = new Set<Scenario>([
+  "openHall",
+  "referenceTerminal",
+  "furnishedTerminal",
+]);
 
 function count(value: string, min: number, max: number): number | undefined {
   if (!/^\d{1,7}$/.test(value)) {

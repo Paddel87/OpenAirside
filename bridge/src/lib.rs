@@ -174,6 +174,26 @@ impl Task for LoadTask {
     }
 }
 
+/// Starts a new game on a libuv thread (S-6 `game.new`, step 3.1b): the
+/// call waits for the simulation thread, which builds the empty world.
+pub struct NewGameTask {
+    link: SaveLink,
+    edge: u16,
+}
+
+impl Task for NewGameTask {
+    type Output = ();
+    type JsValue = ();
+
+    fn compute(&mut self) -> napi::Result<()> {
+        self.link.new_game(self.edge).map_err(|r| reason_error(&r))
+    }
+
+    fn resolve(&mut self, _env: Env, _output: ()) -> napi::Result<()> {
+        Ok(())
+    }
+}
+
 /// Reads header and metadata of a save game for the list (S-5): `prefix`
 /// is the start of the file, `file_len` its length. Returns
 /// `{ gameVersion, meta, previewOffset, previewLen }`.
@@ -517,6 +537,21 @@ impl Core {
             link,
             bytes: bytes.to_vec(),
         }))
+    }
+
+    /// Starts a new game with an empty world on a square map of `map` cells
+    /// (S-6 `game.new`); resolves once the new session runs.
+    ///
+    /// # Errors
+    ///
+    /// Fails with the reason as JSON if the core is stopped or `map` is not
+    /// a map size of the game (`invalidArgument`).
+    #[napi(ts_return_type = "Promise<void>")]
+    pub fn new_game(&self, map: u32) -> napi::Result<AsyncTask<NewGameTask>> {
+        let link = self.runner()?.save_link();
+        // A value that does not fit 16 bits cannot be a map size either.
+        let edge = u16::try_from(map).unwrap_or(0);
+        Ok(AsyncTask::new(NewGameTask { link, edge }))
     }
 
     /// Stops the simulation thread.

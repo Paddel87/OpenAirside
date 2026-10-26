@@ -3,7 +3,8 @@
 //! `runner`, and their compact binary encoding with a filter on floor and camera rectangle
 //! (`docs/architecture.md` section 4, spike 1.3).
 //!
-//! Layout version 1, little endian. Header of [`HEADER_BYTES`] bytes:
+//! Layout version 2 (ADR-038, step 3.1b), little endian. Header of
+//! [`HEADER_BYTES`] bytes:
 //!
 //! | Offset | Type | Field |
 //! |---|---|---|
@@ -19,9 +20,19 @@
 //! | 25 | u8 | bytes per person ([`PERSON_BYTES`]) |
 //! | 26 | u16 | reserved, 0 |
 //! | 28 | u32 | revision of the flow fields in use |
+//! | 32 | u32 | world revision of this frame, 0 if it carries no block |
+//! | 36 | u32 | vehicles in this frame |
+//! | 40 | u32 | aircraft in this frame |
+//! | 44 | u32 | baggage items in this frame |
 //!
-//! Then n persons of [`PERSON_BYTES`] bytes: x and y as u16 in 1/32 cell
-//! ([`SUBCELL`]), floor as i8, heading as u8.
+//! Then the sections in fixed order, each on a 4-byte boundary: n persons of
+//! [`PERSON_BYTES`] bytes (x and y as u16 in 1/32 cell [`SUBCELL`], floor
+//! i8, heading u8 in 256 steps, group u8, state u8), vehicles
+//! ([`VEHICLE_BYTES`]), aircraft ([`AIRCRAFT_BYTES`]) and baggage
+//! ([`BAGGAGE_BYTES`]) with the counts of the header, and the world section
+//! of `display` (always present, at least its header). Group and state of
+//! persons are 0 until step 3.2; the sections of vehicles, aircraft and
+//! baggage are empty until steps 3.4 and 3.5.
 
 use std::sync::Arc;
 
@@ -29,16 +40,23 @@ use serde::{Deserialize, Serialize};
 
 use crate::build::grid::floor_index;
 use crate::datapack::Catalog;
+use crate::display::{WorldSender, WorldView};
 use crate::geometry::MapSize;
 use crate::time::Tick;
 use crate::world::World;
 
 /// Version of the frame layout; changes with every non-additive change.
-pub const LAYOUT_VERSION: u16 = 1;
+pub const LAYOUT_VERSION: u16 = 2;
 /// Size of the frame header in bytes.
-pub const HEADER_BYTES: usize = 32;
+pub const HEADER_BYTES: usize = 48;
 /// Size of one person in a frame in bytes.
-pub const PERSON_BYTES: usize = 6;
+pub const PERSON_BYTES: usize = 8;
+/// Size of one vehicle in a frame in bytes (section empty until step 3.4).
+pub const VEHICLE_BYTES: usize = 12;
+/// Size of one aircraft in a frame in bytes (section empty until step 3.4).
+pub const AIRCRAFT_BYTES: usize = 16;
+/// Size of one baggage item in a frame in bytes (section empty until step 3.5).
+pub const BAGGAGE_BYTES: usize = 8;
 /// Steps per cell of the fixed-point positions.
 pub const SUBCELL: f32 = 32.0;
 /// Floor value in the header when the frame holds all floors.
@@ -132,6 +150,8 @@ pub struct Snapshot {
     /// Content of the session (S-7 `catalog`); it changes only with the
     /// session, so a capture only counts a reference.
     content: Arc<Catalog>,
+    /// The resting world; taken again only when it changed.
+    world: WorldView,
 }
 
 fn fixed(cells: f32, limit: u16) -> u16 {
@@ -155,6 +175,7 @@ impl Snapshot {
         self.width = map.width;
         self.height = map.height;
         self.fields_revision = world.wayfinding().fields_revision();
+        self.world.refresh(session, world.build(), content);
         self.persons.clear();
         self.persons.reserve(world.persons().len());
         let persons = &mut self.persons;
@@ -210,15 +231,23 @@ impl Snapshot {
         })
     }
 
-    /// Largest frame this snapshot can produce, in bytes.
+    /// The resting world of the snapshot.
     #[must_use]
-    pub fn max_frame_bytes(&self) -> usize {
-        HEADER_BYTES + self.persons.len() * PERSON_BYTES
+    pub fn world(&self) -> &WorldView {
+        &self.world
     }
 
-    /// Encodes the persons matching `filter` into `out` (cleared first).
-    /// An invalid filter yields a frame without persons.
-    pub fn encode(&self, filter: &FrameFilter, out: &mut Vec<u8>) {
+    /// Bytes of the frame without the blocks of the world section.
+    #[must_use]
+    pub fn max_frame_bytes(&self) -> usize {
+        HEADER_BYTES + self.persons.len() * PERSON_BYTES + crate::display::SECTION_HEADER
+    }
+
+    /// Encodes the persons matching `filter` and the changed blocks of the
+    /// world that `world` has not handed out yet into `out` (cleared
+    /// first). An invalid filter yields a frame without persons and with
+    /// the blocks of the ground floor.
+    pub fn encode(&self, filter: &FrameFilter, world: &mut WorldSender, out: &mut Vec<u8>) {
         out.clear();
         out.resize(HEADER_BYTES, 0);
         let valid = filter.is_valid();
@@ -246,10 +275,23 @@ impl Snapshot {
                 out.extend_from_slice(&p.x.to_le_bytes());
                 out.extend_from_slice(&p.y.to_le_bytes());
                 out.extend_from_slice(&p.floor.to_le_bytes());
-                out.push(p.heading);
+                // Heading, group and state (group and state are 0 until 3.2).
+                out.extend_from_slice(&[p.heading, 0, 0]);
                 count += 1;
             }
         }
+        let revision = world.write(
+            &self.world,
+            self.session,
+            floor,
+            bounds.map(|[x0, y0, x1, y1]| ViewRect {
+                x0: x0 / SUBCELL,
+                y0: y0 / SUBCELL,
+                x1: x1 / SUBCELL,
+                y1: y1 / SUBCELL,
+            }),
+            out,
+        );
         let total = u32::try_from(self.persons.len()).unwrap_or(u32::MAX);
         let header = &mut out[..HEADER_BYTES];
         header[0..2].copy_from_slice(&LAYOUT_VERSION.to_le_bytes());
@@ -263,6 +305,7 @@ impl Snapshot {
         header[24..25].copy_from_slice(&floor.unwrap_or(ALL_FLOORS).to_le_bytes());
         header[25] = u8::try_from(PERSON_BYTES).unwrap_or(0);
         header[28..32].copy_from_slice(&self.fields_revision.to_le_bytes());
+        header[32..36].copy_from_slice(&revision.to_le_bytes());
     }
 }
 
@@ -304,7 +347,8 @@ mod tests {
     }
 
     fn persons(frame: &[u8]) -> Vec<(u16, u16, i8)> {
-        frame[HEADER_BYTES..]
+        let count = u32::from_le_bytes(frame[20..24].try_into().unwrap()) as usize;
+        frame[HEADER_BYTES..HEADER_BYTES + count * PERSON_BYTES]
             .as_chunks::<PERSON_BYTES>()
             .0
             .iter()
@@ -324,11 +368,34 @@ mod tests {
         assert_eq!(snap.map(), None);
         snap.capture(3, 99, &world(), &Arc::default());
         let mut out = Vec::new();
-        snap.encode(&FrameFilter::default(), &mut out);
-        assert_eq!(out.len(), HEADER_BYTES + 3 * PERSON_BYTES);
-        assert_eq!(out.len(), snap.max_frame_bytes());
+        snap.encode(
+            &FrameFilter::default(),
+            &mut WorldSender::default(),
+            &mut out,
+        );
+        // Persons, then the world section with the four blocks of the hall.
+        let section = HEADER_BYTES + 3 * PERSON_BYTES;
+        assert_eq!(
+            header_u32(&out, section).map(|bytes| section + bytes as usize),
+            Some(out.len())
+        );
+        assert_eq!(header_u32(&out, section + 4), Some(4));
+        assert_eq!(
+            header_u32(&out, 32),
+            Some(1),
+            "the first frame carries the ground floor"
+        );
+        assert_eq!(
+            (
+                header_u32(&out, 36),
+                header_u32(&out, 40),
+                header_u32(&out, 44)
+            ),
+            (Some(0), Some(0), Some(0)),
+            "no vehicles, aircraft or baggage yet"
+        );
         assert_eq!(u16::from_le_bytes([out[0], out[1]]), LAYOUT_VERSION);
-        assert_eq!(u16::from_le_bytes([out[2], out[3]]), 32);
+        assert_eq!(u16::from_le_bytes([out[2], out[3]]), 48);
         assert_eq!(header_u32(&out, 4), Some(3));
         assert_eq!(header_u32(&out, 8), Some(99));
         assert_eq!(u16::from_le_bytes([out[12], out[13]]), 64);
@@ -346,7 +413,11 @@ mod tests {
         let mut snap = Snapshot::default();
         snap.capture(1, 0, &world(), &Arc::default());
         let mut out = Vec::new();
-        snap.encode(&FrameFilter::default(), &mut out);
+        snap.encode(
+            &FrameFilter::default(),
+            &mut WorldSender::default(),
+            &mut out,
+        );
         let got = persons(&out);
         assert_eq!(got[0], (48, 48, 0)); // (1 + 0.5) × 32
         assert_eq!(got[1], (1296, 1616, 0));
@@ -372,6 +443,7 @@ mod tests {
                 floor: Some(0),
                 view: Some(view),
             },
+            &mut WorldSender::default(),
             &mut out,
         );
         // (40.5, 50.5) lies inside the rectangle plus 4 cells margin.
@@ -382,6 +454,7 @@ mod tests {
                 floor: Some(1),
                 view: None,
             },
+            &mut WorldSender::default(),
             &mut out,
         );
         assert!(persons(&out).is_empty());
@@ -418,8 +491,8 @@ mod tests {
             },
         ] {
             assert!(!filter.is_valid());
-            snap.encode(&filter, &mut out);
-            assert_eq!(out.len(), HEADER_BYTES);
+            snap.encode(&filter, &mut WorldSender::default(), &mut out);
+            assert_eq!(header_u32(&out, 20), Some(0));
         }
     }
 }

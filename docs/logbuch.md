@@ -17,16 +17,29 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, 3.1a ist erledigt (CI grün, PR offen), weiter mit 3.1b.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, 3.1a ist erledigt und gemergt (PR #35), 3.1b ist im Code fertig und wartet auf Messungen und Grafik-Abnahme des Projektinhabers (`docs/research/3.1b-messung.md`), danach 3.1c.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-26 15:15 (UTC) – [BEOBACHTUNG]
+
+- **Merges nach Freigabe des Projektinhabers** („Merge du beide, erst #37, dann #36“): PR #37 (Q.5, ADR-043) gemergt als `56bdc8c`; `main` in den Branch von 3.1b geholt. Konflikte nur in `docs/decisions.md` (Teil A: Zeilen ADR-043 und ADR-044, Reaktiv-Quote jetzt 4 / 10 über ADR-035 bis ADR-044, gesamt 17 / 44) und `docs/logbuch.md` (Einträge beider Branches nach Zeit geordnet).
+- **3.1b `[ERLEDIGT]`:** DoD erfüllt, CI grün auf `1dd8082` (39 Checks); Merge-Stand läuft durch die neue CI (Code aus `main` enthalten, daher voller Lauf). Grafik-Abnahme bleibt als 3.1b-N1 offen.
+
 ### 2026-10-26 15:05 (UTC) – [PROBLEM-GELÖST]
 
 - **Q.5 erledigt:** Nachweise auf PR #37: (1) Code-Push `0c59ece` nur als PR-Lauf, 23 Checks grün; (2) Doku-Push `f5e6269` auf grünem Stand in rund 20 s, Pflicht-Checks des Rulesets bestanden, PR mergebar; (3) erzwungener Fehlerfall: roter Rust-Test `ff1cfab`, Doku-Push `adcfc91` darauf → volle Pipeline, rot; Revert `312c9c6`, danach `c79c1b1` grün. Dieser Eintrag selbst ist der erste Doku-Commit, der nach dem grünen Stand nur den Doku-Weg nehmen soll.
+
+### 2026-10-26 15:00 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Nachmessung 3.1b eingetroffen:** Referenz-PC 14:50 UTC, Mac 14:51 UTC (Pakete aus Release-Lauf 40339206366 auf `2b36e3d`, Messergebnis Version 3); Rohdateien `docs/research/3.1b-ergebnisse/referenz-pc-nachmessung.json`, `mac-nachmessung.json`; Auswertung `docs/research/3.1b-messung.md` 5.3–5.5. Keine Störung gemeldet, alle Fenster gewertet.
+- **Ergebnis gegen die vorab festgelegten Schwellen (4a):** `previewFramesMax` 1 in allen 20 Fenstern auf beiden Rechnern; Referenz-PC 59,9–60 Bilder/s, p99 17,3–17,8 ms, 0 späte Antworten, 180 Ticks/s; Speicher 641 MB (PC) bzw. 841 MB (Mac, bei s = 40). Das Bild von 160,5 ms aus der ersten Messung kam nicht wieder.
+- **ADR-044:** „NFR Bauaktion im nächsten Bild“ `[VORLÄUFIG]` → `[BELASTBAR]`; „Speicher der Weltdarstellung“ `[BELASTBAR]` (seit 14:25 UTC) bestätigt; Auflage Windows aus 3.15 erfüllt. Entscheidungs-Klasse aktiv (Opus 5.5).
+- **Befund ohne Kriterium:** Mac einmal 179 Ticks/s (Fenster 8), ein Verzögerungsereignis (Fenster 19, 6 Ticks), Schritt bis 39,2 ms; Muster der Erkundung 3.13. Bauaktion bis zum Bild am Mac einmal 5 Bilder (32,8 ms, Schwelle 100 ms eingehalten, Ziel 1–2 Bilder verfehlt).
+- **ADR-Nummer:** ADR-043 trägt die CI-Trigger (Q.5, Branch `ci/q-5-ci-trigger`, PR #37); die Reifegrade erhalten ADR-044.
 
 ### 2026-10-26 14:45 (UTC) – [ADR]
 
@@ -34,6 +47,72 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 - **Fund beim Entwurf:** Der Ruleset „main-schutz“ (öffentlich lesbar über die API) verlangt 19 Checks namentlich, darunter die Matrix-Jobs je Betriebssystem. Ein auf Job-Ebene übersprungener Matrix-Job meldet nicht unter seinem vollen Namen; deshalb überspringen die Matrix-Jobs ihre Schritte. Zweiter Fund: Scheitert der Entscheidungs-Job, würden abhängige Jobs übersprungen und als bestanden gelten; deshalb laufen die Code-Jobs, außer die Entscheidung ist ausdrücklich `false`.
 - **Lokal geprüft:** `scripts/ci-changes.test.mjs` (10 Tests, darunter Doku auf rotem, laufendem und unlesbarem Stand); echter Diff im Repo: zwei Doku-Commits → `false`, Bereich mit Code → `true`, ohne Token (HTTP 401) → `true`.
 - **Modell:** Entscheidungs-Klasse (Opus 5.5, laut `get_session`), passt zur Empfehlung von Q.5.
+
+### 2026-10-26 14:30 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung 2026-10-26 13:50 bis 14:30 UTC (Session ab 2026-10-25 20:54 UTC).
+- **Bearbeitet:** 3.1b: Auswertung der Messungen Referenz-PC und Mac, Grafik-Abnahme verschoben (3.1b-N1), Reifegrade, Bildzählung der Vorschau im Messwerkzeug (Option C).
+- **Erreicht:** Commits `c7cab0c`, `868fd07`, `b027de8`, `ee59a4d`, `aa57ae0`, `2b36e3d`, `b4c2086` (gepusht, PR #36). „Speicher der Weltdarstellung“ `[BELASTBAR]`. Lokal grün: Vitest Renderer (18 Dateien, 177 Tests), `tsc`, ESLint; `measure 1` im Container mit Version 3. CI grün auf `aa57ae0`; Lauf auf `ee59a4d` rot nur im Artefakt-Upload (`ENOTFOUND`), PR-Kommentar. Release-Lauf 40339206366 auf `2b36e3d` für die Nachmessung gestartet.
+- **Offen geblieben:** Nachmessung auf beiden Rechnern durch den Projektinhaber (zugesagt „nachher“); danach Auswertung nach `docs/research/3.1b-messung.md` Abschnitt 4a, ADR-043 zu den Reifegraden, `[ERLEDIGT]` für 3.1b, Merge nur nach Freigabe. Grafik-Abnahme 3.1b-N1, Zeitpunkt nennt der Projektinhaber.
+- **Nächster Schritt:** Messdateien auswerten.
+- **Modell-Bilanz:** bis 14:07 UTC Routine-Klasse (Sonnet 5.5, laut `get_session`), danach Entscheidungs-Klasse (Opus 5.5, Wechsel durch den Projektinhaber nach Stopp). Schritt 3.1b empfiehlt Entscheidung für die Bewertung; die Auswertung lief vor dem Wechsel auf Routine (nur Eintragen der Zahlen, keine Bewertung), die Bewertung auf Entscheidung. Keine Teilarbeit an Unteragenten abgegeben (Probelauf offen).
+- **Kontextgröße:** 292.231 von 1.000.000 Token laut `get_session`, unter der Grenze von 400.000.
+
+### 2026-10-26 14:25 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Modellwechsel:** Stopp „Modellwechsel erforderlich“ (Beförderung nach `[BELASTBAR]`) aufgehoben; laut `get_session` eingestellt und bedient `claude-opus-5-5` → Entscheidungs-Klasse.
+- **Speicher der Weltdarstellung:** `[VORLÄUFIG]` → `[BELASTBAR]`. Kriterium aus ADR-038 (höchstens +256 MB gegenüber 2.10) auf beiden Rechnern eingehalten: Referenz-PC höchstens 671 MB (Schwelle 811), Mac höchstens 849 MB (Schwelle 930).
+- **Nicht befördert:** „NFR Bauaktion im nächsten Bild“ bleibt `[VORLÄUFIG]` (Zeit bis zur Vorschau im Maximum über einem Bildtakt; Messgröße sagt nicht, in welchem Bild die Vorschau stand). „NFR Performance unter Windows“ bleibt `[BELASTBAR]` bis zur Nachmessung: Fenster 9 (59,4 Bilder/s) fällt zeitlich auf einen Bildschirm-Standby (Abschaltung nach 5 Minuten, Angabe des Projektinhabers; 300 s nach der letzten Eingabe ≈ 289 s Fensterzeit, Fenster 9 von 271 bis 301 s).
+- **Entscheidung des Projektinhabers (Option C von A/B/C):** 3.1b bleibt `[IN ARBEIT]`; Bildzählung der Vorschau ins Messwerkzeug (`previewFramesMax`, Messergebnis Version 3), neue Pakete, Nachmessung auf beiden Rechnern mit Bildschirm-Abschaltung aus. Schwellen vorab festgelegt in `docs/research/3.1b-messung.md` Abschnitt 4a. Container-Prüfung: `measure 1` mit Version 3, `previewFramesMax` 1 in beiden Fenstern.
+- **CI auf `ee59a4d`:** „TS Tests & Coverage (ubuntu-latest)“ rot nur im Schritt `upload-artifact` (`ENOTFOUND`), alle 473 Tests grün; PR-Kommentar, Neustart abgelehnt, solange der Lauf lief.
+
+### 2026-10-26 14:20 (UTC) – [BEOBACHTUNG]
+
+- **Messungen 3.1b eingetroffen:** Referenz-PC (Windows, 13:48 UTC) und Mac (14:03 UTC), Rohdateien in `docs/research/3.1b-ergebnisse/`, Auswertung gegen die Schwellen in `docs/research/3.1b-messung.md` Abschnitt 5 (Commits `c7cab0c`, `868fd07`). Nur Zahlen aus den Dateien, keine Schätzung. Auffällig: Referenz-PC Fenster 9 mit 59,4 Bildern/s und einem Bild von 160,5 ms; Mac `ticksPerSecMin` 162 (Fenster 16, längster Schritt 110,5 ms) und 179 (Fenster 10), 7 Verzögerungsereignisse, ohne Wirkung auf das Bild; Vorschau der Bauaktion am Referenz-PC im Median meist ein Bildtakt (16,6–17,7 ms), im Maximum bis 28,6 ms. Notizen zum Zuschauen: Referenz-PC: Bildschirm einmal kurz im Standby (siehe Messdokument 5.1); Mac: keine.
+- **Grafik-Abnahme verschoben (Antwort des Projektinhabers):** „Die Grafiken würde ich gerne zu einem anderen Zeitpunkt abnehmen. Die können ja auch noch mal komplett durchgetauscht werden.“ Die Verschiebung hat ihren Landeplatz im neuen Fahrplan-Schritt 3.1b-N1 `[OFFEN]` (Abschnitt 6 der Harten Regeln); die Testgrafiken aus 2.10 bleiben im Spiel. Vorlage 3.1 und Messdokument entsprechend vermerkt.
+- **Reifegrade nicht entschieden:** Die Beförderung von „Speicher der Weltdarstellung“, „NFR Bauaktion im nächsten Bild“ und „NFR Performance unter Windows“ nach `[BELASTBAR]` ist ein Eskalations-Auslöser (Entscheidungs-Klasse, `CLAUDE.md` Abschnitt 0, Punkt 4). Aktive Klasse: Routine (Sonnet 5.5). Die Entscheidung wartet auf einen Wechsel.
+
+### 2026-10-25 21:50 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 20:54 bis 21:50 UTC.
+- **Bearbeitet:** 3.1b: S-1 Layout 2 mit `worldAck`, `game.new`, Weltdarstellung (Z-1), Bau-Werkzeug, möbliertes Szenario und Messreihe, Rauchtest über vier Sitzungswechsel, Dokumente, Messanleitung.
+- **Erreicht:** Commits `0634e65`, `9edb236`, `0b2c685`, `7c97219`, `a21643d` auf `feat/3-1b-darstellung-und-bedienung` (gepusht; CI nachgetragen 21:46 UTC: grün auf `9b730e8`, Läufe 40236635139, 40236700118 und Security 40236700122; PR #36 eröffnet). Lokal grün: Rust-Tests (Kern 167 Lib-Tests, alle Integrationstests), clippy, Vitest 480+ Tests, ESLint, Prettier, `tsc`, Rauchtests `smoke` und `world` unter xvfb, `measure 1` im Container. 3.1b bleibt `[IN ARBEIT]`.
+- **Offen geblieben:** Release-Pakete starten (Workflow „Release“ auf dem Branch, die KI hat ihn nicht gestartet); Messungen auf Referenz-PC und Mac und Grafik-Abnahme (Wand A/B, Boden A/B, Sitzbank) durch den Projektinhaber nach `docs/research/3.1b-messung.md`; danach Auswertung, Reifegrade, PR (nicht eröffnet: keine Anweisung dazu in dieser Session), `[ERLEDIGT]`. Coverage der Kern-Änderung nicht gemessen (CI-Gate prüft).
+- **Nächster Schritt:** Ergebnisse des Projektinhabers auswerten; danach 3.1c.
+- **Aktive Klasse und Bilanz:** Routine (Sonnet 5.5 laut `get_session` 20:54 und 21:45 UTC); 0 Schritte oberhalb der Empfehlung; nichts abgegeben (Probelauf der Unteragenten-Klassen offen).
+- **Kontextgröße:** laut `get_session` nicht feststellbar (meldet 0 von 1.000.000); die Session war sehr umfangreich, die nächste Arbeit sollte in einer neuen Session beginnen.
+- **Ablaufdaten-Prüfung und Drift-Check:** Register geprüft, kein Eintrag am Vorlauf. Keine neuen ADRs; Reaktiv-Quote unverändert 4 / 10; Fahrplan-Stand, README und Runbook nachgezogen; Landeplatz der 253-Typen-Grenze in 6.1 eingetragen; kein CHANGELOG vorhanden (Version 0.0.0). Onboarding-Pfad: Quick-Start-Befehle unverändert, daher keine Neu-Validierung des Klons; die Rauchtests liefen im Arbeitsbaum.
+
+### 2026-10-25 21:40 (UTC) – [PROBLEM-GELÖST]
+
+- **Reibungen in 3.1b, je mit Lösung:**
+  1. `pre-commit` war im neuen Container nicht installiert und der Hook hat drei Commits wegen ESLint und `tsc` gestoppt (`prefer-function-type` bei `game.new`: In einem Typ-Literal ist `new(…)` eine Konstruktor-Signatur, kein Methodenname; Lösung: Eigenschaft `readonly new: (…) => …`; `no-unnecessary-condition` bei einem `let`, das nur einmal gesetzt wird: Lösung: `const` vor die Handler gezogen). `pip install pre-commit` und `pre-commit install` im Container.
+  2. Der Budget-Test des Welt-Senders baute sein Muster aus `floor_kind`-Nummern, die ohne Typtabelle alle zu „fehlt“ übersetzt werden und damit gleichförmig sind; Muster stattdessen aus Zone, Kostenfaktor und Flächenart.
+  3. `Build::build_floor` über Leerzellen **pflastert** sie (Semantik von `buildArea`). Das möblierte Terminal setzt den Boden deshalb je Lauf begehbarer Zellen einer Zeile; die Wände folgen auf den Leerzellen daneben.
+  4. `npm ci --ignore-scripts` lädt das Electron-Paket nicht; `node node_modules/electron/install.js` holt es über den Proxy. Der Test der Messreihe mit Playwright muss auf `data-session` warten, nicht auf `data-ready` (der Port kommt später); sonst meldet die Konsole „measure: not connected“.
+  5. Ein neuer Stempel je Block (`Block::stamp`, Änderungszähler des Rasters beim Ändern) ersetzt das Festhalten gesendeter Blöcke im Sender; sonst hätte jede Änderung eines gesendeten Blocks ihn kopieren müssen (einer der Posten für den Speicher auf dem Mac in 3.8).
+
+### 2026-10-25 21:40 (UTC) – [BEOBACHTUNG]
+
+- **3.1b umgesetzt** (Commits `0634e65`, `9edb236`, `0b2c685`, `7c97219`). Entscheidungen im Rahmen von ADR-038 und ADR-040 („Technisch, Entscheidung der KI“), die den Wortlaut des Entwurfs präzisieren, ohne eine Kategorie aus Abschnitt 4 zu berühren:
+  1. **Kopf und Abschnitt von Layout 2:** Kopf zu 48 Byte mit Welt-Revision und den Zahlen der Fahrzeuge, Flugzeuge und Gepäckstücke (je `u32`); die Zahl der Welt-Blöcke und die Bytes des Abschnitts stehen im 16-Byte-Kopf des Welt-Abschnitts, der immer da ist. Beschrieben in `architecture-schnittstellen.md` (S-1, Umsetzung 3.1b).
+  2. **Typen in Welt-Blöcken** sind Katalog-Index plus 1 (0 keiner, `0xFFFF` unbekannt oder über 16 Bit); Objekte gehören zum Block ihres Ankers.
+  3. **`worldAck`** quittiert die Welt-Revision des zuletzt **gezeichneten** Bildes; ohne Quittung bietet der Kern dieselben Blöcke wieder an. Ein Bild einer fremden Sitzung oder ein Handler, der wirft, quittiert nichts.
+  4. **Kachelblatt:** höchstens 253 Boden- und Wandtypen, darüber Ersatzkachel; Landeplatz Schritt 6.1 (Grafiken in Mods).
+  5. **Zonentönung** nur für Zone 1 bis 3 (Luftseite, Kontrolle, Ausgang); die Landseite bleibt ungetönt, bis 3.2 Zonen als Spielerwerkzeug einführt.
+  6. **Bedienung:** Ist ein Werkzeug gewählt, baut die linke Maustaste; rechte und mittlere Taste verschieben die Ansicht; R dreht, Esc beendet das Werkzeug. Der Katalog wird mit dem ersten Bild einer Sitzung abgefragt (S-7 antwortet aus dem jüngsten übergebenen Bild).
+  7. **Neues Szenario `furnishedTerminal`** (S-2 Debug-Aktion, additiv nach Regel-008): Das Referenz-Terminal mit Boden, Wänden und 20.000 Bänken (ohne Sperrwirkung) für die Messung; ein Feld der Halle bleibt frei für die Bauaktionen der Messreihe. Das Szenario `referenceTerminal` und seine Benchmarks bleiben unverändert.
+  8. **Messreihe, Ergebnisformat 2:** echte Befehle `buildArea` (Wand) und `demolish`, Zeit bis zur Zeichnung der Vorschau und bis zum Bild mit dem geänderten Block, Erstübertragung der Welt (Ausschnitt, ganz), Zahl abgelehnter Bauaktionen.
+- **Container-Prüfung nach Maßnahme (11):** `e2e/world.spec.ts` (neues Spiel 1536, möbliertes Szenario, neues Spiel 2048, neues Spiel 1536, Ablehnung mit Hinweis) und die vollständige Messreihe `measure 1` über das echte Programm: Welt in einem Bild (4.988 Blöcke, 0,84 MB, 20.000 Objekte), 26 Datentexturen (26,1 MB), Bauaktionen 6 von 6 angenommen, 179–180 Ticks/s. Bildraten ohne Aussage (SwiftShader). Alle bisherigen Rauchtests unverändert grün.
+- **Abgrenzung zu ADR-038:** Der Entwurf nennt „Kopf 48 Byte“ mit „Zahl der Welt-Blöcke, Bytes des Welt-Abschnitts“ im Kopf; die Einzelheit steht jetzt im Abschnittskopf (gleiche Information, ein Feld weniger im Hauptkopf). Kein Vertragsbruch, weil Layout 2 vorher nirgends umgesetzt war.
+
+### 2026-10-25 20:55 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 19:55 UTC, danach `[PROBLEM-GELÖST]` 20:05 UTC (unbeständiger Test, CI auf `2b386a4` grün). 3.1a ist auf `main` gemergt (PR #35, Merge-Commit `63070a1`); 3.1b `[OFFEN]`.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Schritt 3.1, Architektur 1/2/9, Decisions Teil A und C, Requirements-Übersicht, aktive Blocker: keine); Vertiefung folgt: `docs/research/3.1-vorlage.md` (gelesen), ADR-038, ADR-040, ADR-042, `docs/research/3.8-weltdarstellung.md`, `docs/architecture-schnittstellen.md` (S-1, S-2, S-6, S-7, S-8).
+- **Modell:** eingestellt `claude-sonnet-5-5`, bedient `claude-sonnet-5-5` laut `get_session` 20:54 UTC → Routine-Klasse; passt zur Empfehlung für die Umsetzung (Bewertungen sind in ADR-038/040/042 entschieden). Kontextgröße 0 von 1.000.000 (frische Session).
+- **Branch:** `feat/3-1b-darstellung-und-bedienung` vom aktuellen `main` (`63070a1`).
+- **Vorhaben:** 3.1b nach Fahrplan und Vorlage; Messungen auf Referenz-PC und Mac sowie die Grafik-Abnahme macht der Projektinhaber (Messwerkzeug und Anleitung bereitstellen, dann anhalten). Freigabepflichtige Entscheidung außerhalb von ADR-038/040/042 oder Eskalations-Auslöser → Stopp.
 
 ### 2026-10-25 20:05 (UTC) – [PROBLEM-GELÖST]
 

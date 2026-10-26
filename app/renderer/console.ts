@@ -25,6 +25,8 @@ export type ConsoleResult =
   | { readonly kind: "languages" }
   | { readonly kind: "setLanguage"; readonly code: string }
   | { readonly kind: "settings" }
+  | { readonly kind: "newGame"; readonly map: 1536 | 2048 }
+  | { readonly kind: "details"; readonly all: boolean }
   | { readonly kind: "help"; readonly text: string }
   | { readonly kind: "error"; readonly text: string };
 
@@ -36,7 +38,9 @@ export const HELP = [
   "clear",
   "build <pack:entry> <x> <y> [floor] – build command with a content id (S-2, S-4)",
   "walls <floor> <x0> <y0> <x1> <y1> on|off",
-  "scenario hall|reference [persons]",
+  "scenario hall|reference|furnished [persons] – furnished: floors, walls and 20,000 objects",
+  "newgame [1536|2048] – a new game with an empty world on a square map (default 1536)",
+  "details on|off – draw objects also in the simplified overview",
   "table [rows 1–1000] – persons of the newest frame, sorted by y and x (S-7)",
   `measure [minutes 1–${String(MAX_MINUTES)}] – measurement series, result as JSON file (default 10)`,
   "packs – data packs with state and errors",
@@ -64,6 +68,8 @@ const SCENARIOS: Readonly<Record<string, Scenario>> = {
   openhall: "openHall",
   reference: "referenceTerminal",
   referenceterminal: "referenceTerminal",
+  furnished: "furnishedTerminal",
+  furnishedterminal: "furnishedTerminal",
 };
 
 function integer(text: string | undefined): number | undefined {
@@ -141,7 +147,7 @@ export function parseConsoleLine(line: string): ConsoleResult {
       const scenario = SCENARIOS[args[0] ?? ""];
       const persons = args[1] === undefined ? 0 : integer(args[1]);
       if (scenario === undefined || persons === undefined || persons < 0) {
-        return error("scenario hall|reference [persons]");
+        return error("scenario hall|reference|furnished [persons]");
       }
       return command({ kind: "debug", action: { kind: "loadScenario", scenario, persons } });
     }
@@ -199,6 +205,16 @@ export function parseConsoleLine(line: string): ConsoleResult {
     }
     case "settings":
       return args.length === 0 ? { kind: "settings" } : error("settings");
+    case "newgame": {
+      const map = args[0] === undefined ? 1536 : integer(args[0]);
+      return args.length <= 1 && (map === 1536 || map === 2048)
+        ? { kind: "newGame", map }
+        : error("newgame [1536|2048]");
+    }
+    case "details":
+      return args.length === 1 && (args[0] === "on" || args[0] === "off")
+        ? { kind: "details", all: args[0] === "on" }
+        : error("details on|off");
     case "measure": {
       const minutes = args[0] === undefined ? 10 : integer(args[0]);
       if (minutes === undefined || minutes < 1 || minutes > MAX_MINUTES) {

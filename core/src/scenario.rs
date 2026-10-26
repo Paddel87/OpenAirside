@@ -9,11 +9,12 @@
 // built from data packs and a reference save game.
 
 use crate::build::grid::{
-    COST_AVOID, COST_MARKED, COST_NORMAL, Cell, FLOORS, GROUND_INDEX, STAIRS, WALL, Zone,
+    AreaKind, BLOCK, COST_AVOID, COST_MARKED, COST_NORMAL, Cell, FLOORS, GROUND_INDEX, STAIRS,
+    WALL, Zone,
 };
 use crate::build::target::Target;
 use crate::command::Scenario;
-use crate::geometry::{CellPos, MapSize};
+use crate::geometry::{CellPos, CellRect, MapSize, Rotation};
 use crate::persons::SplitMix64;
 use crate::world::World;
 
@@ -292,7 +293,164 @@ pub fn scenario_world(scenario: Scenario, map: MapSize, persons: u32, seed: u64)
         Scenario::ReferenceTerminal => {
             reference_terminal(map, REFERENCE_EDGE, REFERENCE_GATES, persons, seed)
         }
+        Scenario::FurnishedTerminal => {
+            let mut world =
+                reference_terminal(map, REFERENCE_EDGE, REFERENCE_GATES, persons, seed)?;
+            furnish(&mut world, REFERENCE_EDGE, FURNISHED_OBJECTS, seed);
+            Some(world)
+        }
     }
+}
+
+/// Types the furnished terminal uses; ids of the base pack (step 3.1b).
+const FURNISH_FLOOR: &str = "base:floor_concrete";
+const FURNISH_WALL: &str = "base:wall_concrete";
+const FURNISH_OBJECT: &str = "base:bench";
+/// Objects of the furnished terminal: the estimate of step 2.10 for the
+/// reference scenario (several thousand seats, counters, plants and signs,
+/// doubled as headroom; re-measured in 4.1).
+pub const FURNISHED_OBJECTS: usize = 20_000;
+/// Footprint of a bench in cells (4 m × 2 m).
+const BENCH_SIZE: (u16, u16) = (2, 1);
+
+/// Origin of the terminal of `edge` cells in the middle of `map`.
+fn terminal_origin(map: MapSize, edge: u16) -> (u16, u16) {
+    ((map.width - edge) / 2, (map.height - edge) / 2)
+}
+
+/// The field of the measurement's build actions in the terminal, in cells
+/// `x0, y0, x1, y1` (half open): the landside hall below the security line
+/// (`app/renderer/measure.ts` `buildArea` draws its 3 × 3 areas there). The
+/// furnished terminal keeps it free of objects, so that walls can be built
+/// and demolished there.
+#[must_use]
+pub fn measurement_field(map: MapSize, edge: u16) -> (u16, u16, u16, u16) {
+    let (ox, oy) = terminal_origin(map, edge);
+    let x0 = ox + edge / 8;
+    let y0 = oy + edge / 2 + 15;
+    (x0, y0, x0 + edge / 4 * 3 + 3, y0 + (edge / 2 - 90) + 3)
+}
+
+/// Gives the ground floor of the terminal floor coverings, walls and
+/// objects of the base pack ([`Scenario::FurnishedTerminal`]): the
+/// walkable cells get the floor, void cells next to them the wall, and
+/// `objects` benches stand on free floor in the blocks with enough room,
+/// outside the [`measurement_field`]. Deterministic in `seed`.
+pub fn furnish(world: &mut World, edge: u16, objects: usize, seed: u64) {
+    let map = world.map();
+    let (ox, oy) = terminal_origin(map, edge);
+    // Floor under the walkable cells, per run of a row: a floor drawn over
+    // void would pave it (`buildArea` semantics).
+    for y in oy..oy + edge {
+        let mut run: Option<u16> = None;
+        for x in ox..=ox + edge {
+            let walkable =
+                x < ox + edge && world.build().grid().walkable(CellPos { x, y, floor: 0 });
+            match (run, walkable) {
+                (None, true) => run = Some(x),
+                (Some(start), false) => {
+                    let rect = CellRect {
+                        floor: 0,
+                        x0: start,
+                        y0: y,
+                        x1: x,
+                        y1: y + 1,
+                    };
+                    let _ =
+                        world.build_floor(FURNISH_FLOOR, AreaKind::PublicWalk, COST_NORMAL, rect);
+                    run = None;
+                }
+                _ => {}
+            }
+        }
+    }
+    // Walls where void touches walkable cells, merged into runs per row.
+    for y in oy..oy + edge {
+        let mut run: Option<u16> = None;
+        for x in ox..=ox + edge {
+            let at_wall = x < ox + edge
+                && {
+                    let grid = world.build().grid();
+                    let pos = |x: u16, y: u16| CellPos { x, y, floor: 0 };
+                    let void = grid
+                        .cell(pos(x, y))
+                        .is_some_and(|c| !c.walkable() && c.wall_kind == 0);
+                    void && [
+                    (x.checked_sub(1), Some(y)),
+                    (Some(x + 1), Some(y)),
+                    (Some(x), y.checked_sub(1)),
+                    (Some(x), Some(y + 1)),
+                ]
+                .into_iter()
+                .any(|(nx, ny)| matches!((nx, ny), (Some(nx), Some(ny)) if grid.walkable(pos(nx, ny))))
+                };
+            match (run, at_wall) {
+                (None, true) => run = Some(x),
+                (Some(start), false) => {
+                    let rect = CellRect {
+                        floor: 0,
+                        x0: start,
+                        y0: y,
+                        x1: x,
+                        y1: y + 1,
+                    };
+                    let _ = world.build_wall(FURNISH_WALL, rect);
+                    run = None;
+                }
+                _ => {}
+            }
+        }
+    }
+    let (fx0, fy0, fx1, fy1) = measurement_field(map, edge);
+    let blocks_x = usize::from(map.width).div_ceil(BLOCK);
+    let ground = GROUND_INDEX * blocks_x * usize::from(map.height).div_ceil(BLOCK);
+    let walkable: Vec<usize> = {
+        let snapshot = world.build().grid().snapshot();
+        (0..blocks_x * usize::from(map.height).div_ceil(BLOCK))
+            .filter(|&i| {
+                snapshot
+                    .block(ground + i)
+                    .is_some_and(|b| b.walkable_cells() >= 100)
+            })
+            .filter(|&i| {
+                let (bx0, by0) = ((i % blocks_x * BLOCK) as u16, (i / blocks_x * BLOCK) as u16);
+                // Two cells of margin: a bench reaches into the next block.
+                bx0 + BLOCK as u16 + 2 <= fx0
+                    || bx0 >= fx1 + 2
+                    || by0 + BLOCK as u16 + 2 <= fy0
+                    || by0 >= fy1 + 2
+            })
+            .collect()
+    };
+    if walkable.is_empty() {
+        return;
+    }
+    let per_block = objects.div_ceil(walkable.len());
+    let mut rng = SplitMix64(seed ^ 0x9e37_79b9_7f4a_7c15);
+    let mut placed = 0usize;
+    for &i in &walkable {
+        let (bx0, by0) = ((i % blocks_x * BLOCK) as u16, (i / blocks_x * BLOCK) as u16);
+        let mut tries = 0usize;
+        let mut here = 0usize;
+        while here < per_block && placed < objects && tries < per_block * 6 {
+            tries += 1;
+            let r = rng.next();
+            let at = CellPos {
+                x: bx0 + (r % BLOCK as u64) as u16,
+                y: by0 + ((r >> 8) % BLOCK as u64) as u16,
+                floor: 0,
+            };
+            let rotation = Rotation(((r >> 16) % 4) as u8);
+            if world
+                .build_object(FURNISH_OBJECT, BENCH_SIZE, false, at, rotation)
+                .is_ok()
+            {
+                here += 1;
+                placed += 1;
+            }
+        }
+    }
+    world.discard_events();
 }
 
 /// Builds a world with the reference terminal of `edge` × `edge` cells (at
@@ -466,5 +624,66 @@ mod tests {
             .map(|t| set.unreachable_cells(u8::try_from(t).unwrap()))
             .sum();
         assert_eq!(stuck, 0);
+    }
+
+    #[test]
+    fn the_furnished_terminal_has_floors_walls_and_free_build_field() {
+        let map = MapSize::new(2048, 2048).unwrap();
+        let world = scenario_world(Scenario::FurnishedTerminal, map, 0, 7).unwrap();
+        let build = world.build();
+        let objects = build.objects().as_slice();
+        assert!(
+            (FURNISHED_OBJECTS - 200..=FURNISHED_OBJECTS).contains(&objects.len()),
+            "{} objects",
+            objects.len()
+        );
+        assert_eq!(
+            build.types().ids(),
+            [FURNISH_FLOOR, FURNISH_WALL, FURNISH_OBJECT]
+        );
+        // A walkable cell of the hall has the floor, a wall cell next to it the wall.
+        let (x0, y0, x1, y1) = measurement_field(map, REFERENCE_EDGE);
+        let hall = CellPos {
+            x: x0 + 10,
+            y: y0 + 10,
+            floor: 0,
+        };
+        let cell = build.grid().cell(hall).unwrap();
+        assert!(cell.walkable());
+        assert_eq!(cell.floor_kind, 1);
+        let walls = (0..build.grid().snapshot().table_len())
+            .filter_map(|i| {
+                build
+                    .grid()
+                    .snapshot()
+                    .block(i)
+                    .map(|b| b.wall_kinds().iter().filter(|w| **w == 2).count())
+            })
+            .sum::<usize>();
+        assert!(walls > 1000, "{walls} wall cells");
+        // The field of the measurement's build actions stays free.
+        assert!(
+            objects
+                .iter()
+                .all(|o| o.x + o.width <= x0 || o.x >= x1 || o.y + o.depth <= y0 || o.y >= y1),
+            "an object stands in the build field"
+        );
+        // The persons can still walk: no cell under a bench is blocked.
+        assert!(objects.iter().all(|o| !o.blocks));
+    }
+
+    #[test]
+    fn the_furnished_terminal_is_deterministic_and_keeps_its_targets() {
+        let map = MapSize::new(2048, 2048).unwrap();
+        let hash = |seed| {
+            let world = scenario_world(Scenario::FurnishedTerminal, map, 100, seed).unwrap();
+            let mut hasher = crate::hash::StateHasher::new();
+            world.hash_into(&mut hasher);
+            (hasher.finish(), world.build().targets().len())
+        };
+        let (a, targets) = hash(5);
+        assert_eq!((a, targets), hash(5));
+        assert_ne!(a, hash(6).0);
+        assert_eq!(targets, super::target_count(usize::from(REFERENCE_GATES)));
     }
 }

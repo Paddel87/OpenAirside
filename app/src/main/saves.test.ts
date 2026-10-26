@@ -11,6 +11,7 @@ import {
   withinChars,
   newSaveId,
   parseInfoAnswer,
+  parseNewGameArgs,
   parseSaveArgs,
   parseSaveMeta,
   type SaveEntry,
@@ -232,5 +233,19 @@ describe("bounds against huge or odd input (separate review of 2.5b)", () => {
     expect(previewSize({ width: 600, height: 1400 })).toEqual({ width: 462, height: 1080 });
     expect(previewSize({ width: 1, height: 100_000 })).toBeUndefined();
     expect(previewSize({ width: 0, height: 10 })).toBeUndefined();
+  });
+});
+
+describe("parseNewGameArgs (S-6 game.new)", () => {
+  it("accepts exactly the two map sizes", () => {
+    expect(parseNewGameArgs({ map: 1536 })).toEqual({ map: 1536 });
+    expect(parseNewGameArgs({ map: 2048 })).toEqual({ map: 2048 });
+    expect(parseNewGameArgs({ map: 1024 })).toBeUndefined();
+    expect(parseNewGameArgs({ map: "2048" })).toBeUndefined();
+    expect(parseNewGameArgs({})).toBeUndefined();
+    expect(parseNewGameArgs({ map: 2048, name: "x" })).toBeUndefined();
+    expect(parseNewGameArgs([2048])).toBeUndefined();
+    expect(parseNewGameArgs(null)).toBeUndefined();
+    expect(parseNewGameArgs(2048)).toBeUndefined();
   });
 });

@@ -1,32 +1,32 @@
 /**
  * Measurement tool of step 2.7 (module "Benchmark & Leistung"): the long
- * run of spike 1.5 on production code. Loads the reference terminal with
- * 10,000 persons, runs it at the highest game speed and records per window
- * of 30 s the frame rate and frame times, the round trip of frame requests,
- * ticks per second, tick times and lag (from `coreStats`, S-3), the
- * recomputation of the flow fields after a build action every 10 s
- * (`setWalls`), a table query 4 times per second (S-7) and long tasks of the
- * renderer. The camera alternates per window between the whole ground floor
- * and circling its densest spot. Since step 2.10 the series also places
- * object sprites from the atlases and translucent zone overlays over the
- * ground floor of the terminal (`measureScene`): a stand-in load while the
- * way of the world display is open (3.8, ADR-032), not that display. Unlike spike 1.5 (densest spot of the
- * floor above after an unthrottled fast-forward), the persons are still on
- * the ground floor after the warm-up at 3×, so the ground floor carries the
- * drawing load in both views.
+ * run of spike 1.5 on production code. Loads the furnished reference
+ * terminal (floors, walls and 20,000 objects of the base pack, step 3.1b)
+ * with 10,000 persons, runs it at the highest game speed and records per
+ * window of 30 s the frame rate and frame times, the round trip of frame
+ * requests, ticks per second, tick times and lag (from `coreStats`, S-3),
+ * a build action every 10 s (a 3 × 3 wall built and demolished again with
+ * the real commands `buildArea` and `demolish`, with the provisional
+ * drawing as the build tool does it), a table query 4 times per second
+ * (S-7) and long tasks of the renderer. Before the series it records the
+ * time the resting world needs to arrive in the playfield (first transfer,
+ * ADR-038). The camera alternates per window between the whole ground
+ * floor and circling its densest spot.
  *
  * Display and measurement only (rule 002): the core decides every effect;
- * the series only sends debug commands and queries. Timers and the camera
- * come from a host, so that the series is testable without a browser.
+ * the series only sends commands and queries. Timers and the camera come
+ * from a host, so that the series is testable without a browser.
  */
 import type { CellRect } from "../src/generated/CellRect.js";
 import type { Command } from "../src/generated/Command.js";
 import type { EventRecord } from "../src/generated/EventRecord.js";
 import type { Query } from "../src/generated/Query.js";
+import type { Scenario } from "../src/generated/Scenario.js";
 import type { TickStats } from "../src/generated/TickStats.js";
+import type { WorldFigures } from "./world-view.js";
 
 /** Version of the result format; raised by every non-additive change. */
-export const RESULT_VERSION = 1;
+export const RESULT_VERSION = 3;
 /** Edge of the reference terminal in cells (core/src/scenario.rs `REFERENCE_EDGE`). */
 export const REFERENCE_EDGE = 768;
 /** Panel id of the measurement's table query. */
@@ -43,19 +43,15 @@ export interface MeasureConfig {
   readonly buildEverySeconds: number;
   readonly queriesPerSecond: number;
   readonly tableRows: number;
-  /** Longest wait for the scenario, milliseconds. */
+  /** Longest wait for the scenario and its world, milliseconds. */
   readonly loadTimeoutMs: number;
-  /** Object sprites of the scene (step 2.10). */
-  readonly objects: number;
-  /** Zone overlays of the scene (step 2.10). */
-  readonly zones: number;
+  /** The scenario of the run. */
+  readonly scenario: Scenario;
 }
 
 /**
- * Settings of spike 1.5 (fahrplan.md step 2.7) plus the scene of step 2.10:
- * 20,000 objects (estimate: several thousand seats, counters, plants and
- * signs in the reference scenario, doubled as headroom; re-measured in 4.1)
- * and 64 zones.
+ * Settings of spike 1.5 (fahrplan.md step 2.7) with the furnished terminal
+ * of step 3.1b (20,000 objects: estimate of step 2.10, re-measured in 4.1).
  */
 export function defaultConfig(minutes: number): MeasureConfig {
   return {
@@ -67,8 +63,7 @@ export function defaultConfig(minutes: number): MeasureConfig {
     queriesPerSecond: 4,
     tableRows: 1000,
     loadTimeoutMs: 180_000,
-    objects: 20_000,
-    zones: 64,
+    scenario: "furnishedTerminal",
   };
 }
 
@@ -100,49 +95,61 @@ export interface SeriesHost {
   hotspot(): { readonly x: number; readonly y: number };
   /** Progress line for the player. */
   status(text: string): void;
-  /** Image names of the atlas without the fallback; empty without atlas. */
-  imageNames(): readonly string[];
-  /** Draws the scene over the playfield and reports what it drew. */
-  scene(scene: MeasureScene): SceneInfo;
   /** Resolution of the atlas drawn with now in pixels per cell, 0 without atlas. */
   tierPx(): number;
+  /** The atlas of the build, for the result. */
+  atlas(): AtlasInfo;
+  /**
+   * Sends a build command and draws its provisional drawing over `area`
+   * like the build tool (S-2); returns the command id, 0 if not connected.
+   */
+  build(command: Command, area: CellRect): number;
+  /**
+   * Resolves after the first rendered frame that holds the provisional drawing set by the
+   * last {@link build}: frames rendered since then (1 = the next frame) and the time after that render.
+   */
+  previewDrawn(): Promise<PreviewDrawn>;
+  /** The resting world as the playfield holds it. */
+  world(): WorldReadout;
 }
 
-/** One object sprite of the scene, top left corner in cells. */
-export interface SceneObject {
-  readonly name: string;
-  readonly x: number;
-  readonly y: number;
+/** The first rendered frame with a provisional drawing. */
+export interface PreviewDrawn {
+  /** Frames rendered since the drawing was set, 1 = the next frame. */
+  readonly frames: number;
+  /** Time after the render of that frame (same clock as {@link SeriesHost.now}). */
+  readonly at: number;
 }
 
-/** A translucent zone overlay of the scene, in cells. */
-export interface SceneZone {
-  readonly x: number;
-  readonly y: number;
-  readonly w: number;
-  readonly h: number;
-  /** Index of the zone colour, 0 … 3. */
-  readonly colour: number;
+/** What the playfield knows of the resting world. */
+export interface WorldReadout {
+  figures(): WorldFigures;
+  /** Every block of the shown floor in view was received. */
+  visibleComplete(): boolean;
+  /** The core has nothing more to send. */
+  complete(): boolean;
+  /** Time the block holding the cell of the shown floor was last updated, if ever. */
+  updatedAt(x: number, y: number): number | undefined;
 }
 
-/** The scene the series places (step 2.10). */
-export interface MeasureScene {
-  readonly objects: readonly SceneObject[];
-  readonly zones: readonly SceneZone[];
-}
-
-/** What the playfield drew of the scene, for the result. */
-export interface SceneInfo {
-  readonly objects: number;
-  /** Objects drawn with the fallback image. */
-  readonly fallbacks: number;
-  readonly zones: number;
+/** The atlas the playfield drew with, for the result. */
+export interface AtlasInfo {
   /** Resolutions of the atlas in pixels per cell; empty without atlas. */
   readonly tiers: readonly number[];
   /** Atlas pages of all resolutions. */
   readonly pages: number;
   /** Texture memory of the largest resolution, MB. */
   readonly textureMbMax: number;
+}
+
+/** What the playfield held of the world, for the result. */
+export interface WorldResult {
+  /** From the start of the session to the last block in view (ms), `undefined` if never. */
+  readonly firstVisibleMs: number | undefined;
+  /** From the start of the session to the last block of the world (ms), `undefined` if never. */
+  readonly firstCompleteMs: number | undefined;
+  /** Figures after the transfer. */
+  readonly figures: WorldFigures;
 }
 
 /** Header values of a drawn frame the series needs. */
@@ -189,10 +196,20 @@ export interface WindowResult {
   readonly recomputes: number;
   readonly recomputeMsMean: number;
   readonly recomputeMsMax: number;
+  /** Build actions that reached the world display (command to the frame with the changed block). */
   readonly builds: number;
   readonly buildMsP50: number;
   readonly buildMsMax: number;
   readonly buildFramesMax: number;
+  /**
+   * Command to the end of the render of the first frame with the provisional drawing, and the
+   * number of frames rendered until then (1 = the next frame; NFR "Bauaktion im nächsten Bild", step 3.1b).
+   */
+  readonly previewMsP50: number;
+  readonly previewMsMax: number;
+  readonly previewFramesMax: number;
+  /** Build actions the core refused. */
+  readonly buildsRejected: number;
   readonly adoptMsMax: number;
   readonly queries: number;
   readonly queryMsP50: number;
@@ -207,7 +224,8 @@ export interface SeriesResult {
   readonly threads: number;
   readonly backgroundThreads: number;
   readonly hotspot: { readonly x: number; readonly y: number };
-  readonly scene: SceneInfo;
+  readonly atlas: AtlasInfo;
+  readonly world: WorldResult;
   readonly windows: readonly WindowResult[];
   readonly summary: Summary;
 }
@@ -241,6 +259,10 @@ function round(value: number, digits = 2): number {
   return Math.round(value * f) / f;
 }
 
+function milliseconds(value: number | undefined): number | undefined {
+  return value === undefined ? undefined : round(value, 0);
+}
+
 function ascending(values: readonly number[]): number[] {
   return [...values].sort((a, b) => a - b);
 }
@@ -262,6 +284,8 @@ export class WindowRecorder {
   readonly #lags: number[] = [];
   readonly #recomputes = new Map<number, number>();
   readonly #builds: { ms: number; frames: number }[] = [];
+  readonly #previews: { ms: number; frames: number }[] = [];
+  #rejected = 0;
   readonly #adopts: number[] = [];
   readonly #queries: number[] = [];
   #lastFrame: number | undefined;
@@ -294,6 +318,16 @@ export class WindowRecorder {
     this.#builds.push({ ms, frames });
   }
 
+  /** The provisional drawing of a build action was rendered `ms` after the command, in the `frames`-th frame. */
+  preview(ms: number, frames: number): void {
+    this.#previews.push({ ms, frames });
+  }
+
+  /** The core refused a build action. */
+  rejected(): void {
+    this.#rejected += 1;
+  }
+
   adopt(ms: number): void {
     this.#adopts.push(ms);
   }
@@ -315,6 +349,7 @@ export class WindowRecorder {
     // One display tick: the median interval between drawn frames.
     const tick = quantile(frames, 0.5);
     const builds = ascending(this.#builds.map((b) => b.ms));
+    const previews = ascending(this.#previews.map((p) => p.ms));
     const queries = ascending(this.#queries);
     const tps = this.#stats.map((s) => s.ticksPerSecond);
     const recomputes: number[] = [];
@@ -353,6 +388,10 @@ export class WindowRecorder {
       buildMsP50: round(quantile(builds, 0.5)),
       buildMsMax: round(max(builds)),
       buildFramesMax: max(this.#builds.map((b) => b.frames)),
+      previewMsP50: round(quantile(previews, 0.5)),
+      previewMsMax: round(max(previews)),
+      previewFramesMax: max(this.#previews.map((p) => p.frames)),
+      buildsRejected: this.#rejected,
       adoptMsMax: round(max(this.#adopts)),
       queries: queries.length,
       queryMsP50: round(quantile(queries, 0.5)),
@@ -399,60 +438,20 @@ export function buildArea(
   return { area: { floor: 0, x0, y0, x1: x0 + 3, y1: y0 + 3 }, seed: next };
 }
 
-/** Image name the scene uses for every 100th object, to draw the fallback (ADR-032, L-4). */
-export const MISSING_IMAGE = "base:measure_missing";
-
-/**
- * The scene of the series: `objects` sprites on an even grid over the ground
- * floor of the reference terminal (centred on the map like `buildArea`),
- * cycling through `names`, every 100th with `MISSING_IMAGE`; and `zones`
- * overlays tiling the terminal with a gap of 4 cells. Deterministic.
- */
-export function measureScene(
-  objects: number,
-  zones: number,
-  mapWidth: number,
-  mapHeight: number,
-  names: readonly string[],
-): MeasureScene {
-  const edge = REFERENCE_EDGE;
-  const ox = Math.floor((mapWidth - edge) / 2);
-  const oy = Math.floor((mapHeight - edge) / 2);
-  const placed: SceneObject[] = [];
-  const columns = Math.max(1, Math.ceil(Math.sqrt(objects)));
-  const step = edge / columns;
-  for (let i = 0; i < objects; i += 1) {
-    const name =
-      i % 100 === 99 || names.length === 0
-        ? MISSING_IMAGE
-        : (names[i % names.length] ?? MISSING_IMAGE);
-    placed.push({
-      name,
-      x: Math.floor(ox + (i % columns) * step),
-      y: Math.floor(oy + Math.floor(i / columns) * step),
-    });
-  }
-  const tiles: SceneZone[] = [];
-  const side = Math.max(1, Math.ceil(Math.sqrt(zones)));
-  const size = edge / side;
-  for (let i = 0; i < zones; i += 1) {
-    tiles.push({
-      x: Math.floor(ox + (i % side) * size) + 2,
-      y: Math.floor(oy + Math.floor(i / side) * size) + 2,
-      w: Math.max(1, Math.floor(size) - 4),
-      h: Math.max(1, Math.floor(size) - 4),
-      colour: i % 4,
-    });
-  }
-  return { objects: placed, zones: tiles };
-}
-
 interface PendingBuild {
   readonly id: number;
   readonly sentAt: number;
+  /** Cell whose block shows the change. */
+  readonly cell: { readonly x: number; readonly y: number };
   acceptedTick?: number;
   frames: number;
+  /** Frames and time until a frame with the changed block was drawn. */
+  worldFrames?: number;
+  worldMs?: number;
 }
+
+/** Wall type the series builds (base pack, step 3.1a). */
+export const WALL_TYPE = "base:wall_concrete";
 
 /** One run of the measurement series. */
 export class MeasureSeries {
@@ -468,6 +467,10 @@ export class MeasureSeries {
   #lastBuildAt: number | undefined;
   #walls: CellRect | undefined;
   #seed = 12_345;
+  /** Start of the session of the scenario, for the first transfer of the world. */
+  #sessionAt = 0;
+  /** The first transfer of the world is being timed. */
+  #transfer: { visibleMs?: number; completeMs?: number } | undefined;
   readonly #queriesSent = new Map<number, number>();
 
   constructor(host: SeriesHost, config: MeasureConfig) {
@@ -478,6 +481,7 @@ export class MeasureSeries {
   /** A new session began (scenario loaded). */
   onSession(session: number): void {
     this.#session = session;
+    this.#sessionAt = this.#host.now();
     // Query ids start anew with every session.
     this.#queriesSent.clear();
   }
@@ -486,11 +490,32 @@ export class MeasureSeries {
   onFrame(now: number, info: FrameInfo, rttMs: number): void {
     this.#frame = info;
     this.#recorder.frame(now, rttMs);
+    const transfer = this.#transfer;
+    if (transfer !== undefined && info.session === this.#session) {
+      const world = this.#host.world();
+      if (transfer.visibleMs === undefined && world.visibleComplete()) {
+        transfer.visibleMs = now - this.#sessionAt;
+      }
+      if (transfer.completeMs === undefined && world.complete()) {
+        transfer.completeMs = now - this.#sessionAt;
+      }
+    }
     const build = this.#build;
     if (build !== undefined && info.session === this.#session) {
       build.frames += 1;
-      if (build.acceptedTick !== undefined && info.tick >= build.acceptedTick) {
-        this.#recorder.build(now - build.sentAt, build.frames);
+      if (build.worldMs === undefined) {
+        const changed = this.#host.world().updatedAt(build.cell.x, build.cell.y);
+        if (changed !== undefined && changed >= build.sentAt) {
+          build.worldMs = now - build.sentAt;
+          build.worldFrames = build.frames;
+        }
+      }
+      if (
+        build.worldMs !== undefined &&
+        build.acceptedTick !== undefined &&
+        info.tick >= build.acceptedTick
+      ) {
+        this.#recorder.build(build.worldMs, build.worldFrames ?? build.frames);
         this.#build = undefined;
       }
     }
@@ -517,6 +542,10 @@ export class MeasureSeries {
         this.#recorder.lag(event.behindTicks);
       } else if (event.kind === "commandAccepted" && event.id === this.#build?.id) {
         this.#build.acceptedTick = event.tick;
+      } else if (event.kind === "commandRejected" && event.id === this.#build?.id) {
+        this.#recorder.rejected();
+        this.#build = undefined;
+        this.#lastBuildAt = undefined;
       } else if (event.kind === "waypointsAdopted" && this.#lastBuildAt !== undefined) {
         this.#recorder.adopt(now - this.#lastBuildAt);
         this.#lastBuildAt = undefined;
@@ -544,10 +573,13 @@ export class MeasureSeries {
     const c = this.#config;
     const t0 = host.now();
     const startSession = this.#session;
-    host.status(`measure: loading reference terminal with ${String(c.persons)} persons`);
+    host.status(`measure: loading the furnished terminal with ${String(c.persons)} persons`);
+    // A close view over the middle of the map: the visible part of the world must arrive first.
+    this.#show({ kind: "circle", floor: 0, x: 1024, y: 1024, radius: 0, zoom: 4, angle: 0 });
+    this.#transfer = {};
     this.#send({
       kind: "debug",
-      action: { kind: "loadScenario", scenario: "referenceTerminal", persons: c.persons },
+      action: { kind: "loadScenario", scenario: c.scenario, persons: c.persons },
     });
     await this.#until(
       () =>
@@ -558,10 +590,18 @@ export class MeasureSeries {
       "scenario did not load",
     );
     const initMs = round(host.now() - t0, 0);
-    const map = this.#frame;
-    const scene = host.scene(
-      measureScene(c.objects, c.zones, map?.mapWidth ?? 0, map?.mapHeight ?? 0, host.imageNames()),
+    host.status("measure: waiting for the world");
+    await this.#until(
+      () => this.#transfer?.completeMs !== undefined,
+      c.loadTimeoutMs,
+      "the world did not arrive",
     );
+    const world: WorldResult = {
+      firstVisibleMs: milliseconds(this.#transfer.visibleMs),
+      firstCompleteMs: milliseconds(this.#transfer.completeMs),
+      figures: host.world().figures(),
+    };
+    this.#transfer = undefined;
 
     this.#send({ kind: "setSpeed", speed: "x3" });
     this.#show({ kind: "overview", floor: 0 });
@@ -613,7 +653,6 @@ export class MeasureSeries {
     }
     this.#send({ kind: "setSpeed", speed: "paused" });
     this.#show({ kind: "overview", floor: 0 });
-    host.scene({ objects: [], zones: [] });
     return {
       version: RESULT_VERSION,
       config: c,
@@ -621,7 +660,8 @@ export class MeasureSeries {
       threads: this.#stats?.threads ?? 0,
       backgroundThreads: this.#stats?.backgroundThreads ?? 0,
       hotspot,
-      scene,
+      atlas: host.atlas(),
+      world,
       windows,
       summary: summarize(windows),
     };
@@ -641,11 +681,13 @@ export class MeasureSeries {
     this.#host.view(view);
   }
 
+  /** Builds a 3 × 3 wall, or demolishes it again, as the build tool does (command and provisional drawing). */
   #toggleWalls(now: number): void {
     const frame = this.#frame;
     if (frame === undefined) {
       return;
     }
+    const host = this.#host;
     let area = this.#walls;
     const wall = area === undefined;
     if (area === undefined) {
@@ -654,9 +696,19 @@ export class MeasureSeries {
       area = next.area;
     }
     this.#walls = wall ? area : undefined;
-    const id = this.#send({ kind: "debug", action: { kind: "setWalls", area, wall } });
-    this.#build = { id, sentAt: now, frames: 0 };
+    const command: Command = wall
+      ? { kind: "buildArea", object: WALL_TYPE, area }
+      : { kind: "demolish", area };
+    const id = host.build(command, area);
+    if (id === 0) {
+      throw new Error("not connected");
+    }
+    this.#build = { id, sentAt: now, frames: 0, cell: { x: area.x0, y: area.y0 } };
     this.#lastBuildAt = now;
+    const recorder = this.#recorder;
+    void host.previewDrawn().then(({ frames, at }) => {
+      recorder.preview(at - now, frames);
+    });
   }
 
   #sendQuery(now: number): void {

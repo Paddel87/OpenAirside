@@ -43,6 +43,11 @@ export type ClientMessage =
        * Highest `seq` received so far, 0 for none.
        */
       ack: number;
+      /**
+       * World revision (S-1 header) of the newest frame the renderer
+       * processed in this session, 0 for none.
+       */
+      worldAck: number;
     }
   | {
       type: "eventsAck";

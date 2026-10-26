@@ -21,6 +21,7 @@ import {
   MAX_MANUAL_SAVES,
   newSaveId,
   parseInfoAnswer,
+  parseNewGameArgs,
   parseSaveArgs,
   parseSaveMeta,
   type SaveEntry,
@@ -47,6 +48,8 @@ export interface SavesService {
   list(): Promise<SaveEntry[]>;
   save(arg: unknown): Promise<{ id: string }>;
   load(arg: unknown): Promise<SaveMeta>;
+  /** S-6 `game.new({ map })`: starts a new game; a new session begins. */
+  newGame(arg: unknown): Promise<null>;
   delete(arg: unknown): Promise<null>;
   preview(arg: unknown): Promise<ArrayBuffer>;
   /** The core process asked for an autosave: runs it once no other operation runs. */
@@ -178,6 +181,19 @@ export function createSavesService(deps: SavesDeps): SavesService {
         if (meta === undefined) fail("invalidAnswer");
         log("info", `loaded game ${id}`);
         return meta;
+      });
+    },
+
+    // S-6 `game.new({ map })` (ADR-032, L-3): an empty world on a square map; like loading,
+    // one operation at a time with the save games and packs.
+    async newGame(arg) {
+      const parsed = parseNewGameArgs(arg);
+      if (parsed === undefined) fail("invalidArgument");
+      return lock.exclusive("newGame", async () => {
+        const answer = await request((n) => ({ type: "game:new", request: n, map: parsed.map }));
+        if (answer !== null) fail("invalidAnswer");
+        log("info", `new game on a map of ${String(parsed.map)} cells`);
+        return null;
       });
     },
 

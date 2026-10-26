@@ -65,8 +65,8 @@ export interface InfoFile {
 
 /**
  * Request of the main process to the core host that expects an answer:
- * save games (S-6 `saves.*`, step 2.5) and the texts of a language
- * (`lang.texts`, step 2.6).
+ * save games (S-6 `saves.*`, step 2.5), the texts of a language
+ * (`lang.texts`, step 2.6) and a new game (`game.new`, step 3.1b).
  */
 export type SavesRequest =
   | {
@@ -80,7 +80,8 @@ export type SavesRequest =
   | { readonly type: "saves:load"; readonly request: number; readonly bytes: Uint8Array }
   | { readonly type: "saves:info"; readonly request: number; readonly files: readonly InfoFile[] }
   | { readonly type: "saves:checkPreview"; readonly request: number; readonly png: Uint8Array }
-  | { readonly type: "lang:texts"; readonly request: number; readonly code: string };
+  | { readonly type: "lang:texts"; readonly request: number; readonly code: string }
+  | { readonly type: "game:new"; readonly request: number; readonly map: number };
 
 /** Autosave interval for the clock of the core host (S-6 `settings.*`, step 2.6). */
 export interface AutosaveIntervalMessage {
@@ -205,7 +206,9 @@ export const MAX_INFO_FILES = 1000;
 export function savesRequestNumber(value: unknown): number | undefined {
   return isRecord(value) &&
     typeof value.type === "string" &&
-    (value.type.startsWith("saves:") || value.type.startsWith("lang:")) &&
+    (value.type.startsWith("saves:") ||
+      value.type.startsWith("lang:") ||
+      value.type.startsWith("game:")) &&
     isRequestNumber(value.request)
     ? value.request
     : undefined;
@@ -247,6 +250,10 @@ export function parseSavesRequest(value: unknown): SavesRequest | undefined {
       }
       return { type: "saves:info", request, files };
     }
+    case "game:new":
+      return value.map === 1536 || value.map === 2048
+        ? { type: "game:new", request, map: value.map }
+        : undefined;
     case "lang:texts":
       return isLanguageCode(value.code)
         ? { type: "lang:texts", request, code: value.code }

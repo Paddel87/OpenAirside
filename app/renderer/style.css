@@ -151,3 +151,46 @@ body {
     13px/1.4 system-ui,
     sans-serif;
 }
+
+#build {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  font:
+    13px/1.4 system-ui,
+    sans-serif;
+  background: rgb(17 19 23 / 92%);
+  border-radius: 4px;
+  padding: 6px 8px;
+  text-align: center;
+}
+
+#build[hidden] {
+  display: none;
+}
+
+#build button {
+  margin: 0 3px 4px;
+  background: #2a3038;
+  color: inherit;
+  border: 1px solid #3a414b;
+  border-radius: 3px;
+  font: inherit;
+  padding: 2px 8px;
+}
+
+#build button.active {
+  background: #3f6fa8;
+  border-color: #8fb4de;
+}
+
+#build .note {
+  color: #b8c0cc;
+  font-size: 12px;
+}
+
+#build .note.hint {
+  color: #e8b730;
+}

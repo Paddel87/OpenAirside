@@ -52,6 +52,7 @@ enum Input {
     Content(Arc<Catalog>),
     Snapshot(Sender<SaveSnapshot>),
     Load(Box<LoadedGame>, Sender<Result<(), Reason>>),
+    NewGame(u16, Sender<Result<(), Reason>>),
     Stop,
 }
 
@@ -96,6 +97,21 @@ impl SaveLink {
         let (reply, answer) = mpsc::channel();
         self.input
             .send(Input::Load(Box::new(game), reply))
+            .map_err(|_| stopped())?;
+        answer.recv_timeout(LINK_TIMEOUT).map_err(|_| stopped())?
+    }
+
+    /// Replaces the session by a new, empty game on a square map of `edge`
+    /// cells (S-6 `game.new`, step 3.1b): same rules as [`SaveLink::load`].
+    ///
+    /// # Errors
+    ///
+    /// `invalidArgument` for an edge that is not a map size of the game,
+    /// `coreStopped` if the simulation thread does not answer.
+    pub fn new_game(&self, edge: u16) -> Result<(), Reason> {
+        let (reply, answer) = mpsc::channel();
+        self.input
+            .send(Input::NewGame(edge, reply))
             .map_err(|_| stopped())?;
         answer.recv_timeout(LINK_TIMEOUT).map_err(|_| stopped())?
     }
@@ -421,8 +437,14 @@ fn status_of(sim: &Simulation, measured: Measured) -> Status {
 /// What the driver does after an input.
 enum Applied {
     Continue,
-    Load(Box<LoadedGame>, Sender<Result<(), Reason>>),
+    Replace(Replace, Sender<Result<(), Reason>>),
     Stop,
+}
+
+/// A new session that takes real time: the state reads `loading` meanwhile.
+enum Replace {
+    Load(Box<LoadedGame>),
+    NewGame(u16),
 }
 
 /// Applies one input; loading is left to the driver.
@@ -443,7 +465,8 @@ fn apply(sim: &mut Simulation, input: Input, shared: &Mutex<Shared>) -> Applied 
         Input::Snapshot(reply) => {
             let _ = reply.send(sim.save_snapshot());
         }
-        Input::Load(game, reply) => return Applied::Load(game, reply),
+        Input::Load(game, reply) => return Applied::Replace(Replace::Load(game), reply),
+        Input::NewGame(edge, reply) => return Applied::Replace(Replace::NewGame(edge), reply),
         Input::Stop => return Applied::Stop,
     }
     Applied::Continue
@@ -474,9 +497,9 @@ fn apply_all(
         match apply(sim, input, shared) {
             Applied::Continue => {}
             Applied::Stop => return Flow::Stop,
-            Applied::Load(game, reply) => {
+            Applied::Replace(replace, reply) => {
                 loaded = true;
-                if !load_game(sim, *game, &reply, inbox, back, shared) {
+                if !replace_session(sim, replace, &reply, inbox, back, shared) {
                     return Flow::Stop;
                 }
             }
@@ -485,13 +508,14 @@ fn apply_all(
     Flow::Run { loaded }
 }
 
-/// Loads a save game (S-5): the state reads `loading` while the flow
-/// fields in use are computed; inputs that arrived meanwhile are applied
-/// afterwards, their commands answered with `notReady` (a successful load
-/// discards them as commands of the old session). Returns `false` on stop.
-fn load_game(
+/// Loads a save game (S-5) or starts a new game (S-6 `game.new`): the state
+/// reads `loading` while the flow fields in use are computed; inputs that
+/// arrived meanwhile are applied afterwards, their commands answered with
+/// `notReady` (a successful replacement discards them as commands of the
+/// old session). Returns `false` on stop.
+fn replace_session(
     sim: &mut Simulation,
-    game: LoadedGame,
+    replace: Replace,
     reply: &Sender<Result<(), Reason>>,
     inbox: &Receiver<Input>,
     back: &mut Snapshot,
@@ -499,13 +523,16 @@ fn load_game(
 ) -> bool {
     sim.begin_loading();
     lock(shared).status.state = CoreState::Loading;
-    let result = sim.load_game(game);
+    let result = match replace {
+        Replace::Load(game) => sim.load_game(*game),
+        Replace::NewGame(edge) => sim.new_game(edge),
+    };
     let mut running = true;
     while let Ok(input) = inbox.try_recv() {
         match apply(sim, input, shared) {
             Applied::Continue => {}
             Applied::Stop => running = false,
-            Applied::Load(_, other) => {
+            Applied::Replace(_, other) => {
                 let _ = other.send(Err(crate::savegame::error("busy")));
             }
         }
@@ -901,6 +928,34 @@ mod tests {
             },
         );
         wait_for(&runner, &mut fresh, answered(1));
+        runner.stop().unwrap();
+    }
+
+    #[test]
+    fn a_new_game_starts_an_empty_world_on_the_chosen_map() {
+        let runner = runner();
+        let link = runner.save_link();
+        // A map size the game does not have is refused; the session stays.
+        let reason = link.new_game(100).unwrap_err();
+        assert_eq!(reason.code, "invalidArgument");
+        assert_eq!(runner.status().session, 1);
+        link.new_game(1536).unwrap();
+        let status = runner.status();
+        assert_eq!((status.session, status.state), (2, CoreState::Ready));
+        let mut front = Snapshot::default();
+        let _ = runner.poll(&mut front);
+        assert_eq!(front.session(), 2);
+        assert_eq!(front.map(), MapSize::new(1536, 1536));
+        assert_eq!(front.persons(), 0);
+        // Everything is void: no ground floor block has anything walkable.
+        let grid = front.world().grid().unwrap();
+        assert!(
+            (0..grid.table_len()).all(|i| grid.block(i).is_none_or(|b| b.walkable_cells() == 0))
+        );
+        // Commands of the new session are accepted.
+        let mut seen = Vec::new();
+        runner.command(2, 1, Command::SetSpeed { speed: Speed::X1 });
+        wait_for(&runner, &mut seen, answered(1));
         runner.stop().unwrap();
     }
 

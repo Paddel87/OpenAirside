@@ -100,6 +100,11 @@ export interface OpenAirsideApi {
     /** PNG bytes of the preview (empty if none, ADR-028); list first. */
     preview(id: string): Promise<ArrayBuffer>;
   };
+  /** The running game (step 3.1b). */
+  readonly game: {
+    /** Starts a new game with an empty world on a square map; a new session begins. */
+    readonly new: (options: { readonly map: 1536 | 2048 }) => Promise<null>;
+  };
   /** Settings of the player (step 2.6, ADR-031). */
   readonly settings: {
     get(): Promise<Settings>;

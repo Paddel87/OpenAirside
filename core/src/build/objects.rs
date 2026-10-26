@@ -294,6 +294,14 @@ impl Build {
         &self.types
     }
 
+    /// Handle of the next object placed. Together with the number of
+    /// objects it identifies the set of objects: a build raises the handle,
+    /// a demolition lowers the number, neither goes back (S-1 sender).
+    #[must_use]
+    pub fn next_handle(&self) -> u32 {
+        self.next_handle
+    }
+
     /// The object whose footprint covers `pos`, if any.
     #[must_use]
     pub fn object_at(&self, pos: CellPos) -> Option<&PlacedObject> {

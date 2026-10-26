@@ -8,14 +8,17 @@
  * minimal settings panel. Console and performance display stay English.
  * The interface panels (React) follow from roadmap step 3.6 on.
  */
+import type { CatalogEntry } from "../src/generated/CatalogEntry.js";
 import type { PackReport } from "../src/generated/PackReport.js";
 import type { TickStats } from "../src/generated/TickStats.js";
+import { BuildPanel } from "./build-panel.js";
+import { BuildTool } from "./build-tool.js";
 import { type ClientHandlers, CoreClient } from "./core-client.js";
 import { basePackLoaded, formatPacks, parseConsoleLine, TABLE_COLUMNS } from "./console.js";
 import { FALLBACK_LANGUAGE, loadTexts, Localizer } from "./i18n.js";
 import { defaultConfig, MeasureSeries, type SeriesHost } from "./measure.js";
 import { PerfMeter } from "./perf.js";
-import { describeError, onCorePort } from "./platform.js";
+import { describeError, isPlatformError, onCorePort } from "./platform.js";
 import { formatSaves, latestAutosave } from "./saves.js";
 import { loadSave, SavesPanel, showNotice } from "./saves-panel.js";
 import { Playfield } from "./playfield.js";
@@ -69,6 +72,23 @@ async function start(): Promise<void> {
   let states: readonly string[] = [];
   let stats: TickStats | undefined;
   let series: MeasureSeries | undefined;
+  // The catalog of the session (S-7): asked for with the first frame of a session, which is the
+  // earliest the core can answer it (S-7 "Konsistenz").
+  let catalogSession = 0;
+  let catalogFor = 0;
+  let catalogQuery = 0;
+  let buildPanel: BuildPanel | undefined;
+
+  // Build tool (step 3.1b): pointer gestures become build commands with a provisional drawing (S-2).
+  const tool = new BuildTool({
+    send: (command) => client?.send(command) ?? 0,
+    preview: (shapes) => {
+      playfield.setPreview(shapes);
+    },
+    modeChanged: () => {
+      buildPanel?.render();
+    },
+  });
 
   const showPacks = (reports: readonly PackReport[]): void => {
     for (const line of formatPacks(reports)) write(line);
@@ -95,6 +115,8 @@ async function start(): Promise<void> {
     welcome: (core, session) => {
       root.dataset.session = String(session);
       write(`core ${core.name} ${core.version}, session ${String(session)}`);
+      catalogSession = 0;
+      catalogQuery = 0;
       checkBasePack();
       // The core is ready: texts of all loaded packs (S-6 `lang.texts`).
       reloadLanguage();
@@ -105,6 +127,9 @@ async function start(): Promise<void> {
     sessionStarted: (session, at) => {
       root.dataset.session = String(session);
       write(`session ${String(session)} at tick ${String(at)}`);
+      catalogSession = 0;
+      catalogQuery = 0;
+      tool.reset();
       series?.onSession(session);
     },
     events: (session, events) => {
@@ -113,9 +138,13 @@ async function start(): Promise<void> {
         switch (event.kind) {
           case "commandAccepted":
             write(`#${String(event.id)} ok (tick ${String(event.tick)})`);
+            tool.accepted(event.id, event.tick);
             break;
           case "commandRejected":
             write(`#${String(event.id)} rejected: ${event.reason.code}`);
+            tool.rejected(event.id);
+            // S-2: the player gets the reason with the name of the object ({ key } parameter).
+            buildPanel?.showHint(i18n.reason(event.reason));
             break;
           case "simulationLag":
             lag = `lag ${String(event.behindTicks)} ticks`;
@@ -135,7 +164,14 @@ async function start(): Promise<void> {
       tick = frame.header.tick;
       personsTotal = frame.header.personsTotal;
       root.dataset.tick = String(tick);
-      playfield.show(frame);
+      const drawn = performance.now();
+      const world = playfield.show(frame, drawn);
+      if (!world.ok) write(`dropped world section: ${world.error}`);
+      tool.frameDrawn(tick);
+      if (frame.header.session !== catalogSession && catalogQuery === 0) {
+        catalogFor = frame.header.session;
+        catalogQuery = client?.query({ kind: "catalog" }) ?? 0;
+      }
       const now = performance.now();
       const rtt = now - requestedAt;
       perf.frame(now, rtt);
@@ -147,6 +183,14 @@ async function start(): Promise<void> {
     },
     queryResult: (id, answer) => {
       const now = performance.now();
+      if (id === catalogQuery) {
+        catalogQuery = 0;
+        if (answer.catalog !== undefined) {
+          catalogSession = catalogFor;
+          setCatalog(answer.catalog);
+        }
+        return;
+      }
       if (answer.dictionary !== undefined) {
         states = answer.dictionary.entries;
         return;
@@ -179,6 +223,7 @@ async function start(): Promise<void> {
       }
     },
     queryError: (id, code) => {
+      if (id === catalogQuery) catalogQuery = 0;
       queriesSent.delete(id);
       series?.onQuery(performance.now(), id);
       write(`query #${String(id)} failed: ${code}`);
@@ -186,6 +231,12 @@ async function start(): Promise<void> {
     dropped: (reason) => {
       write(`dropped message: ${reason}`);
     },
+  };
+
+  const setCatalog = (catalog: readonly CatalogEntry[]): void => {
+    playfield.setCatalog(catalog);
+    buildPanel?.setCatalog(catalog);
+    root.dataset.catalog = String(catalog.length);
   };
 
   const connect = (port: MessagePort): void => {
@@ -246,6 +297,27 @@ async function start(): Promise<void> {
     settingsButton.addEventListener("click", () => {
       void settingsPanel?.open();
     });
+  }
+  // Build tool (step 3.1b): pointer gestures become build commands with a provisional drawing (S-2).
+  const buildBox = document.getElementById("build");
+  const newGame = (map: 1536 | 2048): void => {
+    if (api === undefined) {
+      write("newgame: not connected");
+      return;
+    }
+    api.game.new({ map }).then(
+      () => {
+        write(`new game on a map of ${String(map)} cells`);
+      },
+      (error: unknown) => {
+        write(`newgame failed: ${describeError(error)}`);
+        buildPanel?.showHint(isPlatformError(error) ? i18n.reason(error) : describeError(error));
+      },
+    );
+  };
+  playfield.onPointer((event) => tool.pointer(event));
+  if (buildBox !== null) {
+    buildPanel = new BuildPanel(document, buildBox, tool, i18n, newGame);
   }
   const save = (name: string, kind: "manual" | "quick"): void => {
     if (api === undefined) {
@@ -319,9 +391,31 @@ async function start(): Promise<void> {
     },
     hotspot: () => playfield.hotspot(),
     status: write,
-    imageNames: () => playfield.imageNames(),
-    scene: (scene) => playfield.scene(scene),
     tierPx: () => playfield.tierPx(),
+    atlas: () => playfield.atlas(),
+    // The series builds as the tool does: the command and its provisional drawing (S-2).
+    build: (command, area) => {
+      const id = client?.send(command) ?? 0;
+      if (id !== 0) {
+        playfield.setPreview([
+          {
+            kind: command.kind === "demolish" ? "demolish" : "build",
+            x0: area.x0,
+            y0: area.y0,
+            x1: area.x1,
+            y1: area.y1,
+          },
+        ]);
+      }
+      return id;
+    },
+    previewDrawn: () => playfield.previewDrawn(),
+    world: () => ({
+      figures: () => playfield.worldFigures(),
+      visibleComplete: () => playfield.worldVisibleComplete(),
+      complete: () => playfield.worldComplete(),
+      updatedAt: (x, y) => playfield.worldUpdatedAt(x, y),
+    }),
   };
   try {
     // Long tasks (> 50 ms) of the renderer's main thread, for the series.
@@ -449,6 +543,11 @@ async function start(): Promise<void> {
     } else if (result.kind === "settings") {
       if (settingsPanel === undefined) write("settings: not connected");
       else void settingsPanel.open();
+    } else if (result.kind === "newGame") {
+      newGame(result.map);
+    } else if (result.kind === "details") {
+      playfield.details = result.all;
+      write(`details ${result.all ? "on" : "off"}`);
     } else if (result.kind === "command") {
       const id = client?.send(result.command) ?? 0;
       write(id === 0 ? "not connected" : `#${String(id)} ${line}`);
@@ -469,6 +568,8 @@ async function start(): Promise<void> {
       return;
     }
     if (event.target === input) return;
+    if (event.key === "Escape") tool.setMode({ kind: "off" });
+    if (event.key === "r" || event.key === "R") tool.rotate();
     if (event.key === "PageUp") playfield.changeFloor(1);
     if (event.key === "PageDown") playfield.changeFloor(-1);
   });
@@ -483,6 +584,10 @@ async function start(): Promise<void> {
 
   setInterval(() => {
     const s = perf.snapshot(performance.now());
+    const world = playfield.worldFigures();
+    root.dataset.worldBlocks = String(world.blocks);
+    root.dataset.worldObjects = String(world.objects);
+    root.dataset.worldComplete = String(playfield.worldComplete());
     if (hud !== null) {
       hud.textContent = [
         `${String(s.fps)} fps · frame ${s.rttMs.toFixed(1)} ms (max ${s.rttMaxMs.toFixed(1)})`,
@@ -490,6 +595,7 @@ async function start(): Promise<void> {
         stats === undefined
           ? "tick figures pending"
           : `${String(stats.ticksPerSecond)} ticks/s · step ${(stats.stepMeanUs / 1000).toFixed(2)} ms (p99 ${(stats.stepP99Us / 1000).toFixed(2)}) · recompute ${stats.recomputing ? "running" : stats.lastRecompute === undefined ? "–" : `${(stats.lastRecompute.millis / 1000).toFixed(2)} s`}`,
+        `world ${String(world.blocks)} blocks (${world.pending === 0 ? "complete" : `${String(world.pending)} to come`}) · ${String(world.objects)} objects · ${String(world.tiles)} tiles · ${world.textureMb.toFixed(1)} MB textures`,
         `${playfield.gpu}${lag === "" ? "" : ` · ${lag}`}${client === undefined ? "" : ` · gaps ${String(client.gaps)}`}`,
       ].join("\n");
     }

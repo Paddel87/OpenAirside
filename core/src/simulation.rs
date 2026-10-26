@@ -305,6 +305,28 @@ impl Simulation {
         Ok(())
     }
 
+    /// Starts a new game (S-6 `game.new`): an empty world on a square map of
+    /// `edge` cells, paused, with the content of the next session. The
+    /// map size also applies to later debug scenarios of the process.
+    ///
+    /// # Errors
+    ///
+    /// `invalidArgument` (parameter `field` = `map`) if `edge` is not one of
+    /// the map sizes of the game ([`savegame::MAP_EDGES`]); the running
+    /// session stays unchanged.
+    pub fn new_game(&mut self, edge: u16) -> Result<(), Reason> {
+        let map = savegame::MAP_EDGES
+            .contains(&edge)
+            .then(|| MapSize::new(edge, edge))
+            .flatten()
+            .ok_or_else(|| {
+                savegame::error(savegame::code::INVALID_ARGUMENT).with_text("field", "map")
+            })?;
+        self.config.map = map;
+        self.restart_with_world(World::new(map));
+        Ok(())
+    }
+
     /// Current session number.
     #[must_use]
     pub fn session(&self) -> u32 {
@@ -645,8 +667,10 @@ impl Simulation {
                 .set_walls(*area, *wall)
                 .map_err(|_| rejection(code::OUT_OF_MAP)),
             DebugAction::LoadScenario { scenario, persons } => {
-                if *scenario == Scenario::ReferenceTerminal
-                    && !crate::scenario::fits_reference_terminal(self.config.map)
+                if matches!(
+                    scenario,
+                    Scenario::ReferenceTerminal | Scenario::FurnishedTerminal
+                ) && !crate::scenario::fits_reference_terminal(self.config.map)
                 {
                     return Err(rejection(code::OUT_OF_MAP));
                 }

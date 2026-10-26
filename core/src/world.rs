@@ -214,6 +214,14 @@ impl World {
         self.build.demolish(rect, &mut self.events, Stage::Commands)
     }
 
+    /// Forgets the internal events laid down so far. A scenario that builds
+    /// its world before the session starts computes the flow fields itself
+    /// ([`World::rebuild_fields_now`]); the events would only start a second
+    /// recomputation in the first step.
+    pub(crate) fn discard_events(&mut self) {
+        self.events = InternalEvents::default();
+    }
+
     /// Starts a session: adoption of the flow fields with `mode`.
     pub(crate) fn reset_adoption(&mut self, mode: AdoptionMode) {
         self.wayfinding.reset(mode);

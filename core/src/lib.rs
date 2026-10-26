@@ -13,6 +13,7 @@ pub mod adoption;
 pub mod build;
 pub mod command;
 pub mod datapack;
+pub mod display;
 pub mod event;
 pub mod frame;
 pub mod geometry;

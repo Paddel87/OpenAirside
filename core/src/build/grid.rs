@@ -236,6 +236,10 @@ pub struct Block {
     floor_kind: [u16; BLOCK_CELLS],
     wall_kind: [u16; BLOCK_CELLS],
     walkable: u16,
+    /// Value of the grid's change counter at the last change of this block;
+    /// derived, not part of the state hash. The frame sender compares it to
+    /// find the blocks that changed since the ones it handed out (S-1).
+    stamp: u32,
 }
 
 impl Block {
@@ -247,7 +251,15 @@ impl Block {
             floor_kind: [0; BLOCK_CELLS],
             wall_kind: [0; BLOCK_CELLS],
             walkable: 0,
+            stamp: 0,
         }
+    }
+
+    /// Change counter of the grid at the last change of this block (0 for a
+    /// block that never changed since it was created or loaded).
+    #[must_use]
+    pub fn stamp(&self) -> u32 {
+        self.stamp
     }
 
     /// Flag bytes in row order (`y · 32 + x`).
@@ -312,6 +324,7 @@ impl Block {
             floor_kind,
             wall_kind,
             walkable: u16::try_from(walkable).ok()?,
+            stamp: 0,
         })
     }
 
@@ -529,7 +542,9 @@ impl Grid {
             if block.cell(local) == cell {
                 return Ok(());
             }
-            Arc::make_mut(block).set(local, cell);
+            let changed = Arc::make_mut(block);
+            changed.set(local, cell);
+            changed.stamp = self.version.wrapping_add(1);
         }
         self.version = self.version.wrapping_add(1);
         Ok(())

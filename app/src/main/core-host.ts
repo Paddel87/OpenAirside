@@ -43,6 +43,7 @@ interface NativeCore {
   status(): { session: number; running: boolean };
   saveGame(name: string, kind: string, savedAt: string, preview: Buffer): Promise<Buffer>;
   loadGame(bytes: Buffer): Promise<string>;
+  newGame(map: number): Promise<void>;
 }
 
 interface BridgeModule {
@@ -83,6 +84,9 @@ async function answerSaves(
       );
     case "saves:load":
       return JSON.parse(await core.loadGame(asBuffer(request.bytes))) as unknown;
+    case "game:new":
+      await core.newGame(request.map);
+      return null;
     case "saves:checkPreview":
       bridge.checkPreview(asBuffer(request.png));
       return null;

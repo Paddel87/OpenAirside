@@ -17,7 +17,7 @@ import type { TickStats } from "../src/generated/TickStats.js";
 import { type Frame, readFrame } from "./frame-reader.js";
 
 /** Protocol version of this renderer (core/src/port.rs `PROTOCOL`). */
-export const PROTOCOL = 1;
+export const PROTOCOL = 2;
 /** A frame request without answer for this long is given up. */
 export const FRAME_TIMEOUT_MS = 1000;
 
@@ -105,6 +105,8 @@ export class CoreClient {
   #nextId = 1;
   #lastSeq = 0;
   #frameSince: number | undefined;
+  /** World revision of the newest frame the handler processed in this session (S-1 `worldAck`). */
+  #worldAck = 0;
   #gaps = 0;
   #nextQuery = 1;
   /** Table queries in flight by panel (S-7 "Drosselung"). */
@@ -182,6 +184,7 @@ export class CoreClient {
       session: this.#session,
       filter,
       ack: this.#lastSeq,
+      worldAck: this.#worldAck,
     });
     return true;
   }
@@ -269,6 +272,10 @@ export class CoreClient {
             return;
           }
           this.handlers.frame(result.frame);
+          // Acknowledged only after the handler returned, i.e. the blocks are drawn.
+          if (data.session === this.#session && result.frame.header.worldRevision !== 0) {
+            this.#worldAck = result.frame.header.worldRevision;
+          }
           return;
         }
         break;
@@ -292,6 +299,7 @@ export class CoreClient {
     this.#panels.clear();
     this.#queryPanel.clear();
     this.#lastSeq = 0;
+    this.#worldAck = 0;
     this.#frameSince = undefined;
   }
 

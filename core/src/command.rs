@@ -118,6 +118,14 @@ pub enum Scenario {
     /// Reference terminal 768² × 5 with 17 gates (36 targets) in the middle
     /// of the map (spike 1.5, ADR-020).
     ReferenceTerminal,
+    /// The reference terminal with floor coverings, walls and furniture for
+    /// the measurement of the world display (step 3.1b, ADR-038): the
+    /// walkable cells of the ground floor get `base:floor_concrete`, the
+    /// boundary `base:wall_concrete` and about 20,000 `base:bench` objects
+    /// stand in the halls, outside the field of the measurement's build
+    /// actions. Needs the base pack in the session; without it the types
+    /// show as missing.
+    FurnishedTerminal,
 }
 
 /// Stable rejection codes of S-2.

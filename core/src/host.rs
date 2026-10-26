@@ -8,6 +8,7 @@
 use std::time::{Duration, Instant};
 
 use crate::core_info;
+use crate::display::WorldSender;
 use crate::frame::{FrameFilter, Snapshot};
 use crate::port::{Action, ClientMessage, CommandEnvelope, Port, PortCounters, ServerMessage};
 use crate::query::{Answer, ERROR_TEXT_PREFIX, Query, answer};
@@ -37,6 +38,8 @@ pub enum Outgoing {
 pub struct PortHost {
     port: Port,
     front: Snapshot,
+    /// Blocks of the resting world handed out on this port (S-1).
+    world: WorldSender,
     /// Session last announced on this port.
     announced: u32,
     last_delivery: Instant,
@@ -50,6 +53,7 @@ impl PortHost {
         Self {
             port: Port::new(),
             front: Snapshot::default(),
+            world: WorldSender::default(),
             announced: 0,
             last_delivery: now,
             last_stats: now,
@@ -148,10 +152,15 @@ impl PortHost {
             } => runner.command(session, id, command),
             Action::InvalidCommand { session, id } => runner.invalid_command(session, id),
             Action::Ack { seq } => runner.ack(self.announced, seq),
-            Action::Frame { filter, ack } => {
+            Action::Frame {
+                filter,
+                ack,
+                world_ack,
+            } => {
                 if ack > 0 {
                     runner.ack(self.announced, ack);
                 }
+                self.world.acknowledge(world_ack);
                 let poll = runner.poll(&mut self.front);
                 self.last_delivery = now;
                 self.deliver(poll, Some(filter), &mut out);
@@ -210,7 +219,7 @@ impl PortHost {
         }
         if let Some(filter) = filter {
             let mut buf = Vec::with_capacity(self.front.max_frame_bytes());
-            self.front.encode(&filter, &mut buf);
+            self.front.encode(&filter, &mut self.world, &mut buf);
             out.push(Outgoing::Binary {
                 message: ServerMessage::Frame {
                     session: frame_session,
@@ -274,6 +283,7 @@ mod tests {
                 session: host.announced,
                 filter: FrameFilter::default(),
                 ack,
+                world_ack: 0,
             },
             now,
         )
@@ -325,6 +335,74 @@ mod tests {
         }
     }
 
+    fn world_of(out: &[Outgoing]) -> (u32, u32) {
+        let Some(Outgoing::Binary { buf, .. }) = out.last() else {
+            panic!("no frame: {out:?}");
+        };
+        let section = crate::frame::HEADER_BYTES + 10 * crate::frame::PERSON_BYTES;
+        (
+            crate::frame::header_u32(buf, 32).unwrap(),
+            crate::frame::header_u32(buf, section + 4).unwrap(),
+        )
+    }
+
+    #[test]
+    fn the_world_follows_the_acknowledgement_of_the_renderer() {
+        let runner = runner();
+        let now = Instant::now();
+        let mut host = PortHost::new(now);
+        hello(&mut host, &runner, now);
+        let request = |host: &mut PortHost, world_ack: u32| {
+            host.receive(
+                &runner,
+                ClientMessage::FrameRequest {
+                    session: host.announced,
+                    filter: FrameFilter::default(),
+                    ack: 0,
+                    world_ack,
+                },
+                now,
+            )
+        };
+        // The first frame carries the four blocks of the hall.
+        assert_eq!(world_of(&request(&mut host, 0)), (1, 4));
+        // Not acknowledged (the renderer did not process the frame): again.
+        assert_eq!(world_of(&request(&mut host, 0)), (2, 4));
+        // Acknowledged: nothing new to send, revision 0.
+        assert_eq!(world_of(&request(&mut host, 2)), (0, 0));
+        assert_eq!(world_of(&request(&mut host, 2)), (0, 0));
+        // A new session starts the transfer over, without any acknowledgement.
+        host.receive(
+            &runner,
+            ClientMessage::Command {
+                session: 1,
+                id: 1,
+                command: Command::Debug {
+                    action: DebugAction::LoadScenario {
+                        scenario: Scenario::OpenHall,
+                        persons: 10,
+                    },
+                },
+            },
+            now,
+        );
+        let deadline = Instant::now() + Duration::from_secs(10);
+        loop {
+            let out = request(&mut host, 2);
+            if host.announced == 2 || Instant::now() > deadline {
+                assert_eq!(host.announced, 2, "the session switched");
+                break;
+            }
+            drop(out);
+        }
+        let mut seen = world_of(&request(&mut host, 0));
+        while seen.1 == 0 && Instant::now() < deadline {
+            seen = world_of(&request(&mut host, 0));
+        }
+        assert_eq!(seen.1, 4, "the first frame of the new session");
+        runner.stop().unwrap();
+    }
+
     #[test]
     fn frames_carry_the_answers_to_commands() {
         let runner = runner();
@@ -339,9 +417,11 @@ mod tests {
         let Some(Outgoing::Binary { buf, .. }) = out.last() else {
             panic!("no frame: {out:?}");
         };
+        let section = crate::frame::HEADER_BYTES + 10 * crate::frame::PERSON_BYTES;
         assert_eq!(
-            buf.len(),
-            crate::frame::HEADER_BYTES + 10 * crate::frame::PERSON_BYTES
+            crate::frame::header_u32(buf, section).map(|bytes| section + bytes as usize),
+            Some(buf.len()),
+            "persons, then the world section"
         );
         host.receive(
             &runner,
