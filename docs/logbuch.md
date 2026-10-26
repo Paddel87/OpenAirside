@@ -33,7 +33,7 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 - **Nächster Schritt:** 3.1c (Bauaufträge und Bauarbeiter) auf neuem Branch vom aktuellen `main`; diesen Sessionende-Eintrag übernehmen (`project-context.md` Abschnitt 10).
 - **Modell-Bilanz:** Entscheidungs-Klasse (Opus 5.5, laut `get_session` 15:20 UTC) für die ganze Fortsetzung; Q.5 und die Bewertung von 3.1b empfehlen Entscheidung; Routine-Teilarbeiten (Eintragen von Messzahlen, Doku-Nachzug) liefen oberhalb ihrer Empfehlung, nicht abgegeben (Probelauf offen).
 - **Kontextgröße:** 496.382 von 1.000.000 Token laut `get_session`, **über der Grenze von 400.000** – Empfehlung: 3.1c in einer neuen Session beginnen.
-- **Ablaufdaten-Register:** keine neue Abkündigung, kein Eintrag mit erreichtem Vorlauf. **Archiv-Trigger Logbuch:** 840 Zeilen, über dem Trigger von 800 (Klasse G, `CLAUDE.md` Abschnitt 14); alle Einträge stammen aus 2026-10, eine vorletzte Monats-Scheibe zum Auslagern gibt es nicht. Der Trigger lässt sich nach seinem Verfahren erst mit dem Monatswechsel oder der Verdichtung am Phasenwechsel 3 erfüllen; dem Projektinhaber gemeldet.
+- **Ablaufdaten-Register:** keine neue Abkündigung, kein Eintrag mit erreichtem Vorlauf. **Archiv-Trigger Logbuch:** 837 Zeilen, über dem Trigger von 800 (Klasse G, `CLAUDE.md` Abschnitt 14); alle Einträge stammen aus 2026-10, eine vorletzte Monats-Scheibe zum Auslagern gibt es nicht. Der Trigger lässt sich nach seinem Verfahren erst mit dem Monatswechsel oder der Verdichtung am Phasenwechsel 3 erfüllen; dem Projektinhaber gemeldet.
 
 ### 2026-10-26 15:15 (UTC) – [BEOBACHTUNG]
 
