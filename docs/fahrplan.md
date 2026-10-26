@@ -424,6 +424,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Build/CI
 - **Reifegrad-Wirkung:** keine
 - **Artefakte:** `.github/workflows/ci.yml`, `scripts/ci-changes.mjs`, `scripts/ci-changes.test.mjs`, ADR-043
+- **Belege:** (1) Code-Push `0c59ece`: nur der PR-Lauf, kein Push-Lauf; alle 23 Checks grün, „Änderungsart“ meldet `code=true`.
 
 #### Q.1: Versions-Nachzug (Electron, Rust, Werkzeuge)
 
