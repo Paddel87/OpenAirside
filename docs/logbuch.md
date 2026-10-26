@@ -24,6 +24,15 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-26 15:15 (UTC) – [BEOBACHTUNG]
+
+- **Merges nach Freigabe des Projektinhabers** („Merge du beide, erst #37, dann #36“): PR #37 (Q.5, ADR-043) gemergt als `56bdc8c`; `main` in den Branch von 3.1b geholt. Konflikte nur in `docs/decisions.md` (Teil A: Zeilen ADR-043 und ADR-044, Reaktiv-Quote jetzt 4 / 10 über ADR-035 bis ADR-044, gesamt 17 / 44) und `docs/logbuch.md` (Einträge beider Branches nach Zeit geordnet).
+- **3.1b `[ERLEDIGT]`:** DoD erfüllt, CI grün auf `1dd8082` (39 Checks); Merge-Stand läuft durch die neue CI (Code aus `main` enthalten, daher voller Lauf). Grafik-Abnahme bleibt als 3.1b-N1 offen.
+
+### 2026-10-26 15:05 (UTC) – [PROBLEM-GELÖST]
+
+- **Q.5 erledigt:** Nachweise auf PR #37: (1) Code-Push `0c59ece` nur als PR-Lauf, 23 Checks grün; (2) Doku-Push `f5e6269` auf grünem Stand in rund 20 s, Pflicht-Checks des Rulesets bestanden, PR mergebar; (3) erzwungener Fehlerfall: roter Rust-Test `ff1cfab`, Doku-Push `adcfc91` darauf → volle Pipeline, rot; Revert `312c9c6`, danach `c79c1b1` grün. Dieser Eintrag selbst ist der erste Doku-Commit, der nach dem grünen Stand nur den Doku-Weg nehmen soll.
+
 ### 2026-10-26 15:00 (UTC) – [REIFEGRAD-WECHSEL]
 
 - **Nachmessung 3.1b eingetroffen:** Referenz-PC 14:50 UTC, Mac 14:51 UTC (Pakete aus Release-Lauf 40339206366 auf `2b36e3d`, Messergebnis Version 3); Rohdateien `docs/research/3.1b-ergebnisse/referenz-pc-nachmessung.json`, `mac-nachmessung.json`; Auswertung `docs/research/3.1b-messung.md` 5.3–5.5. Keine Störung gemeldet, alle Fenster gewertet.
@@ -31,6 +40,13 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 - **ADR-044:** „NFR Bauaktion im nächsten Bild“ `[VORLÄUFIG]` → `[BELASTBAR]`; „Speicher der Weltdarstellung“ `[BELASTBAR]` (seit 14:25 UTC) bestätigt; Auflage Windows aus 3.15 erfüllt. Entscheidungs-Klasse aktiv (Opus 5.5).
 - **Befund ohne Kriterium:** Mac einmal 179 Ticks/s (Fenster 8), ein Verzögerungsereignis (Fenster 19, 6 Ticks), Schritt bis 39,2 ms; Muster der Erkundung 3.13. Bauaktion bis zum Bild am Mac einmal 5 Bilder (32,8 ms, Schwelle 100 ms eingehalten, Ziel 1–2 Bilder verfehlt).
 - **ADR-Nummer:** ADR-043 trägt die CI-Trigger (Q.5, Branch `ci/q-5-ci-trigger`, PR #37); die Reifegrade erhalten ADR-044.
+
+### 2026-10-26 14:45 (UTC) – [ADR]
+
+- **ADR-043 (Q.5):** CI-Trigger nur für `main` und PRs, Code-Jobs nicht bei reinen Doku-Änderungen; Option B, freigegeben vom Projektinhaber per Auswahl. Anlass: rund 270 CI-Jobs für acht Pushes auf PR #36, davon sieben reine Doku.
+- **Fund beim Entwurf:** Der Ruleset „main-schutz“ (öffentlich lesbar über die API) verlangt 19 Checks namentlich, darunter die Matrix-Jobs je Betriebssystem. Ein auf Job-Ebene übersprungener Matrix-Job meldet nicht unter seinem vollen Namen; deshalb überspringen die Matrix-Jobs ihre Schritte. Zweiter Fund: Scheitert der Entscheidungs-Job, würden abhängige Jobs übersprungen und als bestanden gelten; deshalb laufen die Code-Jobs, außer die Entscheidung ist ausdrücklich `false`.
+- **Lokal geprüft:** `scripts/ci-changes.test.mjs` (10 Tests, darunter Doku auf rotem, laufendem und unlesbarem Stand); echter Diff im Repo: zwei Doku-Commits → `false`, Bereich mit Code → `true`, ohne Token (HTTP 401) → `true`.
+- **Modell:** Entscheidungs-Klasse (Opus 5.5, laut `get_session`), passt zur Empfehlung von Q.5.
 
 ### 2026-10-26 14:30 (UTC) – [SESSIONENDE]
 
