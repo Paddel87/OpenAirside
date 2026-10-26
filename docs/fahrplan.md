@@ -410,6 +410,21 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 ### Querschnitt: wiederkehrende Schritte
 
+#### Q.5: CI-Trigger nur für `main` und PRs, Code-Jobs nicht bei reinen Doku-Änderungen
+
+- **Status:** IN ARBEIT (2026-10-26)
+- **Phasentyp-Kontext:** STABILISIERUNG (Querschnitt)
+- **Abhängigkeiten:** keine
+- **Freigabepflichtig:** ja (Kategorie 7), freigegeben am 2026-10-26 (ADR-043, Option B)
+- **Empfohlene Klasse:** Entscheidung – die Sicherung „kein Grün auf rotem Stand“ ist ein Gate, dessen Fehler teuer wäre; die Umsetzung selbst ist Routine.
+- **Eingangskriterien:** Freigabe
+- **Anforderungen (ab Klasse M):** – (Infrastruktur)
+- **Zu tun:** `ci.yml`: Trigger `push` nur auf `main`, dazu `workflow_dispatch`; Job „Änderungsart“ mit `scripts/ci-changes.mjs`; Code-Jobs nur, wenn er nicht ausdrücklich `false` meldet; Matrix-Jobs überspringen ihre Schritte. Unit-Tests des Skripts, `project-context.md` Abschnitt 7, Tooling-Inventar.
+- **Akzeptanzkriterien:** Unit-Tests grün; auf dem PR dieses Schritts (1) Code-Push mit voller Pipeline grün, (2) Doku-Push auf grünem Stand: nur „Änderungsart“ und „Dokumentation“ laufen, alle 19 Pflicht-Checks des Rulesets bestanden, PR mergebar; (3) erzwungener Fehlerfall: Doku-Push auf einen roten Stand löst die volle Pipeline aus und bleibt rot (CLAUDE.md Abschnitt 6, Schutzmechanismen).
+- **Betroffene Module:** Build/CI
+- **Reifegrad-Wirkung:** keine
+- **Artefakte:** `.github/workflows/ci.yml`, `scripts/ci-changes.mjs`, `scripts/ci-changes.test.mjs`, ADR-043
+
 #### Q.1: Versions-Nachzug (Electron, Rust, Werkzeuge)
 
 - **Status:** OFFEN
