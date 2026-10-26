@@ -412,7 +412,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### Q.5: CI-Trigger nur für `main` und PRs, Code-Jobs nicht bei reinen Doku-Änderungen
 
-- **Status:** IN ARBEIT (2026-10-26)
+- **Status:** ERLEDIGT (2026-10-26)
 - **Phasentyp-Kontext:** STABILISIERUNG (Querschnitt)
 - **Abhängigkeiten:** keine
 - **Freigabepflichtig:** ja (Kategorie 7), freigegeben am 2026-10-26 (ADR-043, Option B)
@@ -424,7 +424,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Betroffene Module:** Build/CI
 - **Reifegrad-Wirkung:** keine
 - **Artefakte:** `.github/workflows/ci.yml`, `scripts/ci-changes.mjs`, `scripts/ci-changes.test.mjs`, ADR-043
-- **Belege:** (1) Code-Push `0c59ece`: nur der PR-Lauf, kein Push-Lauf; alle 23 Checks grün, „Änderungsart“ meldet `code=true`. (2) Doku-Push `f5e6269` auf grünem Stand: Code-Jobs übersprungen bzw. Matrix-Schritte übersprungen, Lauf in rund 20 s, alle 23 Checks bestanden, PR `mergeable_state: clean`. (3) Erzwungener roter Stand `ff1cfab` (fehlschlagender Rust-Test): 4 Checks rot; Doku-Push `adcfc91` darauf: „Änderungsart“ meldet `code=true`, volle Pipeline läuft (Lint, Benchmark, Rauchtest, Tests), „Rust Tests (ubuntu-latest)“ rot. Danach Revert des roten Tests.
+- **Belege:** (1) Code-Push `0c59ece`: nur der PR-Lauf, kein Push-Lauf; alle 23 Checks grün, „Änderungsart“ meldet `code=true`. (2) Doku-Push `f5e6269` auf grünem Stand: Code-Jobs übersprungen bzw. Matrix-Schritte übersprungen, Lauf in rund 20 s, alle 23 Checks bestanden, PR `mergeable_state: clean`. (3) Erzwungener roter Stand `ff1cfab` (fehlschlagender Rust-Test): 4 Checks rot; Doku-Push `adcfc91` darauf: „Änderungsart“ meldet `code=true`, volle Pipeline läuft (Lint, Benchmark, Rauchtest, Tests), „Rust Tests (ubuntu-latest)“ rot. Danach Revert des roten Tests (`312c9c6`); auf `c79c1b1` alle 23 Checks grün. DoD für eine Workflow-Änderung: Unit-Tests, ESLint, Prettier, Pre-Commit-Hook lokal, CI grün; Coverage des Skripts in der TS-Coverage enthalten.
 
 #### Q.1: Versions-Nachzug (Electron, Rust, Werkzeuge)
 

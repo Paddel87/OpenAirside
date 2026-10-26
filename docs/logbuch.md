@@ -24,6 +24,10 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-26 15:05 (UTC) – [PROBLEM-GELÖST]
+
+- **Q.5 erledigt:** Nachweise auf PR #37: (1) Code-Push `0c59ece` nur als PR-Lauf, 23 Checks grün; (2) Doku-Push `f5e6269` auf grünem Stand in rund 20 s, Pflicht-Checks des Rulesets bestanden, PR mergebar; (3) erzwungener Fehlerfall: roter Rust-Test `ff1cfab`, Doku-Push `adcfc91` darauf → volle Pipeline, rot; Revert `312c9c6`, danach `c79c1b1` grün. Dieser Eintrag selbst ist der erste Doku-Commit, der nach dem grünen Stand nur den Doku-Weg nehmen soll.
+
 ### 2026-10-26 14:45 (UTC) – [ADR]
 
 - **ADR-043 (Q.5):** CI-Trigger nur für `main` und PRs, Code-Jobs nicht bei reinen Doku-Änderungen; Option B, freigegeben vom Projektinhaber per Auswahl. Anlass: rund 270 CI-Jobs für acht Pushes auf PR #36, davon sieben reine Doku.
