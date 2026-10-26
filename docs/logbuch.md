@@ -24,6 +24,16 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-26 14:30 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung 2026-10-26 13:50 bis 14:30 UTC (Session ab 2026-10-25 20:54 UTC).
+- **Bearbeitet:** 3.1b: Auswertung der Messungen Referenz-PC und Mac, Grafik-Abnahme verschoben (3.1b-N1), Reifegrade, Bildzählung der Vorschau im Messwerkzeug (Option C).
+- **Erreicht:** Commits `c7cab0c`, `868fd07`, `b027de8`, `ee59a4d`, `aa57ae0`, `2b36e3d`, `b4c2086` (gepusht, PR #36). „Speicher der Weltdarstellung“ `[BELASTBAR]`. Lokal grün: Vitest Renderer (18 Dateien, 177 Tests), `tsc`, ESLint; `measure 1` im Container mit Version 3. CI grün auf `aa57ae0`; Lauf auf `ee59a4d` rot nur im Artefakt-Upload (`ENOTFOUND`), PR-Kommentar. Release-Lauf 40339206366 auf `2b36e3d` für die Nachmessung gestartet.
+- **Offen geblieben:** Nachmessung auf beiden Rechnern durch den Projektinhaber (zugesagt „nachher“); danach Auswertung nach `docs/research/3.1b-messung.md` Abschnitt 4a, ADR-043 zu den Reifegraden, `[ERLEDIGT]` für 3.1b, Merge nur nach Freigabe. Grafik-Abnahme 3.1b-N1, Zeitpunkt nennt der Projektinhaber.
+- **Nächster Schritt:** Messdateien auswerten.
+- **Modell-Bilanz:** bis 14:07 UTC Routine-Klasse (Sonnet 5.5, laut `get_session`), danach Entscheidungs-Klasse (Opus 5.5, Wechsel durch den Projektinhaber nach Stopp). Schritt 3.1b empfiehlt Entscheidung für die Bewertung; die Auswertung lief vor dem Wechsel auf Routine (nur Eintragen der Zahlen, keine Bewertung), die Bewertung auf Entscheidung. Keine Teilarbeit an Unteragenten abgegeben (Probelauf offen).
+- **Kontextgröße:** 292.231 von 1.000.000 Token laut `get_session`, unter der Grenze von 400.000.
+
 ### 2026-10-26 14:25 (UTC) – [REIFEGRAD-WECHSEL]
 
 - **Modellwechsel:** Stopp „Modellwechsel erforderlich“ (Beförderung nach `[BELASTBAR]`) aufgehoben; laut `get_session` eingestellt und bedient `claude-opus-5-5` → Entscheidungs-Klasse.
