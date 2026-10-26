@@ -24,6 +24,12 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-26 14:20 (UTC) – [BEOBACHTUNG]
+
+- **Messungen 3.1b eingetroffen:** Referenz-PC (Windows, 13:48 UTC) und Mac (14:03 UTC), Rohdateien in `docs/research/3.1b-ergebnisse/`, Auswertung gegen die Schwellen in `docs/research/3.1b-messung.md` Abschnitt 5 (Commits `c7cab0c`, `868fd07`). Nur Zahlen aus den Dateien, keine Schätzung. Auffällig: Referenz-PC Fenster 9 mit 59,4 Bildern/s und einem Bild von 160,5 ms; Mac `ticksPerSecMin` 162 (Fenster 16, längster Schritt 110,5 ms) und 179 (Fenster 10), 7 Verzögerungsereignisse, ohne Wirkung auf das Bild; Vorschau der Bauaktion am Referenz-PC im Median meist ein Bildtakt (16,6–17,7 ms), im Maximum bis 28,6 ms. Notizen zum Zuschauen: keine eingegangen.
+- **Grafik-Abnahme verschoben (Antwort des Projektinhabers):** „Die Grafiken würde ich gerne zu einem anderen Zeitpunkt abnehmen. Die können ja auch noch mal komplett durchgetauscht werden.“ Die Verschiebung hat ihren Landeplatz im neuen Fahrplan-Schritt 3.1b-N1 `[OFFEN]` (Abschnitt 6 der Harten Regeln); die Testgrafiken aus 2.10 bleiben im Spiel. Vorlage 3.1 und Messdokument entsprechend vermerkt.
+- **Reifegrade nicht entschieden:** Die Beförderung von „Speicher der Weltdarstellung“, „NFR Bauaktion im nächsten Bild“ und „NFR Performance unter Windows“ nach `[BELASTBAR]` ist ein Eskalations-Auslöser (Entscheidungs-Klasse, `CLAUDE.md` Abschnitt 0, Punkt 4). Aktive Klasse: Routine (Sonnet 5.5). Die Entscheidung wartet auf einen Wechsel.
+
 ### 2026-10-25 21:50 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** 20:54 bis 21:50 UTC.
