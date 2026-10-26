@@ -24,6 +24,14 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-26 15:00 (UTC) – [REIFEGRAD-WECHSEL]
+
+- **Nachmessung 3.1b eingetroffen:** Referenz-PC 14:50 UTC, Mac 14:51 UTC (Pakete aus Release-Lauf 40339206366 auf `2b36e3d`, Messergebnis Version 3); Rohdateien `docs/research/3.1b-ergebnisse/referenz-pc-nachmessung.json`, `mac-nachmessung.json`; Auswertung `docs/research/3.1b-messung.md` 5.3–5.5. Keine Störung gemeldet, alle Fenster gewertet.
+- **Ergebnis gegen die vorab festgelegten Schwellen (4a):** `previewFramesMax` 1 in allen 20 Fenstern auf beiden Rechnern; Referenz-PC 59,9–60 Bilder/s, p99 17,3–17,8 ms, 0 späte Antworten, 180 Ticks/s; Speicher 641 MB (PC) bzw. 841 MB (Mac, bei s = 40). Das Bild von 160,5 ms aus der ersten Messung kam nicht wieder.
+- **ADR-044:** „NFR Bauaktion im nächsten Bild“ `[VORLÄUFIG]` → `[BELASTBAR]`; „Speicher der Weltdarstellung“ `[BELASTBAR]` (seit 14:25 UTC) bestätigt; Auflage Windows aus 3.15 erfüllt. Entscheidungs-Klasse aktiv (Opus 5.5).
+- **Befund ohne Kriterium:** Mac einmal 179 Ticks/s (Fenster 8), ein Verzögerungsereignis (Fenster 19, 6 Ticks), Schritt bis 39,2 ms; Muster der Erkundung 3.13. Bauaktion bis zum Bild am Mac einmal 5 Bilder (32,8 ms, Schwelle 100 ms eingehalten, Ziel 1–2 Bilder verfehlt).
+- **ADR-Nummer:** ADR-043 trägt die CI-Trigger (Q.5, Branch `ci/q-5-ci-trigger`, PR #37); die Reifegrade erhalten ADR-044.
+
 ### 2026-10-26 14:30 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** Fortsetzung 2026-10-26 13:50 bis 14:30 UTC (Session ab 2026-10-25 20:54 UTC).

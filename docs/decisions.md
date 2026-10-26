@@ -55,10 +55,11 @@
 | 040 | 2026-10-25 | Aktiv | OPERATIV | METHODIK | Methodik | Schritt 3.1 in drei Stufen |
 | 041 | 2026-10-25 | Aktiv | OPERATIV | DEPLOYMENT, PERFORMANCE | Build/Deploy | Dauerbau-Benchmark als Schritt im CI-Job „Kern-Benchmark“ |
 | 042 | 2026-10-25 | Aktiv | REAKTIV | DATENMODELL, SCHNITTSTELLE | Datenmodell, API-Verträge | Wirkung der Objekttypen, Möbel sperren, Abriss berührter Objekte |
+| 044 | 2026-10-26 | Aktiv | ERKENNTNIS | PERFORMANCE | Architektur | Bauaktion im nächsten Bild und Speicher der Weltdarstellung belastbar, Auflage Windows erfüllt |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 4 / 10 über die letzten 10 ADRs (ADR-033 bis ADR-042: ADR-036, ADR-037, ADR-038, ADR-042), 40 % – **über dem Schwellenwert**; gesamt 17 / 42. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-042, 2026-10-25, neues Muster nach Regel-009); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
+- **Aktueller Wert:** 4 / 10 über die letzten 10 ADRs (ADR-035 bis ADR-044: ADR-036, ADR-037, ADR-038, ADR-042; ADR-043 steht auf dem Branch `ci/q-5-ci-trigger`), 40 % – **über dem Schwellenwert**; gesamt 17 / 44. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-042, 2026-10-25, neues Muster nach Regel-009); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
@@ -150,6 +151,7 @@ Seit 2026-10-13 liegt jeder ADR als eigene Datei in `docs/decisions/` (ADR-001: 
 - [ADR-040: Schritt 3.1 in drei Stufen](decisions/ADR-040.md)
 - [ADR-041: Dauerbau-Benchmark als Schritt im CI-Job „Kern-Benchmark“](decisions/ADR-041.md)
 - [ADR-042: Wirkung der Objekttypen, Möbel sperren, Abriss berührter Objekte](decisions/ADR-042.md)
+- [ADR-044: Bauaktion im nächsten Bild und Speicher der Weltdarstellung belastbar, Auflage Windows erfüllt](decisions/ADR-044.md)
 
 ---
 
