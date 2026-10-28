@@ -7,11 +7,23 @@ import {
   MISSING_SLOT,
   placeOf,
   SlotTable,
+  STATE_ALPHA,
+  stateAlpha,
   tileKey,
   TILE,
   writeBlockTexels,
 } from "./world-texels.js";
-import { BLOCK_CELLS, MISSING, WALL, type WorldBlock } from "./world-reader.js";
+import {
+  BLOCK_CELLS,
+  BUILDING,
+  BUILT,
+  KIND_SHIFT,
+  MISSING,
+  PLANNED,
+  TERRAIN,
+  WALL,
+  type WorldBlock,
+} from "./world-reader.js";
 
 function block(fill: (i: number) => [flags: number, zone: number, floor: number, wall: number]) {
   const b: WorldBlock = {
@@ -19,6 +31,7 @@ function block(fill: (i: number) => [flags: number, zone: number, floor: number,
     flags: new Uint8Array(BLOCK_CELLS),
     zone: new Uint8Array(BLOCK_CELLS),
     marking: new Uint8Array(BLOCK_CELLS),
+    state: new Uint8Array(BLOCK_CELLS),
     floor: new Uint16Array(BLOCK_CELLS),
     wall: new Uint16Array(BLOCK_CELLS),
     objects: [],
@@ -110,6 +123,28 @@ describe("writeBlockTexels", () => {
     // Outside the block nothing was written.
     expect(texel(63, 96)).toEqual([0, 0, 0, 0]);
     expect(texel(64, 128)).toEqual([0, 0, 0, 0]);
+  });
+
+  it("leaves terrain undrawn and draws planned constructions translucent (ADR-045)", () => {
+    const slots = new SlotTable();
+    const data = new Uint8Array(TILE * TILE * 4);
+    const terrain = TERRAIN << KIND_SHIFT;
+    const b = block((i) => {
+      if (i === 0) return [terrain, 0, 0, 0]; // terrain, nothing built
+      if (i === 1) return [terrain | WALL, 0, 30, 0]; // planned floor on terrain
+      if (i === 2) return [0, 0, 30, 31]; // wall in construction over a floor
+      return [terrain, 0, 0, 0];
+    });
+    b.state[1] = PLANNED;
+    b.state[2] = BUILDING;
+    writeBlockTexels(data, 0, 0, b, slots);
+    const texel = (cx: number): number[] => [...data.slice(cx * 4, cx * 4 + 4)];
+    expect(texel(0)).toEqual([0, 0, 0, 255]);
+    expect(texel(1)).toEqual([1, 0, 0, STATE_ALPHA[PLANNED]]);
+    expect(texel(2)).toEqual([1, 2, 0, STATE_ALPHA[BUILDING]]);
+    expect(stateAlpha(BUILT)).toBe(255);
+    expect(stateAlpha(9)).toBe(255);
+    expect(STATE_ALPHA[PLANNED]).toBeLessThan(STATE_ALPHA[BUILDING] ?? 0);
   });
 
   it("places a block of a later texture at the offset inside it", () => {

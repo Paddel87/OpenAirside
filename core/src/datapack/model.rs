@@ -66,7 +66,7 @@ pub struct ObjectsFile {
 
 /// An object type: something the player builds (step 2.4 defines the
 /// minimal fields; later steps add fields additively; `effect` and `blocks`
-/// came with ADR-042).
+/// came with ADR-042, `work` and the effect `deliveryPoint` with ADR-045).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -80,15 +80,23 @@ pub struct ObjectEntry {
     /// How the object is placed.
     #[cfg_attr(feature = "schema", schemars(with = "Placement"))]
     pub placement: PlacementSpec,
-    /// What an `area` object does to the cells it is drawn over; required
-    /// for `area`, not allowed for `single` (ADR-042).
+    /// What the object does: required for `area` (`floor` or `wall`,
+    /// ADR-042); for `single` only `deliveryPoint` (ADR-045), else absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "schema", schemars(with = "Option<Effect>"))]
     pub effect: Option<EffectSpec>,
     /// Whether a `single` object keeps persons from walking over its cells;
-    /// default `true`, not allowed for `area` (ADR-042).
+    /// default `true`, not allowed for `area` (ADR-042) and for a
+    /// `deliveryPoint`, on which its workers stand (ADR-045).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub blocks: Option<bool>,
+    /// Work of the construction workers in game minutes, 1 to 1440: for
+    /// `area` per cell, for `single` per object (ADR-045). Default 1 for a
+    /// floor, 3 for a wall, 10 for a `single` object; not allowed for a
+    /// `deliveryPoint`, which stands at once.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 1440)))]
+    pub work: Option<u16>,
     /// Entry of another pack that this entry replaces (`<pack>:<entry>`);
     /// allowed only if this pack depends on that pack.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -100,7 +108,7 @@ pub struct ObjectEntry {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct EffectSpec {
-    /// `floor` or `wall`.
+    /// `floor`, `wall` or `deliveryPoint`.
     pub kind: EffectKind,
     /// What the floor is used for, only for `floor`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -108,6 +116,9 @@ pub struct EffectSpec {
     /// Cost factor of the floor in tenths, only for `floor`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cost: Option<u8>,
+    /// Construction workers of the company, only for `deliveryPoint`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub workers: Option<u8>,
 }
 
 /// Kind of an [`EffectSpec`].
@@ -118,9 +129,12 @@ pub enum EffectKind {
     Floor,
     /// See [`Effect::Wall`].
     Wall,
+    /// See [`Effect::DeliveryPoint`].
+    DeliveryPoint,
 }
 
-/// What an `area` object type does to the cells it is drawn over. Further
+/// What an object type does: an `area` type to the cells it is drawn over
+/// (`floor`, `wall`), a `single` type as a whole (`deliveryPoint`). Further
 /// kinds (zone, stairs, marking) come with the steps that build them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -145,10 +159,36 @@ pub enum Effect {
     /// Wall: the cell cannot be walked on and shows this object type as
     /// wall.
     Wall {},
+    /// Delivery point of a construction company (ADR-045), only for
+    /// `single`: built at once, also on terrain; its construction workers
+    /// fetch material here and carry it to the construction sites.
+    DeliveryPoint {
+        /// Construction workers of the company, 1 to 64; default 10.
+        #[serde(default = "default_workers")]
+        #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 64)))]
+        workers: u8,
+    },
 }
 
 fn default_floor_cost() -> u8 {
     COST_NORMAL
+}
+
+/// Construction workers of a delivery point without `workers` (ADR-045).
+pub const DEFAULT_WORKERS: u8 = 10;
+/// Most construction workers of one delivery point.
+pub const MAX_WORKERS: u8 = crate::build::orders::MAX_WORKERS;
+/// Longest work of one object type in game minutes.
+pub const MAX_WORK: u16 = 1440;
+/// Work of a floor per cell without `work`, in game minutes (ADR-045).
+pub const DEFAULT_FLOOR_WORK: u16 = 1;
+/// Work of a wall per cell without `work`, in game minutes (ADR-045).
+pub const DEFAULT_WALL_WORK: u16 = 3;
+/// Work of a single object without `work`, in game minutes (ADR-045).
+pub const DEFAULT_SINGLE_WORK: u16 = 10;
+
+fn default_workers() -> u8 {
+    DEFAULT_WORKERS
 }
 
 /// `placement` as read from the file: a plain struct, so that errors name

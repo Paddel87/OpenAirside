@@ -46,7 +46,7 @@
       ]
     },
     "Effect": {
-      "description": "What an `area` object type does to the cells it is drawn over. Further\nkinds (zone, stairs, marking) come with the steps that build them.",
+      "description": "What an object type does: an `area` type to the cells it is drawn over\n(`floor`, `wall`), a `single` type as a whole (`deliveryPoint`). Further\nkinds (zone, stairs, marking) come with the steps that build them.",
       "oneOf": [
         {
           "additionalProperties": false,
@@ -84,15 +84,35 @@
           },
           "required": ["kind"],
           "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Delivery point of a construction company (ADR-045), only for\n`single`: built at once, also on terrain; its construction workers\nfetch material here and carry it to the construction sites.",
+          "properties": {
+            "kind": {
+              "const": "deliveryPoint",
+              "type": "string"
+            },
+            "workers": {
+              "default": 10,
+              "description": "Construction workers of the company, 1 to 64; default 10.",
+              "format": "uint8",
+              "maximum": 64,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": ["kind"],
+          "type": "object"
         }
       ]
     },
     "ObjectEntry": {
       "additionalProperties": false,
-      "description": "An object type: something the player builds (step 2.4 defines the\nminimal fields; later steps add fields additively; `effect` and `blocks`\ncame with ADR-042).",
+      "description": "An object type: something the player builds (step 2.4 defines the\nminimal fields; later steps add fields additively; `effect` and `blocks`\ncame with ADR-042, `work` and the effect `deliveryPoint` with ADR-045).",
       "properties": {
         "blocks": {
-          "description": "Whether a `single` object keeps persons from walking over its cells;\ndefault `true`, not allowed for `area` (ADR-042).",
+          "description": "Whether a `single` object keeps persons from walking over its cells;\ndefault `true`, not allowed for `area` (ADR-042) and for a\n`deliveryPoint`, on which its workers stand (ADR-045).",
           "type": ["boolean", "null"]
         },
         "effect": {
@@ -104,7 +124,7 @@
               "type": "null"
             }
           ],
-          "description": "What an `area` object does to the cells it is drawn over; required\nfor `area`, not allowed for `single` (ADR-042)."
+          "description": "What the object does: required for `area` (`floor` or `wall`,\nADR-042); for `single` only `deliveryPoint` (ADR-045), else absent."
         },
         "id": {
           "description": "Identifier within the pack: 1 to 64 characters `a-z`, `0-9`, `_`, `-`.",
@@ -124,6 +144,13 @@
         "replaces": {
           "description": "Entry of another pack that this entry replaces (`<pack>:<entry>`);\nallowed only if this pack depends on that pack.",
           "type": ["string", "null"]
+        },
+        "work": {
+          "description": "Work of the construction workers in game minutes, 1 to 1440: for\n`area` per cell, for `single` per object (ADR-045). Default 1 for a\nfloor, 3 for a wall, 10 for a `single` object; not allowed for a\n`deliveryPoint`, which stands at once.",
+          "format": "uint16",
+          "maximum": 1440,
+          "minimum": 1,
+          "type": ["integer", "null"]
         }
       },
       "required": ["id", "name", "placement"],

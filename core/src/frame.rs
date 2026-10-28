@@ -30,9 +30,13 @@
 //! i8, heading u8 in 256 steps, group u8, state u8), vehicles
 //! ([`VEHICLE_BYTES`]), aircraft ([`AIRCRAFT_BYTES`]) and baggage
 //! ([`BAGGAGE_BYTES`]) with the counts of the header, and the world section
-//! of `display` (always present, at least its header). Group and state of
-//! persons are 0 until step 3.2; the sections of vehicles, aircraft and
-//! baggage are empty until steps 3.4 and 3.5.
+//! of `display` (always present, at least its header). Groups of persons
+//! (ADR-045): 0 undetermined (all persons until step 3.2), 1 departing
+//! passenger, 2 arriving passenger, 3 business passenger, 4 visitor, 5
+//! staff, 6 franchise staff, 7 security staff, 8 apron staff, 9
+//! construction worker (state 0 carrying material, 1 working, 2
+//! returning). The sections of vehicles, aircraft and baggage are empty
+//! until steps 3.4 and 3.5.
 
 use std::sync::Arc;
 
@@ -123,6 +127,8 @@ struct Packed {
     y: u16,
     floor: i8,
     heading: u8,
+    group: u8,
+    state: u8,
 }
 
 /// A person of a snapshot as seen by the query service (S-7).
@@ -185,6 +191,8 @@ impl Snapshot {
                 y: fixed(p.y, map.height),
                 floor: p.floor,
                 heading: p.heading,
+                group: p.group,
+                state: p.state,
             });
         });
     }
@@ -275,8 +283,9 @@ impl Snapshot {
                 out.extend_from_slice(&p.x.to_le_bytes());
                 out.extend_from_slice(&p.y.to_le_bytes());
                 out.extend_from_slice(&p.floor.to_le_bytes());
-                // Heading, group and state (group and state are 0 until 3.2).
-                out.extend_from_slice(&[p.heading, 0, 0]);
+                // Heading, group and state (ADR-045: group 0 until 3.2, 9
+                // for construction workers with their state).
+                out.extend_from_slice(&[p.heading, p.group, p.state]);
                 count += 1;
             }
         }
@@ -360,6 +369,43 @@ mod tests {
                 )
             })
             .collect()
+    }
+
+    #[test]
+    fn construction_workers_carry_group_and_state() {
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(1)
+            .build()
+            .unwrap();
+        let mut world = World::new_game(MapSize::new(64, 64).unwrap());
+        let at = CellPos {
+            x: 8,
+            y: 4,
+            floor: 0,
+        };
+        world
+            .build_delivery_point(
+                "base:delivery_point",
+                (4, 4),
+                2,
+                at,
+                crate::geometry::Rotation(0),
+            )
+            .unwrap();
+        world.step(&pool, &pool, 0, false);
+        let mut snap = Snapshot::default();
+        snap.capture(1, 0, &world, &Arc::default());
+        let mut out = Vec::new();
+        snap.encode(
+            &FrameFilter::default(),
+            &mut WorldSender::default(),
+            &mut out,
+        );
+        assert_eq!(persons(&out), vec![(8 * 32 + 16, 4 * 32 + 16, 0); 2]);
+        for k in 0..2 {
+            let p = HEADER_BYTES + k * PERSON_BYTES;
+            assert_eq!((out[p + 6], out[p + 7]), (9, 0), "group 9, carrying");
+        }
     }
 
     #[test]

@@ -1,6 +1,8 @@
 //! Building with effect (ADR-042, step 3.1a): `build`, `buildArea` and
 //! `demolish` change the grid and the objects of the world state, a refused
-//! command changes nothing, and the result survives a save game.
+//! command changes nothing, and the result survives a save game. Since
+//! ADR-045 the commands place orders; these tests let the orders take
+//! effect at once.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -69,6 +71,10 @@ impl Game {
         self.next_id += 1;
         self.sim.submit(self.sim.session(), id, command);
         self.sim.step();
+        // The effect of building, not the work of construction workers, is
+        // tested here (ADR-045, see `construction.rs`): open orders take
+        // effect at once.
+        self.sim.world_mut().complete_orders();
         let mut answer = None;
         for record in self.sim.take_events(usize::MAX) {
             self.sim.ack(self.sim.session(), record.seq);
@@ -330,7 +336,11 @@ fn demolishing_removes_every_touched_object_as_a_whole() {
         build.object(first).is_none(),
         "a stale handle finds nothing"
     );
-    assert_eq!(game.cell(10, 10), Cell::VOID, "inside the frame: void");
+    assert_eq!(
+        game.cell(10, 10),
+        Cell::TERRAIN,
+        "inside the frame: terrain"
+    );
     let right = game.cell(11, 10);
     assert!(right.walkable(), "outside the frame: passable again");
     assert_eq!(right.floor_kind, game.type_number(FLOOR), "with its floor");
@@ -344,7 +354,8 @@ fn demolishing_clears_floors_and_walls_inside_the_frame_only() {
     game.accepted(area(WALL_TYPE, rect(5, 5, 6, 6)));
     game.accepted(demolish(rect(4, 4, 7, 7)));
     for (x, y) in [(4, 4), (5, 5), (6, 6)] {
-        assert_eq!(game.cell(x, y), Cell::VOID, "({x}, {y})");
+        // The ground floor keeps terrain where something was (ADR-045).
+        assert_eq!(game.cell(x, y), Cell::TERRAIN, "({x}, {y})");
     }
     assert!(game.walkable(3, 3) && game.walkable(7, 7));
     // Nothing to demolish is not an error.

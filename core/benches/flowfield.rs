@@ -1,8 +1,13 @@
 //! Flow field benchmark "terminal 768² × 5 in a world 2048²" (roadmap step
-//! 2.3, FR-017, ADR-020).
+//! 2.3, FR-017, ADR-020), since step 3.1c as a construction site (ADR-045):
+//! terrain on the ground floor outside the terminal, one delivery point and
+//! open floor orders, so that every recomputation also computes the set of
+//! the construction workers.
 //!
-//! Measures (1) the full recomputation of all flow fields for 64 targets on
-//! all cores (median of 5 runs) with memory, and (2) the
+//! Measures (1) the full recomputation of all flow fields for 64 targets and
+//! the set of the construction workers on all cores (median of 5 runs) with
+//! memory, the set of the construction workers alone for information, and
+//! (2) the
 //! simulation step with 10,000 persons at 3× in real-time pace while
 //! recomputations run on those threads and are adopted. The defaults split
 //! 4 cores into 2 simulation and 2 background threads: more threads than
@@ -24,9 +29,10 @@ use openairside_core::adoption::AdoptionMode;
 use openairside_core::command::Command;
 use openairside_core::event::Event;
 use openairside_core::geometry::MapSize;
-use openairside_core::scenario::{reference_terminal, target_count};
+use openairside_core::scenario::{add_construction_site, reference_terminal, target_count};
 use openairside_core::simulation::{Simulation, SimulationConfig};
 use openairside_core::time::Speed;
+use openairside_core::wayfinding::Fields;
 use openairside_core::wayfinding::flowfield::FieldSet;
 
 const PERSONS: u32 = 10_000;
@@ -89,10 +95,14 @@ fn run() -> Result<bool, String> {
     )?;
     let max_p99 = env_number("OPENAIRSIDE_BENCH_MAX_P99_MS", DEFAULT_MAX_P99_MS)?;
     let map = MapSize::new(2048, 2048).ok_or("invalid map size")?;
-    let world = reference_terminal(map, TERMINAL_EDGE, GATES, PERSONS, 2026)
+    let mut world = reference_terminal(map, TERMINAL_EDGE, GATES, PERSONS, 2026)
         .ok_or("the terminal does not fit on the map")?;
     if world.build().targets().len() != target_count(usize::from(GATES)) {
         return Err("unexpected number of targets".into());
+    }
+    add_construction_site(&mut world, TERMINAL_EDGE);
+    if world.build().delivery_points().len() != 1 || world.build().orders().is_empty() {
+        return Err("the construction site is missing".into());
     }
 
     // (1) Full recomputation on all cores, as measured in spike 1.5.
@@ -105,17 +115,25 @@ fn run() -> Result<bool, String> {
     let mut times = Vec::new();
     let mut bytes = 0;
     let mut cells = 0;
+    let mut worker_cells = 0;
     for run in 0..RUNS {
         let start = Instant::now();
-        let set = pool.install(|| FieldSet::compute(&input, 1));
+        let fields = pool.install(|| Fields::compute(&input, 1));
         times.push(start.elapsed().as_secs_f64() * 1e3);
         if run == 0 {
-            bytes = set.bytes() + set.cells() * 3;
+            let (set, workers) = (fields.main(), fields.workers());
+            bytes = set.bytes() + set.cells() * 3 + workers.bytes() + workers.cells() * 3;
             cells = set.cells();
+            worker_cells = workers.cells();
         }
     }
     times.sort_by(f64::total_cmp);
     let recompute = times[times.len() / 2];
+    let start = Instant::now();
+    let workers = pool.install(|| FieldSet::compute(&input.workers, 1));
+    let worker_ms = start.elapsed().as_secs_f64() * 1e3;
+    let worker_targets = workers.targets();
+    drop(workers);
 
     // (2) Simulation step while recomputations run in the background.
     let mut sim = Simulation::with_world(
@@ -170,6 +188,7 @@ fn run() -> Result<bool, String> {
     let json = format!(
         concat!(
             "{{\"benchmark\":\"flowfield\",\"targets\":{},\"persons\":{},\"cells\":{},",
+            "\"workerTargets\":{},\"workerCells\":{},\"workerMs\":{:.1},",
             "\"fieldBytes\":{},\"threads\":{},\"backgroundThreads\":{},\"cpus\":{},",
             "\"os\":\"{}\",\"recomputeMs\":{:.1},\"recomputeMinMs\":{:.1},",
             "\"recomputeMaxMs\":{:.1},\"ticks\":{},\"adopted\":{},\"adoptionMaxMs\":{:.4},\"meanMs\":{:.4},",
@@ -179,6 +198,9 @@ fn run() -> Result<bool, String> {
         target_count(usize::from(GATES)),
         PERSONS,
         cells,
+        worker_targets,
+        worker_cells,
+        worker_ms,
         bytes,
         sim_threads,
         background_threads,
@@ -202,8 +224,9 @@ fn run() -> Result<bool, String> {
         std::fs::write(&path, &json).map_err(|err| format!("{path}: {err}"))?;
     }
     println!(
-        "flow fields, {} targets, {cells} cells, {:.0} MB: recompute median {recompute:.0} ms \
-         (limit {max_recompute}); step with {PERSONS} persons during recompute: \
+        "flow fields, {} targets, {cells} cells, workers {worker_targets} fields on \
+         {worker_cells} cells ({worker_ms:.0} ms alone), {:.0} MB: recompute median \
+         {recompute:.0} ms (limit {max_recompute}); step with {PERSONS} persons during recompute: \
          mean {mean:.3} ms, p50 {p50:.3} ms, p99 {p99:.3} ms (limit {max_p99}), max {max:.3} ms, \
          {adopted} adoptions (slowest step {adoption_ms:.3} ms)",
         target_count(usize::from(GATES)),

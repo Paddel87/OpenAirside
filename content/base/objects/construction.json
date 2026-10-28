@@ -1,0 +1,11 @@
+{
+  "$schema": "../../schema/objects.schema.json",
+  "objects": [
+    {
+      "id": "delivery_point",
+      "name": "object.delivery_point",
+      "placement": { "kind": "single", "width": 8, "depth": 8 },
+      "effect": { "kind": "deliveryPoint", "workers": 10 }
+    }
+  ]
+}

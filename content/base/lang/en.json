@@ -42,6 +42,7 @@
         "datapack.error.unexpectedEntry": "The pack format does not know this entry.",
         "notice.tickLimit": "The game has reached the end of its time span and is paused.",
         "object.bench": "Bench",
+        "object.delivery_point": "Delivery point",
         "object.floor_concrete": "Concrete floor",
         "object.wall_concrete": "Concrete wall",
         "platform.error.alreadyRunning": "A measurement is already running.",

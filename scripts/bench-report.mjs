@@ -33,6 +33,7 @@ const LAYOUTS = {
     title: "Wegweiser-Benchmark",
     rows: [
       ["recomputeMs", "Neuberechnung aller Wegweiser (ms)", "recomputeMs", 0, 1],
+      ["workerMs", "davon Satz der Bauarbeiter allein (ms, nicht bewertet)", null, 0, 1],
       ["fieldBytes", "Speicher der Wegweiser (MB)", null, 1, 1e-6],
       ["meanMs", "Schritt während Neuberechnung, Mittel (ms)", null, 3, 1],
       ["p99Ms", "Schritt während Neuberechnung, p99 (ms)", "p99Ms", 3, 1],

@@ -6,11 +6,22 @@
  * so that it is testable.
  *
  * Texel (RGBA8): R = slot of the floor covering, G = slot of the wall type,
- * B = zone (0 … 3), A = 255. Slot 0 means "none"; a cell with neither is
- * void and not drawn. A slot is the place of a type in the 16 × 16 tile
- * sheet; types get their slot when a block first shows them.
+ * B = zone (0 … 3), A = opacity by the state of the cell ({@link STATE_ALPHA}:
+ * built 255, planned and in construction less, ADR-045). Slot 0 means
+ * "none"; a cell with neither is void or terrain and not drawn. A slot is the
+ * place of a type in the 16 × 16 tile sheet; types get their slot when a
+ * block first shows them.
  */
-import { BLOCK, BLOCK_CELLS, MISSING, WALL, type WorldBlock } from "./world-reader.js";
+import {
+  BLOCK,
+  BLOCK_CELLS,
+  KIND_MASK,
+  KIND_SHIFT,
+  MISSING,
+  TERRAIN,
+  WALL,
+  type WorldBlock,
+} from "./world-reader.js";
 
 /** Edge of a data texture in cells. */
 export const TILE = 512;
@@ -28,6 +39,13 @@ export const MISSING_SLOT = 254;
 export const LAST_TYPE_SLOT = 253;
 /** Tiles per edge of the tile sheet. */
 export const SHEET_TILES = 16;
+/** Opacity (0 … 255) of a cell or object by its state: built, planned, in construction (ADR-045). */
+export const STATE_ALPHA: readonly number[] = [255, 102, 166];
+
+/** Opacity of the state `state`; unknown states count as built. */
+export function stateAlpha(state: number): number {
+  return STATE_ALPHA[state] ?? 255;
+}
 
 /** The slots of the types shown, by catalog value (catalog index plus 1). */
 export class SlotTable {
@@ -114,16 +132,18 @@ export function writeBlockTexels(
     const o = ((y0 + Math.floor(i / BLOCK)) * TILE + x0 + (i % BLOCK)) * 4;
     const wall = slots.slotOf(block.wall[i] ?? 0);
     const covering = block.floor[i] ?? 0;
-    const walkable = ((block.flags[i] ?? WALL) & WALL) === 0;
+    const flags = block.flags[i] ?? WALL;
+    const walkable = (flags & WALL) === 0;
+    const terrain = (flags & KIND_MASK) >> KIND_SHIFT === TERRAIN;
     data[o] =
       covering !== 0
         ? slots.slotOf(covering)
-        : wall === NO_SLOT && walkable
+        : wall === NO_SLOT && walkable && !terrain
           ? DEFAULT_SLOT
           : NO_SLOT;
     data[o + 1] = wall;
     data[o + 2] = (block.zone[i] ?? 0) & 3;
-    data[o + 3] = 255;
+    data[o + 3] = stateAlpha(block.state[i] ?? 0);
   }
 }
 

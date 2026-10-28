@@ -17,12 +17,120 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, 3.1a ist erledigt und gemergt (PR #35), 3.1b ist im Code fertig und wartet auf Messungen und Grafik-Abnahme des Projektinhabers (`docs/research/3.1b-messung.md`), danach 3.1c.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, 3.1a und 3.1b sind erledigt und gemergt (PR #35, #36), 3.1c (Bauaufträge und Bauarbeiter, ADR-045) ist im Code fertig und wartet auf CI und die Freigabe des Merges; offen daneben 3.1b-N1.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-28 21:45 (UTC) – [BEOBACHTUNG]
+
+- **Anlass:** Rückfrage des Projektinhabers zum Eintrag 21:15 UTC: Der Hauptsatz lag auf dem Runner auf `main` bei 2,55–2,70 s (Läufe 39692518721 bis 40348379307, 2026-10-21 bis 26), auf PR #38 brauchen beide Sätze zusammen 1,93 s. Die Vermutung dort (eigene Topologie je Feldsatz, `9b36e7d`) war nicht gemessen. Korrektur zum Bericht davor: Die Spanne „2,4–3,2 s“ war nicht geprüft; richtig sind die Werte oben.
+- **Messung:** Mac M3 Pro, `cargo bench -p openairside-core --bench flowfield` wie in der CI (2 Simulations-, 2 Hintergrund-Threads), Worktrees auf `f438c2c` (vor `9b36e7d`), `9b36e7d` und `82be23c`, drei Runden abwechselnd. Median der Neuberechnung:
+
+  | Stand | Lauf 1 | Lauf 2 | Lauf 3 | Zellen Hauptsatz | Speicher |
+  |---|---|---|---|---|---|
+  | vor `9b36e7d` (`f438c2c`), nur Hauptsatz | 400 ms | 407 ms | 398 ms | 1.503.232 | 101 MB |
+  | nach `9b36e7d`, nur Hauptsatz | 409 ms | 397 ms | 395 ms | 1.503.232 | 101 MB |
+  | `82be23c`, beide Sätze | 449 ms | 451 ms | 491 ms | 1.503.232 | 122 MB |
+
+  Satz der Bauarbeiter allein auf `82be23c`: 121–122 ms.
+- **Ergebnis:** Die Vermutung ist widerlegt. `9b36e7d` ändert am Hauptsatz nichts: gleiche Zellenzahl, gleicher Speicher, gleiche Zeit im Rahmen der Streuung (395–409 ms). Im Benchmark vor 3.1c gibt es kein Gelände, deshalb fällt kein Block heraus. Seine Wirkung zeigt sich erst auf `82be23c`: Der Benchmark legt dort eine Baustelle mit Gelände an, und der Hauptsatz bleibt trotzdem bei 1.503.232 Zellen, weil Blöcke nur mit Gelände nicht zu ihm gehören (Test `each_set_covers_only_blocks_its_persons_may_stand_in`). Der Code ab 3.1c macht die Neuberechnung auf dem Mac nicht schneller, sondern um 12–23 % langsamer (zweiter Satz parallel).
+- **Folgerung für den Runner:** Der Rückgang von 2,7 auf 1,9 s kommt nicht aus dem Code. Image des Runners in beiden Läufen gleich (`ubuntu26/20261012.163`); das CPU-Modell steht nicht im Protokoll. Naheliegend ist ein anderer Host-Prozessor des gehosteten Runners; belegt ist das nicht. Für die Grenze von 4 s heißt das: Auf einem Runner wie in den Läufen auf `main` lägen beide Sätze nach dem Verhältnis vom Mac bei etwa 3,0–3,3 s, also weiterhin unter der Grenze, aber mit weniger Abstand als die 1,9 s nahelegen.
+- **Nicht untersucht:** der Sprung von 1,39 s (`89aa217`, Lauf 39526364375) auf 2,58 s (`ec5f349`, Lauf 39692518721) am 2026-10-21; ebenfalls ohne Erklärung.
+- **Lerneffekt:** Eine auffällige Abweichung im Benchmark wird gemessen, bevor eine Ursache ins Logbuch geht, auch wenn die Grenze hält. Vorschlag, nicht umgesetzt: das CPU-Modell des Runners ins Benchmark-Ergebnis schreiben, damit ein Wechsel des Runners sofort erkennbar ist; auf Wunsch des Projektinhabers angelegt als Fahrplan-Schritt Q.6 `[WARTET-AUF-FREIGABE]`.
+
+### 2026-10-28 21:15 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung der Session 17:40 UTC nach Zusammenfassung des Kontexts, 21:10 bis 21:15 UTC.
+- **Bearbeitet:** Auswertung der CI von PR #38; Auto-fix für den PR auf Wunsch des Projektinhabers eingeschaltet.
+- **Erreicht:** CI grün auf `82be23c` (Lauf 40744977749, 23 Checks). Wegweiser-Benchmark auf dem Runner (4 vCPU, Linux): Neuberechnung beider Sätze Median 1.935 ms (min 1.922, max 2.009; Grenze 4.000 ms), Satz der Bauarbeiter allein 184 ms (2 Felder auf 4.194.304 Zellen), Speicher der Felder 122 MB, Schritt während der Neuberechnung p99 0,50 ms (Grenze 4 ms). Die Sorge vom Sessionende 18:30 hat sich nicht bestätigt: der Hauptsatz lag früher bei 2,4–3,2 s, jetzt mit beiden Sätzen bei 1,9 s. Die Ursache ist nicht gemessen; naheliegend ist die eigene Topologie je Feldsatz (`9b36e7d`), ein anderer Runner ist nicht ausgeschlossen. Dauerbau längste Lücke 1.995 ms, letzter Stand nach 3.795 ms (Grenze je 8.000 ms), Spitze 230 MB. Takt mit 10.000 Personen Mittel 0,06 ms, p99 0,12 ms. Coverage Kern 98,17 % Zeilen (`build/orders.rs` 96,81 %, `persons/workers.rs` 92,02 %, `wayfinding/mod.rs` 99,50 %), TypeScript 81,25 % Zeilen. 3.1c und damit 3.1 `[ERLEDIGT]`.
+- **Offen geblieben:** Merge von PR #38 nach Freigabe des Projektinhabers; 3.1b-N1.
+- **Nächster Schritt:** nach dem Merge 3.2.
+- **Modell-Bilanz:** Entscheidungs-Klasse aktiv (Opus 5.5, Systemkontext). Ein Schritt oberhalb seiner Empfehlung (Fahrplan-Status-Update, Routine); nichts abgegeben, Probelauf offen.
+- **Kontextgröße:** nicht feststellbar; nach der Zusammenfassung klein.
+- **Ablaufdaten-Prüfung:** unverändert gegenüber 18:30 UTC.
+- **README und Drift:** Projektphase und „Nächste Schritte“ angepasst; Reifegrad-Zeile der Wegfindung um die Runner-Messung ergänzt (Reifegrad unverändert). Keine weitere Drift.
+
+### 2026-10-28 18:30 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 2026-10-28 17:40 bis 18:30 UTC.
+- **Bearbeitet:** 3.1c Rest nach ADR-045: Gelände, Aufträge und Anlieferstellen, Bauarbeiter mit eigenem Feldsatz, Format 4, S-1, S-4 mit Basispaket und Schema, durchscheinende Darstellung, `core/tests/construction.rs`, Benchmark, Verträge und Architektur.
+- **Erreicht:** Commits `f84e8d4` bis `82be23c` (Liste im Eintrag 18:25 UTC), gepusht; PR #38 nach `main` angelegt, die CI läuft.
+- **Offen geblieben:** CI-Ergebnis auf PR #38. Maßgeblich ist der Wegweiser-Benchmark auf dem Runner mit der Grenze 4 s; reißt er sie, gilt Stopp mit Vorlage nach ADR-045. Coverage-Zahl aus der CI, `[ERLEDIGT]` und Merge nach Freigabe des Projektinhabers. Daneben 3.1b-N1, jetzt mit der Testgrafik der Anlieferstelle. Dieser Eintrag ist lokal committet und wird erst nach dem CI-Lauf gepusht, damit der laufende Lauf nicht neu startet.
+- **Nächster Schritt:** CI von PR #38 auswerten, danach Fahrplan, Logbuch und Reifegrade mit den Runner-Zahlen nachziehen; dann 3.2.
+- **Modell-Bilanz:** Entscheidungs-Klasse aktiv (Opus 5.5, laut `get_session`). Ein Schritt lief oberhalb seiner Empfehlung: die Umsetzung von 3.1c (Routine). Keine Teilarbeit an Unteragenten abgegeben, weil der Probelauf offen ist.
+- **Kontextgröße:** nicht feststellbar, weil `get_session` sie nicht liefert; geschätzt rund 300.000 Token. Liegt sie über der Grenze von 400.000 Token, sollte die Auswertung der CI in einer neuen Session laufen.
+- **Ablaufdaten-Prüfung:** Electron 44 endet 2027-03-02; der Vorlauf ab 2027-01-02 ist noch nicht erreicht. Keine weitere Frist fällig.
+- **README und Drift:** Stand von 3.1c und „Nächste Schritte“ sind angepasst. Modul-Liste, ADR → Schritt und Blocker zeigen keine Drift. Reaktiv-Quote unverändert 5 / 10. Phasenumfang unverändert bei 15 von 26 Schritten.
+- **Archivierung:** Das Logbuch hat 892 Zeilen und liegt über dem Trigger von 800. Alle Einträge stammen aus dem laufenden Monat; ausgelagert wird wie am 2026-10-28 17:40 UTC festgehalten, beim Phasenwechsel oder Anfang November. `project-context.md` hat 376 Zeilen und liegt unter dem Budget.
+
+### 2026-10-28 18:25 (UTC) – [BEOBACHTUNG]
+
+- **3.1c im Code fertig:** Commits `f84e8d4` (Gelände bei `game.new`), `40bd6c1` (S-4 `work`, `deliveryPoint`, Basispaket `base:delivery_point` mit Testgrafik, Schema), `0388b01` (Aufträge und Anlieferstellen in Welt & Bau, interne Ereignisse, Format 4), `510de51` (Bauarbeiter in Personen, Satz der Bauarbeiter in derselben Neuberechnung), `a516138` (S-1 Zustände und Gruppen), `c355c0e` (durchscheinende Darstellung), `4d3bfad` (Wegweiser-Benchmark auf einer Baustelle), `d1a7378` (Rauchtest zählt die Objekte), `c4c4255` (Verträge, Architektur, README).
+- **Geprüft lokal (Mac M3 Pro):** `cargo fmt --check`, `cargo clippy --all-targets --all-features -D warnings`, `cargo test --workspace` grün (darunter `core/tests/construction.rs` mit 9 Tests, Unit-Tests für Aufträge, Bauarbeiter, Anzeige der Aufträge und Gruppe im Bild); `npm run check:types`, `npm run check:schema`, `npm run check:graphics`, ESLint, Prettier, `tsc`, Vitest (486 Tests) grün; Playwright: `smoke.spec` grün, `world.spec` scheitert nur am deutschen Hinweistext (Systemsprache Deutsch auf diesem Mac, „Sitzbank braucht Boden …“ statt „Bench needs floor“; in der CI englisch).
+- **Wegweiser-Benchmark lokal (11 Kerne):** beide Sätze 429 ms (Grenze 4000), Satz der Bauarbeiter allein 118 ms auf 4,19 Mio. Zellen mit 2 Feldern, 122 MB, Schritt p99 0,97 ms. Maßgeblich ist der Runner (4 vCPU, bisher 2,4–3,2 s); Ergebnis folgt mit der CI.
+- **Sichtprüfung in der echten Anwendung (Playwright, Bildschirmfotos):** geplanter Boden und geplante Wand durchscheinend über dem Gelände, Anlieferstelle mit Testgrafik, Bauarbeiter als blaue Punkte; bei 3× nach rund 8 s der Boden fertig, später die Wand, danach warten die Bauarbeiter an der Anlieferstelle.
+- **Festlegungen der KI im Rahmen von ADR-045** (keine Kategorie aus `CLAUDE.md` Abschnitt 4 neu berührt, dem Projektinhaber im PR zur Kenntnis): (1) Ein Abriss im Erdgeschoss hinterlässt Gelände statt Leere – sonst entstünden Löcher, die Bauarbeiter nie mehr betreten (der in 3B verworfene Fall); (2) Möbel auf einem noch nicht gebauten Boden werden mit `blocked` abgelehnt (Folge von „ein offener Auftrag belegt seine Zellen“); (3) eine Anlieferstelle sperrt nie, `blocks` und `work` sind dort `invalidStructure`; (4) ein Bauarbeiter auf einer Zelle, die für ihn nicht mehr begehbar ist (fertige Wand über einem Vorbeigehenden), kommt an seine Anlieferstelle zurück; (5) zusätzliche Prüfungen beim Laden `deliveryPoints` und `deliveryFields` neben `orders`, `orderCells`, `worker`; Grenze `workers` 1.024 (16 × 64); (6) beide Sätze einer Neuberechnung zählen im Dauerbau-Gate als ein Feldsatz (Zähler unverändert, wie in der Vorlage); (7) Personen ohne Gruppe starten nur auf Zellen, die Fluggäste betreten dürfen (Debug `spawnPersons` setzt niemanden auf Gelände); (8) Bauarbeiter zählen bei „Personen in der Welt“ mit, sperren aber den Nachtsprung nicht.
+- **Modell:** Entscheidungs-Klasse (Opus 5.5); die Umsetzung (Routine) lief oberhalb ihrer Empfehlung, keine Abgabe (Probelauf offen).
+
+### 2026-10-28 17:40 (UTC) – [SESSIONSTART]
+
+- **Anlass:** neue Session, gestartet aus der Session des Projektinhabers mit dem Auftrag „Rest von 3.1c umsetzen“ auf dem bestehenden Branch `feat/3-1c-bauauftraege-und-bauarbeiter` (Stand `377e83e`, sauber, nicht gepusht).
+- **Letzter Stand:** `[SESSIONENDE]` 2026-10-28 17:40 UTC; 3.1c `[IN ARBEIT]` nach ADR-045, Topologie je Feldsatz erledigt (`9b36e7d`).
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Schritt 3.1, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht); Vertiefung: ADR-045, `docs/research/3.1c-vorlage.md`.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` laut `get_session` („self“) → Entscheidungs-Klasse. Die Umsetzung ist Routine (Schritt 3.1) und läuft damit oberhalb ihrer Empfehlung; keine Abgabe an Unteragenten, weil der Probelauf der Routine-Klasse offen ist. Die Bewertungen (Benchmark-Grenze, Abweichungen von der Vorlage) sind Entscheidung.
+
+### 2026-10-28 17:40 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 2026-10-28 17:11 bis 17:40 UTC.
+- **Bearbeitet:** 3.1c: Vorlage vor dem Code (Maßnahme 12), Freigabe als ADR-045 (reaktiv, Reflexion mit Maßnahme 13), Einrichtung der Werkzeuge auf dem Mac, erster Kernteil „Topologie je Feldsatz“.
+- **Erreicht:** Commits `3b7d247` (Vorlage), `f438c2c` (ADR-045), `9b36e7d` (Topologie je Feldsatz; fmt, clippy, alle Kern-Tests grün), `bb60001` (Logbuch). Branch `feat/3-1c-bauauftraege-und-bauarbeiter`, nicht gepusht, keine CI gelaufen.
+- **Offen geblieben:** Rest von 3.1c (Fahrplan „Nächster Schritt“); `fnm env` in `~/.zshrc` und `pipx ensurepath` trägt der Projektinhaber ein (Eintrag 17:35 UTC); 3.1b-N1.
+- **Nächster Schritt:** neue Session, Einstieg über dieses Logbuch; Gelände bei `game.new` und Bauaufträge in Welt & Bau.
+- **Modell-Bilanz:** bis 17:19 UTC Routine-Klasse (Sonnet 5.5), danach Entscheidungs-Klasse (Opus 5.5, Wechsel durch den Projektinhaber nach Stopp). Ein Schritt oberhalb seiner Empfehlung: die Werkzeug-Einrichtung und der Topologie-Code (Routine) liefen auf Entscheidung; keine Abgabe an Unteragenten (Probelauf offen).
+- **Kontextgröße:** nicht feststellbar (`get_session` liefert sie hier nicht); geschätzt über 250.000 Token, daher Wechsel in eine neue Session auf Wunsch des Projektinhabers.
+- **Zeitstempel:** Die Einträge 17:23 bis 17:35 UTC trugen zunächst geschätzte, zu späte Zeiten (17:50 bis 18:40); korrigiert anhand der Commit-Zeiten.
+- **Archivierung:** Logbuch über 800 Zeilen (Trigger `CLAUDE.md` Abschnitt 14), aber alle Einträge stammen aus dem laufenden Monat (Phase 1 und 2 sind schon ausgelagert); eine vorletzte Monats-Scheibe gibt es nicht. Auslagerung beim `[PHASEN-WECHSEL]` nach Phase 3 oder Anfang November.
+- **Ablaufdaten-Prüfung:** Electron 44 Ende 2027-03-02, Vorlauf ab 2027-01-02 noch nicht erreicht; keine weitere Frist fällig.
+- **README:** „Nächste Schritte“ nennt 3.1c, 3.1b-N1, 3.2 – keine Drift.
+
+### 2026-10-28 17:35 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** Mac ohne Entwicklungsumgebung (Eintrag 17:30 UTC); der Projektinhaber hat die Installation nach `docs/onboarding-runbook.md` freigegeben.
+- **Lösung:** `rustup` per offiziellem Installer mit `--profile minimal` (Toolchain 1.98.1 aus `rust-toolchain.toml` beim ersten `cargo`-Aufruf nachgeladen); Homebrew `fnm` und `pipx`; `fnm install 26.11.1`, `fnm default 26.11.1`; `pipx install pre-commit` (4.7.0); `pre-commit install` im Repository; `npm ci` mit Node 26.11.1.
+- **Nicht gemacht:** Der Eintrag `eval "$(fnm env --use-on-cd --shell zsh)"` in `~/.zshrc` wurde von der Rechteprüfung der Sitzung abgelehnt; `pipx ensurepath` ebenso nicht ausgeführt. In neuen Terminals ist deshalb noch Node 24.15.0 aus `/usr/local/bin` aktiv, und `pre-commit` liegt in `~/.local/bin` außerhalb des PATH. Der Projektinhaber trägt beides selbst ein; die KI setzt den PATH je Befehl.
+- **Geprüft:** `cargo fmt --check`, `cargo clippy -p openairside-core --all-targets --all-features -- -D warnings`, `cargo test -p openairside-core` grün (168 Unit-Tests, darunter der neue Test zur Topologie je Feldsatz, und alle Integrationstests).
+- **Aufwand:** etwa 15 Minuten.
+
+### 2026-10-28 17:30 (UTC) – [BEOBACHTUNG]
+
+- **Mac ohne Entwicklungsumgebung:** Diese Session läuft auf dem Mac des Projektinhabers (Apple M3 Pro). Dort fehlen `rustup`/`cargo`, `pre-commit` ist nicht installiert (kein `.git/hooks/pre-commit`), Node ist 24.15.0 statt 26.11.1 (`docs/project-context.md` Abschnitt 3). Bisherige Sessions bauten und prüften im Container.
+- **Folge:** Die beiden Doku-Commits `3b7d247` und `f438c2c` liefen **ohne** Pre-Commit-Hook (DoD-Punkt offen; markdownlint prüft erst die CI). Der erste Code-Teil von 3.1c (Topologie je Feldsatz: `Rules::union`, `FieldInput::ground_only`, Test `each_set_covers_only_blocks_its_persons_may_stand_in`) ist geschrieben, aber nicht übersetzt und nicht getestet; er bleibt uncommittet, bis eine Rust-Werkzeugkette bereitsteht.
+- **Offen:** Entscheidung des Projektinhabers, ob die Werkzeuge nach `docs/onboarding-runbook.md` auf dem Mac installiert werden oder die Arbeit im Container weitergeht.
+
+### 2026-10-28 17:27 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-045 „Bauaufträge mit Bauarbeitern, Anlieferstelle, Gelände in neuen Karten“, freigegeben per Auswahl („A: Auftrag“, „A: Anlieferstelle“, „A: Gelände“, „Übernehmen“).
+- **Tag:** `[REAKTIV]`; Reaktiv-Quote 5 / 10, Reflexion mit Maßnahme (13) in `fahrplan.md` „Iterations-Reflexion“, vom Projektinhaber übernommen.
+- **Auslöser:** Vorlage 3.1c nach Maßnahme (12). 3.1c jetzt `[IN ARBEIT]`.
+
+### 2026-10-28 17:23 (UTC) – [BEOBACHTUNG]
+
+- **Modellwechsel bestätigt:** Projektinhaber hat nach dem Stopp auf `claude-opus-5-5` gewechselt; `get_session` („self“) meldet `claude-opus-5-5` → Entscheidungs-Klasse aktiv, passt zur Vorlage mit `ENTSCHEIDUNG ERFORDERLICH`.
+- **Vorlage 3.1c** (`docs/research/3.1c-vorlage.md`) nach Maßnahme (12): Je Teilaufgabe die gelesenen Daten mit Fundstelle. Funde: (1) Bau-Befehle ändern ihre Bedeutung (S-2 „Wirkung im Schritt der Annahme“) → nicht additiv; (2) ein neues Spiel ist vollständig Leere (`World::new`, `Cell::VOID`), Bauarbeiter könnten nirgends gehen; (3) die Topologie der Wegweiser ist für alle Profile gleich (Blöcke mit irgendeiner begehbaren Zelle) – begehbares Gelände würde jedes Fluggast-Feld über das ganze Erdgeschoss ziehen, deshalb eine Topologie je Feldsatz; (4) Gruppen-Nummern in S-1 nirgends festgelegt; (5) Arbeitsmenge und Anlieferstelle fehlen in S-4.
+- **Einstufung:** `[REAKTIV]` (Schritt 3.1 sah außer dem CI-Gate keine Freigabe vor), Reaktiv-Quote danach 5 / 10; neues Muster nach Regel-009 (Code in Welt & Bau, Wegfindung, Personen) → Reflexion mit Stopp, Entwurf in der Vorlage Abschnitt 7 mit Maßnahme (13).
+- **Risiko:** Wegweiser-Benchmark mit dem Satz der Bauarbeiter auf dem Runner nahe der Grenze 4 s (bisher 2,4–3,2 s, Satz der Bauarbeiter ≈ 0,6 s auf 4 vCPU nach 3.7).
+
+### 2026-10-28 17:20 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 2026-10-26 14:30 UTC; danach PR #37 (Q.5) und PR #36 (3.1b) gemergt, `main` auf `568af2c`, sauber. 3.1a, 3.1b und Q.5 `[ERLEDIGT]`; offen daneben 3.1b-N1 (Grafik-Abnahme, Zeitpunkt nennt der Projektinhaber).
+- **Geplant für diese Session:** 3.1c Bauaufträge und Bauarbeiter (FR-011), Branch `feat/3-1c-bauauftraege-und-bauarbeiter` von `main` angelegt.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Schritt 3.1, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht); dazu `docs/research/3.1-vorlage.md` Abschnitte 1–4, ADR-037 und ADR-042 (Vertiefung für 3.1c).
+- **Vorabprüfung:** Welt & Bau (Grundraster, Bauen mit Wirkung seit 3.1a), Datenmodell im Kern, S-1, S-2, S-5, S-7 `[BELASTBAR]`; Eingangskriterien von 3.1 erfüllt. Befund: Bauauftrag, Bauarbeiter (Gruppe, Anlieferstelle, Anforderung und Entlassung), Fortschritt und Zustand „im Bau“ sind in keinem ADR und keinem Vertrag festgelegt (ADR-040 und der Fahrplan nennen nur Stichworte; ADR-042 hat die Sofortwirkung aus 3.1a ausdrücklich bis 3.1c offen gelassen); die Umsetzung berührt Datenmodell (Kategorie 4, Spielstand-Format), Modulbeziehung Welt & Bau ↔ Personen (Kategorie 1) und S-1/S-5 (Kategorie 5).
+- **Modell:** eingestellt `claude-sonnet-5-5`, bedient `claude-sonnet-5-5` laut `get_session` („self“) 17:19 UTC → Routine-Klasse. Kontingent: `get_session` liefert hier keine `rate_limit_info`, nicht feststellbar.
+- **Vorhaben und Klasse:** Schritt 3.1 empfiehlt Entscheidung für die Bewertung, Routine für die Umsetzung. Die Vorlage vor dem Code mit `ENTSCHEIDUNG ERFORDERLICH` ist Eskalations-Auslöser 1 (`CLAUDE.md` Abschnitt 0): Stopp mit Modellwechsel auf die Entscheidungs-Klasse, bevor die Vorlage entsteht.
 
 ### 2026-10-26 15:15 (UTC) – [BEOBACHTUNG]
 

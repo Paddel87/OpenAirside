@@ -40,6 +40,12 @@ const MIN_FLOOR = -2;
 const MAX_FLOOR = 2;
 /** Diameter of a person in cells. */
 const PERSON_SIZE = 0.8;
+/** Colour of persons without a group (until step 3.2). */
+const PERSON_TINT = 0xf2a541;
+/** Colour of construction workers (group 9, ADR-045). */
+const WORKER_TINT = 0x3f6fa8;
+/** Group of the construction workers in S-1 (ADR-045). */
+const GROUP_WORKER = 9;
 /** Smallest diameter of a person on the screen in pixels, so that crowds stay visible in the overview. */
 const MIN_PERSON_PIXELS = 2;
 /** Colours of the provisional drawing (palette): area, object, demolition, refused. */
@@ -382,18 +388,26 @@ export class Playfield {
           scaleY: scale,
           anchorX: 0.5,
           anchorY: 0.5,
-          tint: 0xf2a541,
+          tint: PERSON_TINT,
         }),
       );
     }
+    // The colour is a static property of the particles: upload only when one changed.
+    let recoloured = false;
     for (let i = 0; i < persons; i += 1) {
       const p = readPerson(frame, i, this.#person);
       const particle = this.#pool[i];
       if (particle !== undefined) {
         particle.x = p.x;
         particle.y = p.y;
+        const tint = p.group === GROUP_WORKER ? WORKER_TINT : PERSON_TINT;
+        if (particle.tint !== tint) {
+          particle.tint = tint;
+          recoloured = true;
+        }
       }
     }
+    if (recoloured) this.#persons.update();
     if (this.#shown !== persons) {
       this.#persons.particleChildren = this.#pool.slice(0, persons);
       this.#persons.update();

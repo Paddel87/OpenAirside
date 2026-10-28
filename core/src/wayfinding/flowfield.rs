@@ -3,8 +3,10 @@
 //! costs (bucket queue). Each walkable cell stores one byte: the next step
 //! towards the target.
 //!
-//! Fields exist only in blocks of 32 × 32 cells that contain walkable cells.
-//! A [`FieldSet`] is built completely from a snapshot of the grid, on any
+//! Fields exist only in blocks of 32 × 32 cells that contain a cell on which
+//! a person walking to one of the targets of the set may stand (ADR-045:
+//! terrain walkable only for workers does not spread the fields of
+//! passengers over the whole ground floor). A [`FieldSet`] is built completely from a snapshot of the grid, on any
 //! thread, and never changed afterwards; the simulation takes over a new set
 //! as a whole (see `adoption`). Building is deterministic: the same snapshot
 //! gives the same bytes regardless of thread count.
@@ -52,6 +54,9 @@ pub struct FieldInput {
     pub grid: GridSnapshot,
     /// Targets; the index in this list is the field number.
     pub targets: Vec<Target>,
+    /// Fields cover the ground floor only (the set of the construction
+    /// workers, ADR-037, ADR-045).
+    pub ground_only: bool,
 }
 
 /// Index of the direction `(dx, dy)` in [`DIRS`].
@@ -68,7 +73,7 @@ const fn dir_index(dx: i32, dy: i32) -> usize {
     }
 }
 
-/// Compact numbering of the walkable blocks and their neighbourhood.
+/// Compact numbering of the blocks of a set and their neighbourhood.
 struct Topology {
     blocks_x: usize,
     blocks_y: usize,
@@ -84,16 +89,21 @@ struct Topology {
 }
 
 impl Topology {
-    fn build(grid: &GridSnapshot) -> Self {
+    /// The blocks of `grid` that hold a cell walkable under `standable`, on
+    /// the ground floor only if `ground_only`.
+    fn build(grid: &GridSnapshot, standable: Rules, ground_only: bool) -> Self {
         let (blocks_x, blocks_y) = grid.block_counts();
         let per_floor = blocks_x * blocks_y;
+        let ground = floor_index(0).unwrap_or(0);
         let mut slot_of = vec![NONE; grid.table_len()];
         let mut keys = Vec::new();
         for (table_index, slot) in slot_of.iter_mut().enumerate() {
-            if grid
-                .block(table_index)
-                .is_some_and(|b| b.walkable_cells() > 0)
-            {
+            if ground_only && table_index / per_floor != ground {
+                continue;
+            }
+            if grid.block(table_index).is_some_and(|b| {
+                b.walkable_cells() > 0 && b.flags().iter().any(|&f| standable.walkable(f))
+            }) {
                 *slot = u32::try_from(keys.len()).unwrap_or(NONE);
                 keys.push(table_index);
             }
@@ -360,6 +370,7 @@ impl FieldSet {
             &FieldInput {
                 grid: grid.clone(),
                 targets: Vec::new(),
+                ground_only: false,
             },
             revision,
         )
@@ -370,7 +381,11 @@ impl FieldSet {
     /// the number of threads.
     #[must_use]
     pub fn compute(input: &FieldInput, revision: u32) -> Self {
-        let topo = Topology::build(&input.grid);
+        let standable = input
+            .targets
+            .iter()
+            .fold(Rules::NONE, |all, t| all.union(t.profile.rules()));
+        let topo = Topology::build(&input.grid, standable, input.ground_only);
         let cells = topo.cell_count();
         let targets = input.targets.len();
         let mut data = vec![UNREACHABLE; cells * targets];
@@ -700,6 +715,7 @@ mod tests {
         let input = FieldInput {
             grid: grid.snapshot(),
             targets,
+            ground_only: false,
         };
         pool(threads).install(|| FieldSet::compute(&input, 1))
     }
@@ -834,6 +850,55 @@ mod tests {
         assert_eq!(set.path_cost(3, pos(100, 100, 0)), None);
         assert_eq!(set.path_cost(0, pos(1000, 1000, 0)), None);
         assert_eq!(set.unreachable_cells(9), 0);
+    }
+
+    /// Terrain over the whole ground floor is walkable for workers only: the
+    /// fields of passengers stay in the blocks of their walkways, the set of
+    /// the workers covers the ground floor and nothing else (ADR-045).
+    #[test]
+    fn each_set_covers_only_blocks_its_persons_may_stand_in() {
+        let map = MapSize::new(256, 256).unwrap();
+        let mut grid = Grid::new(map);
+        let terrain = Cell::floor(Zone::Landside).with_kind(AreaKind::Terrain);
+        let ground = |floor| crate::geometry::CellRect {
+            floor,
+            x0: 0,
+            y0: 0,
+            x1: 256,
+            y1: 256,
+        };
+        grid.fill(ground(0), terrain).unwrap();
+        grid.fill(ground(1), terrain).unwrap();
+        for x in 100..140u16 {
+            grid.set(pos(x, 100, 0), Cell::floor(Zone::Landside))
+                .unwrap();
+        }
+        let passengers = compute(&grid, vec![Target::passengers(vec![pos(100, 100, 0)])], 2);
+        assert_eq!(passengers.cells(), 2 * BLOCK_CELLS, "walkway blocks only");
+        assert_eq!(passengers.dir(0, pos(139, 100, 0)), 4);
+        assert_eq!(passengers.dir(0, pos(10, 10, 0)), UNREACHABLE);
+        let worker = Target::passengers(vec![pos(10, 10, 0)]).with_profile(AccessProfile::Worker);
+        let workers = pool(2).install(|| {
+            FieldSet::compute(
+                &FieldInput {
+                    grid: grid.snapshot(),
+                    targets: vec![worker],
+                    ground_only: true,
+                },
+                1,
+            )
+        });
+        assert_eq!(workers.cells(), 64 * BLOCK_CELLS, "the whole ground floor");
+        assert_eq!(workers.dir(0, pos(10, 10, 0)), ARRIVED);
+        assert_eq!(workers.dir(0, pos(12, 10, 0)), 4, "over the terrain");
+        assert_ne!(
+            workers.dir(0, pos(120, 100, 0)),
+            UNREACHABLE,
+            "and walkways"
+        );
+        assert_eq!(workers.dir(0, pos(10, 10, 1)), UNREACHABLE, "not upstairs");
+        // A set without targets covers nothing.
+        assert_eq!(FieldSet::empty(&grid.snapshot(), 0).cells(), 0);
     }
 
     #[test]

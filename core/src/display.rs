@@ -27,10 +27,16 @@
 //! indices of the 1,024 cells (low nibble first, row order), or for [`RAW`]
 //! the 1,024 cell values; padded to 4 bytes; then the objects, [`OBJECT_BYTES`]
 //! each (`u16` type, `u8` x and `u8` y in the block, `u8` rotation, `u8`
-//! state 0), padded to 4 bytes. A cell value is 8 bytes: flags, zone,
-//! marking (0 none, 1 preferred route, 2 avoid), reserve 0, floor covering
+//! state), padded to 4 bytes. A cell value is 8 bytes: flags, zone,
+//! marking (0 none, 1 preferred route, 2 avoid), state, floor covering
 //! `u16`, wall type `u16`. An object belongs to the block that holds the
 //! cell with the smallest coordinates of its footprint.
+//!
+//! State of a cell or object (ADR-045, the former reserve byte): 0 built, 1
+//! planned, 2 in construction. A cell under an open order of a floor or
+//! wall shows the planned type as floor covering or wall type, its flags
+//! stay those of the built world; an open order of a single object is an
+//! object with state 1 or 2.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -39,6 +45,7 @@ use crate::build::Build;
 use crate::build::grid::{
     BLOCK, BLOCK_CELLS, Block, COST_AVOID, COST_MARKED, GROUND_INDEX, GridSnapshot, floor_index,
 };
+use crate::build::orders::OrderWork;
 use crate::datapack::Catalog;
 use crate::frame::ViewRect;
 
@@ -74,12 +81,27 @@ pub struct ObjectRec {
     pub y: u8,
     /// Rotation 0 … 3.
     pub rotation: u8,
+    /// 0 built, 1 planned, 2 in construction (ADR-045).
+    pub state: u8,
+}
+
+/// A cell of a block under an open order: its index in the block, the
+/// state and the shown floor covering and wall type (type numbers of the
+/// module).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Planned {
+    cell: u16,
+    state: u8,
+    floor_kind: u16,
+    wall_kind: u16,
 }
 
 #[derive(Debug, Default)]
 struct BlockObjects {
     records: Vec<ObjectRec>,
-    /// Hash of the records; differs when the objects of the block change.
+    /// Cells under open orders of floors and walls, in cell order.
+    planned: Vec<Planned>,
+    /// Hash of the records and planned cells; differs when they change.
     hash: u64,
 }
 
@@ -107,24 +129,78 @@ impl ObjectIndex {
                 x: u8::try_from(object.x % side).unwrap_or(0),
                 y: u8::try_from(object.y % side).unwrap_or(0),
                 rotation: object.rotation,
+                state: 0,
             });
         }
+        for order in build.object_orders() {
+            let Some(floor) = floor_index(order.floor) else {
+                continue;
+            };
+            let OrderWork::Object { rotation, .. } = order.work_kind else {
+                continue;
+            };
+            let index = floor * per_floor
+                + usize::from(order.y / side) * blocks_x
+                + usize::from(order.x / side);
+            blocks.entry(index).or_default().records.push(ObjectRec {
+                ty: map_kind(type_map, order.ty),
+                x: u8::try_from(order.x % side).unwrap_or(0),
+                y: u8::try_from(order.y % side).unwrap_or(0),
+                rotation,
+                state: order.state() as u8,
+            });
+        }
+        for order in build.area_orders() {
+            let Some(floor) = floor_index(order.floor) else {
+                continue;
+            };
+            for pos in Build::order_cells(order) {
+                let Some(planned) = build.planned_cell(pos) else {
+                    continue;
+                };
+                let index = floor * per_floor
+                    + usize::from(pos.y / side) * blocks_x
+                    + usize::from(pos.x / side);
+                blocks.entry(index).or_default().planned.push(Planned {
+                    cell: (pos.y % side) * side + pos.x % side,
+                    state: planned.state as u8,
+                    floor_kind: planned.floor_kind,
+                    wall_kind: planned.wall_kind,
+                });
+            }
+        }
         for entry in blocks.values_mut() {
+            entry.planned.sort_by_key(|p| p.cell);
             let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+            let mut add = |byte: u8| {
+                hash = (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3);
+            };
             for r in &entry.records {
-                for byte in [
-                    r.ty.to_le_bytes()[0],
-                    r.ty.to_le_bytes()[1],
-                    r.x,
-                    r.y,
-                    r.rotation,
-                ] {
-                    hash = (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3);
+                let [t0, t1] = r.ty.to_le_bytes();
+                for byte in [t0, t1, r.x, r.y, r.rotation, r.state] {
+                    add(byte);
+                }
+            }
+            for p in &entry.planned {
+                for byte in p
+                    .cell
+                    .to_le_bytes()
+                    .into_iter()
+                    .chain([p.state])
+                    .chain(p.floor_kind.to_le_bytes())
+                    .chain(p.wall_kind.to_le_bytes())
+                {
+                    add(byte);
                 }
             }
             entry.hash = hash | 1;
         }
         Self { blocks }
+    }
+
+    /// Cells of the block at `index` under open orders.
+    fn planned(&self, index: usize) -> &[Planned] {
+        self.blocks.get(&index).map_or(&[], |b| &b.planned)
     }
 
     /// Objects of the block at `index`.
@@ -137,7 +213,8 @@ impl ObjectIndex {
         self.blocks.get(&index).map_or(0, |b| b.hash)
     }
 
-    /// Number of objects in all blocks.
+    /// Number of objects in all blocks, open orders of single objects
+    /// included.
     #[must_use]
     pub fn len(&self) -> usize {
         self.blocks.values().map(|b| b.records.len()).sum()
@@ -164,6 +241,8 @@ struct ViewKey {
     /// Next handle and object count of the module: a build raises the
     /// handle, a demolition lowers the count, neither goes back.
     objects: (u32, usize),
+    /// Change counter of the orders (ADR-045).
+    orders: u32,
     types: usize,
     content: usize,
 }
@@ -203,6 +282,7 @@ impl WorldView {
             session,
             grid: grid.version(),
             objects: (build.next_handle(), build.objects().len()),
+            orders: build.orders_version(),
             types: build.types().ids().len(),
             content: Arc::as_ptr(content).addr(),
         };
@@ -230,8 +310,10 @@ impl WorldView {
         if self.grid.is_none() || old.is_none_or(|o| o.grid != key.grid || o.session != session) {
             self.grid = Some(grid.snapshot());
         }
-        let rebuild_objects =
-            !same_session || old.is_none_or(|o| o.objects != key.objects || o.types != key.types);
+        let rebuild_objects = !same_session
+            || old.is_none_or(|o| {
+                o.objects != key.objects || o.orders != key.orders || o.types != key.types
+            });
         if rebuild_objects {
             let (blocks_x, blocks_y) = grid.snapshot().block_counts();
             self.objects = Arc::new(ObjectIndex::build(
@@ -286,6 +368,16 @@ impl WorldView {
                 wall[0],
                 wall[1],
             ];
+        }
+        for p in self.objects.planned(index) {
+            let floor = self.kind(p.floor_kind).to_le_bytes();
+            let wall = self.kind(p.wall_kind).to_le_bytes();
+            let cell = &mut cells[usize::from(p.cell)];
+            cell[3] = p.state;
+            cell[4..6].copy_from_slice(&floor);
+            cell[6..8].copy_from_slice(&wall);
+        }
+        for cell in &cells {
             if fits && !palette.contains(cell) {
                 if palette.len() == 16 {
                     fits = false;
@@ -318,7 +410,7 @@ impl WorldView {
         let objects = self.objects.of(index);
         for o in objects {
             out.extend_from_slice(&o.ty.to_le_bytes());
-            out.extend_from_slice(&[o.x, o.y, o.rotation, 0]);
+            out.extend_from_slice(&[o.x, o.y, o.rotation, o.state]);
         }
         pad4(out, start);
         let payload = u32::try_from(out.len() - start - RECORD_HEADER).unwrap_or(0);
@@ -540,6 +632,7 @@ mod tests {
                         x: section[o + 2],
                         y: section[o + 3],
                         rotation: section[o + 4],
+                        state: section[o + 5],
                     }
                 })
                 .collect();
@@ -610,6 +703,96 @@ mod tests {
     }
 
     #[test]
+    fn open_orders_show_their_state_and_the_planned_type() {
+        let (mut world, catalog) = built();
+        world
+            .order_floor(FLOOR, AreaKind::PublicWalk, 10, 1, rect(40, 2, 44, 4))
+            .unwrap();
+        world.order_wall(WALL_TYPE, 3, rect(2, 2, 6, 3)).unwrap();
+        world
+            .order_object(
+                BENCH,
+                (2, 1),
+                true,
+                10,
+                CellPos {
+                    x: 10,
+                    y: 5,
+                    floor: 0,
+                },
+                Rotation(0),
+            )
+            .unwrap();
+        let view = world_view(&world, &catalog);
+        let mut out = Vec::new();
+        let mut sender = WorldSender::default();
+        let revision = sender.write(&view, 1, Some(0), None, &mut out);
+        let blocks = decode(&out);
+        let block = |index: usize| {
+            blocks
+                .iter()
+                .find(|b| b.0 == GROUND_INDEX * 12 + index)
+                .unwrap()
+        };
+        let index_of = |id: &str| u16::try_from(catalog.index_of(id).unwrap() + 1).unwrap();
+        // A planned floor on void: state 1, the planned covering, the
+        // flags of the built world.
+        let (_, cells, _) = block(1);
+        let c = cells[2 * BLOCK + 8];
+        assert_eq!(c[3], 1, "planned");
+        assert_eq!(u16::from_le_bytes([c[4], c[5]]), index_of(FLOOR));
+        assert_eq!(c[0] & WALL, WALL, "not walkable yet");
+        assert_eq!(cells[2 * BLOCK + 12][3], 0, "beside the order: built");
+        // A planned wall over a floor shows the wall and keeps the floor.
+        let (_, cells, objects) = block(0);
+        let c = cells[2 * BLOCK + 3];
+        assert_eq!(c[3], 1);
+        assert_eq!(u16::from_le_bytes([c[6], c[7]]), index_of(WALL_TYPE));
+        assert_eq!(u16::from_le_bytes([c[4], c[5]]), index_of(FLOOR));
+        assert_eq!(c[0] & WALL, 0, "still walkable");
+        // A planned object is an object record with state 1.
+        assert_eq!(
+            objects,
+            &[ObjectRec {
+                ty: index_of(BENCH),
+                x: 10,
+                y: 5,
+                rotation: 0,
+                state: 1
+            }]
+        );
+        // Work on the wall changes its state and sends the block again.
+        sender.acknowledge(revision);
+        let mut events = crate::internal::InternalEvents::default();
+        let wall = world.build().orders().as_slice()[1].handle;
+        events.push(
+            crate::internal::Stage::Persons,
+            crate::internal::InternalEvent::WorkDone {
+                order: wall,
+                ticks: 1,
+            },
+        );
+        events.end_step();
+        world.build_mut().step(&mut events);
+        let mut view = view;
+        view.refresh(1, world.build(), &catalog);
+        out.clear();
+        sender.write(&view, 1, Some(0), None, &mut out);
+        let blocks = decode(&out);
+        assert_eq!(blocks.len(), 1, "only the block of the wall");
+        assert_eq!(blocks[0].1[2 * BLOCK + 3][3], 2, "in construction");
+        // When all orders are done, the cells show the built world.
+        world.complete_orders();
+        view.refresh(1, world.build(), &catalog);
+        out.clear();
+        WorldSender::default().write(&view, 1, Some(0), None, &mut out);
+        let blocks = decode(&out);
+        let (_, cells, objects) = blocks.iter().find(|b| b.0 == GROUND_INDEX * 12).unwrap();
+        assert!(cells.iter().all(|c| c[3] == 0));
+        assert_eq!(objects[0].state, 0);
+    }
+
+    #[test]
     fn walls_and_objects_are_translated_and_belong_to_their_anchor_block() {
         let (mut world, catalog) = built();
         world.build_wall(WALL_TYPE, rect(5, 5, 6, 8)).unwrap();
@@ -632,7 +815,8 @@ mod tests {
                 ty: bench,
                 x: 10,
                 y: 3,
-                rotation: 1
+                rotation: 1,
+                state: 0
             }]
         );
         // The blocking bench set its cells to blocked, its floor stays.

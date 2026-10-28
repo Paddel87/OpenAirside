@@ -117,21 +117,42 @@ fn base_pack_of_the_repository_loads() {
     assert_eq!(base.source, PackSource::Base);
     assert_eq!(base.id.as_deref(), Some(BASE_PACK_ID));
     assert_eq!(base.state, PackState::Active, "{:?}", base.errors);
-    // 3 objects plus the language entries and texts of `lang/` (ADR-031).
+    // 4 objects plus the language entries and texts of `lang/` (ADR-031).
     let languages = outcome.languages.list();
     let texts: u32 = languages.iter().map(|l| l.keys).sum();
     assert_eq!(
         base.entries,
-        3 + texts + u32::try_from(languages.len()).expect("few")
+        4 + texts + u32::try_from(languages.len()).expect("few")
     );
     assert!(!outcome.catalog.base_failed());
     assert_eq!(
         ids(&outcome.catalog),
-        ["base:bench", "base:floor_concrete", "base:wall_concrete"]
+        [
+            "base:bench",
+            "base:delivery_point",
+            "base:floor_concrete",
+            "base:wall_concrete"
+        ]
     );
     let bench = outcome.catalog.object("base:bench").expect("bench");
     assert_eq!(bench.placement, Placement::Single { width: 4, depth: 2 });
     assert_eq!(bench.name, "object.bench");
+    // Work in game minutes (ADR-045): defaults of floor, wall and object.
+    let work = |id: &str| outcome.catalog.object(id).expect(id).work;
+    assert_eq!(
+        [
+            work("base:floor_concrete"),
+            work("base:wall_concrete"),
+            work("base:bench")
+        ],
+        [1, 3, 10]
+    );
+    let delivery = outcome
+        .catalog
+        .object("base:delivery_point")
+        .expect("delivery point");
+    assert_eq!(delivery.effect, Some(Effect::DeliveryPoint { workers: 10 }));
+    assert_eq!((delivery.blocks, delivery.work), (false, 0));
 }
 
 #[test]
@@ -418,6 +439,130 @@ fn effect_and_blocks_follow_the_placement() {
         assert_eq!(code, structure, "{name}");
         assert!(
             path.is_some_and(|p| p.starts_with("objects[0].effect")),
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn delivery_points_and_work_follow_the_effect() {
+    let user = TempDir::new("delivery");
+    pack(
+        &user,
+        "good",
+        &manifest("good", "1.0.0", &[]),
+        &[
+            r#"{"id": "yard", "name": "n", "placement": {"kind": "single", "width": 4, "depth": 4},
+                "effect": {"kind": "deliveryPoint", "workers": 3}}"#,
+            r#"{"id": "depot", "name": "n", "placement": {"kind": "single", "width": 4, "depth": 4},
+                "effect": {"kind": "deliveryPoint"}}"#,
+            r#"{"id": "slow", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "wall"}, "work": 1440}"#,
+            r#"{"id": "desk", "name": "n", "placement": {"kind": "single", "width": 2, "depth": 2}, "work": 1}"#,
+        ],
+    );
+    let bad = |name: &str, entry: &str| {
+        pack(&user, name, &manifest(name, "1.0.0", &[]), &[entry]);
+    };
+    let single = r#""placement": {"kind": "single", "width": 2, "depth": 2}"#;
+    bad(
+        "areadelivery",
+        r#"{"id": "a", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "deliveryPoint"}}"#,
+    );
+    bad(
+        "deliveryblocks",
+        &format!(
+            r#"{{"id": "a", "name": "n", {single}, "effect": {{"kind": "deliveryPoint"}}, "blocks": false}}"#
+        ),
+    );
+    bad(
+        "deliverywork",
+        &format!(
+            r#"{{"id": "a", "name": "n", {single}, "effect": {{"kind": "deliveryPoint"}}, "work": 5}}"#
+        ),
+    );
+    bad(
+        "workers0",
+        &format!(
+            r#"{{"id": "a", "name": "n", {single}, "effect": {{"kind": "deliveryPoint", "workers": 0}}}}"#
+        ),
+    );
+    bad(
+        "workers65",
+        &format!(
+            r#"{{"id": "a", "name": "n", {single}, "effect": {{"kind": "deliveryPoint", "workers": 65}}}}"#
+        ),
+    );
+    bad(
+        "floorworkers",
+        r#"{"id": "a", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "floor", "workers": 2}}"#,
+    );
+    bad(
+        "deliverycost",
+        &format!(
+            r#"{{"id": "a", "name": "n", {single}, "effect": {{"kind": "deliveryPoint", "cost": 2}}}}"#
+        ),
+    );
+    bad(
+        "work0",
+        r#"{"id": "a", "name": "n", "placement": {"kind": "area"}, "effect": {"kind": "floor"}, "work": 0}"#,
+    );
+    bad(
+        "work1441",
+        &format!(r#"{{"id": "a", "name": "n", {single}, "work": 1441}}"#),
+    );
+    let failing = [
+        ("areadelivery", code::INVALID_STRUCTURE, "objects[0].effect"),
+        (
+            "deliveryblocks",
+            code::INVALID_STRUCTURE,
+            "objects[0].blocks",
+        ),
+        ("deliverywork", code::INVALID_STRUCTURE, "objects[0].work"),
+        ("workers0", code::INVALID_VALUE, "objects[0].effect.workers"),
+        (
+            "workers65",
+            code::INVALID_VALUE,
+            "objects[0].effect.workers",
+        ),
+        (
+            "floorworkers",
+            code::INVALID_STRUCTURE,
+            "objects[0].effect.workers",
+        ),
+        (
+            "deliverycost",
+            code::INVALID_STRUCTURE,
+            "objects[0].effect.cost",
+        ),
+        ("work0", code::INVALID_VALUE, "objects[0].work"),
+        ("work1441", code::INVALID_VALUE, "objects[0].work"),
+    ];
+    let mut all = vec!["good"];
+    all.extend(failing.iter().map(|(name, _, _)| *name));
+    let outcome = load_user(&user, &all);
+    assert_eq!(
+        report(&outcome, "good").state,
+        PackState::Active,
+        "{:?}",
+        report(&outcome, "good").errors
+    );
+    let catalog = &outcome.catalog;
+    let yard = catalog.object("good:yard").expect("yard");
+    assert_eq!(yard.effect, Some(Effect::DeliveryPoint { workers: 3 }));
+    assert!(!yard.blocks, "workers stand on a delivery point");
+    assert_eq!(
+        catalog.object("good:depot").and_then(|o| o.effect),
+        Some(Effect::DeliveryPoint { workers: 10 })
+    );
+    assert_eq!(catalog.object("good:slow").map(|o| o.work), Some(1440));
+    assert_eq!(catalog.object("good:desk").map(|o| o.work), Some(1));
+    for (name, code, path) in failing {
+        let report = report(&outcome, name);
+        assert_eq!(report.state, PackState::Failed, "{name}");
+        let err = &report.errors[0];
+        assert_eq!(
+            (err.reason.code.as_str(), err.path.as_deref()),
+            (code, Some(path)),
             "{name}"
         );
     }

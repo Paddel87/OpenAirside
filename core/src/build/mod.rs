@@ -9,6 +9,7 @@ pub mod access;
 pub mod grid;
 pub mod network;
 pub mod objects;
+pub mod orders;
 pub mod target;
 
 use std::collections::HashMap;
@@ -26,6 +27,7 @@ use access::AccessProfile;
 use grid::{BLOCK_CELLS, Block, Cell, Grid, GridError, GridSnapshot, WALL, floor_index};
 use network::{Network, NetworkKind, NodeId};
 use objects::{MAX_OBJECTS, MAX_TYPES, ObjectContext, Occupancy, PlacedObject, TypeTable};
+use orders::{DeliveryPoint, MAX_DELIVERY_POINTS, MAX_ORDERS, Order, OrderContext};
 use target::{LoadKind, MAX_TARGETS, Target};
 
 /// Why a target could not be added.
@@ -50,6 +52,17 @@ pub struct Build {
     types: TypeTable,
     /// Handle of the next object placed.
     next_handle: u32,
+    /// Open construction orders (ADR-045), in the order of their handles.
+    orders: Pool<Order>,
+    /// Which orders touch which block; derived from `orders`.
+    order_occupancy: Occupancy,
+    /// Handle of the next order placed.
+    next_order: u32,
+    /// Delivery points of construction companies (ADR-045), in the order of
+    /// their object handles.
+    delivery_points: Pool<DeliveryPoint>,
+    /// Changes of the orders for the display; derived, not saved.
+    orders_version: u32,
 }
 
 impl Build {
@@ -64,6 +77,11 @@ impl Build {
             occupancy: Occupancy::default(),
             types: TypeTable::default(),
             next_handle: 0,
+            orders: Pool::default(),
+            order_occupancy: Occupancy::default(),
+            next_order: 0,
+            delivery_points: Pool::default(),
+            orders_version: 0,
         }
     }
 
@@ -182,6 +200,13 @@ impl Build {
         self.types.hash_into(hasher);
         hasher.u32(self.next_handle);
         self.objects.hash_into(hasher);
+        // Orders and delivery points (ADR-045) add nothing while there are
+        // none, so the hash of a world without them stays as it was.
+        if !self.orders.is_empty() || self.next_order != 0 || !self.delivery_points.is_empty() {
+            hasher.u32(self.next_order);
+            self.orders.hash_into(hasher);
+            self.delivery_points.hash_into(hasher);
+        }
     }
 
     /// State of the module for a save game, taken in one tick; cheap
@@ -196,6 +221,9 @@ impl Build {
             types: self.types.ids().to_vec(),
             objects: self.objects.saved(),
             next_handle: self.next_handle,
+            orders: self.orders.saved(),
+            next_order: self.next_order,
+            delivery_points: self.delivery_points.saved(),
         }
     }
 
@@ -205,8 +233,9 @@ impl Build {
     ///
     /// `invalidState` naming the broken invariant: `blockIndex`, `table`,
     /// `targetCells`, `networks`, `edges`, `networkNodes`, `types`,
-    /// `blockKind`, `objects`, `objectHandles` or `objectCells`;
-    /// `limitExceeded` for too many targets, types or objects.
+    /// `blockKind`, `objects`, `objectHandles`, `objectCells`, `orders`,
+    /// `orderCells` or `deliveryPoints`; `limitExceeded` for too many
+    /// targets, types, objects, orders or delivery points.
     pub(crate) fn restore(
         saved: SavedBuild,
         map: MapSize,
@@ -226,6 +255,9 @@ impl Build {
         {
             return Err(invalid("objectCells"));
         }
+        let (orders, order_occupancy) =
+            restore_orders(saved.orders, saved.next_order, map, &types)?;
+        let delivery_points = restore_delivery_points(saved.delivery_points, &objects)?;
         let targets = restore_targets(saved.targets)?;
         let on_map = |p: CellPos| map.contains(p) && floor_index(p.floor).is_some();
         if targets
@@ -263,8 +295,64 @@ impl Build {
             occupancy,
             types,
             next_handle: saved.next_handle,
+            orders,
+            order_occupancy,
+            next_order: saved.next_order,
+            delivery_points,
+            orders_version: 0,
         })
     }
+}
+
+/// The orders of a save game with the occupancy derived from them: handles
+/// ascending and below the counter, no two orders on the same cell.
+fn restore_orders(
+    saved: Vec<Order>,
+    next_order: u32,
+    map: MapSize,
+    types: &TypeTable,
+) -> Result<(Pool<Order>, Occupancy), Reason> {
+    if !Pool::<Order>::fits(saved.len()) {
+        return Err(limit("orders", MAX_ORDERS as f64));
+    }
+    let context = OrderContext {
+        map,
+        types: types.ids().len(),
+    };
+    let pool = Pool::restore(saved, &context).map_err(invalid)?;
+    let orders = pool.as_slice();
+    if !orders.windows(2).all(|w| w[0].handle < w[1].handle)
+        || orders.last().is_some_and(|o| o.handle >= next_order)
+    {
+        return Err(invalid("orders"));
+    }
+    let occupancy = Build::order_occupancy_of(orders).ok_or_else(|| invalid("orderCells"))?;
+    Ok((pool, occupancy))
+}
+
+/// The delivery points of a save game: each one an object of the world,
+/// in the order of the handles.
+fn restore_delivery_points(
+    saved: Vec<DeliveryPoint>,
+    objects: &Pool<PlacedObject>,
+) -> Result<Pool<DeliveryPoint>, Reason> {
+    if !Pool::<DeliveryPoint>::fits(saved.len()) {
+        return Err(limit("deliveryPoints", MAX_DELIVERY_POINTS as f64));
+    }
+    let pool = Pool::restore(saved, &()).map_err(invalid)?;
+    let points = pool.as_slice();
+    let known = |h: u32| {
+        objects
+            .as_slice()
+            .binary_search_by_key(&h, |o| o.handle)
+            .is_ok()
+    };
+    if !points.windows(2).all(|w| w[0].handle < w[1].handle)
+        || !points.iter().all(|d| known(d.handle))
+    {
+        return Err(invalid("deliveryPoints"));
+    }
+    Ok(pool)
 }
 
 /// The type table of a save game.
@@ -325,6 +413,9 @@ pub struct BuildSnapshot {
     types: Vec<String>,
     objects: Vec<PlacedObject>,
     next_handle: u32,
+    orders: Vec<Order>,
+    next_order: u32,
+    delivery_points: Vec<DeliveryPoint>,
 }
 
 impl BuildSnapshot {
@@ -350,6 +441,9 @@ impl BuildSnapshot {
             types: self.types.clone(),
             objects: self.objects.clone(),
             next_handle: self.next_handle,
+            orders: self.orders.clone(),
+            next_order: self.next_order,
+            delivery_points: self.delivery_points.clone(),
         }
     }
 }
@@ -367,6 +461,11 @@ pub(crate) struct SavedBuild {
     pub types: Vec<String>,
     pub objects: Vec<PlacedObject>,
     pub next_handle: u32,
+    /// Open construction orders (format 4, ADR-045).
+    pub orders: Vec<Order>,
+    pub next_order: u32,
+    /// Delivery points (format 4, ADR-045).
+    pub delivery_points: Vec<DeliveryPoint>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

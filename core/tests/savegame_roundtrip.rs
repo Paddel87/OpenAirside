@@ -402,15 +402,16 @@ fn damaged_files_are_rejected_in_the_order_of_the_contract() {
     longer.push(0);
     assert_eq!(code_of(&longer), code::CHECKSUM_MISMATCH);
 
-    assert_eq!(bytes[8], 3, "world state format 3 (ADR-039, ADR-041)");
+    assert_eq!(bytes[8], 4, "world state format 4 (ADR-045)");
     let mut newer = bytes.clone();
-    newer[8] = 4; // world state format 4
+    newer[8] = 5; // world state format 5
     assert_eq!(code_of(&newer), code::VERSION_TOO_NEW);
     let mut container = bytes.clone();
     container[6] = 9;
     assert_eq!(code_of(&container), code::VERSION_TOO_NEW);
-    for format in [0, 1] {
-        // Format 1 (before ADR-039) is not migrated before version 1.0 (S-5).
+    for format in [0, 1, 3] {
+        // Older formats (format 3 before ADR-045) are not migrated before
+        // version 1.0 (S-5).
         let mut older = bytes.clone();
         older[8] = format;
         assert_eq!(code_of(&older), code::MIGRATION_FAILED);

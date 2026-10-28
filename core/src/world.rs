@@ -17,12 +17,14 @@ use crate::build::{Blocks, Build, BuildSnapshot, SavedBuild};
 use crate::geometry::{CellPos, CellRect, MapSize, Rotation};
 use crate::hash::StateHasher;
 use crate::internal::{Entry, InternalEvents, Stage};
+use crate::persons::workers::Worker;
 use crate::persons::{Person, Persons, SplitMix64};
 use crate::savegame::invalid;
 use crate::text::Reason;
 use crate::time::Tick;
-use crate::wayfinding::flowfield::FieldSet;
-use crate::wayfinding::{RestoredWayfinding, SavedWayfinding, Wayfinding, WayfindingSnapshot};
+use crate::wayfinding::{
+    Fields, RestoredWayfinding, SavedWayfinding, Wayfinding, WayfindingSnapshot,
+};
 
 /// The domain modules of one session and the internal events between them.
 pub struct World {
@@ -45,6 +47,27 @@ impl World {
             persons: Persons::default(),
             events: InternalEvents::default(),
         }
+    }
+
+    /// World of a new game (S-6 `game.new`, ADR-045): the ground floor is
+    /// terrain, on which only construction workers walk; nothing is built,
+    /// there are no targets and no persons.
+    #[must_use]
+    pub fn new_game(map: MapSize) -> Self {
+        let mut world = Self::new(map);
+        let rect = CellRect {
+            floor: 0,
+            x0: 0,
+            y0: 0,
+            x1: map.width,
+            y1: map.height,
+        };
+        world
+            .build
+            .grid_mut()
+            .fill(rect, Cell::TERRAIN)
+            .expect("the whole map is a valid rectangle");
+        world
     }
 
     /// World with a walkable landside ground floor, one target in the middle
@@ -84,7 +107,7 @@ impl World {
             .collect();
         world.persons.spawn(&world.build, &cells, seed);
         let input = Wayfinding::input(&world.build);
-        world.wayfinding.adopt_fields(FieldSet::compute(&input, 0));
+        world.wayfinding.adopt_fields(Fields::compute(&input, 0));
         world.persons.resample_headings(world.wayfinding.fields());
         world
     }
@@ -205,6 +228,104 @@ impl World {
             .build_wall(type_id, rect, &mut self.events, Stage::Commands)
     }
 
+    /// Places an order for a single object as a command (S-2 `build`,
+    /// ADR-045).
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::order_object`].
+    #[allow(clippy::too_many_arguments)] // mirrors `Build::order_object`
+    pub fn order_object(
+        &mut self,
+        type_id: &str,
+        size: (u16, u16),
+        blocks: bool,
+        minutes: u16,
+        at: CellPos,
+        rotation: Rotation,
+    ) -> Result<u32, BuildRefusal> {
+        self.build.order_object(
+            type_id,
+            size,
+            blocks,
+            minutes,
+            at,
+            rotation,
+            &mut self.events,
+            Stage::Commands,
+        )
+    }
+
+    /// Places an order for a floor as a command (S-2 `buildArea`, ADR-045).
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::order_floor`].
+    pub fn order_floor(
+        &mut self,
+        type_id: &str,
+        area_kind: AreaKind,
+        cost: u8,
+        minutes: u16,
+        rect: CellRect,
+    ) -> Result<u32, BuildRefusal> {
+        self.build.order_floor(
+            type_id,
+            area_kind,
+            cost,
+            minutes,
+            rect,
+            &mut self.events,
+            Stage::Commands,
+        )
+    }
+
+    /// Places an order for a wall as a command (S-2 `buildArea`, ADR-045).
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::order_wall`].
+    pub fn order_wall(
+        &mut self,
+        type_id: &str,
+        minutes: u16,
+        rect: CellRect,
+    ) -> Result<u32, BuildRefusal> {
+        self.build
+            .order_wall(type_id, minutes, rect, &mut self.events, Stage::Commands)
+    }
+
+    /// Builds a delivery point at once as a command (S-2 `build`, ADR-045).
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::build_delivery_point`].
+    pub fn build_delivery_point(
+        &mut self,
+        type_id: &str,
+        size: (u16, u16),
+        workers: u8,
+        at: CellPos,
+        rotation: Rotation,
+    ) -> Result<u32, BuildRefusal> {
+        self.build.build_delivery_point(
+            type_id,
+            size,
+            workers,
+            at,
+            rotation,
+            &mut self.events,
+            Stage::Commands,
+        )
+    }
+
+    /// Lets every open order take effect now (scenarios and tests that
+    /// build without construction workers, see [`Build::complete_orders`]).
+    pub fn complete_orders(&mut self) {
+        self.build
+            .complete_orders(&mut self.events, Stage::Commands);
+    }
+
     /// Demolishes everything in `rect` as a command (S-2).
     ///
     /// # Errors
@@ -217,8 +338,10 @@ impl World {
     /// Forgets the internal events laid down so far. A scenario that builds
     /// its world before the session starts computes the flow fields itself
     /// ([`World::rebuild_fields_now`]); the events would only start a second
-    /// recomputation in the first step.
+    /// recomputation in the first step. Delivery points built meanwhile
+    /// bring their construction workers first (ADR-045).
     pub(crate) fn discard_events(&mut self) {
+        self.persons.react(&self.build, &self.events);
         self.events = InternalEvents::default();
     }
 
@@ -246,11 +369,13 @@ impl World {
     /// the simulation step of a module runs only if `running`. Returns the
     /// revision of adopted flow fields.
     ///
-    /// - "Welt & Bau": no events and no step of its own (building happens
-    ///   in the commands).
+    /// - "Welt & Bau": the work of the construction workers of the previous
+    ///   step reaches the orders; finished orders take effect (ADR-045).
     /// - "Wegfindung": recomputation for changed grids, then adoption of a
     ///   result that is due.
-    /// - "Personen": movement and target choice.
+    /// - "Personen": construction workers of new and demolished delivery
+    ///   points; movement, target choice and the work of the construction
+    ///   workers (ADR-045).
     pub fn step(
         &mut self,
         pool: &ThreadPool,
@@ -258,12 +383,18 @@ impl World {
         tick: Tick,
         running: bool,
     ) -> Option<u32> {
+        self.build.step(&mut self.events);
         let adopted = self
             .wayfinding
             .step(&self.build, &self.events, background, tick);
+        self.persons.react(&self.build, &self.events);
         if running {
-            self.persons
-                .advance(self.wayfinding.fields(), self.build.targets().len(), pool);
+            self.persons.advance(
+                &self.build,
+                self.wayfinding.all_fields(),
+                pool,
+                &mut self.events,
+            );
         }
         self.events.end_step();
         adopted
@@ -284,6 +415,7 @@ impl World {
             build: self.build.snapshot(),
             wayfinding: self.wayfinding.snapshot(),
             persons: self.persons.saved(),
+            workers: self.persons.saved_workers(),
             events: self.events.saved(),
         }
     }
@@ -295,6 +427,7 @@ pub(crate) struct WorldSnapshot {
     pub build: BuildSnapshot,
     pub wayfinding: WayfindingSnapshot,
     pub persons: Vec<Person>,
+    pub workers: Vec<Worker>,
     pub events: Vec<Entry>,
 }
 
@@ -303,6 +436,7 @@ pub(crate) struct SavedWorld {
     pub build: SavedBuild,
     pub wayfinding: SavedWayfinding,
     pub persons: Vec<Person>,
+    pub workers: Vec<Worker>,
     pub events: Vec<Entry>,
 }
 
@@ -312,6 +446,7 @@ pub(crate) struct RestoredWorld {
     build: Build,
     wayfinding: RestoredWayfinding,
     persons: Vec<Person>,
+    workers: Vec<Worker>,
     events: InternalEvents,
 }
 
@@ -335,6 +470,7 @@ impl RestoredWorld {
             build,
             wayfinding,
             persons: saved.persons,
+            workers: saved.workers,
             events,
         })
     }
@@ -346,12 +482,25 @@ impl RestoredWorld {
     /// # Errors
     ///
     /// `invalidState` naming the broken invariant (`fieldsMap`, `persons`,
-    /// `person`).
+    /// `person`, `workers`, `worker`).
     pub fn into_world(self, background: &ThreadPool, mode: AdoptionMode) -> Result<World, Reason> {
         let map = self.build.map();
         let prepared = self.wayfinding.into_fields(map, background)?;
-        let persons =
-            Persons::restore(self.persons, map, self.build.targets().len()).map_err(invalid)?;
+        let delivery = self
+            .build
+            .delivery_points()
+            .as_slice()
+            .iter()
+            .map(|d| d.handle)
+            .collect();
+        let persons = Persons::restore(
+            self.persons,
+            self.workers,
+            map,
+            self.build.targets().len(),
+            delivery,
+        )
+        .map_err(invalid)?;
         Ok(World {
             build: self.build,
             wayfinding: prepared.resume(mode, background),

@@ -4,7 +4,10 @@
 //! hash.
 //!
 //! The module reads the module "Welt & Bau" (grid and targets are the input
-//! of the flow fields). It reacts to [`InternalEvent::GridChanged`] with a
+//! of the flow fields). Each recomputation computes two sets from the same
+//! snapshot (ADR-045): the main set for the targets of the world, and the
+//! set of the construction workers over the ground floor with a field to
+//! all construction sites and one per delivery point. It reacts to [`InternalEvent::GridChanged`] with a
 //! recomputation and adopts finished results in its stage of the step. At
 //! most one recomputation runs at a time; changes that arrive meanwhile are
 //! remembered as one follow-up request, so that continuous building neither
@@ -20,6 +23,8 @@ use rayon::ThreadPool;
 use serde::{Deserialize, Serialize};
 
 use crate::adoption::{Adoption, AdoptionMode};
+use crate::build::access::AccessProfile;
+use crate::build::target::Target;
 use crate::build::{BlockPool, Blocks, Build, SavedTarget, restore_targets, saved_targets};
 use crate::geometry::MapSize;
 use crate::hash::StateHasher;
@@ -43,13 +48,108 @@ pub struct RecomputeStats {
     pub millis: u32,
 }
 
+/// Field of the set of the construction workers that leads to all open
+/// construction orders (ADR-045); the fields of the delivery points follow
+/// in the order of their handles.
+pub const SITES: u8 = 0;
+
+/// Input of one recomputation: both sets from the same grid snapshot.
+#[derive(Clone)]
+pub struct RecomputeInput {
+    /// Input of the main set (all targets of the world).
+    pub main: FieldInput,
+    /// Input of the set of the construction workers: no target without a
+    /// delivery point, else [`SITES`] and one target per delivery point.
+    pub workers: FieldInput,
+    /// Object handles of the delivery points, in the order of their fields
+    /// after [`SITES`].
+    pub delivery: Vec<u32>,
+}
+
+/// The flow fields of one recomputation.
+pub struct Fields {
+    main: FieldSet,
+    workers: FieldSet,
+    delivery: Vec<u32>,
+}
+
+impl Fields {
+    /// Computes both sets of `input` for `revision`, side by side on the
+    /// current rayon pool.
+    #[must_use]
+    pub fn compute(input: &RecomputeInput, revision: u32) -> Self {
+        let (main, workers) = rayon::join(
+            || FieldSet::compute(&input.main, revision),
+            || FieldSet::compute(&input.workers, revision),
+        );
+        Self {
+            main,
+            workers,
+            delivery: input.delivery.clone(),
+        }
+    }
+
+    fn empty(build: &Build, revision: u32) -> Self {
+        let grid = build.grid().snapshot();
+        Self {
+            main: FieldSet::empty(&grid, revision),
+            workers: FieldSet::empty(&grid, revision),
+            delivery: Vec::new(),
+        }
+    }
+
+    /// The main set: one field per target of the world.
+    #[must_use]
+    pub fn main(&self) -> &FieldSet {
+        &self.main
+    }
+
+    /// The set of the construction workers.
+    #[must_use]
+    pub fn workers(&self) -> &FieldSet {
+        &self.workers
+    }
+
+    /// Field of the delivery point with the object handle `handle` in the
+    /// set of the construction workers; `None` until a recomputation knows
+    /// it.
+    #[must_use]
+    pub fn delivery_field(&self, handle: u32) -> Option<u8> {
+        self.delivery
+            .iter()
+            .position(|&h| h == handle)
+            .and_then(|i| u8::try_from(i + 1).ok())
+    }
+
+    /// Input of both sets.
+    fn source(&self) -> RecomputeInput {
+        RecomputeInput {
+            main: self.main.source().clone(),
+            workers: self.workers.source().clone(),
+            delivery: self.delivery.clone(),
+        }
+    }
+
+    fn hash_into(&self, hasher: &mut StateHasher) {
+        self.main.hash_into(hasher);
+        // Nothing for a world without delivery points, so that its hash
+        // stays as it was before ADR-045.
+        if self.workers.targets() > 0 {
+            self.workers.hash_into(hasher);
+            for handle in &self.delivery {
+                hasher.u32(*handle);
+            }
+        }
+    }
+}
+
 /// State of the module: the flow fields in use and the open recomputation.
 pub struct Wayfinding {
-    fields: FieldSet,
-    adoption: Adoption<FieldSet>,
+    fields: Fields,
+    adoption: Adoption<Fields>,
     /// Input of the open request, kept for save games (S-5), counted as a
     /// snapshot copy while it lives.
-    pending_input: Option<(FieldInput, Token)>,
+    pending_input: Option<(RecomputeInput, Token)>,
     /// The grid changed since the newest request and no recomputation has
     /// been started for it yet (the remembered follow-up request). Part of
     /// the save game and the state hash.
@@ -67,10 +167,10 @@ impl Wayfinding {
     /// open request; adoption as soon as a result is ready.
     #[must_use]
     pub fn new(build: &Build) -> Self {
-        Self::with_fields(FieldSet::empty(&build.grid().snapshot(), 0))
+        Self::with_fields(Fields::empty(build, 0))
     }
 
-    fn with_fields(fields: FieldSet) -> Self {
+    fn with_fields(fields: Fields) -> Self {
         let gauges = Gauges::default();
         let fields = Self::counted(fields, &gauges);
         Self {
@@ -84,55 +184,87 @@ impl Wayfinding {
         }
     }
 
-    /// `fields`, counted as a flow field set if they are not yet.
-    fn counted(fields: FieldSet, gauges: &Gauges) -> FieldSet {
-        if fields.is_tracked() {
-            fields
-        } else {
+    /// `fields`, counted as a flow field set if they are not yet. Both sets
+    /// of a recomputation count as one (the main set carries the token), so
+    /// the limits of the continuous-building gate stay (ADR-041, ADR-045).
+    fn counted(mut fields: Fields, gauges: &Gauges) -> Fields {
+        if !fields.main.is_tracked() {
             let token = gauges.field_sets.acquire();
-            fields.tracked(token)
+            fields.main = fields.main.tracked(token);
         }
+        fields
     }
 
     /// The job of a recomputation of `input`: counted as a recomputation in
     /// flight and as a snapshot copy until it is done, and its result as a
     /// flow field set from the start of its computation.
-    fn job(&self, input: FieldInput) -> impl FnOnce(u32) -> FieldSet + Send + 'static {
+    fn job(&self, input: RecomputeInput) -> impl FnOnce(u32) -> Fields + Send + 'static {
         let job = self.gauges.jobs.acquire();
         let snapshot = self.gauges.snapshots.acquire();
         let sets = Arc::clone(&self.gauges.field_sets);
         move |revision| {
             let _counted = (job, snapshot);
             let set = sets.acquire();
-            FieldSet::compute(&input, revision).tracked(set)
+            let mut fields = Fields::compute(&input, revision);
+            fields.main = fields.main.tracked(set);
+            fields
         }
     }
 
-    /// Input of a computation of the flow fields: grid and targets of
-    /// `build` now.
+    /// Input of a computation of the flow fields: grid, targets, open
+    /// orders and delivery points of `build` now.
     #[must_use]
-    pub fn input(build: &Build) -> FieldInput {
-        FieldInput {
-            grid: build.grid().snapshot(),
-            targets: build.targets().to_vec(),
+    pub fn input(build: &Build) -> RecomputeInput {
+        let grid = build.grid().snapshot();
+        let points = build.delivery_points().as_slice();
+        let mut worker_targets = Vec::new();
+        if !points.is_empty() {
+            let worker = |cells| Target::passengers(cells).with_profile(AccessProfile::Worker);
+            worker_targets.push(worker(build.site_cells()));
+            for point in points {
+                let cells = build
+                    .object(point.handle)
+                    .map(|o| crate::build::objects::cells_of(o.rect()))
+                    .unwrap_or_default();
+                worker_targets.push(worker(cells));
+            }
+        }
+        RecomputeInput {
+            main: FieldInput {
+                grid: grid.clone(),
+                targets: build.targets().to_vec(),
+                ground_only: false,
+            },
+            workers: FieldInput {
+                grid,
+                targets: worker_targets,
+                ground_only: true,
+            },
+            delivery: points.iter().map(|p| p.handle).collect(),
         }
     }
 
-    /// The flow fields in use.
+    /// The main set of flow fields in use.
     #[must_use]
     pub fn fields(&self) -> &FieldSet {
+        &self.fields.main
+    }
+
+    /// Both sets of flow fields in use.
+    #[must_use]
+    pub fn all_fields(&self) -> &Fields {
         &self.fields
     }
 
     /// Revision of the flow fields in use.
     #[must_use]
     pub fn fields_revision(&self) -> u32 {
-        self.fields.revision()
+        self.fields.main.revision()
     }
 
-    /// Takes over a new set of flow fields as a whole and returns the old
-    /// one, so that the caller can drop its large buffers off the tick.
-    pub fn adopt_fields(&mut self, fields: FieldSet) -> FieldSet {
+    /// Takes over new flow fields as a whole and returns the old ones, so
+    /// that the caller can drop their large buffers off the tick.
+    pub fn adopt_fields(&mut self, fields: Fields) -> Fields {
         let fields = Self::counted(fields, &self.gauges);
         std::mem::replace(&mut self.fields, fields)
     }
@@ -150,7 +282,7 @@ impl Wayfinding {
     /// Computes the flow fields of `build` now, on `pool`, with revision 0.
     pub(crate) fn rebuild_now(&mut self, build: &Build, pool: &ThreadPool) {
         let input = Self::input(build);
-        let fields = pool.install(|| FieldSet::compute(&input, 0));
+        let fields = pool.install(|| Fields::compute(&input, 0));
         self.fields = Self::counted(fields, &self.gauges);
     }
 
@@ -203,7 +335,11 @@ impl Wayfinding {
     ) -> Option<u32> {
         for event in events.for_stage(Stage::Wayfinding) {
             match event {
-                InternalEvent::GridChanged => self.dirty = true,
+                InternalEvent::GridChanged
+                | InternalEvent::SitesChanged
+                | InternalEvent::DeliveryPointBuilt { .. }
+                | InternalEvent::DeliveryPointRemoved { .. } => self.dirty = true,
+                InternalEvent::WorkDone { .. } => {}
             }
         }
         let adopted = self.adopt(background, tick);
@@ -243,8 +379,8 @@ impl Wayfinding {
     #[must_use]
     pub fn snapshot(&self) -> WayfindingSnapshot {
         WayfindingSnapshot {
-            fields_revision: self.fields.revision(),
-            fields: self.fields.source().clone(),
+            fields_revision: self.fields.main.revision(),
+            fields: self.fields.source(),
             next_revision: self.adoption.next_revision(),
             dirty: self.dirty,
             pending: self
@@ -267,19 +403,9 @@ impl Wayfinding {
         map: MapSize,
         blocks: &Blocks,
     ) -> Result<RestoredWayfinding, Reason> {
-        let fields = FieldInput {
-            grid: blocks.snapshot(map, &saved.fields.grid)?,
-            targets: restore_targets(saved.fields.targets)?,
-        };
+        let fields = saved.fields.restore(map, blocks)?;
         let pending = match saved.pending {
-            Some(p) => Some((
-                p.revision,
-                p.due,
-                FieldInput {
-                    grid: blocks.snapshot(map, &p.input.grid)?,
-                    targets: restore_targets(p.input.targets)?,
-                },
-            )),
+            Some(p) => Some((p.revision, p.due, p.input.restore(map, blocks)?)),
             None => None,
         };
         Ok(RestoredWayfinding {
@@ -296,28 +422,22 @@ impl Wayfinding {
 #[derive(Clone)]
 pub struct WayfindingSnapshot {
     fields_revision: u32,
-    fields: FieldInput,
+    fields: RecomputeInput,
     next_revision: u32,
     dirty: bool,
-    pending: Option<(u32, Tick, FieldInput)>,
+    pending: Option<(u32, Tick, RecomputeInput)>,
 }
 
 impl WayfindingSnapshot {
     pub(crate) fn to_saved(&self, blocks: &mut BlockPool) -> SavedWayfinding {
-        let fields = SavedInput {
-            grid: blocks.table(&self.fields.grid),
-            targets: saved_targets(&self.fields.targets),
-        };
+        let fields = SavedInput::of(&self.fields, blocks);
         let pending = self
             .pending
             .as_ref()
             .map(|(revision, due, input)| SavedPending {
                 revision: *revision,
                 due: *due,
-                input: SavedInput {
-                    grid: blocks.table(&input.grid),
-                    targets: saved_targets(&input.targets),
-                },
+                input: SavedInput::of(input, blocks),
             });
         SavedWayfinding {
             fields_revision: self.fields_revision,
@@ -345,11 +465,61 @@ pub(crate) struct SavedWayfinding {
 }
 
 /// Input of a flow field computation: a block table of the save game's
-/// block store and the targets.
+/// block store, the targets and the input of the set of the construction
+/// workers (format 4, ADR-045) on the same table.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct SavedInput {
     pub grid: Vec<u32>,
     pub targets: Vec<SavedTarget>,
+    /// Targets of the set of the construction workers.
+    pub workers: Vec<SavedTarget>,
+    /// Object handles of the delivery points in the order of their fields.
+    pub delivery: Vec<u32>,
+}
+
+impl SavedInput {
+    fn of(input: &RecomputeInput, blocks: &mut BlockPool) -> Self {
+        Self {
+            grid: blocks.table(&input.main.grid),
+            targets: saved_targets(&input.main.targets),
+            workers: saved_targets(&input.workers.targets),
+            delivery: input.delivery.clone(),
+        }
+    }
+
+    /// The input of a loaded save game.
+    ///
+    /// # Errors
+    ///
+    /// `invalidState` with `blockIndex` or `table` for a broken block
+    /// table, `deliveryFields` if the fields of the delivery points do not
+    /// fit their handles; `limitExceeded` for too many targets.
+    fn restore(self, map: MapSize, blocks: &Blocks) -> Result<RecomputeInput, Reason> {
+        let grid = blocks.snapshot(map, &self.grid)?;
+        let workers = restore_targets(self.workers)?;
+        let fits = if self.delivery.is_empty() {
+            workers.is_empty()
+        } else {
+            workers.len() == self.delivery.len() + 1
+                && self.delivery.len() <= crate::build::orders::MAX_DELIVERY_POINTS
+        };
+        if !fits || workers.iter().any(|t| t.profile != AccessProfile::Worker) {
+            return Err(invalid("deliveryFields"));
+        }
+        Ok(RecomputeInput {
+            main: FieldInput {
+                grid: grid.clone(),
+                targets: restore_targets(self.targets)?,
+                ground_only: false,
+            },
+            workers: FieldInput {
+                grid,
+                targets: workers,
+                ground_only: true,
+            },
+            delivery: self.delivery,
+        })
+    }
 }
 
 /// A recomputation that was running when the game was saved.
@@ -364,10 +534,10 @@ pub(crate) struct SavedPending {
 /// The module of a loaded save game before its flow fields are computed.
 pub(crate) struct RestoredWayfinding {
     fields_revision: u32,
-    fields: FieldInput,
+    fields: RecomputeInput,
     next_revision: u32,
     dirty: bool,
-    pending: Option<(u32, Tick, FieldInput)>,
+    pending: Option<(u32, Tick, RecomputeInput)>,
 }
 
 impl RestoredWayfinding {
@@ -377,10 +547,10 @@ impl RestoredWayfinding {
     ///
     /// `invalidState` with `fieldsMap` if the input belongs to another map.
     pub fn into_fields(self, map: MapSize, background: &ThreadPool) -> Result<Prepared, Reason> {
-        if self.fields.grid.map() != map {
+        if self.fields.main.grid.map() != map {
             return Err(invalid("fieldsMap"));
         }
-        let fields = background.install(|| FieldSet::compute(&self.fields, self.fields_revision));
+        let fields = background.install(|| Fields::compute(&self.fields, self.fields_revision));
         Ok(Prepared {
             wayfinding: Wayfinding::with_fields(fields),
             next_revision: self.next_revision,
@@ -397,7 +567,7 @@ pub(crate) struct Prepared {
     wayfinding: Wayfinding,
     next_revision: u32,
     dirty: bool,
-    pending: Option<(u32, Tick, FieldInput)>,
+    pending: Option<(u32, Tick, RecomputeInput)>,
 }
 
 impl Prepared {
@@ -474,8 +644,8 @@ mod tests {
         // Wall off the west half and recompute for revision 5.
         build.grid_mut().set(pos(10, 3), Cell::VOID).unwrap();
         let input = Wayfinding::input(&build);
-        let old = wayfinding.adopt_fields(pool.install(|| FieldSet::compute(&input, 5)));
-        assert_eq!(old.revision(), 0);
+        let old = wayfinding.adopt_fields(pool.install(|| Fields::compute(&input, 5)));
+        assert_eq!(old.main().revision(), 0);
         assert_eq!(wayfinding.fields_revision(), 5);
         let fields = wayfinding.fields();
         assert_eq!(fields.dir(1, pos(20, 3)), 0, "east end is reachable");

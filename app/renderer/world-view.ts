@@ -6,7 +6,9 @@
  * shader that picks the tile of the floor covering or wall type from a tile
  * sheet (`tile-sheet.ts`), or its mean colour in the simplified overview.
  * Objects are sprites per block, hidden in the simplified overview unless
- * "all details" is set. Display only (rule 002).
+ * "all details" is set. Planned and running constructions (ADR-045) are
+ * drawn translucent: cells by the opacity of their texel, objects by the
+ * opacity of their sprite. Display only (rule 002).
  *
  * Synchronous WebGL queries never happen here (step 3.14/3.15): textures are
  * uploaded through PixiJS, the sheet is drawn on a 2D canvas.
@@ -31,6 +33,7 @@ import {
   placeOf,
   SHEET_TILES,
   SlotTable,
+  stateAlpha,
   TILE,
   tileKey,
   writeBlockTexels,
@@ -112,6 +115,13 @@ uniform sampler2D uMean;
 uniform float uSimple;
 uniform float uInset;
 out vec4 fragColor;
+vec4 tileColour(int idx) {
+  if (uSimple > 0.5) {
+    return texelFetch(uMean, ivec2(idx % ${String(SHEET_TILES)}, idx / ${String(SHEET_TILES)}), 0);
+  }
+  vec2 sub = clamp(fract(vCell), uInset, 1.0 - uInset);
+  return texture(uSheet, (vec2(float(idx % ${String(SHEET_TILES)}), float(idx / ${String(SHEET_TILES)})) + sub) / ${String(SHEET_TILES)}.0);
+}
 void main() {
   ivec2 c = clamp(ivec2(floor(vCell)), ivec2(0), ivec2(${String(TILE - 1)}));
   vec4 d = texelFetch(uData, c, 0);
@@ -120,16 +130,17 @@ void main() {
   int zone = int(d.b * 255.0 + 0.5);
   int idx = wallSlot > 0 ? wallSlot : floorSlot;
   if (idx == 0) discard;
-  vec4 col;
-  if (uSimple > 0.5) {
-    col = texelFetch(uMean, ivec2(idx % ${String(SHEET_TILES)}, idx / ${String(SHEET_TILES)}), 0);
-  } else {
-    vec2 sub = clamp(fract(vCell), uInset, 1.0 - uInset);
-    col = texture(uSheet, (vec2(float(idx % ${String(SHEET_TILES)}), float(idx / ${String(SHEET_TILES)})) + sub) / ${String(SHEET_TILES)}.0);
+  vec4 col = tileColour(idx);
+  float alpha = d.a;
+  // A planned wall over a built floor: the floor shows through the wall.
+  if (alpha < 0.99 && wallSlot > 0 && floorSlot > 0) {
+    col = mix(tileColour(floorSlot), col, alpha);
+    alpha = 1.0;
   }
   vec3 zoneColour = zone == 1 ? vec3(0.37, 0.61, 0.31) : zone == 2 ? vec3(0.91, 0.72, 0.19) : vec3(0.78, 0.26, 0.23);
   float zoneAlpha = zone > 0 ? ${String(ZONE_ALPHA)} : 0.0;
-  fragColor = vec4(mix(col.rgb, zoneColour, zoneAlpha), 1.0);
+  // Premultiplied alpha, as the normal blend mode of PixiJS expects.
+  fragColor = vec4(mix(col.rgb, zoneColour, zoneAlpha) * alpha, alpha);
 }`;
 
 interface DataTile {
@@ -148,6 +159,11 @@ interface ObjectItem {
   readonly x: number;
   readonly y: number;
   readonly rotation: number;
+}
+
+/** Opacity of the sprite of an object in `state` (built, planned, in construction). */
+export function objectAlpha(state: number): number {
+  return stateAlpha(state) / 255;
 }
 
 interface ObjectBox {
@@ -291,6 +307,7 @@ export class WorldView {
       const sprite = new Sprite();
       sprite.anchor.set(0.5);
       sprite.rotation = (o.rotation * Math.PI) / 2;
+      sprite.alpha = objectAlpha(o.state);
       container.addChild(sprite);
       return { sprite, type: o.type, x: o.x, y: o.y, rotation: o.rotation };
     });

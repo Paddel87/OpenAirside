@@ -192,14 +192,16 @@ fn build(object: &str) -> Command {
     }
 }
 
+/// An area beside the cell of [`build`]: an open order occupies its cells
+/// (ADR-045).
 fn build_area(object: &str) -> Command {
     Command::BuildArea {
         object: object.into(),
         area: CellRect {
             floor: 0,
-            x0: 0,
+            x0: 10,
             y0: 0,
-            x1: 3,
+            x1: 13,
             y1: 3,
         },
     }
@@ -236,11 +238,11 @@ fn new_content_applies_from_the_next_session_on() {
         vec![(1, Some(code::UNKNOWN_CONTENT.to_owned()))]
     );
     sim.restart();
-    assert_eq!(sim.content().object_count(), 3);
+    assert_eq!(sim.content().object_count(), 4);
     sim.submit(2, 1, build("base:bench"));
     sim.step();
     assert_eq!(answers(&mut sim), vec![(1, None)]);
     // Without new content the next session keeps the current one.
     sim.restart();
-    assert_eq!(sim.content().object_count(), 3);
+    assert_eq!(sim.content().object_count(), 4);
 }

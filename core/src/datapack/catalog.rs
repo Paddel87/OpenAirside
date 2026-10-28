@@ -13,12 +13,17 @@ pub struct ObjectType {
     pub name: String,
     /// How the object is placed.
     pub placement: Placement,
-    /// What an `area` object does to the cells (ADR-042); `None` for a
-    /// `single` object.
+    /// What an `area` object does to the cells (ADR-042), or
+    /// `deliveryPoint` for a `single` object (ADR-045); `None` for other
+    /// `single` objects.
     pub effect: Option<Effect>,
     /// Whether a `single` object keeps persons from walking over its cells
-    /// (ADR-042); `false` for an `area` object.
+    /// (ADR-042); `false` for an `area` object and a delivery point.
     pub blocks: bool,
+    /// Work of the construction workers in game minutes, per cell for an
+    /// `area` object, per object for a `single` one (ADR-045); 0 for a
+    /// delivery point, which stands at once.
+    pub work: u16,
 }
 
 /// A pack whose content is in the catalog.
@@ -169,6 +174,7 @@ mod tests {
             placement: Placement::Area {},
             effect: Some(Effect::Wall {}),
             blocks: false,
+            work: 3,
         }
     }
 

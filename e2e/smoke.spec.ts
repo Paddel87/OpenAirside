@@ -24,17 +24,25 @@ const packaged = process.env.OPENAIRSIDE_E2E_EXECUTABLE;
 // SUID helper; same pattern as the spike builds. Linux sandbox: roadmap step 7.2.
 const sandboxArgs = process.platform === "linux" ? ["--no-sandbox"] : [];
 
-/** Entries of the base pack: its 3 objects plus every language entry and text of `lang/` (S-4, ADR-031). */
+/** Entries of the base pack: its objects plus every language entry and text of `lang/` (S-4, ADR-031). */
 function baseEntries(): number {
-  const dir = path.join(import.meta.dirname, "..", "content", "base", "lang");
-  let texts = 0;
-  for (const file of readdirSync(dir).filter((name) => name.endsWith(".json"))) {
-    const parsed = JSON.parse(readFileSync(path.join(dir, file), "utf8")) as {
+  const base = path.join(import.meta.dirname, "..", "content", "base");
+  const json = (folder: string): string[] =>
+    readdirSync(path.join(base, folder)).filter((name) => name.endsWith(".json"));
+  let entries = 0;
+  for (const file of json("objects")) {
+    const parsed = JSON.parse(readFileSync(path.join(base, "objects", file), "utf8")) as {
+      objects: unknown[];
+    };
+    entries += parsed.objects.length;
+  }
+  for (const file of json("lang")) {
+    const parsed = JSON.parse(readFileSync(path.join(base, "lang", file), "utf8")) as {
       languages: { texts: Record<string, string> }[];
     };
-    for (const language of parsed.languages) texts += 1 + Object.keys(language.texts).length;
+    for (const language of parsed.languages) entries += 1 + Object.keys(language.texts).length;
   }
-  return 3 + texts;
+  return entries;
 }
 
 /** A user pack "kiosks" with one object type in the pack folder of `userData` (FR-044). */

@@ -38,12 +38,52 @@ impl Stage {
 pub enum InternalEvent {
     /// Cells of the grid changed: the flow fields must be recomputed.
     GridChanged,
+    /// "Welt & Bau": open construction orders were added, done or
+    /// cancelled (ADR-045); the field "all construction sites" of the
+    /// construction workers must be recomputed.
+    SitesChanged,
+    /// "Welt & Bau": a delivery point was built; its construction workers
+    /// appear (ADR-045).
+    DeliveryPointBuilt {
+        /// Handle of the object.
+        handle: u32,
+    },
+    /// "Welt & Bau": a delivery point was demolished; its construction
+    /// workers leave (ADR-045).
+    DeliveryPointRemoved {
+        /// Handle of the object.
+        handle: u32,
+    },
+    /// "Personen": construction workers worked on an order (ADR-045).
+    WorkDone {
+        /// Handle of the order.
+        order: u32,
+        /// Ticks of work of one construction worker each.
+        ticks: u32,
+    },
 }
 
 impl InternalEvent {
     fn code(self) -> u8 {
         match self {
             Self::GridChanged => 0,
+            Self::SitesChanged => 1,
+            Self::DeliveryPointBuilt { .. } => 2,
+            Self::DeliveryPointRemoved { .. } => 3,
+            Self::WorkDone { .. } => 4,
+        }
+    }
+
+    fn hash_into(self, hasher: &mut StateHasher) {
+        match self {
+            Self::GridChanged | Self::SitesChanged => {}
+            Self::DeliveryPointBuilt { handle } | Self::DeliveryPointRemoved { handle } => {
+                hasher.u32(handle);
+            }
+            Self::WorkDone { order, ticks } => {
+                hasher.u32(order);
+                hasher.u32(ticks);
+            }
         }
     }
 }
@@ -108,6 +148,7 @@ impl InternalEvents {
     pub fn hash_into(&self, hasher: &mut StateHasher) {
         for (from, event) in &self.previous {
             hasher.bytes(&[*from as u8, event.code()]);
+            event.hash_into(hasher);
         }
     }
 }

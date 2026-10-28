@@ -14,6 +14,7 @@ use crate::build::target::MAX_TARGETS;
 use crate::build::{BlockPool, Blocks, SavedBlock, SavedBuild};
 use crate::geometry::MapSize;
 use crate::internal::Entry;
+use crate::persons::workers::Worker;
 use crate::persons::{MAX_PERSONS, Person, Persons};
 use crate::text::Reason;
 use crate::time::{Speed, Tick};
@@ -21,10 +22,10 @@ use crate::wayfinding::SavedWayfinding;
 use crate::world::{RestoredWorld, SavedWorld, World, WorldSnapshot};
 
 /// The complete world state section, serialised with postcard (ADR-027),
-/// format version 2 (ADR-039): tick, speed, map, the blocks of the grid
-/// (stored once even if several tables share them), then one part per
-/// domain module in their order and the internal events carried into the
-/// next step.
+/// format version 4 (ADR-039, ADR-045): tick, speed, map, the blocks of
+/// the grid (stored once even if several tables share them), then one part
+/// per domain module in their order and the internal events carried into
+/// the next step.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) struct SavedState {
     tick: Tick,
@@ -34,6 +35,8 @@ pub(crate) struct SavedState {
     build: SavedBuild,
     wayfinding: SavedWayfinding,
     persons: Vec<Person>,
+    /// Construction workers of the module "Personen" (format 4, ADR-045).
+    workers: Vec<Worker>,
     events: Vec<Entry>,
 }
 
@@ -88,6 +91,7 @@ impl SaveSnapshot {
             build,
             wayfinding,
             persons: self.world.persons.clone(),
+            workers: self.world.workers.clone(),
             events: self.world.events.clone(),
         }
     }
@@ -159,6 +163,7 @@ pub(crate) fn restore(state: SavedState, map_edges: &[u16]) -> Result<Restored, 
             build: state.build,
             wayfinding: state.wayfinding,
             persons: state.persons,
+            workers: state.workers,
             events: state.events,
         },
         map,
@@ -327,11 +332,20 @@ mod tests {
             input: SavedInput {
                 grid: vec![0; 3],
                 targets: Vec::new(),
+                workers: Vec::new(),
+                delivery: Vec::new(),
             },
         });
         fails(s.clone(), "invalidState", "table");
         s.wayfinding.pending.as_mut().unwrap().input.grid = pending_grid;
-        assert!(restore(s, EDGES).is_ok());
+        assert!(restore(s.clone(), EDGES).is_ok());
+        // The fields of the delivery points fit their handles (ADR-045).
+        let mut broken = s.clone();
+        broken.wayfinding.fields.delivery = vec![7];
+        fails(broken, "invalidState", "deliveryFields");
+        let mut broken = s;
+        broken.wayfinding.fields.workers = broken.wayfinding.fields.targets.clone();
+        fails(broken, "invalidState", "deliveryFields");
     }
 
     /// The simulation of `simulation()` with a blocking bench at (10, 10)
