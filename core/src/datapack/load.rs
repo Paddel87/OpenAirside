@@ -24,8 +24,9 @@ use super::catalog::{ActivePack, Catalog, ObjectType};
 use super::files::{ContentFile, Folder, Kind, MANIFEST};
 use super::languages::{Languages, is_language_code, is_text_key};
 use super::model::{
-    Effect, EffectKind, LangFile, LanguageEntry, Manifest, ObjectEntry, ObjectsFile, Placement,
-    PlacementKind,
+    DEFAULT_FLOOR_WORK, DEFAULT_SINGLE_WORK, DEFAULT_WALL_WORK, DEFAULT_WORKERS, Effect,
+    EffectKind, LangFile, LanguageEntry, MAX_WORK, MAX_WORKERS, Manifest, ObjectEntry, ObjectsFile,
+    Placement, PlacementKind,
 };
 use super::scan::{self, Limit, Limits, MAX_PATH_CHARS, truncate};
 use super::{
@@ -826,12 +827,14 @@ impl Stage<'_> {
         }
         let placement = self.check_placement(file, &format!("{path}.placement"), entry.placement);
         let effect = self.check_effect(file, path, &entry, placement);
+        let work = self.check_work(file, path, &entry, placement, effect);
         if let Some(target) = &entry.replaces {
             self.check_replace(file, &format!("{path}.replaces"), target, &full);
         }
         if let Some(placement) = placement
             && self.errors.len() == before
         {
+            let delivery = matches!(effect, Some(Effect::DeliveryPoint { .. }));
             self.objects.push(ObjectType {
                 id: full,
                 name: entry.name,
@@ -839,14 +842,17 @@ impl Stage<'_> {
                 effect,
                 blocks: entry
                     .blocks
-                    .unwrap_or(matches!(placement, Placement::Single { .. })),
+                    .unwrap_or(matches!(placement, Placement::Single { .. }) && !delivery),
+                work,
             });
         }
     }
 
-    /// Stage 2 of `effect` and `blocks` (ADR-042): an `area` object has an
-    /// `effect` and no `blocks`, a `single` object the other way round; a
-    /// floor has `areaKind` and `cost` in range, a wall neither.
+    /// Stage 2 of `effect` and `blocks` (ADR-042, ADR-045): an `area`
+    /// object has a `floor` or `wall` effect and no `blocks`; a `single`
+    /// object has no effect or `deliveryPoint`, the latter without
+    /// `blocks`; a floor has `areaKind` and `cost` in range, a delivery
+    /// point `workers` in range, and no effect has the fields of another.
     fn check_effect(
         &mut self,
         file: &str,
@@ -860,10 +866,22 @@ impl Stage<'_> {
         };
         match placement? {
             Placement::Single { .. } => {
-                if entry.effect.is_some() {
-                    misplaced(self, "effect", "`effect` is only allowed for kind `area`");
+                let spec = entry.effect?;
+                if spec.kind != EffectKind::DeliveryPoint {
+                    misplaced(
+                        self,
+                        "effect",
+                        "only `deliveryPoint` is allowed for kind `single`",
+                    );
+                    return None;
                 }
-                None
+                if entry.blocks.is_some() {
+                    misplaced(
+                        self,
+                        "blocks",
+                        "`blocks` is not allowed for `deliveryPoint`",
+                    );
+                }
             }
             Placement::Area {} => {
                 if entry.blocks.is_some() {
@@ -875,38 +893,94 @@ impl Stage<'_> {
                     self.at(file, path, reason);
                     return None;
                 };
-                match spec.kind {
-                    EffectKind::Wall => {
-                        for (field, present) in [
-                            ("areaKind", spec.area_kind.is_some()),
-                            ("cost", spec.cost.is_some()),
-                        ] {
-                            if present {
-                                misplaced(
-                                    self,
-                                    &format!("effect.{field}"),
-                                    &format!("`{field}` is only allowed for kind `floor`"),
-                                );
-                            }
-                        }
-                        Some(Effect::Wall {})
-                    }
-                    EffectKind::Floor => {
-                        let cost = spec.cost.unwrap_or(COST_NORMAL);
-                        if !(1..=MAX_COST).contains(&cost) {
-                            let reason = error(code::INVALID_VALUE)
-                                .with_number("min", 1.0)
-                                .with_number("max", f64::from(MAX_COST));
-                            self.at(file, &format!("{path}.effect.cost"), reason);
-                        }
-                        Some(Effect::Floor {
-                            area_kind: spec.area_kind.unwrap_or_default(),
-                            cost,
-                        })
-                    }
+                if spec.kind == EffectKind::DeliveryPoint {
+                    misplaced(
+                        self,
+                        "effect",
+                        "`deliveryPoint` is only allowed for kind `single`",
+                    );
+                    return None;
                 }
             }
         }
+        let spec = entry.effect?;
+        let owner = match spec.kind {
+            EffectKind::Floor => "floor",
+            EffectKind::Wall => "wall",
+            EffectKind::DeliveryPoint => "deliveryPoint",
+        };
+        for (field, present, allowed) in [
+            ("areaKind", spec.area_kind.is_some(), "floor"),
+            ("cost", spec.cost.is_some(), "floor"),
+            ("workers", spec.workers.is_some(), "deliveryPoint"),
+        ] {
+            if present && owner != allowed {
+                misplaced(
+                    self,
+                    &format!("effect.{field}"),
+                    &format!("`{field}` is only allowed for kind `{allowed}`"),
+                );
+            }
+        }
+        match spec.kind {
+            EffectKind::Wall => Some(Effect::Wall {}),
+            EffectKind::Floor => {
+                let cost = spec.cost.unwrap_or(COST_NORMAL);
+                if !(1..=MAX_COST).contains(&cost) {
+                    let reason = error(code::INVALID_VALUE)
+                        .with_number("min", 1.0)
+                        .with_number("max", f64::from(MAX_COST));
+                    self.at(file, &format!("{path}.effect.cost"), reason);
+                }
+                Some(Effect::Floor {
+                    area_kind: spec.area_kind.unwrap_or_default(),
+                    cost,
+                })
+            }
+            EffectKind::DeliveryPoint => {
+                let workers = spec.workers.unwrap_or(DEFAULT_WORKERS);
+                if !(1..=MAX_WORKERS).contains(&workers) {
+                    let reason = error(code::INVALID_VALUE)
+                        .with_number("min", 1.0)
+                        .with_number("max", f64::from(MAX_WORKERS));
+                    self.at(file, &format!("{path}.effect.workers"), reason);
+                }
+                Some(Effect::DeliveryPoint { workers })
+            }
+        }
+    }
+
+    /// Stage 2 of `work` (ADR-045): in range, not for a delivery point; the
+    /// default follows the effect.
+    fn check_work(
+        &mut self,
+        file: &str,
+        path: &str,
+        entry: &ObjectEntry,
+        placement: Option<Placement>,
+        effect: Option<Effect>,
+    ) -> u16 {
+        let default = match (placement, effect) {
+            (_, Some(Effect::DeliveryPoint { .. })) => {
+                if entry.work.is_some() {
+                    let reason = error(code::INVALID_STRUCTURE)
+                        .with_text("detail", "`work` is not allowed for `deliveryPoint`");
+                    self.at(file, &format!("{path}.work"), reason);
+                }
+                return 0;
+            }
+            (_, Some(Effect::Wall {})) => DEFAULT_WALL_WORK,
+            (Some(Placement::Area {}), _) => DEFAULT_FLOOR_WORK,
+            _ => DEFAULT_SINGLE_WORK,
+        };
+        let work = entry.work.unwrap_or(default);
+        if !(1..=MAX_WORK).contains(&work) {
+            let reason = error(code::INVALID_VALUE)
+                .with_number("min", 1.0)
+                .with_number("max", f64::from(MAX_WORK));
+            self.at(file, &format!("{path}.work"), reason);
+        }
+        work
     }
 
     /// Stage 2 of `placement`: `width` and `depth` exactly for `single`,

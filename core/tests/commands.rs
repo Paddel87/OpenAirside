@@ -236,11 +236,11 @@ fn new_content_applies_from_the_next_session_on() {
         vec![(1, Some(code::UNKNOWN_CONTENT.to_owned()))]
     );
     sim.restart();
-    assert_eq!(sim.content().object_count(), 3);
+    assert_eq!(sim.content().object_count(), 4);
     sim.submit(2, 1, build("base:bench"));
     sim.step();
     assert_eq!(answers(&mut sim), vec![(1, None)]);
     // Without new content the next session keeps the current one.
     sim.restart();
-    assert_eq!(sim.content().object_count(), 3);
+    assert_eq!(sim.content().object_count(), 4);
 }

@@ -42,6 +42,7 @@
         "datapack.error.unexpectedEntry": "Das Paketformat kennt diesen Eintrag nicht.",
         "notice.tickLimit": "Das Spiel hat das Ende seiner Zeitspanne erreicht und ist angehalten.",
         "object.bench": "Sitzbank",
+        "object.delivery_point": "Anlieferstelle",
         "object.floor_concrete": "Betonboden",
         "object.wall_concrete": "Betonwand",
         "platform.error.alreadyRunning": "Es läuft schon eine Messung.",

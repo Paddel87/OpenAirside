@@ -736,14 +736,19 @@ mod tests {
             .collect();
         assert_eq!(
             ids,
-            ["base:bench", "base:floor_concrete", "base:wall_concrete"]
+            [
+                "base:bench",
+                "base:delivery_point",
+                "base:floor_concrete",
+                "base:wall_concrete"
+            ]
         );
         assert_eq!(
             serde_json::to_string(&entries[0]).unwrap(),
             r#"{"kind":"object","id":"base:bench","name":"object.bench","placement":{"kind":"single","width":4,"depth":2}}"#
         );
         assert_eq!(
-            serde_json::to_string(&entries[1]).unwrap(),
+            serde_json::to_string(&entries[2]).unwrap(),
             r#"{"kind":"object","id":"base:floor_concrete","name":"object.floor_concrete","placement":{"kind":"area"}}"#
         );
         let query: Query = serde_json::from_str(r#"{"kind":"catalog"}"#).unwrap();

@@ -108,8 +108,8 @@ fn the_base_pack_ships_german_and_english() {
         .collect();
     assert_eq!(names, vec![("de", "Deutsch"), ("en", "English")]);
     assert_eq!(list[0].keys, list[1].keys);
-    // Every language entry and every text count (S-4); 3 objects.
-    assert_eq!(base.entries, 3 + 2 + list[0].keys + list[1].keys);
+    // Every language entry and every text count (S-4); 4 objects.
+    assert_eq!(base.entries, 4 + 2 + list[0].keys + list[1].keys);
 }
 
 #[test]
