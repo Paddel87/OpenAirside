@@ -24,7 +24,27 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
-### 2026-10-28 21:45 (UTC) – [BEOBACHTUNG]
+### 2026-10-28 22:32 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung, 21:15 bis 22:32 UTC.
+- **Bearbeitet:** Nachmessung des Hauptsatzes (Eintrag 21:35), Merge von PR #38, Q.6 von Vorschlag bis CI.
+- **Erreicht:** PR #38 gemergt (`394d24e`). Q.6 `[ERLEDIGT]`: CI grün auf `3a2cd0e` (Lauf 40774228111, 23 Checks), Runner `AMD EPYC 9V74 80-Core Processor` steht in allen drei Ergebnissen und in der Job-Zusammenfassung; der Vergleichslauf auf `main` (40773654864) hat das Feld noch nicht und erscheint als „unbekannt“, wie vorgesehen.
+- **Befund zur Streuung des Runners:** Derselbe Code von 3.1c rechnet die Neuberechnung beider Sätze auf dem Runner in drei Läufen sehr verschieden: PR #38 auf `82be23c` 1.935 ms, `main` auf `394d24e` (Merge, Code gleich) 2.918 ms, PR #39 auf `3a2cd0e` (nur Benchmark-Ausgabe geändert) 2.255 ms; Grenze 4.000 ms. Die Abschätzung vom Eintrag 21:35 (3,0–3,3 s auf einem Runner wie früher auf `main`) wird damit gestützt: Der Abstand zur Grenze liegt bei 1,1–2,1 s, nicht bei 2 s. Das Prozessormodell der beiden früheren Läufe ist unbekannt; ab jetzt steht es im Ergebnis.
+- **Offen geblieben:** Merge von PR #39 nach Freigabe des Projektinhabers; danach Worktree `wt-q6` entfernen. 3.1b-N1.
+- **Nächster Schritt:** 3.2.
+- **Modell-Bilanz:** Entscheidungs-Klasse aktiv (Opus 5.5, Systemkontext). Ein Schritt oberhalb seiner Empfehlung: Q.6 (Routine); nichts abgegeben, Probelauf offen.
+- **Kontextgröße:** nicht feststellbar.
+- **Ablaufdaten-Prüfung:** unverändert gegenüber 18:30 UTC (Electron 44, Vorlauf ab 2027-01-02).
+- **README und Drift:** README unverändert gültig (Q-Schritte stehen nicht in „Nächste Schritte“). Architektur nennt Q.6 im Leistungstest und im Tooling-Inventar; Modulnamen von Q.6 („Benchmark & Leistung“, „Build/CI“) wie in der Modul-Karte bzw. in Q.5. Keine weitere Drift.
+- **Archivierung:** Logbuch über 800 Zeilen; Auslagerung wie am 2026-10-28 17:40 UTC festgehalten.
+
+### 2026-10-28 21:42 (UTC) – [BEOBACHTUNG]
+
+- **Merge 3.1c:** Freigabe des Projektinhabers im Gespräch („Beides“: Merge von PR #38 und Umsetzung von Q.6). PR #38 um 21:38 UTC gemergt als Merge-Commit `394d24e`, nach grüner CI auf dem letzten Commit `89f945d` (16 Checks bestanden, 7 als reine Doku-Änderung übersprungen, Q.5).
+- **Q.6 begonnen:** Branch `test/q-6-cpu-modell-im-benchmark-ergebnis` von `394d24e`, in einem eigenen Worktree, damit die Arbeitskopie der Session auf ihrem Branch bleibt. Die drei Benchmarks nutzen ein gemeinsames Hilfsmodul `core/benches/machine/` (Unterordner, damit Cargo es nicht als eigenen Benchmark erkennt); bisher hatte jeder Benchmark seine Hilfsfunktionen selbst. Lokal (Mac M3 Pro) schreiben alle drei `"cpuModel":"Apple M3 Pro"` und bestehen ihre Grenzen.
+- **Korrektur:** Der Eintrag zur Nachmessung trug zuerst die Zeit 21:45 UTC; geschrieben wurde er gegen 21:35 UTC, vor dem Merge. Zeit dort und im Fahrplan (Q.6, „Anlass“) berichtigt. Ursache: Zeit geschätzt statt abgefragt.
+
+### 2026-10-28 21:35 (UTC) – [BEOBACHTUNG]
 
 - **Anlass:** Rückfrage des Projektinhabers zum Eintrag 21:15 UTC: Der Hauptsatz lag auf dem Runner auf `main` bei 2,55–2,70 s (Läufe 39692518721 bis 40348379307, 2026-10-21 bis 26), auf PR #38 brauchen beide Sätze zusammen 1,93 s. Die Vermutung dort (eigene Topologie je Feldsatz, `9b36e7d`) war nicht gemessen. Korrektur zum Bericht davor: Die Spanne „2,4–3,2 s“ war nicht geprüft; richtig sind die Werte oben.
 - **Messung:** Mac M3 Pro, `cargo bench -p openairside-core --bench flowfield` wie in der CI (2 Simulations-, 2 Hintergrund-Threads), Worktrees auf `f438c2c` (vor `9b36e7d`), `9b36e7d` und `82be23c`, drei Runden abwechselnd. Median der Neuberechnung:

@@ -35,6 +35,8 @@ use openairside_core::time::Speed;
 use openairside_core::wayfinding::Fields;
 use openairside_core::wayfinding::flowfield::FieldSet;
 
+mod machine;
+
 const PERSONS: u32 = 10_000;
 const TERMINAL_EDGE: u16 = 768;
 /// 45 gates and 19 other targets make 64 targets.
@@ -185,12 +187,14 @@ fn run() -> Result<bool, String> {
     let max = samples.last().copied().unwrap_or(0.0);
     let passed = recompute <= max_recompute && p99 <= max_p99;
 
+    let cpu = machine::cpu_model();
+    let cpu_json = serde_json::to_string(&cpu).map_err(|err| err.to_string())?;
     let json = format!(
         concat!(
             "{{\"benchmark\":\"flowfield\",\"targets\":{},\"persons\":{},\"cells\":{},",
             "\"workerTargets\":{},\"workerCells\":{},\"workerMs\":{:.1},",
             "\"fieldBytes\":{},\"threads\":{},\"backgroundThreads\":{},\"cpus\":{},",
-            "\"os\":\"{}\",\"recomputeMs\":{:.1},\"recomputeMinMs\":{:.1},",
+            "\"os\":\"{}\",\"cpuModel\":{},\"recomputeMs\":{:.1},\"recomputeMinMs\":{:.1},",
             "\"recomputeMaxMs\":{:.1},\"ticks\":{},\"adopted\":{},\"adoptionMaxMs\":{:.4},\"meanMs\":{:.4},",
             "\"p50Ms\":{:.4},\"p99Ms\":{:.4},\"maxMs\":{:.4},",
             "\"limits\":{{\"recomputeMs\":{},\"p99Ms\":{}}},\"passed\":{}}}\n"
@@ -206,6 +210,7 @@ fn run() -> Result<bool, String> {
         background_threads,
         cpus,
         std::env::consts::OS,
+        cpu_json,
         recompute,
         times[0],
         times[times.len() - 1],
@@ -232,6 +237,7 @@ fn run() -> Result<bool, String> {
         target_count(usize::from(GATES)),
         bytes as f64 / 1e6,
     );
+    println!("processor: {cpu}");
     print!("{json}");
     Ok(passed)
 }
