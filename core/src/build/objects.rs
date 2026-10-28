@@ -395,7 +395,7 @@ impl Build {
             if is_wall(cell) {
                 return Err(BuildRefusal::Blocked);
             }
-            needs_floor |= !cell.walkable();
+            needs_floor |= !cell.has_floor();
         }
         if needs_floor {
             return Err(BuildRefusal::NeedsFloor);
@@ -533,8 +533,9 @@ impl Build {
 
     /// Demolishes everything in `rect` (`demolish`, ADR-042): every object
     /// whose footprint touches the area is removed as a whole, floors and
-    /// walls inside the area become void. The cells of a removed object
-    /// outside the area keep their floor and become passable again.
+    /// walls inside the area become terrain (ADR-045; building happens on
+    /// the ground floor only). The cells of a removed object outside the
+    /// area keep their floor and become passable again.
     ///
     /// # Errors
     ///
@@ -574,7 +575,7 @@ impl Build {
         }
         for pos in cells(rect) {
             self.grid
-                .set(pos, Cell::VOID)
+                .set(pos, Cell::TERRAIN)
                 .expect("the cell lies on the map");
         }
         if self.grid.version() != before {

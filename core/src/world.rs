@@ -47,6 +47,27 @@ impl World {
         }
     }
 
+    /// World of a new game (S-6 `game.new`, ADR-045): the ground floor is
+    /// terrain, on which only construction workers walk; nothing is built,
+    /// there are no targets and no persons.
+    #[must_use]
+    pub fn new_game(map: MapSize) -> Self {
+        let mut world = Self::new(map);
+        let rect = CellRect {
+            floor: 0,
+            x0: 0,
+            y0: 0,
+            x1: map.width,
+            y1: map.height,
+        };
+        world
+            .build
+            .grid_mut()
+            .fill(rect, Cell::TERRAIN)
+            .expect("the whole map is a valid rectangle");
+        world
+    }
+
     /// World with a walkable landside ground floor, one target in the middle
     /// and `persons` persons spread over it. Used where a world is needed
     /// without a building.

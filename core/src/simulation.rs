@@ -305,8 +305,9 @@ impl Simulation {
         Ok(())
     }
 
-    /// Starts a new game (S-6 `game.new`): an empty world on a square map of
-    /// `edge` cells, paused, with the content of the next session. The
+    /// Starts a new game (S-6 `game.new`): a world of terrain on a square map
+    /// of `edge` cells (ADR-045), paused, with the content of the next
+    /// session. The
     /// map size also applies to later debug scenarios of the process.
     ///
     /// # Errors
@@ -323,7 +324,7 @@ impl Simulation {
                 savegame::error(savegame::code::INVALID_ARGUMENT).with_text("field", "map")
             })?;
         self.config.map = map;
-        self.restart_with_world(World::new(map));
+        self.restart_with_world(World::new_game(map));
         Ok(())
     }
 

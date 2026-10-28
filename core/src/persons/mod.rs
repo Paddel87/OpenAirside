@@ -14,6 +14,7 @@ use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::build::Build;
+use crate::build::access::AccessProfile;
 use crate::build::grid::{FLOORS, floor_index};
 use crate::geometry::{CellPos, MapSize};
 use crate::hash::StateHasher;
@@ -168,14 +169,14 @@ impl Persons {
         !self.pool.is_empty()
     }
 
-    /// Adds one person on each of `cells` (cells that are not walkable in
-    /// `build` are skipped, and none beyond [`MAX_PERSONS`]), with a target
+    /// Adds one person on each of `cells` (cells a passenger may not stand
+    /// on in `build` are skipped, and none beyond [`MAX_PERSONS`]), with a target
     /// and a generator state derived from `seed`.
     pub fn spawn(&mut self, build: &Build, cells: &[CellPos], seed: u64) {
         let mut rng = SplitMix64(seed ^ 0x5eed);
         let targets = build.targets().len().max(1) as u64;
         for &pos in cells {
-            if !build.grid().walkable(pos) {
+            if !walkable_for_passengers(build, pos) {
                 continue;
             }
             let state = u32::try_from(rng.next() >> 32).unwrap_or(1) | 1;
@@ -193,8 +194,8 @@ impl Persons {
         self.count_per_floor_serial();
     }
 
-    /// Adds up to `count` persons on random walkable cells of the ground
-    /// floor (debug command, META-15). Gives up on a person after 64
+    /// Adds up to `count` persons on random cells of the ground floor that
+    /// a passenger may stand on (debug command, META-15). Gives up on a person after 64
     /// cells that are not walkable and never exceeds [`MAX_PERSONS`].
     /// Returns the number of persons added.
     pub fn spawn_random(&mut self, build: &Build, count: u32, seed: u64) -> u32 {
@@ -211,7 +212,7 @@ impl Persons {
                     y: u16::try_from(rng.next() % u64::from(map.height)).unwrap_or(0),
                     floor: 0,
                 };
-                if build.grid().walkable(pos) {
+                if walkable_for_passengers(build, pos) {
                     cells.push(pos);
                     break;
                 }
@@ -320,6 +321,15 @@ impl Persons {
         persons.count_per_floor_serial();
         Ok(persons)
     }
+}
+
+/// `true` if a passenger may stand on `pos`: persons other than
+/// construction workers never start on terrain (ADR-045).
+fn walkable_for_passengers(build: &Build, pos: CellPos) -> bool {
+    build
+        .grid()
+        .cell(pos)
+        .is_some_and(|c| AccessProfile::Passenger.rules().walkable(c.flags))
 }
 
 fn add_counts(mut a: [u32; FLOORS], b: [u32; FLOORS]) -> [u32; FLOORS] {

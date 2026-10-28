@@ -330,7 +330,11 @@ fn demolishing_removes_every_touched_object_as_a_whole() {
         build.object(first).is_none(),
         "a stale handle finds nothing"
     );
-    assert_eq!(game.cell(10, 10), Cell::VOID, "inside the frame: void");
+    assert_eq!(
+        game.cell(10, 10),
+        Cell::TERRAIN,
+        "inside the frame: terrain"
+    );
     let right = game.cell(11, 10);
     assert!(right.walkable(), "outside the frame: passable again");
     assert_eq!(right.floor_kind, game.type_number(FLOOR), "with its floor");
@@ -344,7 +348,8 @@ fn demolishing_clears_floors_and_walls_inside_the_frame_only() {
     game.accepted(area(WALL_TYPE, rect(5, 5, 6, 6)));
     game.accepted(demolish(rect(4, 4, 7, 7)));
     for (x, y) in [(4, 4), (5, 5), (6, 6)] {
-        assert_eq!(game.cell(x, y), Cell::VOID, "({x}, {y})");
+        // The ground floor keeps terrain where something was (ADR-045).
+        assert_eq!(game.cell(x, y), Cell::TERRAIN, "({x}, {y})");
     }
     assert!(game.walkable(3, 3) && game.walkable(7, 7));
     // Nothing to demolish is not an error.

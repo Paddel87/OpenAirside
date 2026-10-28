@@ -663,6 +663,7 @@ fn load_scenario(
 mod tests {
     use super::*;
     use crate::adoption::AdoptionMode;
+    use crate::build::grid::{BLOCK_CELLS, Cell, FLOORS, GROUND_INDEX};
     use crate::event::Event;
     use crate::geometry::MapSize;
 
@@ -932,7 +933,7 @@ mod tests {
     }
 
     #[test]
-    fn a_new_game_starts_an_empty_world_on_the_chosen_map() {
+    fn a_new_game_starts_a_world_of_terrain_on_the_chosen_map() {
         let runner = runner();
         let link = runner.save_link();
         // A map size the game does not have is refused; the session stays.
@@ -947,11 +948,20 @@ mod tests {
         assert_eq!(front.session(), 2);
         assert_eq!(front.map(), MapSize::new(1536, 1536));
         assert_eq!(front.persons(), 0);
-        // Everything is void: no ground floor block has anything walkable.
+        // The ground floor is terrain (ADR-045), the other floors are void.
         let grid = front.world().grid().unwrap();
-        assert!(
-            (0..grid.table_len()).all(|i| grid.block(i).is_none_or(|b| b.walkable_cells() == 0))
-        );
+        let per_floor = grid.table_len() / FLOORS;
+        let ground = GROUND_INDEX * per_floor..(GROUND_INDEX + 1) * per_floor;
+        for i in 0..grid.table_len() {
+            let block = grid.block(i);
+            if ground.contains(&i) {
+                let block = block.unwrap();
+                assert_eq!(block.walkable_cells(), BLOCK_CELLS);
+                assert!(block.flags().iter().all(|&f| f == Cell::TERRAIN.flags));
+            } else {
+                assert!(block.is_none_or(|b| b.walkable_cells() == 0));
+            }
+        }
         // Commands of the new session are accepted.
         let mut seen = Vec::new();
         runner.command(2, 1, Command::SetSpeed { speed: Speed::X1 });

@@ -163,6 +163,17 @@ impl Cell {
         wall_kind: 0,
     };
 
+    /// Terrain without a floor covering: the ground floor of a new game
+    /// (ADR-045). Only construction workers walk on it (ADR-037); a
+    /// demolition on the ground floor leaves it behind.
+    pub const TERRAIN: Self = Self {
+        flags: (AreaKind::Terrain as u8) << KIND_SHIFT,
+        zone: Zone::Landside as u8,
+        cost: COST_NORMAL,
+        floor_kind: 0,
+        wall_kind: 0,
+    };
+
     /// Walkable floor in the given zone with the normal cost.
     #[must_use]
     pub fn floor(zone: Zone) -> Self {
@@ -209,6 +220,13 @@ impl Cell {
     #[must_use]
     pub fn walkable(self) -> bool {
         self.flags & WALL == 0
+    }
+
+    /// Returns `true` if the cell is a walkable floor an object can stand
+    /// on: neither void, wall nor terrain.
+    #[must_use]
+    pub fn has_floor(self) -> bool {
+        self.walkable() && self.kind() != AreaKind::Terrain
     }
 }
 
