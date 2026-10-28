@@ -24,6 +24,19 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-28 18:30 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** 2026-10-28 17:40 bis 18:30 UTC.
+- **Bearbeitet:** 3.1c Rest nach ADR-045: Gelände, Aufträge und Anlieferstellen, Bauarbeiter mit eigenem Feldsatz, Format 4, S-1, S-4 mit Basispaket und Schema, durchscheinende Darstellung, `core/tests/construction.rs`, Benchmark, Verträge und Architektur.
+- **Erreicht:** Commits `f84e8d4` bis `82be23c` (Liste im Eintrag 18:25 UTC), gepusht; PR #38 nach `main` angelegt, die CI läuft.
+- **Offen geblieben:** CI-Ergebnis auf PR #38. Maßgeblich ist der Wegweiser-Benchmark auf dem Runner mit der Grenze 4 s; reißt er sie, gilt Stopp mit Vorlage nach ADR-045. Coverage-Zahl aus der CI, `[ERLEDIGT]` und Merge nach Freigabe des Projektinhabers. Daneben 3.1b-N1, jetzt mit der Testgrafik der Anlieferstelle. Dieser Eintrag ist lokal committet und wird erst nach dem CI-Lauf gepusht, damit der laufende Lauf nicht neu startet.
+- **Nächster Schritt:** CI von PR #38 auswerten, danach Fahrplan, Logbuch und Reifegrade mit den Runner-Zahlen nachziehen; dann 3.2.
+- **Modell-Bilanz:** Entscheidungs-Klasse aktiv (Opus 5.5, laut `get_session`). Ein Schritt lief oberhalb seiner Empfehlung: die Umsetzung von 3.1c (Routine). Keine Teilarbeit an Unteragenten abgegeben, weil der Probelauf offen ist.
+- **Kontextgröße:** nicht feststellbar, weil `get_session` sie nicht liefert; geschätzt rund 300.000 Token. Liegt sie über der Grenze von 400.000 Token, sollte die Auswertung der CI in einer neuen Session laufen.
+- **Ablaufdaten-Prüfung:** Electron 44 endet 2027-03-02; der Vorlauf ab 2027-01-02 ist noch nicht erreicht. Keine weitere Frist fällig.
+- **README und Drift:** Stand von 3.1c und „Nächste Schritte“ sind angepasst. Modul-Liste, ADR → Schritt und Blocker zeigen keine Drift. Reaktiv-Quote unverändert 5 / 10. Phasenumfang unverändert bei 15 von 26 Schritten.
+- **Archivierung:** Das Logbuch hat 892 Zeilen und liegt über dem Trigger von 800. Alle Einträge stammen aus dem laufenden Monat; ausgelagert wird wie am 2026-10-28 17:40 UTC festgehalten, beim Phasenwechsel oder Anfang November. `project-context.md` hat 376 Zeilen und liegt unter dem Budget.
+
 ### 2026-10-28 18:25 (UTC) – [BEOBACHTUNG]
 
 - **3.1c im Code fertig:** Commits `f84e8d4` (Gelände bei `game.new`), `40bd6c1` (S-4 `work`, `deliveryPoint`, Basispaket `base:delivery_point` mit Testgrafik, Schema), `0388b01` (Aufträge und Anlieferstellen in Welt & Bau, interne Ereignisse, Format 4), `510de51` (Bauarbeiter in Personen, Satz der Bauarbeiter in derselben Neuberechnung), `a516138` (S-1 Zustände und Gruppen), `c355c0e` (durchscheinende Darstellung), `4d3bfad` (Wegweiser-Benchmark auf einer Baustelle), `d1a7378` (Rauchtest zählt die Objekte), `c4c4255` (Verträge, Architektur, README).
