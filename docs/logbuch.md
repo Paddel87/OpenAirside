@@ -24,6 +24,12 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-28 23:39 (UTC) – [BEOBACHTUNG]
+
+- **Neuableitung nach ADR-046:** `docs/requirements.md` aus `docs/vision-2.md` neu abgeleitet: 68 Anforderungen (55 Muss, 9 Soll, 3 Kann, 1 verworfen); neue Spalte „Säule“ (Regel-010); neu FR-053 bis FR-068 (Bauphasen, Baustellenlogistik, Störwirkung, Raumformen, Overlays, Engpass-Diagnose, Tagesrhythmus, Umsteiger, Slots, Betriebstag mit Störung, Kennzahlen, Geschäftsmodelle, Gebühren, Frachtnacht, Bestandsflughafen, Bedienkomfort); FR-037 verworfen; FR-031, FR-033 eingeschränkt, FR-002 auf Soll, FR-048 auf Muss (Beiladefracht); FR-011 als erledigt nachgetragen (Drift seit 3.1c). Prioritäten der neuen Anforderungen sind ein Vorschlag der KI.
+- **Fahrplan:** Phase 3 neu geplant ohne neue Schritte; 3.2 heißt jetzt „Kleines Terminal im laufenden Betrieb erweitern (erste Lektion)“ und braucht eine Vorlage vor dem Code; 3.3, 3.4, 3.6 und die Phasen 4 bis 7 angepasst, 6.3 verworfen. Drift-Prüfung per Skript: jede im Fahrplan genannte Anforderung existiert, jede Muss-Anforderung hat einen existierenden Schritt.
+- **Offen:** Pflichtfrage „Weiterbauen, umbauen oder neu aufsetzen?“ durch eine getrennte Instanz vor 3.2. Abschnitte in `docs/architecture.md`, die das bisherige Vorbild als Begründung früherer Entscheidungen nennen, bleiben als Historie stehen.
+
 ### 2026-10-28 23:34 (UTC) – [ADR-ANGELEGT]
 
 - **ADR:** [ADR-046](decisions/ADR-046.md) „Neuausrichtung als eigenes Flughafen-Aufbauspiel“, `[STRATEGISCH]` `[METHODIK]`, Datum 2026-10-29 (Ortszeit des Projektinhabers).

@@ -352,9 +352,10 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 <!-- ANCHOR:glossar -->
 ## 12. Glossar (projektspezifische Begriffe)
 
-- **Original:** Airport CEO von Apog Labs, Stand Version 1.1-3, einschließlich aller DLCs.
-- **Funktionsgleichheit:** Alle Funktionen aus `funktionsinventar.md` sind gleichwertig abgebildet, in der modernisierten Form laut `modernisierung.md`.
-- **Kern / Kandidat:** Kern = Teil der Funktionsgleichheit; Kandidat = unverbindliche Erweiterung nach der Funktionsgleichheit.
+- **Säule:** einer der fünf Schwerpunkte aus `docs/vision-2.md` (S1 Umbau im Betrieb, S2 Ströme lesen, S3 Rhythmus und Fracht, S4 Störung und Erholung, S5 Airlines als Partner); jede Spielfunktion nennt ihre Säule (Regel-010).
+- **Bisheriges Vorbild (historisch, „Original“ in älteren Dokumenten):** Airport CEO von Apog Labs, Stand Version 1.1-3. Seit ADR-046 nur noch eine Ideenquelle unter mehreren.
+- **Funktionsgleichheit (historisch):** Ziel bis 2026-10-29, entfallen mit ADR-046.
+- **Kern / Kandidat (in `modernisierung.md`):** historische Einteilung; seit ADR-046 entscheidet die Säule, nicht die Einteilung.
 - **Referenzszenario:** der in Abschnitt 6 beschriebene große Flughafen als Maßstab für Leistung.
 - **Zielhardware / Untergrenze:** Rechner, für den optimiert wird / Rechner, auf dem das Spiel mindestens lauffähig sein muss.
 - **Simulationskern:** der Rust-Teil mit der gesamten Spiellogik.
