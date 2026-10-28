@@ -6,8 +6,11 @@
 //! Persons keep their hot fields in one small record each and move in two
 //! phases (ADR-010): phase 1 computes every person from the state of the
 //! previous tick, phase 2 computes commutative counts. The module reads the
-//! modules "Welt & Bau" (walkable cells, number of targets) and
-//! "Wegfindung" (flow fields).
+//! modules "Welt & Bau" (walkable cells, number of targets, orders and
+//! delivery points) and "Wegfindung" (flow fields). Construction workers
+//! (`workers`, ADR-045) are persons of their own kind.
+
+pub mod workers;
 
 use rayon::ThreadPool;
 use rayon::prelude::*;
@@ -15,16 +18,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::build::Build;
 use crate::build::access::AccessProfile;
-use crate::build::grid::{FLOORS, floor_index};
+use crate::build::grid::{FLOORS, GROUND_INDEX, floor_index};
 use crate::geometry::{CellPos, MapSize};
 use crate::hash::StateHasher;
+use crate::internal::InternalEvents;
 use crate::pool::{Kind, Pool};
+use crate::wayfinding::Fields;
 use crate::wayfinding::flowfield::{ARRIVED, DIRS, DOWN, FieldSet, UNREACHABLE, UP};
+use workers::{GROUP_WORKER, Worker, WorkerContext};
 
 /// Walking speed in cells per tick: 0.3 cells per game second, the guide
 /// value of ADR-020 (a 300 m walk takes about 8 game minutes).
 pub const WALK_SPEED: f32 = 0.1;
-const DIAGONAL: f32 = std::f32::consts::FRAC_1_SQRT_2;
+pub(crate) const DIAGONAL: f32 = std::f32::consts::FRAC_1_SQRT_2;
 
 /// Most persons a world holds; the debug command `spawnPersons` stops
 /// there, and a save game with more is rejected (S-5).
@@ -102,6 +108,8 @@ impl Person {
             y: f32::from(self.y) + 0.5 + dy * self.progress,
             floor: self.floor,
             heading: self.heading,
+            group: 0,
+            state: 0,
         }
     }
 }
@@ -118,36 +126,76 @@ pub struct PersonView {
     pub floor: i8,
     /// Direction 0 … 9, `ARRIVED` or `UNREACHABLE` (see `flowfield`).
     pub heading: u8,
+    /// Group of the person in S-1 (ADR-045): 0 undetermined (until 3.2),
+    /// 9 construction worker.
+    pub group: u8,
+    /// State within the group; for construction workers a
+    /// [`workers::WorkerState`].
+    pub state: u8,
 }
 
-/// State of the module: the persons, the second buffer of the step and the
-/// count per floor.
+/// State of the module: the persons, the second buffer of the step, the
+/// construction workers and the count per floor.
 #[derive(Default)]
 pub struct Persons {
     pool: Pool<Person>,
     next: Vec<Person>,
+    workers: Pool<Worker>,
     per_floor: [u32; FLOORS],
 }
 
 impl Persons {
-    /// Number of persons.
+    /// Number of persons, construction workers included.
     #[must_use]
     pub fn len(&self) -> usize {
-        self.pool.len()
+        self.pool.len() + self.workers.len()
     }
 
     /// `true` if there is no person.
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        self.pool.is_empty()
+        self.len() == 0
     }
 
-    /// Calls `visit` with the visible state of every person, in storage
-    /// order.
+    /// Number of construction workers.
+    #[must_use]
+    pub fn workers(&self) -> usize {
+        self.workers.len()
+    }
+
+    /// Calls `visit` with the visible state of every person in storage
+    /// order, then of every construction worker.
     pub fn visit(&self, mut visit: impl FnMut(PersonView)) {
         for p in self.pool.as_slice() {
             visit(p.view());
         }
+        for w in self.workers.as_slice() {
+            let (dx, dy) = DIRS
+                .get(usize::from(w.heading()))
+                .copied()
+                .unwrap_or((0, 0));
+            #[allow(clippy::cast_precision_loss)] // dx, dy are −1, 0 or 1
+            let (dx, dy) = (dx as f32, dy as f32);
+            let pos = w.pos();
+            visit(PersonView {
+                x: f32::from(pos.x) + 0.5 + dx * w.progress(),
+                y: f32::from(pos.y) + 0.5 + dy * w.progress(),
+                floor: pos.floor,
+                heading: w.heading(),
+                group: GROUP_WORKER,
+                state: w.state(),
+            });
+        }
+    }
+
+    /// Visible state of construction worker `index` with the object handle
+    /// of its delivery point (tests and debug tables).
+    #[must_use]
+    pub fn worker(&self, index: usize) -> Option<(CellPos, u8, u32)> {
+        self.workers
+            .as_slice()
+            .get(index)
+            .map(|w| (w.pos(), w.state(), w.delivery()))
     }
 
     /// Persons per floor, index 0 = floor −2.
@@ -156,14 +204,16 @@ impl Persons {
         self.per_floor
     }
 
-    /// Position of person `index`, if it exists.
+    /// Position of person `index` (construction workers not included), if
+    /// it exists.
     #[must_use]
     pub fn position(&self, index: usize) -> Option<CellPos> {
         self.pool.as_slice().get(index).map(Person::pos)
     }
 
     /// `true` while persons are present, which blocks the night skip
-    /// (META-08: no passenger in the terminal).
+    /// (META-08: no passenger in the terminal); construction workers do not
+    /// count.
     #[must_use]
     pub fn has_active(&self) -> bool {
         !self.pool.is_empty()
@@ -223,11 +273,12 @@ impl Persons {
         u32::try_from(self.pool.len() - before).unwrap_or(u32::MAX)
     }
 
-    /// Removes all persons (debug command).
+    /// Removes all persons (debug command); construction workers stay with
+    /// their delivery points.
     pub fn clear(&mut self) {
         self.pool.clear();
         self.next.clear();
-        self.per_floor = [0; FLOORS];
+        self.count_per_floor_serial();
     }
 
     /// Sets every heading from `fields` (start of a session, after the
@@ -238,17 +289,38 @@ impl Persons {
         }
     }
 
+    /// Reacts to the internal events of the step: delivery points bring
+    /// and take their construction workers (ADR-045). Runs in every step,
+    /// also while the game is paused.
+    pub(crate) fn react(&mut self, build: &Build, events: &InternalEvents) {
+        let before = self.workers.len();
+        workers::react(self.workers.items_mut(), build, events);
+        if self.workers.len() != before {
+            self.count_per_floor_serial();
+        }
+    }
+
     /// Simulation step of the module: phase 1 moves every person from the
-    /// state of the previous tick along `fields`, phase 2 computes
-    /// commutative counts.
-    pub(crate) fn advance(&mut self, fields: &FieldSet, targets: usize, pool: &ThreadPool) {
+    /// state of the previous tick along the main set of `fields`, the
+    /// construction workers along their set (serially, ADR-045); phase 2
+    /// computes commutative counts.
+    pub(crate) fn advance(
+        &mut self,
+        build: &Build,
+        fields: &Fields,
+        pool: &ThreadPool,
+        events: &mut InternalEvents,
+    ) {
+        let (main, targets) = (fields.main(), build.targets().len());
         let (persons, next) = (self.pool.items_mut(), &mut self.next);
         pool.install(|| {
             next.par_iter_mut()
                 .zip(persons.par_iter())
-                .for_each(|(out, cur)| *out = step_person(*cur, fields, targets));
+                .for_each(|(out, cur)| *out = step_person(*cur, main, targets));
         });
         std::mem::swap(persons, next);
+        workers::advance(self.workers.items_mut(), build, fields, events);
+        let workers = u32::try_from(self.workers.len()).unwrap_or(u32::MAX);
         self.per_floor = pool.install(|| {
             self.pool
                 .as_slice()
@@ -264,6 +336,7 @@ impl Persons {
                 )
                 .reduce(|| [0u32; FLOORS], add_counts)
         });
+        self.per_floor[GROUND_INDEX] += workers;
     }
 
     fn count_per_floor_serial(&mut self) {
@@ -273,16 +346,18 @@ impl Persons {
                 counts[index] += 1;
             }
         }
+        counts[GROUND_INDEX] += u32::try_from(self.workers.len()).unwrap_or(u32::MAX);
         self.per_floor = counts;
     }
 
-    /// Feeds the state of the module into `hasher`: every person, then the
-    /// count per floor.
+    /// Feeds the state of the module into `hasher`: every person, the count
+    /// per floor, then the construction workers.
     pub fn hash_into(&self, hasher: &mut StateHasher) {
         self.pool.hash_into(hasher);
         for count in self.per_floor {
             hasher.u32(count);
         }
+        workers::hash_into(self.workers.as_slice(), hasher);
     }
 
     /// The persons as stored in a save game (S-5).
@@ -290,32 +365,43 @@ impl Persons {
         self.pool.saved()
     }
 
+    /// The construction workers as stored in a save game (format 4).
+    pub(crate) fn saved_workers(&self) -> Vec<Worker> {
+        self.workers.saved()
+    }
+
     /// `true` if `count` persons of a save game fit under [`MAX_PERSONS`].
     pub(crate) fn fits(count: usize) -> bool {
         Pool::<Person>::fits(count)
     }
 
-    /// Persons of a loaded save game in a world with `map` and `targets`
-    /// targets.
+    /// Persons and construction workers of a loaded save game in a world
+    /// with `map`, `targets` targets and the delivery points `delivery`.
     ///
     /// # Errors
     ///
-    /// `persons` for too many, `person` for the first person off the map, on
-    /// an invalid floor, with an unknown target or heading, or with a step
-    /// share outside 0 … 1.
+    /// `persons` for too many, `person` for the first person off the map,
+    /// on an invalid floor, with an unknown target or heading, or with a
+    /// step share outside 0 … 1; `workers` for too many construction
+    /// workers and `worker` for the first one off the map, with an unknown
+    /// state, heading or delivery point, or a load out of range.
     pub(crate) fn restore(
         saved: Vec<Person>,
+        workers: Vec<Worker>,
         map: MapSize,
         targets: usize,
+        delivery: Vec<u32>,
     ) -> Result<Self, &'static str> {
         let context = PersonContext {
             map,
             targets: targets.max(1),
         };
         let pool = Pool::restore(saved, &context)?;
+        let workers = Pool::restore(workers, &WorkerContext { map, delivery })?;
         let mut persons = Self {
             next: pool.as_slice().to_vec(),
             pool,
+            workers,
             per_floor: [0; FLOORS],
         };
         persons.count_per_floor_serial();
@@ -418,9 +504,9 @@ mod tests {
     #[test]
     fn loaded_persons_are_checked_against_map_and_targets() {
         let map = MapSize::new(64, 64).unwrap();
-        assert!(Persons::restore(vec![person()], map, 1).is_ok());
+        assert!(Persons::restore(vec![person()], Vec::new(), map, 1, Vec::new()).is_ok());
         assert!(
-            Persons::restore(vec![person()], map, 0).is_ok(),
+            Persons::restore(vec![person()], Vec::new(), map, 0, Vec::new()).is_ok(),
             "target 0 without targets"
         );
         for change in [
@@ -433,10 +519,40 @@ mod tests {
         ] {
             let mut p = person();
             change(&mut p);
-            assert_eq!(Persons::restore(vec![p], map, 1).err(), Some("person"));
+            assert_eq!(
+                Persons::restore(vec![p], Vec::new(), map, 1, Vec::new()).err(),
+                Some("person")
+            );
         }
         assert!(!Persons::fits(MAX_PERSONS + 1));
-        let restored = Persons::restore(vec![person(); 3], map, 1).unwrap();
+        // Construction workers belong to a delivery point of the world.
+        let worker = Worker::new_at(
+            CellPos {
+                x: 3,
+                y: 4,
+                floor: 0,
+            },
+            7,
+        );
+        let with = |w: Worker, delivery: Vec<u32>| {
+            Persons::restore(Vec::new(), vec![w], map, 1, delivery).err()
+        };
+        assert_eq!(with(worker, vec![7]), None);
+        assert_eq!(with(worker, vec![8]), Some("worker"), "unknown point");
+        let off = Worker::new_at(
+            CellPos {
+                x: 64,
+                y: 0,
+                floor: 0,
+            },
+            7,
+        );
+        assert_eq!(with(off, vec![7]), Some("worker"), "off the map");
+        let restored = Persons::restore(Vec::new(), vec![worker; 2], map, 1, vec![7]).unwrap();
+        assert_eq!((restored.len(), restored.workers()), (2, 2));
+        assert_eq!(restored.per_floor()[2], 2, "workers on the ground floor");
+        assert!(!restored.has_active(), "workers do not block the night");
+        let restored = Persons::restore(vec![person(); 3], Vec::new(), map, 1, Vec::new()).unwrap();
         assert_eq!(restored.per_floor()[3], 3, "floor 1 counted");
         assert_eq!(restored.saved(), vec![person(); 3]);
     }

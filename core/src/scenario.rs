@@ -617,7 +617,7 @@ mod tests {
     #[test]
     fn unreachable_counts_are_zero_for_the_reference_terminal() {
         let world = reference_terminal(map(), 256, 17, 0, 1).unwrap();
-        let input = crate::wayfinding::Wayfinding::input(world.build());
+        let input = crate::wayfinding::Wayfinding::input(world.build()).main;
         let set = pool(2).install(|| FieldSet::compute(&input, 0));
         assert_eq!(set.targets(), target_count(17));
         let stuck: u32 = (0..set.targets())

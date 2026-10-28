@@ -17,12 +17,14 @@ use crate::build::{Blocks, Build, BuildSnapshot, SavedBuild};
 use crate::geometry::{CellPos, CellRect, MapSize, Rotation};
 use crate::hash::StateHasher;
 use crate::internal::{Entry, InternalEvents, Stage};
+use crate::persons::workers::Worker;
 use crate::persons::{Person, Persons, SplitMix64};
 use crate::savegame::invalid;
 use crate::text::Reason;
 use crate::time::Tick;
-use crate::wayfinding::flowfield::FieldSet;
-use crate::wayfinding::{RestoredWayfinding, SavedWayfinding, Wayfinding, WayfindingSnapshot};
+use crate::wayfinding::{
+    Fields, RestoredWayfinding, SavedWayfinding, Wayfinding, WayfindingSnapshot,
+};
 
 /// The domain modules of one session and the internal events between them.
 pub struct World {
@@ -105,7 +107,7 @@ impl World {
             .collect();
         world.persons.spawn(&world.build, &cells, seed);
         let input = Wayfinding::input(&world.build);
-        world.wayfinding.adopt_fields(FieldSet::compute(&input, 0));
+        world.wayfinding.adopt_fields(Fields::compute(&input, 0));
         world.persons.resample_headings(world.wayfinding.fields());
         world
     }
@@ -369,7 +371,9 @@ impl World {
     ///   step reaches the orders; finished orders take effect (ADR-045).
     /// - "Wegfindung": recomputation for changed grids, then adoption of a
     ///   result that is due.
-    /// - "Personen": movement and target choice.
+    /// - "Personen": construction workers of new and demolished delivery
+    ///   points; movement, target choice and the work of the construction
+    ///   workers (ADR-045).
     pub fn step(
         &mut self,
         pool: &ThreadPool,
@@ -381,9 +385,14 @@ impl World {
         let adopted = self
             .wayfinding
             .step(&self.build, &self.events, background, tick);
+        self.persons.react(&self.build, &self.events);
         if running {
-            self.persons
-                .advance(self.wayfinding.fields(), self.build.targets().len(), pool);
+            self.persons.advance(
+                &self.build,
+                self.wayfinding.all_fields(),
+                pool,
+                &mut self.events,
+            );
         }
         self.events.end_step();
         adopted
@@ -404,6 +413,7 @@ impl World {
             build: self.build.snapshot(),
             wayfinding: self.wayfinding.snapshot(),
             persons: self.persons.saved(),
+            workers: self.persons.saved_workers(),
             events: self.events.saved(),
         }
     }
@@ -415,6 +425,7 @@ pub(crate) struct WorldSnapshot {
     pub build: BuildSnapshot,
     pub wayfinding: WayfindingSnapshot,
     pub persons: Vec<Person>,
+    pub workers: Vec<Worker>,
     pub events: Vec<Entry>,
 }
 
@@ -423,6 +434,7 @@ pub(crate) struct SavedWorld {
     pub build: SavedBuild,
     pub wayfinding: SavedWayfinding,
     pub persons: Vec<Person>,
+    pub workers: Vec<Worker>,
     pub events: Vec<Entry>,
 }
 
@@ -432,6 +444,7 @@ pub(crate) struct RestoredWorld {
     build: Build,
     wayfinding: RestoredWayfinding,
     persons: Vec<Person>,
+    workers: Vec<Worker>,
     events: InternalEvents,
 }
 
@@ -455,6 +468,7 @@ impl RestoredWorld {
             build,
             wayfinding,
             persons: saved.persons,
+            workers: saved.workers,
             events,
         })
     }
@@ -466,12 +480,25 @@ impl RestoredWorld {
     /// # Errors
     ///
     /// `invalidState` naming the broken invariant (`fieldsMap`, `persons`,
-    /// `person`).
+    /// `person`, `workers`, `worker`).
     pub fn into_world(self, background: &ThreadPool, mode: AdoptionMode) -> Result<World, Reason> {
         let map = self.build.map();
         let prepared = self.wayfinding.into_fields(map, background)?;
-        let persons =
-            Persons::restore(self.persons, map, self.build.targets().len()).map_err(invalid)?;
+        let delivery = self
+            .build
+            .delivery_points()
+            .as_slice()
+            .iter()
+            .map(|d| d.handle)
+            .collect();
+        let persons = Persons::restore(
+            self.persons,
+            self.workers,
+            map,
+            self.build.targets().len(),
+            delivery,
+        )
+        .map_err(invalid)?;
         Ok(World {
             build: self.build,
             wayfinding: prepared.resume(mode, background),

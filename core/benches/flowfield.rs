@@ -27,7 +27,7 @@ use openairside_core::geometry::MapSize;
 use openairside_core::scenario::{reference_terminal, target_count};
 use openairside_core::simulation::{Simulation, SimulationConfig};
 use openairside_core::time::Speed;
-use openairside_core::wayfinding::flowfield::FieldSet;
+use openairside_core::wayfinding::Fields;
 
 const PERSONS: u32 = 10_000;
 const TERMINAL_EDGE: u16 = 768;
@@ -107,9 +107,10 @@ fn run() -> Result<bool, String> {
     let mut cells = 0;
     for run in 0..RUNS {
         let start = Instant::now();
-        let set = pool.install(|| FieldSet::compute(&input, 1));
+        let fields = pool.install(|| Fields::compute(&input, 1));
         times.push(start.elapsed().as_secs_f64() * 1e3);
         if run == 0 {
+            let set = fields.main();
             bytes = set.bytes() + set.cells() * 3;
             cells = set.cells();
         }

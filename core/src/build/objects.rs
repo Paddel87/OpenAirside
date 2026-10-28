@@ -292,6 +292,12 @@ fn object_rect(
     }
 }
 
+/// The cells of `rect` in row order.
+#[must_use]
+pub(crate) fn cells_of(rect: CellRect) -> Vec<CellPos> {
+    cells(rect).collect()
+}
+
 /// A wall as opposed to void or a cell blocked by an object: it has a type.
 pub(super) fn is_wall(cell: Cell) -> bool {
     cell.flags & WALL != 0 && cell.wall_kind != 0
