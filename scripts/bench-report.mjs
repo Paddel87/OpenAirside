@@ -2,7 +2,8 @@
 // Writes the result of a core benchmark (core/benches/tick.rs, ADR-022, or
 // core/benches/flowfield.rs, ADR-023, or core/benches/continuous_build.rs, ADR-041) as a Markdown table for the job summary of the CI,
 // compared with the last result on main if one is given (trend display only). The limits
-// are enforced by the benchmark programs themselves.
+// are enforced by the benchmark programs themselves. Since Q.6 it names the processor model
+// and warns if it differs from the run on main, because the change is then not comparable.
 //
 // Aufruf: node scripts/bench-report.mjs <aktuell.json> [<main.json>]
 // Voraussetzungen: Node 26.11.1 (project-context.md Abschnitt 3)
@@ -64,12 +65,32 @@ function format(value, digits, scale) {
   return value === null ? "–" : (value * scale).toFixed(digits);
 }
 
+/** Processor model of a result, or "unbekannt" for results before Q.6. */
+function cpuModel(result) {
+  return typeof result.cpuModel === "string" && result.cpuModel !== "" ? result.cpuModel : null;
+}
+
 function change(current, previous) {
   if (current === null || previous === null || previous === 0) {
     return "–";
   }
   const percent = ((current - previous) / previous) * 100;
   return `${percent >= 0 ? "+" : ""}${percent.toFixed(1)} %`;
+}
+
+/** Names the processor and warns if the run on main had another known model. */
+function processorLines(current, previous) {
+  const now = cpuModel(current);
+  const before = previous === null ? null : cpuModel(previous);
+  const main = previous === null ? "" : `, letzter Lauf auf main: ${before ?? "unbekannt"}`;
+  const lines = [`Prozessor: ${now ?? "unbekannt"}${main}`, ""];
+  if (now !== null && before !== null && now !== before) {
+    lines.push(
+      "**Anderer Prozessor als im letzten Lauf auf main: Änderung nicht vergleichbar.**",
+      "",
+    );
+  }
+  return lines;
 }
 
 /** Builds the Markdown summary from the parsed results; `previous` may be null. */
@@ -86,6 +107,7 @@ export function renderReport(current, previous) {
     `${targets}${String(current.persons)} Personen, ${threads} ` +
       `(${String(current.cpus)} CPUs, ${String(current.os)}), ${String(current.ticks)} Schritte`,
     "",
+    ...processorLines(current, previous),
     "| Kennzahl | aktuell | Grenze | letzter Lauf auf main | Änderung |",
     "|---|---|---|---|---|",
   ];

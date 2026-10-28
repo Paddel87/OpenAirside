@@ -22,6 +22,8 @@ use openairside_core::scenario::reference_terminal;
 use openairside_core::simulation::{Simulation, SimulationConfig};
 use openairside_core::time::Speed;
 
+mod machine;
+
 const PERSONS: u32 = 10_000;
 /// Edge of the reference terminal and gates for 64 targets (45 + 19).
 const TERMINAL_EDGE: u16 = 768;
@@ -99,10 +101,12 @@ fn run() -> Result<bool, String> {
     let passed = mean <= max_mean && p99 <= max_p99;
 
     let cpus = std::thread::available_parallelism().map_or(0, std::num::NonZero::get);
+    let cpu = machine::cpu_model();
+    let cpu_json = serde_json::to_string(&cpu).map_err(|err| err.to_string())?;
     let json = format!(
         concat!(
             "{{\"benchmark\":\"tick\",\"persons\":{},\"threads\":{},\"cpus\":{},",
-            "\"os\":\"{}\",\"ticks\":{},\"meanMs\":{:.4},\"p50Ms\":{:.4},",
+            "\"os\":\"{}\",\"cpuModel\":{},\"ticks\":{},\"meanMs\":{:.4},\"p50Ms\":{:.4},",
             "\"p99Ms\":{:.4},\"maxMs\":{:.4},\"limits\":{{\"meanMs\":{},\"p99Ms\":{}}},",
             "\"finalTick\":{},\"passed\":{}}}\n"
         ),
@@ -110,6 +114,7 @@ fn run() -> Result<bool, String> {
         threads,
         cpus,
         std::env::consts::OS,
+        cpu_json,
         MEASURED,
         mean,
         p50,
@@ -128,6 +133,7 @@ fn run() -> Result<bool, String> {
          mean {mean:.3} ms (limit {max_mean}), p50 {p50:.3} ms, \
          p99 {p99:.3} ms (limit {max_p99}), max {max:.3} ms"
     );
+    println!("processor: {cpu}");
     print!("{json}");
     Ok(passed)
 }

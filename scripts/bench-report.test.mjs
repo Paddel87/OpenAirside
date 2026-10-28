@@ -104,6 +104,31 @@ describe("renderReport for the continuous building benchmark", () => {
   });
 });
 
+describe("renderReport names the processor (Q.6)", () => {
+  const withCpu = { ...current, cpuModel: "AMD EPYC 7763 64-Core Processor" };
+
+  it("names the model of both runs and does not warn if they are equal", () => {
+    const text = renderReport(withCpu, withCpu);
+    expect(text).toContain(
+      "Prozessor: AMD EPYC 7763 64-Core Processor, letzter Lauf auf main: AMD EPYC 7763 64-Core Processor",
+    );
+    expect(text).not.toContain("Anderer Prozessor");
+  });
+
+  it("warns if the run on main had another processor", () => {
+    const text = renderReport(withCpu, { ...withCpu, cpuModel: "Intel(R) Xeon(R) Platinum 8370C" });
+    expect(text).toContain("letzter Lauf auf main: Intel(R) Xeon(R) Platinum 8370C");
+    expect(text).toContain("Anderer Prozessor als im letzten Lauf auf main");
+  });
+
+  it("shows an unknown model without a warning", () => {
+    const older = renderReport(withCpu, current);
+    expect(older).toContain("letzter Lauf auf main: unbekannt");
+    expect(older).not.toContain("Anderer Prozessor");
+    expect(renderReport({ ...current, cpuModel: "" }, null)).toContain("Prozessor: unbekannt\n");
+  });
+});
+
 describe("readResult and main", () => {
   const files = { "now.json": JSON.stringify(current), "bad.json": "{" };
   const read = (path) => {

@@ -39,6 +39,8 @@ use openairside_core::scenario::reference_terminal;
 use openairside_core::simulation::{Simulation, SimulationConfig};
 use openairside_core::time::Speed;
 
+mod machine;
+
 const PERSONS: u32 = 10_000;
 const TERMINAL_EDGE: u16 = 768;
 /// 45 gates and 19 other targets make 64 targets.
@@ -272,10 +274,12 @@ fn run() -> Result<bool, String> {
         && gauges.field_sets_peak <= limits.field_sets
         && gauges.snapshots_peak <= limits.snapshots;
 
+    let cpu = machine::cpu_model();
+    let cpu_json = serde_json::to_string(&cpu).map_err(|err| err.to_string())?;
     let json = format!(
         concat!(
             "{{\"benchmark\":\"continuousBuild\",\"persons\":{},\"actions\":{},\"periodMs\":{},",
-            "\"threads\":{},\"backgroundThreads\":{},\"cpus\":{},\"os\":\"{}\",\"ticks\":{},",
+            "\"threads\":{},\"backgroundThreads\":{},\"cpus\":{},\"os\":\"{}\",\"cpuModel\":{},\"ticks\":{},",
             "\"adoptionsWhileBuilding\":{},\"adoptionsTotal\":{},\"maxGapMs\":{:.0},\"settleMs\":{:.0},",
             "\"jobsPeak\":{},\"fieldSetsPeak\":{},\"snapshotsPeak\":{},",
             "\"peakMemoryMb\":{},\"stepP99Ms\":{:.4},\"aborted\":{},\"timedOut\":{},",
@@ -289,6 +293,7 @@ fn run() -> Result<bool, String> {
         background_threads,
         std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
         std::env::consts::OS,
+        cpu_json,
         step_index,
         building_adoptions,
         adoptions.len(),
@@ -338,6 +343,7 @@ fn run() -> Result<bool, String> {
             ""
         },
     );
+    println!("processor: {cpu}");
     print!("{json}");
     Ok(passed)
 }
