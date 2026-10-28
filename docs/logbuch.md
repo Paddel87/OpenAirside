@@ -24,6 +24,12 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-28 18:00 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** ADR-045 „Bauaufträge mit Bauarbeitern, Anlieferstelle, Gelände in neuen Karten“, freigegeben per Auswahl („A: Auftrag“, „A: Anlieferstelle“, „A: Gelände“, „Übernehmen“).
+- **Tag:** `[REAKTIV]`; Reaktiv-Quote 5 / 10, Reflexion mit Maßnahme (13) in `fahrplan.md` „Iterations-Reflexion“, vom Projektinhaber übernommen.
+- **Auslöser:** Vorlage 3.1c nach Maßnahme (12). 3.1c jetzt `[IN ARBEIT]`.
+
 ### 2026-10-28 17:50 (UTC) – [BEOBACHTUNG]
 
 - **Modellwechsel bestätigt:** Projektinhaber hat nach dem Stopp auf `claude-opus-5-5` gewechselt; `get_session` („self“) meldet `claude-opus-5-5` → Entscheidungs-Klasse aktiv, passt zur Vorlage mit `ENTSCHEIDUNG ERFORDERLICH`.

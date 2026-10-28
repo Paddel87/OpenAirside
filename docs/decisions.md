@@ -57,10 +57,11 @@
 | 042 | 2026-10-25 | Aktiv | REAKTIV | DATENMODELL, SCHNITTSTELLE | Datenmodell, API-Verträge | Wirkung der Objekttypen, Möbel sperren, Abriss berührter Objekte |
 | 043 | 2026-10-26 | Aktiv | OPERATIV | DEPLOYMENT | Build/Deploy | CI-Trigger nur für `main` und PRs, Code-Jobs nicht bei reinen Doku-Änderungen |
 | 044 | 2026-10-26 | Aktiv | ERKENNTNIS | PERFORMANCE | Architektur | Bauaktion im nächsten Bild und Speicher der Weltdarstellung belastbar, Auflage Windows erfüllt |
+| 045 | 2026-10-28 | Aktiv | REAKTIV | DATENMODELL, SCHNITTSTELLE | Datenmodell, API-Verträge, Build/Deploy | Bauaufträge mit Bauarbeitern, Anlieferstelle, Gelände in neuen Karten |
 
 ### Reaktiv-Quote
 
-- **Aktueller Wert:** 4 / 10 über die letzten 10 ADRs (ADR-035 bis ADR-044: ADR-036, ADR-037, ADR-038, ADR-042), 40 % – **über dem Schwellenwert**; gesamt 17 / 44. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-042, 2026-10-25, neues Muster nach Regel-009); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
+- **Aktueller Wert:** 5 / 10 über die letzten 10 ADRs (ADR-036 bis ADR-045: ADR-036, ADR-037, ADR-038, ADR-042, ADR-045), 50 % – **über dem Schwellenwert**; gesamt 18 / 45. Reflexionen in `fahrplan.md` Abschnitt „Iterations-Reflexion" (letzte: Anlass ADR-045, 2026-10-28, neues Muster nach Regel-009); ab Phase 3 eine Reflexion je Phase bei gleichem Muster (Regel-009)
 - **Schwellenwert (in `project-context.md` festgelegt):** maximal 20 % über die letzten 10 ADRs
 - **Bei Überschreitung:** STOPP, Reflexion in `fahrplan.md` ergänzen, prüfen ob Architektur-Refactoring nötig ist.
 
