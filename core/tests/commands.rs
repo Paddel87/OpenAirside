@@ -192,14 +192,16 @@ fn build(object: &str) -> Command {
     }
 }
 
+/// An area beside the cell of [`build`]: an open order occupies its cells
+/// (ADR-045).
 fn build_area(object: &str) -> Command {
     Command::BuildArea {
         object: object.into(),
         area: CellRect {
             floor: 0,
-            x0: 0,
+            x0: 10,
             y0: 0,
-            x1: 3,
+            x1: 13,
             y1: 3,
         },
     }

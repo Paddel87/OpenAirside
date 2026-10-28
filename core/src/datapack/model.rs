@@ -177,7 +177,7 @@ fn default_floor_cost() -> u8 {
 /// Construction workers of a delivery point without `workers` (ADR-045).
 pub const DEFAULT_WORKERS: u8 = 10;
 /// Most construction workers of one delivery point.
-pub const MAX_WORKERS: u8 = 64;
+pub const MAX_WORKERS: u8 = crate::build::orders::MAX_WORKERS;
 /// Longest work of one object type in game minutes.
 pub const MAX_WORK: u16 = 1440;
 /// Work of a floor per cell without `work`, in game minutes (ADR-045).

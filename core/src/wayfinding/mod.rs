@@ -204,7 +204,11 @@ impl Wayfinding {
     ) -> Option<u32> {
         for event in events.for_stage(Stage::Wayfinding) {
             match event {
-                InternalEvent::GridChanged => self.dirty = true,
+                InternalEvent::GridChanged
+                | InternalEvent::SitesChanged
+                | InternalEvent::DeliveryPointBuilt { .. }
+                | InternalEvent::DeliveryPointRemoved { .. } => self.dirty = true,
+                InternalEvent::WorkDone { .. } => {}
             }
         }
         let adopted = self.adopt(background, tick);

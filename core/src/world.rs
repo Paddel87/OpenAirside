@@ -226,6 +226,104 @@ impl World {
             .build_wall(type_id, rect, &mut self.events, Stage::Commands)
     }
 
+    /// Places an order for a single object as a command (S-2 `build`,
+    /// ADR-045).
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::order_object`].
+    #[allow(clippy::too_many_arguments)] // mirrors `Build::order_object`
+    pub fn order_object(
+        &mut self,
+        type_id: &str,
+        size: (u16, u16),
+        blocks: bool,
+        minutes: u16,
+        at: CellPos,
+        rotation: Rotation,
+    ) -> Result<u32, BuildRefusal> {
+        self.build.order_object(
+            type_id,
+            size,
+            blocks,
+            minutes,
+            at,
+            rotation,
+            &mut self.events,
+            Stage::Commands,
+        )
+    }
+
+    /// Places an order for a floor as a command (S-2 `buildArea`, ADR-045).
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::order_floor`].
+    pub fn order_floor(
+        &mut self,
+        type_id: &str,
+        area_kind: AreaKind,
+        cost: u8,
+        minutes: u16,
+        rect: CellRect,
+    ) -> Result<u32, BuildRefusal> {
+        self.build.order_floor(
+            type_id,
+            area_kind,
+            cost,
+            minutes,
+            rect,
+            &mut self.events,
+            Stage::Commands,
+        )
+    }
+
+    /// Places an order for a wall as a command (S-2 `buildArea`, ADR-045).
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::order_wall`].
+    pub fn order_wall(
+        &mut self,
+        type_id: &str,
+        minutes: u16,
+        rect: CellRect,
+    ) -> Result<u32, BuildRefusal> {
+        self.build
+            .order_wall(type_id, minutes, rect, &mut self.events, Stage::Commands)
+    }
+
+    /// Builds a delivery point at once as a command (S-2 `build`, ADR-045).
+    ///
+    /// # Errors
+    ///
+    /// See [`Build::build_delivery_point`].
+    pub fn build_delivery_point(
+        &mut self,
+        type_id: &str,
+        size: (u16, u16),
+        workers: u8,
+        at: CellPos,
+        rotation: Rotation,
+    ) -> Result<u32, BuildRefusal> {
+        self.build.build_delivery_point(
+            type_id,
+            size,
+            workers,
+            at,
+            rotation,
+            &mut self.events,
+            Stage::Commands,
+        )
+    }
+
+    /// Lets every open order take effect now (scenarios and tests that
+    /// build without construction workers, see [`Build::complete_orders`]).
+    pub fn complete_orders(&mut self) {
+        self.build
+            .complete_orders(&mut self.events, Stage::Commands);
+    }
+
     /// Demolishes everything in `rect` as a command (S-2).
     ///
     /// # Errors
@@ -267,8 +365,8 @@ impl World {
     /// the simulation step of a module runs only if `running`. Returns the
     /// revision of adopted flow fields.
     ///
-    /// - "Welt & Bau": no events and no step of its own (building happens
-    ///   in the commands).
+    /// - "Welt & Bau": the work of the construction workers of the previous
+    ///   step reaches the orders; finished orders take effect (ADR-045).
     /// - "Wegfindung": recomputation for changed grids, then adoption of a
     ///   result that is due.
     /// - "Personen": movement and target choice.
@@ -279,6 +377,7 @@ impl World {
         tick: Tick,
         running: bool,
     ) -> Option<u32> {
+        self.build.step(&mut self.events);
         let adopted = self
             .wayfinding
             .step(&self.build, &self.events, background, tick);

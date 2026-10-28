@@ -177,7 +177,7 @@ impl TypeTable {
             .map(String::as_str)
     }
 
-    fn intern(&mut self, id: &str) -> Result<u16, BuildRefusal> {
+    pub(super) fn intern(&mut self, id: &str) -> Result<u16, BuildRefusal> {
         if let Some(n) = self.number(id) {
             return Ok(n);
         }
@@ -213,7 +213,7 @@ impl Occupancy {
         (by0..=by1).flat_map(move |by| (bx0..=bx1).map(move |bx| (rect.floor, bx, by)))
     }
 
-    fn add(&mut self, rect: CellRect, handle: u32) {
+    pub(super) fn add(&mut self, rect: CellRect, handle: u32) {
         for key in Self::blocks_of(rect) {
             let list = self.0.entry(key).or_default();
             // Handles rise, so a new one belongs at the end; a loaded save
@@ -222,7 +222,7 @@ impl Occupancy {
         }
     }
 
-    fn remove(&mut self, rect: CellRect, gone: &BTreeSet<u32>) {
+    pub(super) fn remove(&mut self, rect: CellRect, gone: &BTreeSet<u32>) {
         for key in Self::blocks_of(rect) {
             if let Some(list) = self.0.get_mut(&key) {
                 list.retain(|h| !gone.contains(h));
@@ -235,7 +235,7 @@ impl Occupancy {
 
     /// Handles of the objects that touch a block the rectangle touches,
     /// ascending, each once.
-    fn candidates(&self, rect: CellRect) -> BTreeSet<u32> {
+    pub(super) fn candidates(&self, rect: CellRect) -> BTreeSet<u32> {
         Self::blocks_of(rect)
             .filter_map(|key| self.0.get(&key))
             .flatten()
@@ -244,7 +244,7 @@ impl Occupancy {
     }
 }
 
-fn intersect(a: CellRect, b: CellRect) -> Option<CellRect> {
+pub(super) fn intersect(a: CellRect, b: CellRect) -> Option<CellRect> {
     let r = CellRect {
         floor: a.floor,
         x0: a.x0.max(b.x0),
@@ -255,7 +255,7 @@ fn intersect(a: CellRect, b: CellRect) -> Option<CellRect> {
     (a.floor == b.floor && r.is_non_empty()).then_some(r)
 }
 
-fn cells(rect: CellRect) -> impl Iterator<Item = CellPos> {
+pub(super) fn cells(rect: CellRect) -> impl Iterator<Item = CellPos> {
     (rect.y0..rect.y1).flat_map(move |y| {
         (rect.x0..rect.x1).map(move |x| CellPos {
             x,
@@ -265,8 +265,35 @@ fn cells(rect: CellRect) -> impl Iterator<Item = CellPos> {
     })
 }
 
+/// Footprint of a single object of `size` cells at rotation 0, placed at
+/// `at` with `rotation`; rotations 1 and 3 swap width and depth.
+fn object_rect(
+    size: (u16, u16),
+    at: CellPos,
+    rotation: Rotation,
+) -> Result<CellRect, BuildRefusal> {
+    if at.floor != 0 {
+        return Err(BuildRefusal::FloorLocked);
+    }
+    let (width, depth) = if rotation.0 % 2 == 1 {
+        (size.1, size.0)
+    } else {
+        size
+    };
+    match (at.x.checked_add(width), at.y.checked_add(depth)) {
+        (Some(x1), Some(y1)) if width > 0 && depth > 0 => Ok(CellRect {
+            floor: at.floor,
+            x0: at.x,
+            y0: at.y,
+            x1,
+            y1,
+        }),
+        _ => Err(BuildRefusal::OutOfMap),
+    }
+}
+
 /// A wall as opposed to void or a cell blocked by an object: it has a type.
-fn is_wall(cell: Cell) -> bool {
+pub(super) fn is_wall(cell: Cell) -> bool {
     cell.flags & WALL != 0 && cell.wall_kind != 0
 }
 
@@ -320,7 +347,7 @@ impl Build {
     }
 
     /// Objects that cover at least one cell of `rect`, in handle order.
-    fn objects_touching(&self, rect: CellRect) -> Vec<PlacedObject> {
+    pub(super) fn objects_touching(&self, rect: CellRect) -> Vec<PlacedObject> {
         self.occupancy
             .candidates(rect)
             .into_iter()
@@ -329,19 +356,20 @@ impl Build {
             .collect()
     }
 
-    /// Places a single object (`build`, ADR-042): the whole footprint must
+    /// Places a single object at once (ADR-042): the whole footprint must
     /// be floor without a wall and without another object. `size` is the
     /// footprint in cells at rotation 0; rotations 1 and 3 swap width and
     /// depth. `at` is the cell with the smallest coordinates. With `blocks`
     /// the cells become impassable for persons (and the flow fields are
-    /// recomputed).
+    /// recomputed). The command `build` places an order instead
+    /// ([`Build::order_object`], ADR-045); scenarios build at once.
     ///
     /// # Errors
     ///
     /// [`BuildRefusal::FloorLocked`] above or below the ground floor,
     /// [`BuildRefusal::OutOfMap`] if the footprint leaves the map,
-    /// [`BuildRefusal::Blocked`] for a cell with a wall or an object,
-    /// [`BuildRefusal::NeedsFloor`] for a cell without floor,
+    /// [`BuildRefusal::Blocked`] for a cell with a wall, an object or an
+    /// open order, [`BuildRefusal::NeedsFloor`] for a cell without floor,
     /// [`BuildRefusal::LimitExceeded`] for too many objects or types.
     #[allow(clippy::too_many_arguments)] // one command, one call; a struct would only repeat the fields
     pub fn build_object(
@@ -354,39 +382,50 @@ impl Build {
         events: &mut InternalEvents,
         from: Stage,
     ) -> Result<u32, BuildRefusal> {
-        if at.floor != 0 {
-            return Err(BuildRefusal::FloorLocked);
-        }
-        let (width, depth) = if rotation.0 % 2 == 1 {
-            (size.1, size.0)
-        } else {
-            size
-        };
-        let rect = CellRect {
-            floor: at.floor,
-            x0: at.x,
-            y0: at.y,
-            x1: at.x.saturating_add(width),
-            y1: at.y.saturating_add(depth),
-        };
-        if width == 0
-            || depth == 0
-            || at.x.checked_add(width).is_none()
-            || at.y.checked_add(depth).is_none()
-            || !self.map().contains_rect(rect)
-        {
+        let rect = self.footprint(size, at, rotation)?;
+        self.check_room_for_object()?;
+        self.check_object_cells(rect, true)?;
+        let ty = self.types.intern(type_id)?;
+        self.place_object(ty, rect, rotation.0, blocks, events, from)
+    }
+
+    /// Footprint of a single object on the map (see [`object_rect`]).
+    pub(super) fn footprint(
+        &self,
+        size: (u16, u16),
+        at: CellPos,
+        rotation: Rotation,
+    ) -> Result<CellRect, BuildRefusal> {
+        let rect = object_rect(size, at, rotation)?;
+        if !self.map().contains_rect(rect) {
             return Err(BuildRefusal::OutOfMap);
         }
+        Ok(rect)
+    }
+
+    /// Refuses a further object if the objects or their handles are used
+    /// up.
+    pub(super) fn check_room_for_object(&self) -> Result<(), BuildRefusal> {
         if self.objects.room() == 0 {
             return Err(BuildRefusal::LimitExceeded { max: MAX_OBJECTS });
         }
-        let following = self
-            .next_handle
-            .checked_add(1)
-            .ok_or(BuildRefusal::LimitExceeded {
+        if self.next_handle == u32::MAX {
+            return Err(BuildRefusal::LimitExceeded {
                 max: u32::MAX as usize,
-            })?;
-        if !self.objects_touching(rect).is_empty() {
+            });
+        }
+        Ok(())
+    }
+
+    /// Checks the footprint of a single object: no other object, no open
+    /// order, no wall; with `floor` every cell must have a floor, else only
+    /// be walkable (terrain or floor, ADR-045).
+    pub(super) fn check_object_cells(
+        &self,
+        rect: CellRect,
+        floor: bool,
+    ) -> Result<(), BuildRefusal> {
+        if !self.objects_touching(rect).is_empty() || self.order_touches(rect) {
             return Err(BuildRefusal::Blocked);
         }
         let mut needs_floor = false;
@@ -395,24 +434,41 @@ impl Build {
             if is_wall(cell) {
                 return Err(BuildRefusal::Blocked);
             }
-            needs_floor |= !cell.has_floor();
+            needs_floor |= if floor {
+                !cell.has_floor()
+            } else {
+                !cell.walkable()
+            };
         }
         if needs_floor {
             return Err(BuildRefusal::NeedsFloor);
         }
-        let ty = self.types.intern(type_id)?;
+        Ok(())
+    }
+
+    /// Places an object of type number `ty` on `rect` after the checks.
+    pub(super) fn place_object(
+        &mut self,
+        ty: u16,
+        rect: CellRect,
+        rotation: u8,
+        blocks: bool,
+        events: &mut InternalEvents,
+        from: Stage,
+    ) -> Result<u32, BuildRefusal> {
+        self.check_room_for_object()?;
         let object = PlacedObject {
             handle: self.next_handle,
             ty,
-            x: at.x,
-            y: at.y,
-            floor: at.floor,
-            width,
-            depth,
-            rotation: rotation.0,
+            x: rect.x0,
+            y: rect.y0,
+            floor: rect.floor,
+            width: rect.x1 - rect.x0,
+            depth: rect.y1 - rect.y0,
+            rotation,
             blocks,
         };
-        self.next_handle = following;
+        self.next_handle += 1;
         let pushed = self.objects.push(object);
         debug_assert!(pushed, "room was checked");
         self.occupancy.add(rect, object.handle);
@@ -434,11 +490,12 @@ impl Build {
         Ok(object.handle)
     }
 
-    /// Draws a floor over `rect` (`buildArea` with the effect `floor`,
-    /// ADR-042): floor covering, area kind and cost factor of every cell
-    /// become those of the type; zone and staff zone stay. Wall cells stay
-    /// walls and are not touched; a cell under a blocking object keeps its
-    /// object and stays impassable.
+    /// Draws a floor over `rect` at once (ADR-042): floor covering, area
+    /// kind and cost factor of every cell become those of the type; zone
+    /// and staff zone stay. Wall cells stay walls and are not touched; a
+    /// cell under a blocking object keeps its object and stays impassable.
+    /// The command `buildArea` places an order instead
+    /// ([`Build::order_floor`], ADR-045); scenarios build at once.
     ///
     /// # Errors
     ///
@@ -455,6 +512,20 @@ impl Build {
     ) -> Result<(), BuildRefusal> {
         self.check_area(rect)?;
         let ty = self.types.intern(type_id)?;
+        self.paint_floor(ty, area_kind, cost, rect, events, from);
+        Ok(())
+    }
+
+    /// Draws the floor of type number `ty` after the checks.
+    pub(super) fn paint_floor(
+        &mut self,
+        ty: u16,
+        area_kind: AreaKind,
+        cost: u8,
+        rect: CellRect,
+        events: &mut InternalEvents,
+        from: Stage,
+    ) {
         let under_object = self.blocked_cells(rect);
         let before = self.grid.version();
         for pos in cells(rect) {
@@ -487,12 +558,12 @@ impl Build {
         if self.grid.version() != before {
             events.push(from, InternalEvent::GridChanged);
         }
-        Ok(())
     }
 
-    /// Draws a wall over `rect` (`buildArea` with the effect `wall`,
-    /// ADR-042): every cell becomes impassable and shows the wall type. A
-    /// single object in the area refuses the whole command.
+    /// Draws a wall over `rect` at once (ADR-042): every cell becomes
+    /// impassable and shows the wall type. A single object in the area
+    /// refuses the whole command. The command `buildArea` places an order
+    /// instead ([`Build::order_wall`], ADR-045).
     ///
     /// # Errors
     ///
@@ -511,6 +582,18 @@ impl Build {
             return Err(BuildRefusal::Blocked);
         }
         let ty = self.types.intern(type_id)?;
+        self.paint_wall(ty, rect, events, from);
+        Ok(())
+    }
+
+    /// Draws the wall of type number `ty` after the checks.
+    pub(super) fn paint_wall(
+        &mut self,
+        ty: u16,
+        rect: CellRect,
+        events: &mut InternalEvents,
+        from: Stage,
+    ) {
         let before = self.grid.version();
         for pos in cells(rect) {
             let cell = self.grid.cell(pos).unwrap_or(Cell::VOID);
@@ -528,14 +611,15 @@ impl Build {
         if self.grid.version() != before {
             events.push(from, InternalEvent::GridChanged);
         }
-        Ok(())
     }
 
-    /// Demolishes everything in `rect` (`demolish`, ADR-042): every object
-    /// whose footprint touches the area is removed as a whole, floors and
-    /// walls inside the area become terrain (ADR-045; building happens on
-    /// the ground floor only). The cells of a removed object outside the
-    /// area keep their floor and become passable again.
+    /// Demolishes everything in `rect` (`demolish`, ADR-042): every open
+    /// order whose footprint touches the area is cancelled (ADR-045), every
+    /// object whose footprint touches it is removed as a whole (a delivery
+    /// point with its construction workers), floors and walls inside the
+    /// area become terrain (ADR-045; building happens on the ground floor
+    /// only). The cells of a removed object outside the area keep their
+    /// floor and become passable again.
     ///
     /// # Errors
     ///
@@ -547,6 +631,7 @@ impl Build {
         from: Stage,
     ) -> Result<(), BuildRefusal> {
         self.check_area(rect)?;
+        self.cancel_orders(rect, events, from);
         let before = self.grid.version();
         let removed = self.objects_touching(rect);
         if !removed.is_empty() {
@@ -554,6 +639,7 @@ impl Build {
             self.objects
                 .items_mut()
                 .retain(|o| !gone.contains(&o.handle));
+            self.forget_delivery_points(&gone, events, from);
             for object in &removed {
                 self.occupancy.remove(object.rect(), &gone);
                 if !object.blocks {
@@ -584,7 +670,7 @@ impl Build {
         Ok(())
     }
 
-    fn check_area(&self, rect: CellRect) -> Result<(), BuildRefusal> {
+    pub(super) fn check_area(&self, rect: CellRect) -> Result<(), BuildRefusal> {
         if rect.floor != 0 {
             return Err(BuildRefusal::FloorLocked);
         }

@@ -1,6 +1,8 @@
 //! Building with effect (ADR-042, step 3.1a): `build`, `buildArea` and
 //! `demolish` change the grid and the objects of the world state, a refused
-//! command changes nothing, and the result survives a save game.
+//! command changes nothing, and the result survives a save game. Since
+//! ADR-045 the commands place orders; these tests let the orders take
+//! effect at once.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -69,6 +71,10 @@ impl Game {
         self.next_id += 1;
         self.sim.submit(self.sim.session(), id, command);
         self.sim.step();
+        // The effect of building, not the work of construction workers, is
+        // tested here (ADR-045, see `construction.rs`): open orders take
+        // effect at once.
+        self.sim.world_mut().complete_orders();
         let mut answer = None;
         for record in self.sim.take_events(usize::MAX) {
             self.sim.ack(self.sim.session(), record.seq);

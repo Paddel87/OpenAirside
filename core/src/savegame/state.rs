@@ -21,10 +21,10 @@ use crate::wayfinding::SavedWayfinding;
 use crate::world::{RestoredWorld, SavedWorld, World, WorldSnapshot};
 
 /// The complete world state section, serialised with postcard (ADR-027),
-/// format version 2 (ADR-039): tick, speed, map, the blocks of the grid
-/// (stored once even if several tables share them), then one part per
-/// domain module in their order and the internal events carried into the
-/// next step.
+/// format version 4 (ADR-039, ADR-045): tick, speed, map, the blocks of
+/// the grid (stored once even if several tables share them), then one part
+/// per domain module in their order and the internal events carried into
+/// the next step.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) struct SavedState {
     tick: Tick,

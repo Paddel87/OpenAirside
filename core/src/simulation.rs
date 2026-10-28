@@ -607,8 +607,8 @@ impl Simulation {
             Command::SkipNight {} => self.skip_night(others),
             // Content ids are full ids of the loaded data packs (S-4). The
             // placement of the type must fit the command: `single` for
-            // `build`, `area` for `buildArea` (ADR-042). The effect is
-            // immediate; construction orders with workers follow in 3.1c.
+            // `build`, `area` for `buildArea` (ADR-042). Both place a
+            // construction order; a delivery point stands at once (ADR-045).
             Command::Build {
                 object,
                 at,
@@ -618,23 +618,29 @@ impl Simulation {
                 let Placement::Single { width, depth } = ty.placement else {
                     return Err(rejection(code::INVALID_ARGUMENT));
                 };
-                self.world
-                    .build_object(&ty.id, (width / 2, depth / 2), ty.blocks, *at, *rotation)
-                    .map(drop)
-                    .map_err(|r| refusal(r, Some(&ty.name)))
+                let size = (width / 2, depth / 2);
+                let built = match ty.effect {
+                    Some(Effect::DeliveryPoint { workers }) => self
+                        .world
+                        .build_delivery_point(&ty.id, size, workers, *at, *rotation),
+                    _ => self
+                        .world
+                        .order_object(&ty.id, size, ty.blocks, ty.work, *at, *rotation),
+                };
+                built.map(drop).map_err(|r| refusal(r, Some(&ty.name)))
             }
             Command::BuildArea { object, area } => {
                 let ty = self.object_type(object)?;
                 let built = match (ty.placement, ty.effect) {
-                    (Placement::Area {}, Some(Effect::Floor { area_kind, cost })) => {
-                        self.world.build_floor(&ty.id, area_kind, cost, *area)
-                    }
+                    (Placement::Area {}, Some(Effect::Floor { area_kind, cost })) => self
+                        .world
+                        .order_floor(&ty.id, area_kind, cost, ty.work, *area),
                     (Placement::Area {}, Some(Effect::Wall {})) => {
-                        self.world.build_wall(&ty.id, *area)
+                        self.world.order_wall(&ty.id, ty.work, *area)
                     }
                     _ => return Err(rejection(code::INVALID_ARGUMENT)),
                 };
-                built.map_err(|r| refusal(r, Some(&ty.name)))
+                built.map(drop).map_err(|r| refusal(r, Some(&ty.name)))
             }
             Command::Demolish { area } => self.world.demolish(*area).map_err(|r| refusal(r, None)),
             Command::Debug { action } => self.debug(action),
