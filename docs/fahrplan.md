@@ -12,7 +12,7 @@
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
 - **Aktiver Schritt:** keiner; 3.1c `[ERLEDIGT]` 2026-10-28 (CI grün auf `82be23c`, PR #38, Merge nach Freigabe des Projektinhabers offen); 3.1b `[ERLEDIGT]` 2026-10-26 (Merge mit PR #36), 3.1a `[ERLEDIGT]`, Q.5 `[ERLEDIGT]` (PR #37, `56bdc8c`)
-- **Nächster Schritt:** Merge von PR #38 nach Freigabe des Projektinhabers; danach 3.2. Offen daneben 3.1b-N1 (Grafik-Abnahme, jetzt mit `base:delivery_point`, Zeitpunkt nennt der Projektinhaber)
+- **Nächster Schritt:** Merge von PR #38 nach Freigabe des Projektinhabers; danach 3.2. Wartet auf Freigabe: Q.6 (CPU-Modell im Benchmark-Ergebnis, Vorschlag der KI) Offen daneben 3.1b-N1 (Grafik-Abnahme, jetzt mit `base:delivery_point`, Zeitpunkt nennt der Projektinhaber)
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 5 / 10 (ADR-036 bis ADR-045) über dem Schwellenwert; Reflexion zu ADR-045 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-28, Maßnahme (13); Reflexion zu ADR-042 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-25, Maßnahme (12); Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
@@ -425,6 +425,23 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 | 7.3 | Erfolgskriterien der Vision ohne eigene Messgröße: Spieltest des Projektinhabers über mehrere Stunden („Gleichwertiges Spielerlebnis") und Bilanz des Machbarkeitstests der KI-gestützten Entwicklung (ADR-016) | – |
 
 ### Querschnitt: wiederkehrende Schritte
+
+#### Q.6: CPU-Modell im Benchmark-Ergebnis
+
+- **Status:** WARTET-AUF-FREIGABE (Vorschlag der KI, auf Wunsch des Projektinhabers am 2026-10-28 angelegt; Umsetzung erst nach Freigabe)
+- **Phasentyp-Kontext:** STABILISIERUNG (Querschnitt)
+- **Abhängigkeiten:** keine
+- **Freigabepflichtig:** nein nach `CLAUDE.md` Abschnitt 4: keine neue Abhängigkeit, kein Eingriff in `ci.yml`, nur Ausgabe der Benchmarks und ihrer Zusammenfassung. Als Vorschlag nach Abschnitt 6 („Keine heimlichen Scope-Erweiterungen“) wartet er trotzdem auf die Freigabe des Projektinhabers.
+- **Empfohlene Klasse:** Routine – durchspezifizierte Testwartung ohne Architektur- oder Freigabewirkung.
+- **Eingangskriterien:** Freigabe des Projektinhabers
+- **Anforderungen (ab Klasse M):** – (Infrastruktur)
+- **Anlass:** Logbuch 2026-10-28 21:45 UTC. Der Wegweiser-Benchmark fiel auf dem Runner von 2,55–2,70 s (Läufe auf `main` 2026-10-21 bis 26) auf 1,93 s (PR #38); die Nachmessung auf dem Mac zeigt, dass es nicht am Code liegt. Image des Runners in beiden Läufen gleich, das CPU-Modell steht weder im Protokoll noch im Ergebnis. Auch der Sprung von 1,39 auf 2,58 s am 2026-10-21 ist ohne diese Angabe nicht einzuordnen.
+- **Zu tun:** Die drei Benchmarks (`core/benches/tick.rs`, `flowfield.rs`, `continuous_build.rs`) schreiben das Feld `cpuModel` neben `cpus` und `os` in ihr JSON und in die Textzeile. Quelle ohne neue Abhängigkeit: unter Linux `model name` aus `/proc/cpuinfo`, unter macOS `sysctl -n machdep.cpu.brand_string`, unter Windows die Umgebungsvariable `PROCESSOR_IDENTIFIER`; sonst `unknown`. Ein Fehler beim Lesen macht den Benchmark nicht rot. `scripts/bench-report.mjs` zeigt das Modell in der Zusammenfassung und vermerkt, wenn es vom Vergleichslauf auf `main` abweicht („anderer Prozessor, Trend nicht vergleichbar“). Fehlt das Feld im Vergleichslauf (ältere Ergebnisse), keine Warnung, nur „unbekannt“.
+- **Akzeptanzkriterien:** Unit-Tests für `bench-report.mjs` (gleiches Modell, anderes Modell, Feld fehlt) grün; im CI-Lauf des PR steht das CPU-Modell des Runners in allen drei Ergebnissen und in der Job-Zusammenfassung; lokal auf dem Mac erscheint `Apple M3 Pro`; Grenzen und Bewertung der Benchmarks unverändert.
+- **Betroffene Module:** Benchmark & Leistung (`core/benches/`), Build/CI (nur `scripts/bench-report.mjs`)
+- **Reifegrad-Wirkung:** keine
+- **Artefakte:** `core/benches/*.rs`, `scripts/bench-report.mjs` mit Tests, `docs/architecture.md` Abschnitt „Leistungstest in der CI“ (ein Satz)
+- **Notizen:** Der Sprung vom 2026-10-21 lässt sich damit nicht rückwirkend klären; die Angabe hilft erst ab dem ersten Lauf mit dem Feld.
 
 #### Q.5: CI-Trigger nur für `main` und PRs, Code-Jobs nicht bei reinen Doku-Änderungen
 
