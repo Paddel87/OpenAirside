@@ -17,12 +17,28 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, 3.1a ist erledigt und gemergt (PR #35), 3.1b ist im Code fertig und wartet auf Messungen und Grafik-Abnahme des Projektinhabers (`docs/research/3.1b-messung.md`), danach 3.1c.
+Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-1.md`. Phase 2 (Fundament) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036), Detail-Einträge in `docs/archiv/logbuch-phase-2.md`. Phase 3 (Vertikaler Schnitt „Kleiner Flughafen“) läuft: ausgeplant mit 13 Schritten, jetzt 15. 3.7, 3.8, 3.14, 3.15 und 3.9 sind erledigt, 3.10 und Q.4 sind erledigt, 3.1a und 3.1b sind erledigt und gemergt (PR #35, #36), 3.1c (Bauaufträge und Bauarbeiter, ADR-045) ist im Code fertig und wartet auf CI und die Freigabe des Merges; offen daneben 3.1b-N1.
 
 ---
 
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
+
+### 2026-10-28 18:25 (UTC) – [BEOBACHTUNG]
+
+- **3.1c im Code fertig:** Commits `f84e8d4` (Gelände bei `game.new`), `40bd6c1` (S-4 `work`, `deliveryPoint`, Basispaket `base:delivery_point` mit Testgrafik, Schema), `0388b01` (Aufträge und Anlieferstellen in Welt & Bau, interne Ereignisse, Format 4), `510de51` (Bauarbeiter in Personen, Satz der Bauarbeiter in derselben Neuberechnung), `a516138` (S-1 Zustände und Gruppen), `c355c0e` (durchscheinende Darstellung), `4d3bfad` (Wegweiser-Benchmark auf einer Baustelle), `d1a7378` (Rauchtest zählt die Objekte), `c4c4255` (Verträge, Architektur, README).
+- **Geprüft lokal (Mac M3 Pro):** `cargo fmt --check`, `cargo clippy --all-targets --all-features -D warnings`, `cargo test --workspace` grün (darunter `core/tests/construction.rs` mit 9 Tests, Unit-Tests für Aufträge, Bauarbeiter, Anzeige der Aufträge und Gruppe im Bild); `npm run check:types`, `npm run check:schema`, `npm run check:graphics`, ESLint, Prettier, `tsc`, Vitest (486 Tests) grün; Playwright: `smoke.spec` grün, `world.spec` scheitert nur am deutschen Hinweistext (Systemsprache Deutsch auf diesem Mac, „Sitzbank braucht Boden …“ statt „Bench needs floor“; in der CI englisch).
+- **Wegweiser-Benchmark lokal (11 Kerne):** beide Sätze 429 ms (Grenze 4000), Satz der Bauarbeiter allein 118 ms auf 4,19 Mio. Zellen mit 2 Feldern, 122 MB, Schritt p99 0,97 ms. Maßgeblich ist der Runner (4 vCPU, bisher 2,4–3,2 s); Ergebnis folgt mit der CI.
+- **Sichtprüfung in der echten Anwendung (Playwright, Bildschirmfotos):** geplanter Boden und geplante Wand durchscheinend über dem Gelände, Anlieferstelle mit Testgrafik, Bauarbeiter als blaue Punkte; bei 3× nach rund 8 s der Boden fertig, später die Wand, danach warten die Bauarbeiter an der Anlieferstelle.
+- **Festlegungen der KI im Rahmen von ADR-045** (keine Kategorie aus `CLAUDE.md` Abschnitt 4 neu berührt, dem Projektinhaber im PR zur Kenntnis): (1) Ein Abriss im Erdgeschoss hinterlässt Gelände statt Leere – sonst entstünden Löcher, die Bauarbeiter nie mehr betreten (der in 3B verworfene Fall); (2) Möbel auf einem noch nicht gebauten Boden werden mit `blocked` abgelehnt (Folge von „ein offener Auftrag belegt seine Zellen“); (3) eine Anlieferstelle sperrt nie, `blocks` und `work` sind dort `invalidStructure`; (4) ein Bauarbeiter auf einer Zelle, die für ihn nicht mehr begehbar ist (fertige Wand über einem Vorbeigehenden), kommt an seine Anlieferstelle zurück; (5) zusätzliche Prüfungen beim Laden `deliveryPoints` und `deliveryFields` neben `orders`, `orderCells`, `worker`; Grenze `workers` 1.024 (16 × 64); (6) beide Sätze einer Neuberechnung zählen im Dauerbau-Gate als ein Feldsatz (Zähler unverändert, wie in der Vorlage); (7) Personen ohne Gruppe starten nur auf Zellen, die Fluggäste betreten dürfen (Debug `spawnPersons` setzt niemanden auf Gelände); (8) Bauarbeiter zählen bei „Personen in der Welt“ mit, sperren aber den Nachtsprung nicht.
+- **Modell:** Entscheidungs-Klasse (Opus 5.5); die Umsetzung (Routine) lief oberhalb ihrer Empfehlung, keine Abgabe (Probelauf offen).
+
+### 2026-10-28 17:40 (UTC) – [SESSIONSTART]
+
+- **Anlass:** neue Session, gestartet aus der Session des Projektinhabers mit dem Auftrag „Rest von 3.1c umsetzen“ auf dem bestehenden Branch `feat/3-1c-bauauftraege-und-bauarbeiter` (Stand `377e83e`, sauber, nicht gepusht).
+- **Letzter Stand:** `[SESSIONENDE]` 2026-10-28 17:40 UTC; 3.1c `[IN ARBEIT]` nach ADR-045, Topologie je Feldsatz erledigt (`9b36e7d`).
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Schritt 3.1, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht); Vertiefung: ADR-045, `docs/research/3.1c-vorlage.md`.
+- **Modell:** eingestellt und bedient `claude-opus-5-5` laut `get_session` („self“) → Entscheidungs-Klasse. Die Umsetzung ist Routine (Schritt 3.1) und läuft damit oberhalb ihrer Empfehlung; keine Abgabe an Unteragenten, weil der Probelauf der Routine-Klasse offen ist. Die Bewertungen (Benchmark-Grenze, Abweichungen von der Vorlage) sind Entscheidung.
 
 ### 2026-10-28 17:40 (UTC) – [SESSIONENDE]
 
