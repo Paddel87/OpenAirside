@@ -24,6 +24,18 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-28 21:15 (UTC) – [SESSIONENDE]
+
+- **Session-Dauer:** Fortsetzung der Session 17:40 UTC nach Zusammenfassung des Kontexts, 21:10 bis 21:15 UTC.
+- **Bearbeitet:** Auswertung der CI von PR #38; Auto-fix für den PR auf Wunsch des Projektinhabers eingeschaltet.
+- **Erreicht:** CI grün auf `82be23c` (Lauf 40744977749, 23 Checks). Wegweiser-Benchmark auf dem Runner (4 vCPU, Linux): Neuberechnung beider Sätze Median 1.935 ms (min 1.922, max 2.009; Grenze 4.000 ms), Satz der Bauarbeiter allein 184 ms (2 Felder auf 4.194.304 Zellen), Speicher der Felder 122 MB, Schritt während der Neuberechnung p99 0,50 ms (Grenze 4 ms). Die Sorge vom Sessionende 18:30 hat sich nicht bestätigt: der Hauptsatz lag früher bei 2,4–3,2 s, jetzt mit beiden Sätzen bei 1,9 s. Die Ursache ist nicht gemessen; naheliegend ist die eigene Topologie je Feldsatz (`9b36e7d`), ein anderer Runner ist nicht ausgeschlossen. Dauerbau längste Lücke 1.995 ms, letzter Stand nach 3.795 ms (Grenze je 8.000 ms), Spitze 230 MB. Takt mit 10.000 Personen Mittel 0,06 ms, p99 0,12 ms. Coverage Kern 98,17 % Zeilen (`build/orders.rs` 96,81 %, `persons/workers.rs` 92,02 %, `wayfinding/mod.rs` 99,50 %), TypeScript 81,25 % Zeilen. 3.1c und damit 3.1 `[ERLEDIGT]`.
+- **Offen geblieben:** Merge von PR #38 nach Freigabe des Projektinhabers; 3.1b-N1.
+- **Nächster Schritt:** nach dem Merge 3.2.
+- **Modell-Bilanz:** Entscheidungs-Klasse aktiv (Opus 5.5, Systemkontext). Ein Schritt oberhalb seiner Empfehlung (Fahrplan-Status-Update, Routine); nichts abgegeben, Probelauf offen.
+- **Kontextgröße:** nicht feststellbar; nach der Zusammenfassung klein.
+- **Ablaufdaten-Prüfung:** unverändert gegenüber 18:30 UTC.
+- **README und Drift:** Projektphase und „Nächste Schritte“ angepasst; Reifegrad-Zeile der Wegfindung um die Runner-Messung ergänzt (Reifegrad unverändert). Keine weitere Drift.
+
 ### 2026-10-28 18:30 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** 2026-10-28 17:40 bis 18:30 UTC.

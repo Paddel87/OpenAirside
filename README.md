@@ -30,7 +30,7 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 
 ## Aktueller Status
 
-- **Projektphase:** Phase 3: Vertikaler Schnitt „Kleiner Flughafen“ (UMSETZUNG), Entwurfsschritte 3.7 (Personengruppen, Begehbarkeit und Querungen, ADR-037) und 3.8 (Weltdarstellung im Spielfeld, ADR-038) sowie die Messung 3.14, die Korrektur 3.15 (Ruckeln unter Windows) und die Umbauten 3.9 (Kernstruktur der Fachmodule, ADR-039) und 3.10 (Aufteilung der Plattform-Datei `main.ts`) erledigt; Schritt 3.1 (Bauen im Raster) in Stufen: 3.1a Kern erledigt, 3.1b Darstellung und Bedienung erledigt (Messungen auf Referenz-PC und Mac bestanden, ADR-044; Grafik-Abnahme verschoben auf 3.1b-N1), 3.1c Bauaufträge und Bauarbeiter im Code fertig (ADR-045), Abschluss nach CI und Freigabe; Phase 2 (Fundament: Projektgerüst und CI, Weltmaßstab, Schnittstellenverträge, Takt, Raster und Wegweiser, Brücke und Plattform, Datenpakete, Spielstände, Lokalisierung, Grafik-Pipeline) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036); Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
+- **Projektphase:** Phase 3: Vertikaler Schnitt „Kleiner Flughafen“ (UMSETZUNG), Entwurfsschritte 3.7 (Personengruppen, Begehbarkeit und Querungen, ADR-037) und 3.8 (Weltdarstellung im Spielfeld, ADR-038) sowie die Messung 3.14, die Korrektur 3.15 (Ruckeln unter Windows) und die Umbauten 3.9 (Kernstruktur der Fachmodule, ADR-039) und 3.10 (Aufteilung der Plattform-Datei `main.ts`) erledigt; Schritt 3.1 (Bauen im Raster) in Stufen: 3.1a Kern erledigt, 3.1b Darstellung und Bedienung erledigt (Messungen auf Referenz-PC und Mac bestanden, ADR-044; Grafik-Abnahme verschoben auf 3.1b-N1), 3.1c Bauaufträge und Bauarbeiter erledigt (ADR-045, Merge nach Freigabe); Phase 2 (Fundament: Projektgerüst und CI, Weltmaßstab, Schnittstellenverträge, Takt, Raster und Wegweiser, Brücke und Plattform, Datenpakete, Spielstände, Lokalisierung, Grafik-Pipeline) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036); Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
 - **Version:** v0.0.0
 - **Status:** Konzeption
 - **Letzte Änderung:** 2026-10-25
@@ -95,7 +95,7 @@ Sprache und Einstellungen: Die Oberfläche gibt es auf Deutsch und Englisch, bei
 
 ## Nächste Schritte
 
-- 3.1c: Bauaufträge mit Bauarbeitern – Abschluss nach grüner CI und Freigabe des Merges
+- 3.1c: Bauaufträge mit Bauarbeitern – Merge von PR #38 nach Freigabe
 - 3.1b-N1: Abnahme der Grafiken für Boden, Wand und Sitzbank, Zeitpunkt nennt der Projektinhaber
 - 3.2: Kleines Terminal und Passagierablauf
 
