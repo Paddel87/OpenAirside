@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-28 (Vorlage 3.1c vorgelegt, wartet auf Freigabe; zuvor 2026-10-26: 3.1b erledigt nach Nachmessung auf Referenz-PC und Mac, ADR-044; Q.5 CI-Trigger erledigt und gemergt, PR #37; Grafik-Abnahme als 3.1b-N1)
+- **Stand vom:** 2026-10-28 (3.1c in Arbeit nach ADR-045, erster Kernteil „Topologie je Feldsatz“ `9b36e7d`; zuvor 2026-10-26: 3.1b erledigt nach Nachmessung auf Referenz-PC und Mac, ADR-044; Q.5 CI-Trigger erledigt und gemergt, PR #37; Grafik-Abnahme als 3.1b-N1)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** keiner; 3.1b `[ERLEDIGT]` 2026-10-26 (Merge mit PR #36), 3.1a `[ERLEDIGT]`, Q.5 `[ERLEDIGT]` (PR #37, `56bdc8c`)
-- **Nächster Schritt:** Umsetzung 3.1c nach ADR-045 (Branch `feat/3-1c-bauauftraege-und-bauarbeiter`); empfohlene Klasse laut Schritt 3.1; offen daneben 3.1b-N1 (Grafik-Abnahme, Zeitpunkt nennt der Projektinhaber)
+- **Aktiver Schritt:** 3.1c `[IN ARBEIT]` (Branch `feat/3-1c-bauauftraege-und-bauarbeiter`, nicht gepusht); 3.1b `[ERLEDIGT]` 2026-10-26 (Merge mit PR #36), 3.1a `[ERLEDIGT]`, Q.5 `[ERLEDIGT]` (PR #37, `56bdc8c`)
+- **Nächster Schritt:** Rest von 3.1c nach ADR-045 und `docs/research/3.1c-vorlage.md` Abschnitt 5: Gelände bei `game.new`, Bauaufträge und Anlieferstelle in Welt & Bau, Bauarbeiter in Personen, Satz der Bauarbeiter in der Wegfindung, Spielstand Format 4, S-1-Zustände, S-4 `deliveryPoint`/`work` mit Basispaket, durchscheinende Darstellung im Spielfeld, `core/tests/construction.rs`, Benchmarks, Verträge; empfohlene Klasse laut Schritt 3.1; offen daneben 3.1b-N1 (Grafik-Abnahme, Zeitpunkt nennt der Projektinhaber)
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 5 / 10 (ADR-036 bis ADR-045) über dem Schwellenwert; Reflexion zu ADR-045 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-28, Maßnahme (13); Reflexion zu ADR-042 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-25, Maßnahme (12); Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->

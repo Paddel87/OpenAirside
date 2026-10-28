@@ -24,27 +24,41 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
-### 2026-10-28 18:40 (UTC) – [PROBLEM-GELÖST]
+### 2026-10-28 17:40 (UTC) – [SESSIONENDE]
 
-- **Kontext:** Mac ohne Entwicklungsumgebung (Eintrag 18:20 UTC); der Projektinhaber hat die Installation nach `docs/onboarding-runbook.md` freigegeben.
+- **Session-Dauer:** 2026-10-28 17:11 bis 17:40 UTC.
+- **Bearbeitet:** 3.1c: Vorlage vor dem Code (Maßnahme 12), Freigabe als ADR-045 (reaktiv, Reflexion mit Maßnahme 13), Einrichtung der Werkzeuge auf dem Mac, erster Kernteil „Topologie je Feldsatz“.
+- **Erreicht:** Commits `3b7d247` (Vorlage), `f438c2c` (ADR-045), `9b36e7d` (Topologie je Feldsatz; fmt, clippy, alle Kern-Tests grün), `bb60001` (Logbuch). Branch `feat/3-1c-bauauftraege-und-bauarbeiter`, nicht gepusht, keine CI gelaufen.
+- **Offen geblieben:** Rest von 3.1c (Fahrplan „Nächster Schritt“); `fnm env` in `~/.zshrc` und `pipx ensurepath` trägt der Projektinhaber ein (Eintrag 17:35 UTC); 3.1b-N1.
+- **Nächster Schritt:** neue Session, Einstieg über dieses Logbuch; Gelände bei `game.new` und Bauaufträge in Welt & Bau.
+- **Modell-Bilanz:** bis 17:19 UTC Routine-Klasse (Sonnet 5.5), danach Entscheidungs-Klasse (Opus 5.5, Wechsel durch den Projektinhaber nach Stopp). Ein Schritt oberhalb seiner Empfehlung: die Werkzeug-Einrichtung und der Topologie-Code (Routine) liefen auf Entscheidung; keine Abgabe an Unteragenten (Probelauf offen).
+- **Kontextgröße:** nicht feststellbar (`get_session` liefert sie hier nicht); geschätzt über 250.000 Token, daher Wechsel in eine neue Session auf Wunsch des Projektinhabers.
+- **Zeitstempel:** Die Einträge 17:23 bis 17:35 UTC trugen zunächst geschätzte, zu späte Zeiten (17:50 bis 18:40); korrigiert anhand der Commit-Zeiten.
+- **Archivierung:** Logbuch über 800 Zeilen (Trigger `CLAUDE.md` Abschnitt 14), aber alle Einträge stammen aus dem laufenden Monat (Phase 1 und 2 sind schon ausgelagert); eine vorletzte Monats-Scheibe gibt es nicht. Auslagerung beim `[PHASEN-WECHSEL]` nach Phase 3 oder Anfang November.
+- **Ablaufdaten-Prüfung:** Electron 44 Ende 2027-03-02, Vorlauf ab 2027-01-02 noch nicht erreicht; keine weitere Frist fällig.
+- **README:** „Nächste Schritte“ nennt 3.1c, 3.1b-N1, 3.2 – keine Drift.
+
+### 2026-10-28 17:35 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** Mac ohne Entwicklungsumgebung (Eintrag 17:30 UTC); der Projektinhaber hat die Installation nach `docs/onboarding-runbook.md` freigegeben.
 - **Lösung:** `rustup` per offiziellem Installer mit `--profile minimal` (Toolchain 1.98.1 aus `rust-toolchain.toml` beim ersten `cargo`-Aufruf nachgeladen); Homebrew `fnm` und `pipx`; `fnm install 26.11.1`, `fnm default 26.11.1`; `pipx install pre-commit` (4.7.0); `pre-commit install` im Repository; `npm ci` mit Node 26.11.1.
 - **Nicht gemacht:** Der Eintrag `eval "$(fnm env --use-on-cd --shell zsh)"` in `~/.zshrc` wurde von der Rechteprüfung der Sitzung abgelehnt; `pipx ensurepath` ebenso nicht ausgeführt. In neuen Terminals ist deshalb noch Node 24.15.0 aus `/usr/local/bin` aktiv, und `pre-commit` liegt in `~/.local/bin` außerhalb des PATH. Der Projektinhaber trägt beides selbst ein; die KI setzt den PATH je Befehl.
 - **Geprüft:** `cargo fmt --check`, `cargo clippy -p openairside-core --all-targets --all-features -- -D warnings`, `cargo test -p openairside-core` grün (168 Unit-Tests, darunter der neue Test zur Topologie je Feldsatz, und alle Integrationstests).
 - **Aufwand:** etwa 15 Minuten.
 
-### 2026-10-28 18:20 (UTC) – [BEOBACHTUNG]
+### 2026-10-28 17:30 (UTC) – [BEOBACHTUNG]
 
 - **Mac ohne Entwicklungsumgebung:** Diese Session läuft auf dem Mac des Projektinhabers (Apple M3 Pro). Dort fehlen `rustup`/`cargo`, `pre-commit` ist nicht installiert (kein `.git/hooks/pre-commit`), Node ist 24.15.0 statt 26.11.1 (`docs/project-context.md` Abschnitt 3). Bisherige Sessions bauten und prüften im Container.
 - **Folge:** Die beiden Doku-Commits `3b7d247` und `f438c2c` liefen **ohne** Pre-Commit-Hook (DoD-Punkt offen; markdownlint prüft erst die CI). Der erste Code-Teil von 3.1c (Topologie je Feldsatz: `Rules::union`, `FieldInput::ground_only`, Test `each_set_covers_only_blocks_its_persons_may_stand_in`) ist geschrieben, aber nicht übersetzt und nicht getestet; er bleibt uncommittet, bis eine Rust-Werkzeugkette bereitsteht.
 - **Offen:** Entscheidung des Projektinhabers, ob die Werkzeuge nach `docs/onboarding-runbook.md` auf dem Mac installiert werden oder die Arbeit im Container weitergeht.
 
-### 2026-10-28 18:00 (UTC) – [ADR-ANGELEGT]
+### 2026-10-28 17:27 (UTC) – [ADR-ANGELEGT]
 
 - **ADR:** ADR-045 „Bauaufträge mit Bauarbeitern, Anlieferstelle, Gelände in neuen Karten“, freigegeben per Auswahl („A: Auftrag“, „A: Anlieferstelle“, „A: Gelände“, „Übernehmen“).
 - **Tag:** `[REAKTIV]`; Reaktiv-Quote 5 / 10, Reflexion mit Maßnahme (13) in `fahrplan.md` „Iterations-Reflexion“, vom Projektinhaber übernommen.
 - **Auslöser:** Vorlage 3.1c nach Maßnahme (12). 3.1c jetzt `[IN ARBEIT]`.
 
-### 2026-10-28 17:50 (UTC) – [BEOBACHTUNG]
+### 2026-10-28 17:23 (UTC) – [BEOBACHTUNG]
 
 - **Modellwechsel bestätigt:** Projektinhaber hat nach dem Stopp auf `claude-opus-5-5` gewechselt; `get_session` („self“) meldet `claude-opus-5-5` → Entscheidungs-Klasse aktiv, passt zur Vorlage mit `ENTSCHEIDUNG ERFORDERLICH`.
 - **Vorlage 3.1c** (`docs/research/3.1c-vorlage.md`) nach Maßnahme (12): Je Teilaufgabe die gelesenen Daten mit Fundstelle. Funde: (1) Bau-Befehle ändern ihre Bedeutung (S-2 „Wirkung im Schritt der Annahme“) → nicht additiv; (2) ein neues Spiel ist vollständig Leere (`World::new`, `Cell::VOID`), Bauarbeiter könnten nirgends gehen; (3) die Topologie der Wegweiser ist für alle Profile gleich (Blöcke mit irgendeiner begehbaren Zelle) – begehbares Gelände würde jedes Fluggast-Feld über das ganze Erdgeschoss ziehen, deshalb eine Topologie je Feldsatz; (4) Gruppen-Nummern in S-1 nirgends festgelegt; (5) Arbeitsmenge und Anlieferstelle fehlen in S-4.
