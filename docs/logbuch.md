@@ -24,6 +24,20 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-28 18:40 (UTC) – [PROBLEM-GELÖST]
+
+- **Kontext:** Mac ohne Entwicklungsumgebung (Eintrag 18:20 UTC); der Projektinhaber hat die Installation nach `docs/onboarding-runbook.md` freigegeben.
+- **Lösung:** `rustup` per offiziellem Installer mit `--profile minimal` (Toolchain 1.98.1 aus `rust-toolchain.toml` beim ersten `cargo`-Aufruf nachgeladen); Homebrew `fnm` und `pipx`; `fnm install 26.11.1`, `fnm default 26.11.1`; `pipx install pre-commit` (4.7.0); `pre-commit install` im Repository; `npm ci` mit Node 26.11.1.
+- **Nicht gemacht:** Der Eintrag `eval "$(fnm env --use-on-cd --shell zsh)"` in `~/.zshrc` wurde von der Rechteprüfung der Sitzung abgelehnt; `pipx ensurepath` ebenso nicht ausgeführt. In neuen Terminals ist deshalb noch Node 24.15.0 aus `/usr/local/bin` aktiv, und `pre-commit` liegt in `~/.local/bin` außerhalb des PATH. Der Projektinhaber trägt beides selbst ein; die KI setzt den PATH je Befehl.
+- **Geprüft:** `cargo fmt --check`, `cargo clippy -p openairside-core --all-targets --all-features -- -D warnings`, `cargo test -p openairside-core` grün (168 Unit-Tests, darunter der neue Test zur Topologie je Feldsatz, und alle Integrationstests).
+- **Aufwand:** etwa 15 Minuten.
+
+### 2026-10-28 18:20 (UTC) – [BEOBACHTUNG]
+
+- **Mac ohne Entwicklungsumgebung:** Diese Session läuft auf dem Mac des Projektinhabers (Apple M3 Pro). Dort fehlen `rustup`/`cargo`, `pre-commit` ist nicht installiert (kein `.git/hooks/pre-commit`), Node ist 24.15.0 statt 26.11.1 (`docs/project-context.md` Abschnitt 3). Bisherige Sessions bauten und prüften im Container.
+- **Folge:** Die beiden Doku-Commits `3b7d247` und `f438c2c` liefen **ohne** Pre-Commit-Hook (DoD-Punkt offen; markdownlint prüft erst die CI). Der erste Code-Teil von 3.1c (Topologie je Feldsatz: `Rules::union`, `FieldInput::ground_only`, Test `each_set_covers_only_blocks_its_persons_may_stand_in`) ist geschrieben, aber nicht übersetzt und nicht getestet; er bleibt uncommittet, bis eine Rust-Werkzeugkette bereitsteht.
+- **Offen:** Entscheidung des Projektinhabers, ob die Werkzeuge nach `docs/onboarding-runbook.md` auf dem Mac installiert werden oder die Arbeit im Container weitergeht.
+
 ### 2026-10-28 18:00 (UTC) – [ADR-ANGELEGT]
 
 - **ADR:** ADR-045 „Bauaufträge mit Bauarbeitern, Anlieferstelle, Gelände in neuen Karten“, freigegeben per Auswahl („A: Auftrag“, „A: Anlieferstelle“, „A: Gelände“, „Übernehmen“).
@@ -46,6 +60,7 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 - **Modell:** eingestellt `claude-sonnet-5-5`, bedient `claude-sonnet-5-5` laut `get_session` („self“) 17:19 UTC → Routine-Klasse. Kontingent: `get_session` liefert hier keine `rate_limit_info`, nicht feststellbar.
 - **Vorhaben und Klasse:** Schritt 3.1 empfiehlt Entscheidung für die Bewertung, Routine für die Umsetzung. Die Vorlage vor dem Code mit `ENTSCHEIDUNG ERFORDERLICH` ist Eskalations-Auslöser 1 (`CLAUDE.md` Abschnitt 0): Stopp mit Modellwechsel auf die Entscheidungs-Klasse, bevor die Vorlage entsteht.
 
+### 2026-10-26 15:15 (UTC) – [BEOBACHTUNG]
 
 - **Merges nach Freigabe des Projektinhabers** („Merge du beide, erst #37, dann #36“): PR #37 (Q.5, ADR-043) gemergt als `56bdc8c`; `main` in den Branch von 3.1b geholt. Konflikte nur in `docs/decisions.md` (Teil A: Zeilen ADR-043 und ADR-044, Reaktiv-Quote jetzt 4 / 10 über ADR-035 bis ADR-044, gesamt 17 / 44) und `docs/logbuch.md` (Einträge beider Branches nach Zeit geordnet).
 - **3.1b `[ERLEDIGT]`:** DoD erfüllt, CI grün auf `1dd8082` (39 Checks); Merge-Stand läuft durch die neue CI (Code aus `main` enthalten, daher voller Lauf). Grafik-Abnahme bleibt als 3.1b-N1 offen.
