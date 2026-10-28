@@ -8,11 +8,11 @@
 <!-- ANCHOR:aktueller-stand -->
 ## Aktueller Stand
 
-- **Stand vom:** 2026-10-28 (3.1c erledigt nach ADR-045 und gemergt, PR #38, `394d24e`; Q.6 in Arbeit; zuvor 2026-10-26: 3.1b erledigt nach Nachmessung auf Referenz-PC und Mac, ADR-044; Q.5 CI-Trigger erledigt und gemergt, PR #37; Grafik-Abnahme als 3.1b-N1)
+- **Stand vom:** 2026-10-28 (3.1c erledigt nach ADR-045 und gemergt, PR #38, `394d24e`; Q.6 erledigt, PR #39; zuvor 2026-10-26: 3.1b erledigt nach Nachmessung auf Referenz-PC und Mac, ADR-044; Q.5 CI-Trigger erledigt und gemergt, PR #37; Grafik-Abnahme als 3.1b-N1)
 - **Laufende Phase:** Phase 3 – Vertikaler Schnitt „Kleiner Flughafen“; Phase 2 abgeschlossen am 2026-10-19 (ADR-036, archiviert in [`docs/archiv/fahrplan-phase-2.md`](archiv/fahrplan-phase-2.md))
 - **Phasentyp:** UMSETZUNG (mit Entwurfs- und Erkundungsschritten 3.7, 3.8, 3.11, 3.12, 3.13, Phasentyp-Kontext ERKUNDUNG)
-- **Aktiver Schritt:** Q.6 `[IN ARBEIT]` (Branch `test/q-6-cpu-modell-im-benchmark-ergebnis`); 3.1c `[ERLEDIGT]` 2026-10-28 (CI grün auf `82be23c`, Merge mit PR #38, `394d24e`); 3.1b `[ERLEDIGT]` 2026-10-26 (Merge mit PR #36), 3.1a `[ERLEDIGT]`, Q.5 `[ERLEDIGT]` (PR #37, `56bdc8c`)
-- **Nächster Schritt:** Q.6 abschließen (CI auf dem PR mit dem Prozessormodell des Runners), danach 3.2. Offen daneben 3.1b-N1 (Grafik-Abnahme, jetzt mit `base:delivery_point`, Zeitpunkt nennt der Projektinhaber)
+- **Aktiver Schritt:** keiner; Q.6 `[ERLEDIGT]` 2026-10-28 (PR #39, Merge nach Freigabe offen); 3.1c `[ERLEDIGT]` 2026-10-28 (CI grün auf `82be23c`, Merge mit PR #38, `394d24e`); 3.1b `[ERLEDIGT]` 2026-10-26 (Merge mit PR #36), 3.1a `[ERLEDIGT]`, Q.5 `[ERLEDIGT]` (PR #37, `56bdc8c`)
+- **Nächster Schritt:** Merge von PR #39 nach Freigabe des Projektinhabers; danach 3.2. Offen daneben 3.1b-N1 (Grafik-Abnahme, jetzt mit `base:delivery_point`, Zeitpunkt nennt der Projektinhaber)
 - **Offene STOPP-Situationen:** keine. Reaktiv-Quote 5 / 10 (ADR-036 bis ADR-045) über dem Schwellenwert; Reflexion zu ADR-045 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-28, Maßnahme (13); Reflexion zu ADR-042 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-25, Maßnahme (12); Reflexion zu ADR-038 (neues Muster nach Regel-009) zur Kenntnis genommen am 2026-10-20, siehe „Iterations-Reflexion“
 
 <!-- ANCHOR:phasen-typen -->
@@ -428,7 +428,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 
 #### Q.6: CPU-Modell im Benchmark-Ergebnis
 
-- **Status:** IN ARBEIT (Vorschlag der KI, angelegt und freigegeben vom Projektinhaber am 2026-10-28; Branch `test/q-6-cpu-modell-im-benchmark-ergebnis`)
+- **Status:** ERLEDIGT (2026-10-28; Vorschlag der KI, angelegt und freigegeben vom Projektinhaber am selben Tag; PR #39, Merge nach Freigabe)
 - **Phasentyp-Kontext:** STABILISIERUNG (Querschnitt)
 - **Abhängigkeiten:** keine
 - **Freigabepflichtig:** nein nach `CLAUDE.md` Abschnitt 4: keine neue Abhängigkeit, kein Eingriff in `ci.yml`, nur Ausgabe der Benchmarks und ihrer Zusammenfassung. Als Vorschlag nach Abschnitt 6 („Keine heimlichen Scope-Erweiterungen“) wartet er trotzdem auf die Freigabe des Projektinhabers.
@@ -442,6 +442,7 @@ Jeder Schritt folgt diesem Schema. Abweichungen nur nach Freigabe.
 - **Reifegrad-Wirkung:** keine
 - **Artefakte:** `core/benches/*.rs`, `scripts/bench-report.mjs` mit Tests, `docs/architecture.md` Abschnitt „Leistungstest in der CI“ (ein Satz)
 - **Notizen:** Der Sprung vom 2026-10-21 lässt sich damit nicht rückwirkend klären; die Angabe hilft erst ab dem ersten Lauf mit dem Feld.
+- **Belege:** lokal (Mac M3 Pro) alle drei Benchmarks bestanden mit `"cpuModel":"Apple M3 Pro"`; `scripts/bench-report.test.mjs` 12 Tests grün (3 neu), `bench-report.mjs` 95,23 % Zeilen (offen nur der Aufruf von der Kommandozeile). CI grün auf `3a2cd0e` (Lauf 40774228111, 23 Checks): Runner `AMD EPYC 9V74 80-Core Processor` in allen drei Ergebnissen und in der Zusammenfassung („letzter Lauf auf main: unbekannt“, der Vergleichslauf 40773654864 auf `394d24e` hat das Feld noch nicht); Schritt „Zusammenfassung mit Trend“ erfolgreich, Tabelle aus den Artefakten beider Läufe nachgerechnet.
 
 #### Q.5: CI-Trigger nur für `main` und PRs, Code-Jobs nicht bei reinen Doku-Änderungen
 
