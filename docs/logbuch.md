@@ -24,7 +24,22 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
-### 2026-10-26 15:15 (UTC) – [BEOBACHTUNG]
+### 2026-10-28 17:50 (UTC) – [BEOBACHTUNG]
+
+- **Modellwechsel bestätigt:** Projektinhaber hat nach dem Stopp auf `claude-opus-5-5` gewechselt; `get_session` („self“) meldet `claude-opus-5-5` → Entscheidungs-Klasse aktiv, passt zur Vorlage mit `ENTSCHEIDUNG ERFORDERLICH`.
+- **Vorlage 3.1c** (`docs/research/3.1c-vorlage.md`) nach Maßnahme (12): Je Teilaufgabe die gelesenen Daten mit Fundstelle. Funde: (1) Bau-Befehle ändern ihre Bedeutung (S-2 „Wirkung im Schritt der Annahme“) → nicht additiv; (2) ein neues Spiel ist vollständig Leere (`World::new`, `Cell::VOID`), Bauarbeiter könnten nirgends gehen; (3) die Topologie der Wegweiser ist für alle Profile gleich (Blöcke mit irgendeiner begehbaren Zelle) – begehbares Gelände würde jedes Fluggast-Feld über das ganze Erdgeschoss ziehen, deshalb eine Topologie je Feldsatz; (4) Gruppen-Nummern in S-1 nirgends festgelegt; (5) Arbeitsmenge und Anlieferstelle fehlen in S-4.
+- **Einstufung:** `[REAKTIV]` (Schritt 3.1 sah außer dem CI-Gate keine Freigabe vor), Reaktiv-Quote danach 5 / 10; neues Muster nach Regel-009 (Code in Welt & Bau, Wegfindung, Personen) → Reflexion mit Stopp, Entwurf in der Vorlage Abschnitt 7 mit Maßnahme (13).
+- **Risiko:** Wegweiser-Benchmark mit dem Satz der Bauarbeiter auf dem Runner nahe der Grenze 4 s (bisher 2,4–3,2 s, Satz der Bauarbeiter ≈ 0,6 s auf 4 vCPU nach 3.7).
+
+### 2026-10-28 17:20 (UTC) – [SESSIONSTART]
+
+- **Letzter Stand:** `[SESSIONENDE]` 2026-10-26 14:30 UTC; danach PR #37 (Q.5) und PR #36 (3.1b) gemergt, `main` auf `568af2c`, sauber. 3.1a, 3.1b und Q.5 `[ERLEDIGT]`; offen daneben 3.1b-N1 (Grafik-Abnahme, Zeitpunkt nennt der Projektinhaber).
+- **Geplant für diese Session:** 3.1c Bauaufträge und Bauarbeiter (FR-011), Branch `feat/3-1c-bauauftraege-und-bauarbeiter` von `main` angelegt.
+- **Pflichtlektüre:** durchlaufen (project-context vollständig, Logbuch ab letztem `[SESSIONENDE]`, Fahrplan Stand und Schritt 3.1, Architektur 1/2/9, Decisions Teil A/C, aktive Blocker: keine, Requirements-Übersicht); dazu `docs/research/3.1-vorlage.md` Abschnitte 1–4, ADR-037 und ADR-042 (Vertiefung für 3.1c).
+- **Vorabprüfung:** Welt & Bau (Grundraster, Bauen mit Wirkung seit 3.1a), Datenmodell im Kern, S-1, S-2, S-5, S-7 `[BELASTBAR]`; Eingangskriterien von 3.1 erfüllt. Befund: Bauauftrag, Bauarbeiter (Gruppe, Anlieferstelle, Anforderung und Entlassung), Fortschritt und Zustand „im Bau“ sind in keinem ADR und keinem Vertrag festgelegt (ADR-040 und der Fahrplan nennen nur Stichworte; ADR-042 hat die Sofortwirkung aus 3.1a ausdrücklich bis 3.1c offen gelassen); die Umsetzung berührt Datenmodell (Kategorie 4, Spielstand-Format), Modulbeziehung Welt & Bau ↔ Personen (Kategorie 1) und S-1/S-5 (Kategorie 5).
+- **Modell:** eingestellt `claude-sonnet-5-5`, bedient `claude-sonnet-5-5` laut `get_session` („self“) 17:19 UTC → Routine-Klasse. Kontingent: `get_session` liefert hier keine `rate_limit_info`, nicht feststellbar.
+- **Vorhaben und Klasse:** Schritt 3.1 empfiehlt Entscheidung für die Bewertung, Routine für die Umsetzung. Die Vorlage vor dem Code mit `ENTSCHEIDUNG ERFORDERLICH` ist Eskalations-Auslöser 1 (`CLAUDE.md` Abschnitt 0): Stopp mit Modellwechsel auf die Entscheidungs-Klasse, bevor die Vorlage entsteht.
+
 
 - **Merges nach Freigabe des Projektinhabers** („Merge du beide, erst #37, dann #36“): PR #37 (Q.5, ADR-043) gemergt als `56bdc8c`; `main` in den Branch von 3.1b geholt. Konflikte nur in `docs/decisions.md` (Teil A: Zeilen ADR-043 und ADR-044, Reaktiv-Quote jetzt 4 / 10 über ADR-035 bis ADR-044, gesamt 17 / 44) und `docs/logbuch.md` (Einträge beider Branches nach Zeit geordnet).
 - **3.1b `[ERLEDIGT]`:** DoD erfüllt, CI grün auf `1dd8082` (39 Checks); Merge-Stand läuft durch die neue CI (Code aus `main` enthalten, daher voller Lauf). Grafik-Abnahme bleibt als 3.1b-N1 offen.
