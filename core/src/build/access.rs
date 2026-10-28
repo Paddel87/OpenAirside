@@ -94,6 +94,24 @@ pub struct Rules {
 }
 
 impl Rules {
+    /// Rules under which no cell is walkable; the start of [`Rules::union`].
+    pub const NONE: Self = Self {
+        kinds: 0,
+        enter_staff_zone: false,
+        zone_rule: false,
+    };
+
+    /// Rules under which a cell is walkable if it is walkable under `self`
+    /// or `other`. Only for asking where someone may stand (the cells of a
+    /// set of flow fields, ADR-045); the step rules are those of `self`.
+    #[must_use]
+    pub fn union(self, other: Self) -> Self {
+        Self {
+            kinds: self.kinds | other.kinds,
+            ..self
+        }
+    }
+
     /// `true` if a person with these rules may stand on a cell with `flags`.
     #[must_use]
     pub fn walkable(self, flags: u8) -> bool {

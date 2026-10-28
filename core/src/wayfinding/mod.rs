@@ -115,6 +115,7 @@ impl Wayfinding {
         FieldInput {
             grid: build.grid().snapshot(),
             targets: build.targets().to_vec(),
+            ground_only: false,
         }
     }
 
@@ -270,6 +271,7 @@ impl Wayfinding {
         let fields = FieldInput {
             grid: blocks.snapshot(map, &saved.fields.grid)?,
             targets: restore_targets(saved.fields.targets)?,
+            ground_only: false,
         };
         let pending = match saved.pending {
             Some(p) => Some((
@@ -278,6 +280,7 @@ impl Wayfinding {
                 FieldInput {
                     grid: blocks.snapshot(map, &p.input.grid)?,
                     targets: restore_targets(p.input.targets)?,
+                    ground_only: false,
                 },
             )),
             None => None,
