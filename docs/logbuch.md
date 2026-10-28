@@ -24,7 +24,13 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
-### 2026-10-28 21:45 (UTC) – [BEOBACHTUNG]
+### 2026-10-28 21:42 (UTC) – [BEOBACHTUNG]
+
+- **Merge 3.1c:** Freigabe des Projektinhabers im Gespräch („Beides“: Merge von PR #38 und Umsetzung von Q.6). PR #38 um 21:38 UTC gemergt als Merge-Commit `394d24e`, nach grüner CI auf dem letzten Commit `89f945d` (16 Checks bestanden, 7 als reine Doku-Änderung übersprungen, Q.5).
+- **Q.6 begonnen:** Branch `test/q-6-cpu-modell-im-benchmark-ergebnis` von `394d24e`, in einem eigenen Worktree, damit die Arbeitskopie der Session auf ihrem Branch bleibt. Die drei Benchmarks nutzen ein gemeinsames Hilfsmodul `core/benches/machine/` (Unterordner, damit Cargo es nicht als eigenen Benchmark erkennt); bisher hatte jeder Benchmark seine Hilfsfunktionen selbst. Lokal (Mac M3 Pro) schreiben alle drei `"cpuModel":"Apple M3 Pro"` und bestehen ihre Grenzen.
+- **Korrektur:** Der Eintrag zur Nachmessung trug zuerst die Zeit 21:45 UTC; geschrieben wurde er gegen 21:35 UTC, vor dem Merge. Zeit dort und im Fahrplan (Q.6, „Anlass“) berichtigt. Ursache: Zeit geschätzt statt abgefragt.
+
+### 2026-10-28 21:35 (UTC) – [BEOBACHTUNG]
 
 - **Anlass:** Rückfrage des Projektinhabers zum Eintrag 21:15 UTC: Der Hauptsatz lag auf dem Runner auf `main` bei 2,55–2,70 s (Läufe 39692518721 bis 40348379307, 2026-10-21 bis 26), auf PR #38 brauchen beide Sätze zusammen 1,93 s. Die Vermutung dort (eigene Topologie je Feldsatz, `9b36e7d`) war nicht gemessen. Korrektur zum Bericht davor: Die Spanne „2,4–3,2 s“ war nicht geprüft; richtig sind die Werte oben.
 - **Messung:** Mac M3 Pro, `cargo bench -p openairside-core --bench flowfield` wie in der CI (2 Simulations-, 2 Hintergrund-Threads), Worktrees auf `f438c2c` (vor `9b36e7d`), `9b36e7d` und `82be23c`, drei Runden abwechselnd. Median der Neuberechnung:
