@@ -453,6 +453,73 @@ pub fn furnish(world: &mut World, edge: u16, objects: usize, seed: u64) {
     world.discard_events();
 }
 
+/// Type of the delivery point of [`add_construction_site`]; id of the base
+/// pack (step 3.1c).
+const SITE_DELIVERY: &str = "base:delivery_point";
+/// Footprint of the delivery point in cells (8 m × 8 m).
+const SITE_DELIVERY_SIZE: (u16, u16) = (4, 4);
+/// Open floor orders of [`add_construction_site`].
+pub const SITE_ORDERS: u16 = 32;
+
+/// Turns the reference terminal into a construction site as in a game
+/// (ADR-045, wayfinding benchmark): the void of the ground floor outside
+/// the terminal becomes terrain, a delivery point with 10 construction
+/// workers stands west of the terminal, and [`SITE_ORDERS`] floor orders of
+/// 4 × 4 cells wait on the terrain around it. The void inside the terminal
+/// stays (its walls). The internal events are dropped, as for every
+/// scenario.
+pub fn add_construction_site(world: &mut World, edge: u16) {
+    let map = world.map();
+    let (ox, oy) = terminal_origin(map, edge);
+    let inside = |x: u16, y: u16| x >= ox && x < ox + edge && y >= oy && y < oy + edge;
+    for y in 0..map.height {
+        for x in 0..map.width {
+            let pos = CellPos { x, y, floor: 0 };
+            let void = world
+                .build()
+                .grid()
+                .cell(pos)
+                .is_some_and(|c| c == Cell::VOID);
+            if void && !inside(x, y) {
+                world
+                    .build_mut()
+                    .grid_mut()
+                    .set(pos, Cell::TERRAIN)
+                    .expect("the cell lies on the map");
+            }
+        }
+    }
+    let at = CellPos {
+        x: ox.saturating_sub(24),
+        y: oy + edge / 2,
+        floor: 0,
+    };
+    let _ = world.build_delivery_point(SITE_DELIVERY, SITE_DELIVERY_SIZE, 10, at, Rotation(0));
+    // Orders in a ring around the terminal, 16 cells away from it.
+    let ring = |i: u16| -> (u16, u16) {
+        let step = edge / (SITE_ORDERS / 4);
+        let along = (i % (SITE_ORDERS / 4)) * step;
+        match i / (SITE_ORDERS / 4) {
+            0 => (ox + along, oy.saturating_sub(20)),
+            1 => (ox + edge + 16, oy + along),
+            2 => (ox + along, oy + edge + 16),
+            _ => (ox.saturating_sub(20), oy + along),
+        }
+    };
+    for i in 0..SITE_ORDERS {
+        let (x, y) = ring(i);
+        let rect = CellRect {
+            floor: 0,
+            x0: x,
+            y0: y,
+            x1: x + 4,
+            y1: y + 4,
+        };
+        let _ = world.order_floor(FURNISH_FLOOR, AreaKind::PublicWalk, COST_NORMAL, 1, rect);
+    }
+    world.discard_events();
+}
+
 /// Builds a world with the reference terminal of `edge` × `edge` cells (at
 /// least [`MIN_EDGE`]) in the middle of `map`, with `gates` gates and
 /// `persons` persons starting at the entrance row. The flow fields are not
@@ -685,5 +752,40 @@ mod tests {
         assert_eq!((a, targets), hash(5));
         assert_ne!(a, hash(6).0);
         assert_eq!(targets, super::target_count(usize::from(REFERENCE_GATES)));
+    }
+
+    #[test]
+    fn the_construction_site_has_terrain_a_delivery_point_and_orders() {
+        let map = MapSize::new(1024, 1024).unwrap();
+        let mut world = reference_terminal(map, 256, 4, 0, 1).unwrap();
+        add_construction_site(&mut world, 256);
+        let build = world.build();
+        assert_eq!(build.delivery_points().len(), 1);
+        assert_eq!(build.orders().len(), usize::from(SITE_ORDERS));
+        assert_eq!(world.persons().workers(), 10);
+        let cell = |x, y| build.grid().cell(CellPos { x, y, floor: 0 }).unwrap();
+        assert_eq!(cell(0, 0), Cell::TERRAIN, "outside the terminal");
+        assert_eq!(cell(384, 384), Cell::VOID, "the walls of the terminal stay");
+        let input = crate::wayfinding::Wayfinding::input(build);
+        assert_eq!(
+            input.workers.targets.len(),
+            2,
+            "sites and one delivery point"
+        );
+        assert!(input.workers.ground_only);
+        assert_eq!(
+            input.workers.targets[0].cells.len(),
+            usize::from(SITE_ORDERS) * 20,
+            "the ring of cells around each order"
+        );
+        let fields = pool(2).install(|| crate::wayfinding::Fields::compute(&input, 0));
+        // The construction workers reach every site from the delivery point.
+        let at = CellPos {
+            x: 104,
+            y: 512,
+            floor: 0,
+        };
+        assert!(fields.workers().path_cost(0, at).is_some());
+        assert!(fields.workers().cells() >= 1024 * 1024);
     }
 }

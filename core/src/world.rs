@@ -338,8 +338,10 @@ impl World {
     /// Forgets the internal events laid down so far. A scenario that builds
     /// its world before the session starts computes the flow fields itself
     /// ([`World::rebuild_fields_now`]); the events would only start a second
-    /// recomputation in the first step.
+    /// recomputation in the first step. Delivery points built meanwhile
+    /// bring their construction workers first (ADR-045).
     pub(crate) fn discard_events(&mut self) {
+        self.persons.react(&self.build, &self.events);
         self.events = InternalEvents::default();
     }
 
