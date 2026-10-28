@@ -24,6 +24,23 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-28 21:45 (UTC) – [BEOBACHTUNG]
+
+- **Anlass:** Rückfrage des Projektinhabers zum Eintrag 21:15 UTC: Der Hauptsatz lag auf dem Runner auf `main` bei 2,55–2,70 s (Läufe 39692518721 bis 40348379307, 2026-10-21 bis 26), auf PR #38 brauchen beide Sätze zusammen 1,93 s. Die Vermutung dort (eigene Topologie je Feldsatz, `9b36e7d`) war nicht gemessen. Korrektur zum Bericht davor: Die Spanne „2,4–3,2 s“ war nicht geprüft; richtig sind die Werte oben.
+- **Messung:** Mac M3 Pro, `cargo bench -p openairside-core --bench flowfield` wie in der CI (2 Simulations-, 2 Hintergrund-Threads), Worktrees auf `f438c2c` (vor `9b36e7d`), `9b36e7d` und `82be23c`, drei Runden abwechselnd. Median der Neuberechnung:
+
+  | Stand | Lauf 1 | Lauf 2 | Lauf 3 | Zellen Hauptsatz | Speicher |
+  |---|---|---|---|---|---|
+  | vor `9b36e7d` (`f438c2c`), nur Hauptsatz | 400 ms | 407 ms | 398 ms | 1.503.232 | 101 MB |
+  | nach `9b36e7d`, nur Hauptsatz | 409 ms | 397 ms | 395 ms | 1.503.232 | 101 MB |
+  | `82be23c`, beide Sätze | 449 ms | 451 ms | 491 ms | 1.503.232 | 122 MB |
+
+  Satz der Bauarbeiter allein auf `82be23c`: 121–122 ms.
+- **Ergebnis:** Die Vermutung ist widerlegt. `9b36e7d` ändert am Hauptsatz nichts: gleiche Zellenzahl, gleicher Speicher, gleiche Zeit im Rahmen der Streuung (395–409 ms). Im Benchmark vor 3.1c gibt es kein Gelände, deshalb fällt kein Block heraus. Seine Wirkung zeigt sich erst auf `82be23c`: Der Benchmark legt dort eine Baustelle mit Gelände an, und der Hauptsatz bleibt trotzdem bei 1.503.232 Zellen, weil Blöcke nur mit Gelände nicht zu ihm gehören (Test `each_set_covers_only_blocks_its_persons_may_stand_in`). Der Code ab 3.1c macht die Neuberechnung auf dem Mac nicht schneller, sondern um 12–23 % langsamer (zweiter Satz parallel).
+- **Folgerung für den Runner:** Der Rückgang von 2,7 auf 1,9 s kommt nicht aus dem Code. Image des Runners in beiden Läufen gleich (`ubuntu26/20261012.163`); das CPU-Modell steht nicht im Protokoll. Naheliegend ist ein anderer Host-Prozessor des gehosteten Runners; belegt ist das nicht. Für die Grenze von 4 s heißt das: Auf einem Runner wie in den Läufen auf `main` lägen beide Sätze nach dem Verhältnis vom Mac bei etwa 3,0–3,3 s, also weiterhin unter der Grenze, aber mit weniger Abstand als die 1,9 s nahelegen.
+- **Nicht untersucht:** der Sprung von 1,39 s (`89aa217`, Lauf 39526364375) auf 2,58 s (`ec5f349`, Lauf 39692518721) am 2026-10-21; ebenfalls ohne Erklärung.
+- **Lerneffekt:** Eine auffällige Abweichung im Benchmark wird gemessen, bevor eine Ursache ins Logbuch geht, auch wenn die Grenze hält. Vorschlag, nicht umgesetzt: das CPU-Modell des Runners ins Benchmark-Ergebnis schreiben, damit ein Wechsel des Runners sofort erkennbar ist.
+
 ### 2026-10-28 21:15 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** Fortsetzung der Session 17:40 UTC nach Zusammenfassung des Kontexts, 21:10 bis 21:15 UTC.
