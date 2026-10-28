@@ -24,6 +24,15 @@ Phase 1 abgeschlossen (ADR-016), Detail-Einträge in `docs/archiv/logbuch-phase-
 <!-- ANCHOR:eintraege -->
 ## Einträge (neueste oben)
 
+### 2026-10-28 23:34 (UTC) – [ADR-ANGELEGT]
+
+- **ADR:** [ADR-046](decisions/ADR-046.md) „Neuausrichtung als eigenes Flughafen-Aufbauspiel“, `[STRATEGISCH]` `[METHODIK]`, Datum 2026-10-29 (Ortszeit des Projektinhabers).
+- **Auslöser:** Die Session für die Vorlage zu 3.2 lehnte ab, an einem Nachbau eines bestimmten Spiels mitzuarbeiten (Grundlage: `docs/vision.md` Abschnitt 1, `docs/project-context.md` Abschnitt 1); diese Session prüfte die Stellen und schloss sich an. Der Projektinhaber bat um einen Entwurf für eine Fortsetzung als eigenes Spiel, ließ die Wünsche der Community des Genres recherchieren (`docs/research/community-wuensche.md`) und beantwortete die offenen Fragen im Gespräch per Auswahl (Tabelle in `docs/research/neuausrichtung-entwurf.md` Abschnitt 9). Freigabe von ADR-046 per Auswahl „Freigeben“; Vision als neue Datei `docs/vision-2.md`; Neuableitung in dieser Session.
+- **Wirkung:** ADR-006 überholt, Regel-004 aufgehoben, neue Regel-010 (Funktionen aus den Säulen der Vision begründen). Reaktiv-Quote 4 / 10 (ADR-037 bis ADR-046), weiter über dem Schwellenwert; ADR-046 ist nicht reaktiv (Begründung im ADR). `docs/vision.md` bleibt inhaltlich unverändert und verweist auf ADR-046.
+- **Modellklasse:** Entscheidungs-Klasse aktiv (Opus 5.5, Systemkontext), wie für ein ADR `[STRATEGISCH]` vorgeschrieben (`CLAUDE.md` Abschnitt 0, Auslöser 3).
+- **Beobachtung:** Die KI hat 3.1c und Q.6 umgesetzt, ohne die Vision zu lesen (sie gehört nicht zur Mindest-Lektüre). Dass das Projekt als Nachbau angelegt war, fiel erst der getrennten Session auf. Für die Methodik: Eine KI sollte das Ziel des Projekts kennen, bevor sie daran baut.
+- **Nächster Schritt:** Anforderungen aus `docs/vision-2.md` neu ableiten, danach Phase 3 neu planen und die Pflichtfrage „Weiterbauen, umbauen oder neu aufsetzen?“ von einer getrennten Instanz bewerten lassen.
+
 ### 2026-10-28 22:32 (UTC) – [SESSIONENDE]
 
 - **Session-Dauer:** Fortsetzung, 21:15 bis 22:32 UTC.
