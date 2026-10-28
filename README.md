@@ -16,15 +16,15 @@
 
 ## Über das Projekt
 
-OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport CEO*. Spielprinzip und Funktionsumfang folgen dem Original einschließlich seiner Add-ons: Start- und Landebahnen, Rollwege, Terminals über mehrere Etagen, Gepäckanlagen, Flugpläne, Personal, Wirtschaft, Forschung und Notfälle. Die technische Grundlage ist dagegen von Anfang an auf sehr große Flughäfen ausgelegt, und Abläufe wie Check-in, Sicherheits- und Gepäckkontrolle entsprechen dem heutigen Flughafenbetrieb.
+OpenAirside ist ein freies Flughafen-Aufbauspiel. Ein Flughafen ist darin ein System aus Strömen: Menschen, Gepäck, Fracht, Fahrzeuge und Flugzeuge. Du baust ihn, liest seine Ströme und baust ihn um, während er läuft, für Airlines, die jeweils etwas anderes von dir wollen. Dazu gehören Baustellen mit Bauarbeitern und Umleitungen, Overlays für Wartezeiten und Engpässe mit ihrer Ursache, ein Flughafentag in Wellen mit Umsteigebank und Fracht, Störungen wie Gewitter oder IT-Ausfall und Verträge mit Airlines, die messbare Zusagen enthalten (Vision: [`docs/vision-2.md`](docs/vision-2.md)).
 
-**Was es löst:** Das Original wird nicht mehr weiterentwickelt und bricht bei großen Flughäfen ein: Das Bild ruckelt, Bauaufträge brauchen Sekunden, Passagiere und Fahrzeuge bleiben stecken. OpenAirside will das gleiche fesselnde Spielerlebnis bieten, auch mit über 10.000 gleichzeitig simulierten Personen.
+**Was es löst:** Flughafen-Aufbauspiele brechen bei großen Flughäfen oft ein: Das Bild ruckelt, Bauaufträge brauchen Sekunden, Personen und Fahrzeuge bleiben stecken, und man sieht nicht, warum. OpenAirside ist von Anfang an für über 10.000 gleichzeitig simulierte Personen ausgelegt und erklärt, was im Betrieb passiert.
 
-**Für wen:** Spieler von Aufbau- und Wirtschaftssimulationen, insbesondere die Community von Airport CEO.
+**Für wen:** Spieler von Aufbau- und Wirtschaftssimulationen, die große Flughäfen bauen und betreiben wollen.
 
 **Was es bewusst nicht ist:**
 
-- kein Projekt mit Material aus dem Original: kein Code, keine Grafiken, Texte oder Töne, keine Kompatibilität zu dessen Mods oder Spielständen
+- kein Nachbau eines bestimmten Spiels und kein Material anderer Spiele: kein Code, keine Grafiken, Texte oder Töne, keine Kompatibilität zu fremden Mods oder Spielständen
 - kein Spiel mit Kurven beim Bauen: gebaut wird im rechtwinkligen Raster
 - kein Store-Spiel: Vertrieb über GitHub, kostenlos und ohne Gewinnabsicht
 
@@ -33,7 +33,7 @@ OpenAirside ist ein Open-Source-Nachbau des eingestellten Tycoon-Spiels *Airport
 - **Projektphase:** Phase 3: Vertikaler Schnitt „Kleiner Flughafen“ (UMSETZUNG), Entwurfsschritte 3.7 (Personengruppen, Begehbarkeit und Querungen, ADR-037) und 3.8 (Weltdarstellung im Spielfeld, ADR-038) sowie die Messung 3.14, die Korrektur 3.15 (Ruckeln unter Windows) und die Umbauten 3.9 (Kernstruktur der Fachmodule, ADR-039) und 3.10 (Aufteilung der Plattform-Datei `main.ts`) erledigt; Schritt 3.1 (Bauen im Raster) in Stufen: 3.1a Kern erledigt, 3.1b Darstellung und Bedienung erledigt (Messungen auf Referenz-PC und Mac bestanden, ADR-044; Grafik-Abnahme verschoben auf 3.1b-N1), 3.1c Bauaufträge und Bauarbeiter erledigt (ADR-045); Phase 2 (Fundament: Projektgerüst und CI, Weltmaßstab, Schnittstellenverträge, Takt, Raster und Wegweiser, Brücke und Plattform, Datenpakete, Spielstände, Lokalisierung, Grafik-Pipeline) abgeschlossen am 2026-10-19 mit „gezielt umbauen“ (ADR-036); Phase 1 (Technischer Durchstich und Leistungsnachweis) abgeschlossen (ADR-014, ADR-016)
 - **Version:** v0.0.0
 - **Status:** Konzeption
-- **Letzte Änderung:** 2026-10-25
+- **Letzte Änderung:** 2026-10-29
 - **Architektur-Reife:** Plattformen und Auslieferungsform BELASTBAR; Stack (Electron 44, TypeScript 6, React 19, PixiJS 8, Rust-Simulationskern), Architektur-Pattern, Betriebsart des Rust-Kerns (natives Modul im Hilfsprozess, ADR-009), Datenmodell im Kern (ADR-010; Weltmaßstab 2 m je Zelle mit Luftseite im Raster und Speicherung in Blöcken nach ADR-020; Personengruppen mit eigenen begehbaren Flächen nach ADR-037), Wegweiser-Prinzip und Leistung von Simulation und Zustandsübergabe BELASTBAR seit dem Leistungsnachweis (ADR-014; Linux-Messung in 7.2); Leistung der Darstellung mit echten Grafiken BELASTBAR im gemessenen Umfang (20.000 Objekte, Windows und macOS, ADR-034), Nahansicht mit Weltdarstellung BELASTBAR unter macOS und Windows (Ruckeln auf dem Referenz-PC in 3.15 behoben; Nachmessung mit dem Bauen in 3.1), Fahrzeuge und Flugzeuge VORLÄUFIG; Bauaktion im nächsten Bild BELASTBAR (ADR-044, Vorschau im ersten Bild auf Referenz-PC und Mac); Zustandsübergabe Kern → Darstellung und große Tabellen BELASTBAR (Windows und macOS gemessen); Schnittstellenverträge für Befehle, Ereignisse, Abfragen, Datenpakete, Spielstände und Plattform BELASTBAR (ADR-021, fortgeschrieben durch ADR-032), Steuerung des Kern-Prozesses durch die Plattform BELASTBAR (ADR-032); Weg der Bauten in die Darstellung BELASTBAR (Blöcke im Bild, Zeichnung mit Shader, ADR-038; umgesetzt in 3.1b, Speicher auf Referenz-PC und Mac gemessen und BELASTBAR); Takt des Simulationskerns BELASTBAR (Umsetzung 2.2; Fachmodule mit fester Reihenfolge und internen Ereignissen seit 3.9, ADR-039); Grundraster der Welt BELASTBAR (Umsetzung 2.3); Brücke zwischen Kern und Oberfläche sowie Plattformschicht BELASTBAR (Umsetzung und Messung 2.7); Lader für Datenpakete BELASTBAR (Umsetzung 2.4); Spielstand-Format durch Umsetzung bestätigt (2.5); Lokalisierung BELASTBAR (Umsetzung 2.6); Grafik-Pipeline (SVG → Atlanten) BELASTBAR (Umsetzung 2.10, ADR-033)
 - **Aktive Blocker:** 0
 
@@ -95,8 +95,9 @@ Sprache und Einstellungen: Die Oberfläche gibt es auf Deutsch und Englisch, bei
 
 ## Nächste Schritte
 
+- Neuausrichtung als eigenes Spiel (ADR-046): Anforderungen und Fahrplan neu ableiten
+- 3.2 neu: kleines Terminal im laufenden Betrieb erweitern, Umleitung und Wartezeit mit Ursache, zugleich erste Lektion
 - 3.1b-N1: Abnahme der Grafiken für Boden, Wand und Sitzbank, Zeitpunkt nennt der Projektinhaber
-- 3.2: Kleines Terminal und Passagierablauf
 
 → Vollständiger Fahrplan: [`docs/fahrplan.md`](docs/fahrplan.md)
 
@@ -113,10 +114,11 @@ Beiträge sind willkommen, sobald ein lauffähiger Stand existiert, insbesondere
 
 | Dokument | Inhalt |
 |---|---|
-| [`docs/vision.md`](docs/vision.md) | Ursprüngliche Projektvision (eingefroren) |
+| [`docs/vision-2.md`](docs/vision-2.md) | Projektvision seit ADR-046 (eigenes Spiel) |
+| [`docs/vision.md`](docs/vision.md) | Ursprüngliche Projektvision (historisch) |
 | [`docs/requirements.md`](docs/requirements.md) | Beteiligte, Anwendungsfälle, Anforderungen |
-| [`docs/funktionsinventar.md`](docs/funktionsinventar.md) | Funktionsumfang des Originals als Maßstab |
-| [`docs/modernisierung.md`](docs/modernisierung.md) | Entschiedene Abweichungen vom Original |
+| [`docs/funktionsinventar.md`](docs/funktionsinventar.md) | Funktionen eines anderen Spiels des Genres, Ideenquelle ohne Maßstab (ADR-046) |
+| [`docs/modernisierung.md`](docs/modernisierung.md) | Ideen aus dem heutigen Flughafenbetrieb (Ideenquelle) |
 | [`docs/project-context.md`](docs/project-context.md) | Aktueller Stack, Constraints, Qualitätsziele |
 | [`docs/architecture.md`](docs/architecture.md) | Systemarchitektur, Module, Schnittstellen |
 | [`docs/architecture-schnittstellen.md`](docs/architecture-schnittstellen.md) | Schnittstellenverträge S-1 bis S-8 mit Änderungsprotokoll |

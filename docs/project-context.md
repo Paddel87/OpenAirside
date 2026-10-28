@@ -8,7 +8,7 @@
 ## 1. Kerndaten
 
 - **Projektname:** OpenAirside
-- **Kurzbeschreibung:** Open-Source-Nachbau des eingestellten Flughafen-Tycoon-Spiels Airport CEO für Windows, Linux und macOS. Spielprinzip und Funktionsumfang wie das Original inklusive Add-ons, technisch ausgelegt auf sehr große Flughäfen und an den heutigen Flughafenbetrieb angepasst.
+- **Kurzbeschreibung:** Freies Flughafen-Aufbauspiel für Windows, Linux und macOS. Ein Flughafen ist ein System aus Strömen (Menschen, Gepäck, Fracht, Fahrzeuge, Flugzeuge); der Spieler baut ihn, liest seine Ströme und baut ihn im laufenden Betrieb um, für Airlines mit eigenen Zielen. Technisch ausgelegt auf sehr große Flughäfen. Vision: `docs/vision-2.md` (seit ADR-046, 2026-10-29; `docs/vision.md` historisch).
 - **Status:** Konzeption
 - **Version (SemVer):** v0.0.0 (vor der ersten Umsetzung)
 - **Dokumentationssprache:** Deutsch
@@ -18,7 +18,7 @@
 <!-- ANCHOR:zielgruppe-und-nutzungskontext -->
 ## 2. Zielgruppe und Nutzungskontext
 
-- **Primäre Nutzer:** Spieler von Aufbau- und Wirtschaftssimulationen, insbesondere die Community von Airport CEO; Maßstab für das Spielerlebnis ist der Projektinhaber. Kein technisches Vorwissen nötig. Beteiligte und Anwendungsfälle: `docs/requirements.md`.
+- **Primäre Nutzer:** Spieler von Aufbau- und Wirtschaftssimulationen, die große Flughäfen bauen und betreiben wollen, auch die Community anderer Flughafenspiele des Genres; Maßstab für das Spielerlebnis ist der Projektinhaber. Kein technisches Vorwissen nötig. Beteiligte und Anwendungsfälle: `docs/requirements.md`.
 - **Sekundäre Nutzer / Betreiber:** keine Betreiber. Spieler installieren das Spiel lokal aus GitHub Releases. Später Modder, Übersetzer und Grafiker als Mitwirkende.
 - **Erwartete Last:** Einzelspieler, lokal. Simulationslast: Referenzszenario mit mindestens 10.000 gleichzeitig simulierten Personen (Abschnitt 6, Performance).
 - **Nutzungsumgebung:** Desktop unter Windows, Linux und macOS 13+ auf Apple-Chips (ADR-012). Hardware-Untergrenze: integrierte Grafik. Zielhardware: Mittelklasse-PC (Abschnitt 6).
@@ -352,9 +352,10 @@ Default: Warnungen sind Fehler (clippy `-D warnings`, ESLint `--max-warnings 0`,
 <!-- ANCHOR:glossar -->
 ## 12. Glossar (projektspezifische Begriffe)
 
-- **Original:** Airport CEO von Apog Labs, Stand Version 1.1-3, einschließlich aller DLCs.
-- **Funktionsgleichheit:** Alle Funktionen aus `funktionsinventar.md` sind gleichwertig abgebildet, in der modernisierten Form laut `modernisierung.md`.
-- **Kern / Kandidat:** Kern = Teil der Funktionsgleichheit; Kandidat = unverbindliche Erweiterung nach der Funktionsgleichheit.
+- **Säule:** einer der fünf Schwerpunkte aus `docs/vision-2.md` (S1 Umbau im Betrieb, S2 Ströme lesen, S3 Rhythmus und Fracht, S4 Störung und Erholung, S5 Airlines als Partner); jede Spielfunktion nennt ihre Säule (Regel-010).
+- **Bisheriges Vorbild (historisch, „Original“ in älteren Dokumenten):** Airport CEO von Apog Labs, Stand Version 1.1-3. Seit ADR-046 nur noch eine Ideenquelle unter mehreren.
+- **Funktionsgleichheit (historisch):** Ziel bis 2026-10-29, entfallen mit ADR-046.
+- **Kern / Kandidat (in `modernisierung.md`):** historische Einteilung; seit ADR-046 entscheidet die Säule, nicht die Einteilung.
 - **Referenzszenario:** der in Abschnitt 6 beschriebene große Flughafen als Maßstab für Leistung.
 - **Zielhardware / Untergrenze:** Rechner, für den optimiert wird / Rechner, auf dem das Spiel mindestens lauffähig sein muss.
 - **Simulationskern:** der Rust-Teil mit der gesamten Spiellogik.

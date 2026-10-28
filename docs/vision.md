@@ -171,3 +171,7 @@ Hinweise für die Initialisierung, die in der Konzeptphase entstanden sind:
 **Nach abgeschlossener Initialisierung:** Diese Datei wird nicht mehr verändert.
 Spätere Vision-Erweiterungen oder Pivots werden in einem ADR dokumentiert,
 nicht in dieser Datei. Bei substantieller Vision-Änderung: neuer ADR mit Verweis hier.
+
+**Pivot am 2026-10-29:** [ADR-046](decisions/ADR-046.md) richtet OpenAirside als eigenes
+Flughafen-Aufbauspiel aus; Funktionsgleichheit entfällt. Maßgeblich ist seitdem
+[`vision-2.md`](vision-2.md). Diese Datei bleibt als historisches Dokument erhalten.
