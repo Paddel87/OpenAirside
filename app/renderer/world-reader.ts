@@ -25,6 +25,18 @@ export const RAW = 2;
 export const MISSING = 0xffff;
 /** Flag of a cell that cannot be walked on (core `grid::WALL`). */
 export const WALL = 1;
+/** Position of the area kind in the flags (core `grid::KIND_SHIFT`). */
+export const KIND_SHIFT = 2;
+/** Bits of the area kind in the flags (core `grid::KIND_MASK`). */
+export const KIND_MASK = 0b111 << KIND_SHIFT;
+/** Area kind "terrain": the ground of a new game, nothing built (ADR-045). */
+export const TERRAIN = 7;
+/** State of a cell or object: built (ADR-045). */
+export const BUILT = 0;
+/** State of a cell or object: planned, no material yet (ADR-045). */
+export const PLANNED = 1;
+/** State of a cell or object: in construction (ADR-045). */
+export const BUILDING = 2;
 
 /** An object of a block. */
 export interface WorldObject {
@@ -36,6 +48,8 @@ export interface WorldObject {
   readonly y: number;
   /** Rotation 0 … 3. */
   readonly rotation: number;
+  /** {@link BUILT}, {@link PLANNED} or {@link BUILDING}. */
+  readonly state: number;
 }
 
 /**
@@ -51,6 +65,8 @@ export interface WorldBlock {
   readonly zone: Uint8Array;
   /** Marking per cell: 0 none, 1 preferred route, 2 avoid. */
   readonly marking: Uint8Array;
+  /** State per cell: {@link BUILT}, or {@link PLANNED} / {@link BUILDING} under an open order (then `floor` or `wall` is the planned type). */
+  readonly state: Uint8Array;
   /** Floor covering per cell: 0 none, else catalog index plus 1. */
   readonly floor: Uint16Array;
   /** Wall type per cell: 0 none, else catalog index plus 1. */
@@ -74,6 +90,7 @@ const scratch: WorldBlock = {
   flags: new Uint8Array(BLOCK_CELLS),
   zone: new Uint8Array(BLOCK_CELLS),
   marking: new Uint8Array(BLOCK_CELLS),
+  state: new Uint8Array(BLOCK_CELLS),
   floor: new Uint16Array(BLOCK_CELLS),
   wall: new Uint16Array(BLOCK_CELLS),
   objects: [],
@@ -83,6 +100,7 @@ function cell(view: DataView, at: number, i: number): void {
   scratch.flags[i] = view.getUint8(at);
   scratch.zone[i] = view.getUint8(at + 1);
   scratch.marking[i] = view.getUint8(at + 2);
+  scratch.state[i] = view.getUint8(at + 3);
   scratch.floor[i] = view.getUint16(at + 4, true);
   scratch.wall[i] = view.getUint16(at + 6, true);
 }
@@ -132,6 +150,7 @@ export function readBlocks(
       scratch.flags.fill(scratch.flags[0] ?? 0);
       scratch.zone.fill(scratch.zone[0] ?? 0);
       scratch.marking.fill(scratch.marking[0] ?? 0);
+      scratch.state.fill(scratch.state[0] ?? 0);
       scratch.floor.fill(scratch.floor[0] ?? 0);
       scratch.wall.fill(scratch.wall[0] ?? 0);
     } else {
@@ -151,6 +170,7 @@ export function readBlocks(
         x: view.getUint8(r + 2),
         y: view.getUint8(r + 3),
         rotation: view.getUint8(r + 4) & 3,
+        state: view.getUint8(r + 5),
       });
     }
     scratch.index = index;

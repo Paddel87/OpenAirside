@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import { WORLD_HEADER_BYTES, type WorldSection } from "./frame-reader.js";
 import {
   BLOCK_CELLS,
+  BUILDING,
+  BUILT,
   CELL_BYTES,
   MISSING,
   OBJECT_BYTES,
   PALETTE,
+  PLANNED,
   RAW,
   readBlocks,
   RECORD_HEADER,
@@ -13,12 +16,20 @@ import {
   type WorldBlock,
 } from "./world-reader.js";
 
-type Cell = [flags: number, zone: number, marking: number, floor: number, wall: number];
+type Cell = [
+  flags: number,
+  zone: number,
+  marking: number,
+  floor: number,
+  wall: number,
+  state?: number,
+];
 
-function put(view: DataView, at: number, [flags, zone, marking, floor, wall]: Cell): void {
+function put(view: DataView, at: number, [flags, zone, marking, floor, wall, state]: Cell): void {
   view.setUint8(at, flags);
   view.setUint8(at + 1, zone);
   view.setUint8(at + 2, marking);
+  view.setUint8(at + 3, state ?? 0);
   view.setUint16(at + 4, floor, true);
   view.setUint16(at + 6, wall, true);
 }
@@ -28,7 +39,7 @@ interface Spec {
   encoding: number;
   palette: Cell[];
   cells?: Cell[];
-  objects?: [number, number, number, number][];
+  objects?: [number, number, number, number, number?][];
 }
 
 /** Encodes records like core/src/display.rs. */
@@ -62,12 +73,13 @@ function section(specs: Spec[]): WorldSection {
         v.setUint8(at + (i >> 1), old | (p << ((i & 1) * 4)));
       });
     }
-    objects.forEach(([type, x, y, rotation], i) => {
+    objects.forEach(([type, x, y, rotation, state], i) => {
       const o = RECORD_HEADER + cellsBytes + i * OBJECT_BYTES;
       v.setUint16(o, type, true);
       v.setUint8(o + 2, x);
       v.setUint8(o + 3, y);
       v.setUint8(o + 4, rotation);
+      v.setUint8(o + 5, state ?? 0);
     });
     parts.push(buf);
   }
@@ -92,6 +104,7 @@ function collect(s: WorldSection) {
     floor: number[];
     wall: number[];
     flags: number[];
+    state: number[];
     objects: WorldBlock["objects"];
   }[] = [];
   const result = readBlocks(s, (b) => {
@@ -100,6 +113,7 @@ function collect(s: WorldSection) {
       floor: [b.floor[0] ?? -1, b.floor[33] ?? -1, b.floor[BLOCK_CELLS - 1] ?? -1],
       wall: [b.wall[0] ?? -1, b.wall[33] ?? -1],
       flags: [b.flags[0] ?? -1, b.flags[33] ?? -1],
+      state: [b.state[0] ?? -1, b.state[1] ?? -1, b.state[33] ?? -1],
       objects: b.objects,
     });
   });
@@ -132,9 +146,27 @@ describe("readBlocks", () => {
     expect(seen.map((b) => b.index)).toEqual([7, 8, 9]);
     expect(seen[0]).toMatchObject({ floor: [0, 0, 0], wall: [0, 0], flags: [1, 1], objects: [] });
     expect(seen[1]).toMatchObject({ floor: [0, 3, 3], wall: [0, 4], flags: [1, 1] });
-    expect(seen[1]?.objects).toEqual([{ type: 5, x: 10, y: 3, rotation: 1 }]);
+    expect(seen[1]?.objects).toEqual([{ type: 5, x: 10, y: 3, rotation: 1, state: BUILT }]);
     expect(seen[2]).toMatchObject({ floor: [0, 3, 3], wall: [0, 4] });
-    expect(seen[2]?.objects).toEqual([{ type: MISSING, x: 0, y: 31, rotation: 3 }]);
+    expect(seen[2]?.objects).toEqual([{ type: MISSING, x: 0, y: 31, rotation: 3, state: BUILT }]);
+  });
+
+  it("reads the state of planned cells and objects (ADR-045)", () => {
+    const planned: Cell = [7 << 2, 0, 0, 3, 0, PLANNED];
+    const building: Cell = [0, 0, 0, 3, 4, BUILDING];
+    const cells: Cell[] = Array.from({ length: BLOCK_CELLS }, (_, i) =>
+      i === 0 ? planned : i === 1 ? building : concrete,
+    );
+    const { result, seen } = collect(
+      section([
+        { index: 2, encoding: UNIFORM, palette: [planned], objects: [[5, 1, 2, 0, PLANNED]] },
+        { index: 3, encoding: PALETTE, palette: [concrete, planned, building], cells },
+      ]),
+    );
+    expect(result).toEqual({ ok: true, blocks: 2 });
+    expect(seen[0]).toMatchObject({ state: [PLANNED, PLANNED, PLANNED], floor: [3, 3, 3] });
+    expect(seen[0]?.objects).toEqual([{ type: 5, x: 1, y: 2, rotation: 0, state: PLANNED }]);
+    expect(seen[1]).toMatchObject({ state: [PLANNED, BUILDING, BUILT], wall: [0, 0] });
   });
 
   it("accepts a section without blocks", () => {

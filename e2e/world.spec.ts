@@ -38,12 +38,12 @@ test("the world follows four session changes and a build action", async () => {
 
     // The scenario the core starts with: the ground floor of the default map (2048 cells, 64 × 64 blocks).
     await settled(1, 4096, 0);
-    await expect(root).toHaveAttribute("data-catalog", "3", { timeout: 30_000 });
+    await expect(root).toHaveAttribute("data-catalog", "4", { timeout: 30_000 });
 
     // 1: a new game on 1536 cells has 48 × 48 blocks and no object.
     await run("newgame 1536");
     await settled(2, 2304, 0);
-    await expect(root).toHaveAttribute("data-catalog", "3", { timeout: 30_000 });
+    await expect(root).toHaveAttribute("data-catalog", "4", { timeout: 30_000 });
 
     // 2: the furnished terminal on that map: floors, walls and about 20,000 objects of the base pack.
     await run("scenario furnished 100");
@@ -60,6 +60,7 @@ test("the world follows four session changes and a build action", async () => {
     // 4: and back; a build action of the console reaches the world in the same way.
     await run("newgame 1536");
     await settled(5, 2304, 0);
+    // A new game is terrain (ADR-045): furniture needs a floor first.
     await run("build base:bench 100 100");
     await expect(window.locator("#log")).toContainText("rejected: needsFloor");
     await expect(window.locator("#log")).not.toContainText("dropped");
