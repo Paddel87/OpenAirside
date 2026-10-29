@@ -108,3 +108,16 @@ Diese Einschätzung ist keine Entscheidung. Sie fasst zusammen, wohin die Belege
 2. Wie streng soll eine Sperrung wirken: Dürfen Fluggäste eine frisch gesperrte Fläche noch kurz durchqueren, oder muss die Bauphase einen Vorlauf haben, in dem die Umleitung sichtbar vorbereitet wird? (Spielgefühl, berührt ADR-010.)
 3. Soll das Spiel Warteschlangen sichtbar zeigen (Personen stehen in Reihe) oder genügt eine gemessene Wartezeit mit Overlay? (Aufwand im Kern und in der Darstellung sehr verschieden.)
 4. Wann soll die Oberfläche auf React umgestellt werden, oder bleibt sie bei direktem DOM-Code?
+
+## 6. Antworten des Projektinhabers (nach der Bewertung)
+
+Nachgetragen am 2026-10-29 per Auswahl im Gespräch mit der getrennten Instanz. Die Abschnitte 1–5 bleiben unverändert. Die Antworten sind Eingaben für Stellungnahme, Vorlage und ADR; sie ersetzen nicht die Vorlage als `ENTSCHEIDUNG ERFORDERLICH`.
+
+| Frage aus Abschnitt 5 | Antwort |
+|---|---|
+| 1. Eigener Entwurfsschritt vor 3.2? | Ja, eigener Schritt (Phase 3 von 15 auf 16 Schritte, Schwelle 26) |
+| 2. Wie wirkt eine Sperrung, solange die Wege neu berechnet werden? | Mit Vorlauf: Die Bauphase wird angekündigt, die Umleitung steht vor Baubeginn bereit, erst dann gilt die Sperrung |
+| 3. Wie erscheinen Warteschlangen? | Erst Wartezeit, Reihen später: in 3.2 warten Personen an der Bedienstelle, die Wartezeit wird gemessen und im Overlay gezeigt; sichtbare Reihen als eigener späterer Schritt |
+| 4. Wann wird die Oberfläche auf React umgestellt? | Vor 3.2, als kleiner eigener Schritt (Einrichtung, vier vorhandene Panels umstellen, Versionen nach Regel-001 neu belegen); Antwort nach einer Erläuterung der drei Optionen |
+
+**Folgen für die Planung (zur Umsetzung durch die bauende KI):** Mit Antwort 1 und 4 kommen zwei Schritte vor 3.2 hinzu, Phase 3 hätte dann 17 Schritte (Schwelle 26). Antwort 3 braucht einen Landeplatz mit Schritt-ID für die sichtbaren Reihen (`CLAUDE.md` Abschnitt 6, „Keine Verschiebung ohne Landeplatz“).
